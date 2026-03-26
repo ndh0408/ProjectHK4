@@ -1,0 +1,723 @@
+{
+  "@@locale": "en",
+
+  "appName": "LUMA",
+  "@appName": {
+    "description": "The app name"
+  },
+
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+
+  "explore": "Explore",
+  "@explore": {
+    "description": "Explore tab label"
+  },
+
+  "myEvents": "My Events",
+  "@myEvents": {
+    "description": "My Events tab label"
+  },
+
+  "alerts": "Alerts",
+  "@alerts": {
+    "description": "Alerts tab label"
+  },
+
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+
+  "yourEvents": "Your Events",
+  "@yourEvents": {
+    "description": "Your Events section title"
+  },
+
+  "viewAll": "View All",
+  "@viewAll": {
+    "description": "View all button text"
+  },
+
+  "pickedForYou": "Picked for You",
+  "@pickedForYou": {
+    "description": "Picked for You section title"
+  },
+
+  "nearby": "Nearby",
+  "@nearby": {
+    "description": "Nearby filter option"
+  },
+
+  "allTheWorld": "All the World",
+  "@allTheWorld": {
+    "description": "All the World filter option"
+  },
+
+  "noUpcomingEvents": "No Upcoming Events",
+  "@noUpcomingEvents": {
+    "description": "No upcoming events title"
+  },
+
+  "noUpcomingEventsSubtitle": "Events you are hosting or going to will show up here.",
+  "@noUpcomingEventsSubtitle": {
+    "description": "No upcoming events subtitle"
+  },
+
+  "noEventsFound": "No events found",
+  "@noEventsFound": {
+    "description": "No events found message"
+  },
+
+  "tryChangingFilter": "Try changing the location filter",
+  "@tryChangingFilter": {
+    "description": "Try changing filter suggestion"
+  },
+
+  "today": "Today",
+  "@today": {
+    "description": "Today label"
+  },
+
+  "tomorrow": "Tomorrow",
+  "@tomorrow": {
+    "description": "Tomorrow label"
+  },
+
+  "registered": "Registered",
+  "@registered": {
+    "description": "Registered badge text"
+  },
+
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button text"
+  },
+
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+
+  "welcomeBack": "Welcome Back",
+  "@welcomeBack": {
+    "description": "Welcome back title"
+  },
+
+  "signInToContinue": "Sign in to continue",
+  "@signInToContinue": {
+    "description": "Sign in subtitle"
+  },
+
+  "dontHaveAccount": "Don't have an account?",
+  "@dontHaveAccount": {
+    "description": "Don't have account text"
+  },
+
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up link/button"
+  },
+
+  "orContinueWith": "Or continue with",
+  "@orContinueWith": {
+    "description": "Or continue with text"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings title"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language name"
+  },
+
+  "vietnamese": "Vietnamese",
+  "@vietnamese": {
+    "description": "Vietnamese language name"
+  },
+
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications title"
+  },
+
+  "messages": "Messages",
+  "@messages": {
+    "description": "Messages tab"
+  },
+
+  "send": "Send",
+  "@send": {
+    "description": "Send button"
+  },
+
+  "typeMessage": "Type a message...",
+  "@typeMessage": {
+    "description": "Type message placeholder"
+  },
+
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete action"
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel action"
+  },
+
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm action"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error title"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry action"
+  },
+
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading text"
+  },
+
+  "contactHost": "Contact Host",
+  "@contactHost": {
+    "description": "Contact host button"
+  },
+
+  "register": "Register",
+  "@register": {
+    "description": "Register button"
+  },
+
+  "unregister": "Unregister",
+  "@unregister": {
+    "description": "Unregister button"
+  },
+
+  "eventDetails": "Event Details",
+  "@eventDetails": {
+    "description": "Event details title"
+  },
+
+  "about": "About",
+  "@about": {
+    "description": "About section"
+  },
+
+  "location": "Location",
+  "@location": {
+    "description": "Location label"
+  },
+
+  "dateAndTime": "Date & Time",
+  "@dateAndTime": {
+    "description": "Date and time label"
+  },
+
+  "host": "Host",
+  "@host": {
+    "description": "Host label"
+  },
+
+  "guests": "Guests",
+  "@guests": {
+    "description": "Guests label"
+  },
+
+  "askQuestion": "Ask a Question",
+  "@askQuestion": {
+    "description": "Ask question button"
+  },
+
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile button"
+  },
+
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field"
+  },
+
+  "phone": "Phone",
+  "@phone": {
+    "description": "Phone field"
+  },
+
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+
+  "createEvent": "Create Event",
+  "@createEvent": {
+    "description": "Create event button"
+  },
+
+  "eventTitle": "Event Title",
+  "@eventTitle": {
+    "description": "Event title field"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Description field"
+  },
+
+  "startDate": "Start Date",
+  "@startDate": {
+    "description": "Start date field"
+  },
+
+  "endDate": "End Date",
+  "@endDate": {
+    "description": "End date field"
+  },
+
+  "capacity": "Capacity",
+  "@capacity": {
+    "description": "Capacity field"
+  },
+
+  "price": "Price",
+  "@price": {
+    "description": "Price field"
+  },
+
+  "free": "Free",
+  "@free": {
+    "description": "Free price label"
+  },
+
+  "paid": "Paid",
+  "@paid": {
+    "description": "Paid label"
+  },
+
+  "pending": "Pending",
+  "@pending": {
+    "description": "Pending status"
+  },
+
+  "approved": "Approved",
+  "@approved": {
+    "description": "Approved status"
+  },
+
+  "rejected": "Rejected",
+  "@rejected": {
+    "description": "Rejected status"
+  },
+
+  "deleteChat": "Delete Chat",
+  "@deleteChat": {
+    "description": "Delete chat dialog title"
+  },
+
+  "deleteChatConfirm": "Are you sure you want to delete this chat?",
+  "@deleteChatConfirm": {
+    "description": "Delete chat confirmation message"
+  },
+
+  "chatDeleted": "Chat deleted",
+  "@chatDeleted": {
+    "description": "Chat deleted message"
+  },
+
+  "conversationDeleted": "Conversation deleted",
+  "@conversationDeleted": {
+    "description": "Conversation deleted message"
+  },
+
+  "continueWithEmail": "Continue with Email",
+  "@continueWithEmail": {
+    "description": "Continue with email button"
+  },
+
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account button"
+  },
+
+  "signIn": "Sign In",
+  "@signIn": {
+    "description": "Sign in button"
+  },
+
+  "alreadyHaveAccount": "Already have an account?",
+  "@alreadyHaveAccount": {
+    "description": "Already have account text"
+  },
+
+  "delightfulEvents": "Delightful events",
+  "@delightfulEvents": {
+    "description": "Login screen title"
+  },
+
+  "startHere": "start here",
+  "@startHere": {
+    "description": "Login screen subtitle"
+  },
+
+  "loginDescription": "Discover events, subscribe to calendars and manage events you are going to.",
+  "@loginDescription": {
+    "description": "Login screen description"
+  },
+
+  "pleaseEnterEmail": "Please enter your email",
+  "@pleaseEnterEmail": {
+    "description": "Email validation message"
+  },
+
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "@pleaseEnterValidEmail": {
+    "description": "Invalid email validation message"
+  },
+
+  "pleaseEnterPassword": "Please enter your password",
+  "@pleaseEnterPassword": {
+    "description": "Password validation message"
+  },
+
+  "passwordTooShort": "Password must be at least 6 characters",
+  "@passwordTooShort": {
+    "description": "Password too short validation message"
+  },
+
+  "pleaseEnterFullName": "Please enter your full name",
+  "@pleaseEnterFullName": {
+    "description": "Full name validation message"
+  },
+
+  "upcomingEvents": "Upcoming Events",
+  "@upcomingEvents": {
+    "description": "Upcoming events section"
+  },
+
+  "pastEvents": "Past Events",
+  "@pastEvents": {
+    "description": "Past events section"
+  },
+
+  "searchEvents": "Search events",
+  "@searchEvents": {
+    "description": "Search events placeholder"
+  },
+
+  "categories": "Categories",
+  "organisers": "Organisers",
+  "cities": "Cities",
+  "search": "Search",
+  "conversations": "Conversations",
+  "chat": "Chat",
+  "payment": "Payment",
+  "paymentSuccess": "Payment Success",
+  "paymentCancelled": "Payment Cancelled",
+  "registrationForm": "Registration Form",
+  "myCreatedEvents": "My Created Events",
+  "editEvent": "Edit Event",
+  "eventRegistrations": "Registrations",
+  "speakerEvents": "Speaker Events",
+  "ticket": "Ticket",
+  "verifyOtp": "Verify Code",
+  "enterOtp": "Enter verification code",
+  "resendCode": "Resend Code",
+  "descriptionEditor": "Description",
+  "organiserProfile": "Organiser Profile",
+  "waitlist": "Waitlist",
+  "almostFull": "Almost Full",
+  "noNotifications": "No Notifications",
+  "noMessages": "No Messages",
+  "noConversations": "No Conversations",
+
+  "popularEvents": "Popular Events",
+  "browseByCategory": "Browse by Category",
+  "featuredCalendars": "Featured Calendars",
+  "noUpcomingEventsShort": "No upcoming events",
+  "soldOut": "Sold Out",
+
+  "confirmRegistration": "Confirm Registration",
+  "joinWaitlist": "Join Waitlist",
+  "youAreRegistered": "You are registered",
+  "paymentRequired": "Payment Required",
+  "onWaitingList": "On Waiting List",
+  "waitingListPosition": "Waiting List #{position}",
+  "pendingApproval": "Pending Approval",
+  "registrationRejected": "Registration Rejected",
+  "registrationConfirmed": "Registration confirmed",
+  "eventOrganiser": "Event Organiser",
+  "tapToViewProfile": "Tap to view profile",
+  "date": "Date",
+  "time": "Time",
+  "aboutThisEvent": "About This Event",
+  "speakers": "Speakers",
+  "tapToSeeEvents": "Tap to see events",
+  "youAreTheOrganiser": "You are the organiser",
+  "registrations": "Registrations",
+  "openMaps": "Open Maps",
+  "tapToOpenInMaps": "Tap to open in Maps",
+
+  "deleteMessage": "Delete Message",
+  "deleteMessageConfirm": "Are you sure you want to delete this message?",
+  "thisMessageWasDeleted": "This message was deleted",
+  "noMessagesYet": "No messages yet",
+  "sendMessageToStart": "Send a message to start the conversation",
+  "members": "{count} members",
+  "@members": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "imageUploadedSuccessfully": "Image uploaded successfully",
+  "failedToUploadImage": "Failed to upload image",
+  "eventName": "Event Name",
+  "start": "Start",
+  "end": "End",
+  "selectDate": "Select Date",
+  "chooseLocation": "Choose Location",
+  "venueName": "Venue name",
+  "latitude": "Latitude",
+  "longitude": "Longitude",
+  "tapOnMapOrEnterCoordinates": "Tap on map or enter coordinates manually",
+  "saveLocation": "Save Location",
+  "addDescription": "Add Description",
+  "selectCategory": "Select Category",
+  "loadingCategories": "Loading categories...",
+  "selectCity": "Select City",
+  "loadingCities": "Loading cities...",
+  "ticketing": "Ticketing",
+  "options": "Options",
+  "freeEvent": "Free Event",
+  "ticketPrice": "Ticket Price",
+  "eventVisibility": "Event Visibility",
+  "visibility": "Visibility",
+  "public": "Public",
+  "private": "Private",
+  "anyoneCanDiscover": "Anyone can discover this event",
+  "onlyPeopleWithLink": "Only people with link can see",
+  "anyoneCanSeeAndJoin": "Anyone can see and join",
+  "onlyInvitedCanSee": "Only invited people can see",
+  "eventCapacity": "Event Capacity",
+  "unlimited": "Unlimited",
+  "maximumAttendees": "Maximum attendees",
+  "leaveEmptyForUnlimited": "Leave empty for unlimited",
+  "create": "Create",
+  "done": "Done",
+  "addCoverImage": "Add Cover Image",
+  "uploading": "Uploading...",
+  "uploaded": "Uploaded",
+  "eventCreatedSuccessfully": "Event created successfully! Waiting for approval.",
+  "eventUpdatedSuccessfully": "Event updated successfully!",
+  "eventUpdatedAndResubmitted": "Event updated and resubmitted for approval!",
+  "saveResubmit": "Save & Resubmit",
+  "saveChanges": "Save Changes",
+  "eventWasRejected": "Event was rejected",
+  "pleaseUpdateAndResubmit": "Please update your event and save to resubmit for approval.",
+  "pleaseEnterEventTitle": "Please enter event title",
+  "pleaseSelectStartAndEndTime": "Please select start and end time",
+
+  "completePayment": "Complete Payment",
+  "newWindowOpened": "A new window has opened for payment.",
+  "afterCompletingPayment": "After completing payment:",
+  "youWillBeRedirected": "You will be redirected back",
+  "yourRegistrationConfirmed": "Your registration will be confirmed",
+  "checkPopupBlocker": "If the payment window did not open, please check your popup blocker.",
+  "ok": "OK",
+  "iveCompletedPayment": "I've Completed Payment",
+  "paymentSuccessful": "Payment Successful!",
+  "yourRegistrationHasBeenConfirmed": "Your registration has been confirmed.",
+  "viewMyTicket": "View My Ticket",
+  "paymentNotYetConfirmed": "Payment not yet confirmed. Please complete payment in the opened window.",
+  "paymentNotReady": "Payment not ready. Please wait...",
+  "paymentCancelledByUser": "Payment cancelled",
+  "processingPayment": "Processing payment...",
+  "registrationFee": "Registration Fee",
+  "paymentReady": "Payment ready. Click the button below to proceed.",
+  "paymentReadyWeb": "Payment ready. Click the button below to open secure checkout.",
+  "paymentWillOpenInNewWindow": "Payment will open in a new window",
+  "securePaymentByStripe": "Secure payment powered by Stripe",
+  "pay": "Pay",
+  "checkPaymentStatus": "Check Payment Status",
+  "testMode": "Test Mode",
+  "useTestCard": "Use test card: 4242 4242 4242 4242",
+  "testCardExpiry": "Exp: Any future date | CVC: Any 3 digits",
+
+  "alreadyRegistered": "You are already registered for this event!",
+  "successfullyRegistered": "Successfully registered!",
+  "addedToWaitlistSuccessfully": "Added to waitlist successfully!",
+  "loadingQuestions": "Loading questions...",
+  "noQuestions": "No Questions",
+  "noQuestionsSubtitle": "There are no registration questions for this event.",
+  "fillOutFormToComplete": "Please fill out the form below to complete your registration.",
+  "enterYourAnswer": "Enter your answer",
+  "submitRegistration": "Submit Registration",
+  "continueToPayment": "Continue to Payment",
+
+  "contactHost": "Contact Host",
+  "pleaseEnterYourQuestion": "Please enter your question",
+  "questionSentSuccessfully": "Question sent successfully!",
+  "enterQuestionForHost": "Please enter your question for the host...",
+
+  "eventDescription": "Event Description",
+  "write": "Write",
+  "preview": "Preview",
+  "bold": "Bold",
+  "italic": "Italic",
+  "strikethrough": "Strikethrough",
+  "heading": "Heading",
+  "bulletList": "Bullet List",
+  "numberedList": "Numbered List",
+  "link": "Link",
+  "code": "Code",
+  "quote": "Quote",
+  "horizontalRule": "Horizontal Rule",
+  "insertLink": "Insert Link",
+  "linkText": "Link Text",
+  "url": "URL",
+  "insert": "Insert",
+  "nothingToPreview": "Nothing to preview",
+  "startWritingToPreview": "Start writing to see the preview",
+  "supportsMarkdown": "Supports Markdown formatting",
+  "characters": "{count} characters",
+  "@characters": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "describeYourEvent": "Describe your event...",
+  "contact": "Contact",
+  "share": "Share",
+  "certificate": "Certificate",
+  "certificateOfAttendance": "Certificate of Attendance",
+  "thisCertifiesThat": "This is to certify that",
+  "hasSuccessfullyAttended": "has successfully attended",
+  "hasAttended": "has attended",
+  "scanToVerify": "Scan to verify",
+  "issuedOn": "Issued on",
+  "certificateCode": "Certificate Code",
+  "verifyAt": "Verify at",
+  "download": "Download",
+  "certificateNotAvailable": "Certificate Not Available",
+  "certificateRequirements": "You must check in to the event and the event must have ended to receive your certificate.",
+
+  "reviews": "Reviews",
+  "writeReview": "Write Review",
+  "rating": "Rating",
+  "comment": "Comment",
+  "writeYourReview": "Write your review...",
+  "submitReview": "Submit Review",
+  "reviewSubmitted": "Review submitted successfully!",
+  "pleaseSelectRating": "Please select a rating",
+  "noReviews": "No Reviews",
+  "noReviewsSubtitle": "Be the first to review this event",
+  "seeAllReviews": "See All Reviews",
+  "tapToRate": "Tap to rate",
+  "ratingPoor": "Poor",
+  "ratingFair": "Fair",
+  "ratingGood": "Good",
+  "ratingVeryGood": "Very Good",
+  "ratingExcellent": "Excellent",
+  "reviewsCount": "{count} reviews",
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "signature": "Signature",
+  "uploadSignature": "Upload Signature",
+  "signatureDescription": "Your signature will appear on certificates you issue",
+  "signatureUploaded": "Signature uploaded successfully",
+  "removeSignature": "Remove Signature",
+  "tapToUploadSignature": "Tap to upload your signature",
+
+  "addToCalendar": "Add to Calendar",
+  "couldNotOpenCalendar": "Could not open calendar app",
+
+  "emailNotifications": "Email Notifications",
+  "emailNotificationsDescription": "Receive important updates via email",
+  "eventReminders": "Event Reminders",
+  "eventRemindersDescription": "Get email reminders before your events",
+  "notificationPreferences": "Notification Preferences",
+  "emailPreferencesUpdated": "Email preferences updated",
+
+  "scanQrCode": "Scan QR Code",
+  "pointCameraAtQr": "Point camera at attendee's QR code",
+  "processing": "Processing...",
+  "toggleFlash": "Toggle Flash",
+  "switchCamera": "Switch Camera",
+  "checkInSuccess": "Check-in Successful",
+  "checkInFailed": "Check-in Failed",
+  "checkedInSuccessfully": "has been checked in successfully",
+  "alreadyCheckedIn": "This attendee has already been checked in",
+  "invalidQrCode": "Invalid QR code",
+  "registrationNotApproved": "Registration is not approved",
+  "scanNext": "Scan Next",
+  "guest": "Guest",
+  "checkedIn": "Checked In",
+  "checkedInAt": "Checked in at",
+  "showQrAtEntrance": "Show this QR code at the entrance",
+  "youHaveCheckedIn": "You have checked in to this event",
+
+  "savedEvents": "Saved Events",
+  "noSavedEvents": "No Saved Events",
+  "noSavedEventsSubtitle": "Bookmark events you're interested in to find them here later",
+  "addedToSaved": "Added to saved events",
+  "removedFromSaved": "Removed from saved events",
+  "remove": "Remove",
+  "save": "Save",
+  "saved": "Saved",
+
+  "myQuestions": "My Questions",
+  "noQuestionsSubtitle": "Questions you ask about events will appear here",
+  "answered": "Answered",
+  "answer": "Answer",
+
+  "theme": "Theme",
+  "lightMode": "Light",
+  "darkMode": "Dark",
+  "systemDefault": "System Default",
+
+  "reportReview": "Report Review",
+  "selectReason": "Select a reason for reporting",
+  "additionalDetails": "Additional Details",
+  "optionalDescription": "Provide more details (optional)",
+  "submit": "Submit",
+  "reportSubmitted": "Report submitted successfully",
+  "alreadyReported": "You have already reported this review",
+  "reportFailed": "Failed to submit report",
+  "reasonSpam": "Spam",
+  "reasonInappropriate": "Inappropriate Content",
+  "reasonFakeReview": "Fake Review",
+  "reasonHarassment": "Harassment",
+  "reasonOffTopic": "Off Topic",
+  "reasonOther": "Other"
+}

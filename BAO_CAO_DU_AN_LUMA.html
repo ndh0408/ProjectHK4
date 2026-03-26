@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - LUMA Event Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-600: #475569;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        /* Cover */
+        .cover {
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 16px;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .cover p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .cover .subtitle {
+            margin-top: 30px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .toc h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .toc li:last-child {
+            border-bottom: none;
+        }
+
+        .toc a {
+            color: var(--gray-800);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toc a:hover {
+            color: var(--primary);
+        }
+
+        /* Sections */
+        .section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            font-size: 28px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .section h3 {
+            font-size: 22px;
+            color: var(--gray-800);
+            margin: 30px 0 15px;
+        }
+
+        .section h4 {
+            font-size: 18px;
+            color: var(--primary-dark);
+            margin: 25px 0 12px;
+        }
+
+        .section p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .section ul, .section ol {
+            margin: 15px 0 20px 25px;
+        }
+
+        .section li {
+            margin-bottom: 10px;
+        }
+
+        /* Steps */
+        .steps {
+            background: var(--gray-50);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .steps h4 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .steps ol {
+            margin-left: 20px;
+        }
+
+        /* Note boxes */
+        .note {
+            background: #dbeafe;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .note.success {
+            background: #d1fae5;
+            border-left-color: var(--success);
+        }
+
+        .note.warning {
+            background: #fef3c7;
+            border-left-color: var(--warning);
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* Role badges */
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .role-badge.user {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .role-badge.organiser {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .role-badge.admin {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        @media print {
+            .container { max-width: 100%; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Cover -->
+    <div class="cover">
+        <h1>LUMA</h1>
+        <p>Sàn Thương Mại Sự Kiện - Event Marketplace</p>
+        <div class="subtitle">
+            Hướng Dẫn Sử Dụng Hệ Thống<br>
+            Phiên bản 1.0 - Năm 2024
+        </div>
+    </div>
+
+    <!-- Phân Công Công Việc -->
+    <div class="section" id="phan-cong">
+        <h2>Phân Công Công Việc Nhóm</h2>
+
+        <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background: linear-gradient(135deg, var(--primary), #ec4899); color: white;">
+                <th style="padding: 15px; text-align: center; border: 1px solid #ddd; width: 15%;">Thành Viên</th>
+                <th style="padding: 15px; text-align: center; border: 1px solid #ddd; width: 15%;">Vai Trò</th>
+                <th style="padding: 15px; text-align: left; border: 1px solid #ddd;">Công Việc Phụ Trách</th>
+            </tr>
+            <tr>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600; background: #f0f9ff;">KHOA</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd;"><span style="background: #ef4444; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Team Lead</span></td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Thiết kế kiến trúc hệ thống Backend (Spring Boot)</li>
+                        <li>Xây dựng API Authentication (JWT, OAuth2 Google)</li>
+                        <li>Tích hợp Stripe Payment (Thanh toán, Refund, Payout)</li>
+                        <li>Phát triển hệ thống Subscription & Boost</li>
+                        <li>Tích hợp AI Features (Groq LLM)</li>
+                        <li>Quản lý codebase và code review</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600;">HUY</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd;"><span style="background: #3b82f6; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Frontend</span></td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Phát triển Mobile App (React Native)</li>
+                        <li>Xây dựng UI/UX cho User App</li>
+                        <li>Tính năng tìm kiếm và khám phá sự kiện</li>
+                        <li>Đăng ký tham dự và quản lý vé</li>
+                        <li>Tích hợp Google Calendar</li>
+                        <li>Real-time Chat với Organiser</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600; background: #f0f9ff;">DUY</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd;"><span style="background: #10b981; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Backend</span></td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Xây dựng API Event Management</li>
+                        <li>Hệ thống Registration & Ticketing</li>
+                        <li>QR Code Check-in System</li>
+                        <li>Certificate Generation Service</li>
+                        <li>Email Service (SMTP Gmail)</li>
+                        <li>Cloudinary Integration (Upload hình ảnh)</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600;">KHÁNH</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd;"><span style="background: #8b5cf6; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Frontend</span></td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Phát triển Organiser Portal (React.js)</li>
+                        <li>Dashboard thống kê cho Organiser</li>
+                        <li>Quản lý sự kiện và người đăng ký</li>
+                        <li>Trang Subscription và Boost</li>
+                        <li>Biểu đồ và charts (Recharts)</li>
+                        <li>Export Excel functionality</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: 600; background: #f0f9ff;">TRINH</td>
+                <td style="padding: 12px; text-align: center; border: 1px solid #ddd;"><span style="background: #f59e0b; color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px;">Full-stack</span></td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Phát triển Admin Portal (React.js)</li>
+                        <li>Dashboard Analytics và Revenue Stats</li>
+                        <li>Quản lý Users, Organisers, Events</li>
+                        <li>Hệ thống duyệt sự kiện với AI</li>
+                        <li>Email Marketing Campaign</li>
+                        <li>Notification System</li>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+
+        <div class="note">
+            <strong>Ghi chú:</strong>
+            Tất cả thành viên đều tham gia vào quá trình testing, bug fixing và documentation. Việc phân công có thể linh hoạt điều chỉnh theo tiến độ dự án.
+        </div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="toc">
+        <h2>Mục Lục</h2>
+        <ul>
+            <li><a href="#phan-cong">Phân Công Công Việc Nhóm</a></li>
+            <li><a href="#gioi-thieu">1. Giới Thiệu Tổng Quan</a></li>
+            <li><a href="#user-guide">2. Hướng Dẫn Dành Cho Người Dùng (Mobile App)</a></li>
+            <li><a href="#organiser-guide">3. Hướng Dẫn Dành Cho Người Tổ Chức (Web Portal)</a></li>
+            <li><a href="#admin-guide">4. Hướng Dẫn Dành Cho Quản Trị Viên (Admin Portal)</a></li>
+            <li><a href="#ket-luan">5. Kết Luận</a></li>
+        </ul>
+    </div>
+
+    <!-- Section 1: Giới Thiệu -->
+    <div class="section" id="gioi-thieu">
+        <h2>1. Giới Thiệu Tổng Quan</h2>
+
+        <p>LUMA là một nền tảng sàn thương mại sự kiện (Event Marketplace) được xây dựng nhằm kết nối giữa người tổ chức sự kiện và người tham gia. Hệ thống cho phép người tổ chức đăng tải, quản lý sự kiện của mình, trong khi người dùng có thể dễ dàng tìm kiếm, đăng ký và tham dự các sự kiện đa dạng từ hội thảo, workshop đến concert và lễ hội.</p>
+
+        <p>Hệ thống LUMA bao gồm ba thành phần chính phục vụ cho ba nhóm đối tượng khác nhau:</p>
+
+        <ul>
+            <li><span class="role-badge user">Người Dùng</span> Sử dụng ứng dụng di động (Mobile App) để tìm kiếm sự kiện, đăng ký tham dự, thanh toán vé và nhận vé điện tử. Người dùng cũng có thể đánh giá sự kiện sau khi tham dự và nhận chứng chỉ nếu sự kiện có cấp.</li>
+
+            <li><span class="role-badge organiser">Người Tổ Chức</span> Sử dụng trang web quản trị (Web Portal) để tạo sự kiện, quản lý vé, theo dõi danh sách người đăng ký, check-in người tham dự và xem báo cáo doanh thu. Người tổ chức cũng nhận được thanh toán tự động qua hệ thống.</li>
+
+            <li><span class="role-badge admin">Quản Trị Viên</span> Sử dụng trang quản trị (Admin Portal) để duyệt sự kiện, quản lý người dùng, xem thống kê toàn hệ thống, gửi thông báo và quản lý các chiến dịch email marketing.</li>
+        </ul>
+
+        <div class="note">
+            <strong>Lưu ý quan trọng:</strong>
+            Trước khi sử dụng hệ thống, người dùng cần đảm bảo thiết bị có kết nối internet ổn định. Ứng dụng di động hỗ trợ cả hai nền tảng iOS và Android. Trang web quản trị hoạt động tốt nhất trên các trình duyệt hiện đại như Chrome, Firefox hoặc Safari.
+        </div>
+    </div>
+
+    <!-- Section 2: User Guide -->
+    <div class="section" id="user-guide">
+        <h2>2. Hướng Dẫn Dành Cho Người Dùng (Mobile App)</h2>
+
+        <h3>2.1. Đăng Ký Tài Khoản Mới</h3>
+
+        <p>Để bắt đầu sử dụng ứng dụng LUMA, người dùng cần tạo một tài khoản mới. Quy trình đăng ký được thiết kế đơn giản và nhanh chóng, chỉ mất khoảng 2 phút để hoàn thành.</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Mở ứng dụng LUMA trên điện thoại. Màn hình chào mừng sẽ hiển thị với carousel giới thiệu các sự kiện nổi bật.</li>
+                <li>Nhấn nút "Sign Up" ở cuối màn hình để chuyển đến trang đăng ký.</li>
+                <li>Nhập họ tên đầy đủ của bạn vào ô "Full Name".</li>
+                <li>Nhập địa chỉ email hợp lệ vào ô "Email". Đây sẽ là tên đăng nhập của bạn.</li>
+                <li>Tạo mật khẩu có ít nhất 8 ký tự, bao gồm cả chữ hoa, chữ thường và số.</li>
+                <li>Nhập lại mật khẩu để xác nhận.</li>
+                <li>Nhấn nút "Create Account" để hoàn tất đăng ký.</li>
+                <li>Hệ thống sẽ gửi một email xác nhận đến địa chỉ email của bạn. Mở email và nhấn vào liên kết để kích hoạt tài khoản.</li>
+            </ol>
+        </div>
+
+        <p>Ngoài ra, người dùng có thể đăng ký nhanh bằng tài khoản Google. Chỉ cần nhấn nút "Continue with Google", chọn tài khoản Google của bạn và hệ thống sẽ tự động tạo tài khoản LUMA liên kết với email Google đó.</p>
+
+        <h3>2.2. Đăng Nhập Tài Khoản</h3>
+
+        <p>Sau khi đã có tài khoản, người dùng có thể đăng nhập để sử dụng đầy đủ các tính năng của ứng dụng.</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Mở ứng dụng LUMA trên điện thoại.</li>
+                <li>Tại màn hình đăng nhập, nhập địa chỉ email đã đăng ký vào ô "Email".</li>
+                <li>Nhập mật khẩu của bạn vào ô "Password".</li>
+                <li>Nhấn nút "Sign In" để đăng nhập.</li>
+                <li>Nếu đăng nhập thành công, bạn sẽ được chuyển đến trang chủ của ứng dụng.</li>
+            </ol>
+        </div>
+
+        <p>Trong trường hợp quên mật khẩu, người dùng nhấn vào liên kết "Forgot Password?" và nhập email đã đăng ký. Hệ thống sẽ gửi một liên kết đặt lại mật khẩu đến email đó. Liên kết này có hiệu lực trong 24 giờ.</p>
+
+        <div class="note warning">
+            <strong>Lưu ý bảo mật:</strong>
+            Không chia sẻ thông tin đăng nhập với người khác. Nếu nghi ngờ tài khoản bị truy cập trái phép, hãy đổi mật khẩu ngay lập tức trong phần Cài đặt tài khoản.
+        </div>
+
+        <h3>2.3. Tìm Kiếm và Khám Phá Sự Kiện</h3>
+
+        <p>Sau khi đăng nhập, người dùng có thể bắt đầu tìm kiếm các sự kiện phù hợp với sở thích của mình. Ứng dụng cung cấp nhiều cách để khám phá sự kiện.</p>
+
+        <h4>Trang Chủ (Home)</h4>
+        <p>Trang chủ hiển thị các sự kiện được cá nhân hóa dựa trên lịch sử hoạt động của bạn. Mục "Your Events" hiển thị các sự kiện bạn đã đăng ký sắp diễn ra. Mục "Picked for You" là các gợi ý sự kiện dựa trên sở thích và vị trí của bạn, được tạo bởi hệ thống AI.</p>
+
+        <h4>Trang Khám Phá (Explore)</h4>
+        <p>Nhấn vào tab "Explore" ở thanh điều hướng phía dưới để xem toàn bộ các sự kiện. Tại đây bạn có thể:</p>
+        <ul>
+            <li>Xem các sự kiện nổi bật (Featured Events) được hiển thị ở đầu trang.</li>
+            <li>Duyệt sự kiện theo danh mục như Công nghệ, Âm nhạc, Thể thao, Giáo dục, và nhiều hơn nữa.</li>
+            <li>Lọc sự kiện theo thành phố để tìm các sự kiện gần bạn.</li>
+            <li>Xem danh sách các nhà tổ chức nổi bật và theo dõi họ để nhận thông báo khi họ tạo sự kiện mới.</li>
+        </ul>
+
+        <h4>Tìm Kiếm</h4>
+        <p>Nhấn vào biểu tượng kính lúp ở góc trên bên phải để mở chức năng tìm kiếm. Nhập từ khóa liên quan đến sự kiện bạn muốn tìm, ví dụ "hội thảo AI" hoặc "concert nhạc pop". Hệ thống sẽ hiển thị các kết quả phù hợp.</p>
+
+        <h4>Sự Kiện Gần Bạn</h4>
+        <p>Ứng dụng có thể sử dụng vị trí của bạn để gợi ý các sự kiện đang diễn ra gần đó. Để sử dụng tính năng này, bạn cần cấp quyền truy cập vị trí cho ứng dụng trong phần cài đặt điện thoại.</p>
+
+        <h3>2.4. Xem Chi Tiết Sự Kiện</h3>
+
+        <p>Khi tìm thấy sự kiện quan tâm, nhấn vào để xem thông tin chi tiết. Trang chi tiết sự kiện bao gồm:</p>
+
+        <ul>
+            <li><strong>Hình ảnh và video:</strong> Hình ảnh chính của sự kiện và gallery nếu có.</li>
+            <li><strong>Thông tin cơ bản:</strong> Tên sự kiện, ngày giờ, địa điểm tổ chức.</li>
+            <li><strong>Mô tả chi tiết:</strong> Nội dung chi tiết về sự kiện, lịch trình, những gì người tham gia sẽ nhận được.</li>
+            <li><strong>Diễn giả/Nghệ sĩ:</strong> Thông tin về những người sẽ xuất hiện tại sự kiện.</li>
+            <li><strong>Bản đồ:</strong> Vị trí cụ thể của sự kiện trên bản đồ, có thể nhấn để mở ứng dụng bản đồ và chỉ đường.</li>
+            <li><strong>Loại vé và giá:</strong> Các loại vé có sẵn (VIP, Standard, v.v.) và giá tương ứng.</li>
+            <li><strong>Đánh giá:</strong> Nhận xét từ những người đã tham dự các sự kiện trước đó của nhà tổ chức.</li>
+        </ul>
+
+        <p>Người dùng cũng có thể lưu sự kiện vào danh sách yêu thích bằng cách nhấn vào biểu tượng trái tim, hoặc chia sẻ sự kiện lên mạng xã hội bằng cách nhấn nút chia sẻ.</p>
+
+        <h3>2.5. Đăng Ký Tham Dự Sự Kiện</h3>
+
+        <p>Khi quyết định tham gia sự kiện, người dùng thực hiện quy trình đăng ký như sau:</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Tại trang chi tiết sự kiện, nhấn nút "Register" hoặc "Get Tickets" ở cuối màn hình.</li>
+                <li>Chọn loại vé mong muốn. Mỗi loại vé sẽ hiển thị giá tiền, số lượng còn lại và những quyền lợi đi kèm.</li>
+                <li>Chọn số lượng vé cần mua (nếu sự kiện cho phép mua nhiều vé).</li>
+                <li>Nếu sự kiện yêu cầu, bạn cần điền form đăng ký với các thông tin bổ sung như số điện thoại, công ty, chức vụ, hoặc trả lời các câu hỏi từ nhà tổ chức.</li>
+                <li>Kiểm tra lại thông tin đăng ký và tổng tiền cần thanh toán.</li>
+                <li>Nếu sự kiện có phí, bạn sẽ được chuyển đến trang thanh toán. Nhập thông tin thẻ tín dụng hoặc thẻ ghi nợ (Visa, Mastercard).</li>
+                <li>Nhấn "Confirm Payment" để hoàn tất thanh toán.</li>
+                <li>Sau khi thanh toán thành công, vé điện tử sẽ được gửi đến email của bạn và hiển thị trong phần "My Tickets" của ứng dụng.</li>
+            </ol>
+        </div>
+
+        <div class="note success">
+            <strong>Xác nhận đăng ký:</strong>
+            Bạn sẽ nhận được email xác nhận chứa thông tin vé và mã QR code. Vé điện tử cũng được lưu trong ứng dụng để bạn có thể truy cập bất kỳ lúc nào mà không cần kết nối internet.
+        </div>
+
+        <p>Đối với các sự kiện miễn phí hoặc sự kiện yêu cầu duyệt đăng ký, sau khi gửi form, bạn sẽ nhận được thông báo khi nhà tổ chức phê duyệt. Trạng thái đăng ký có thể là "Pending" (chờ duyệt), "Approved" (đã duyệt) hoặc "Rejected" (bị từ chối).</p>
+
+        <h3>2.6. Quản Lý Vé và Check-in</h3>
+
+        <p>Tất cả vé đã mua hoặc đăng ký được lưu trong phần "Tickets" của ứng dụng. Tại đây, bạn có thể:</p>
+
+        <ul>
+            <li><strong>Xem vé điện tử:</strong> Mỗi vé bao gồm mã QR code độc nhất để check-in tại sự kiện.</li>
+            <li><strong>Xem thông tin vé:</strong> Loại vé, ngày giờ sự kiện, địa điểm, trạng thái vé.</li>
+            <li><strong>Chia sẻ vé:</strong> Gửi vé cho bạn bè qua email hoặc tin nhắn.</li>
+            <li><strong>Thêm vào lịch:</strong> Tự động thêm sự kiện vào Google Calendar nếu bạn đã kết nối.</li>
+        </ul>
+
+        <h4>Check-in Tại Sự Kiện</h4>
+        <p>Khi đến sự kiện, bạn chỉ cần mở ứng dụng, vào phần "Tickets", chọn vé tương ứng và hiển thị mã QR code. Nhân viên của nhà tổ chức sẽ sử dụng máy quét để xác nhận vé của bạn. Sau khi quét thành công, trạng thái vé sẽ chuyển thành "Checked In".</p>
+
+        <h3>2.7. Đồng Bộ Google Calendar</h3>
+
+        <p>LUMA hỗ trợ đồng bộ với Google Calendar để bạn không bỏ lỡ bất kỳ sự kiện nào đã đăng ký.</p>
+
+        <div class="steps">
+            <h4>Cách kết nối Google Calendar:</h4>
+            <ol>
+                <li>Vào phần "Profile" (Hồ sơ) trong ứng dụng.</li>
+                <li>Chọn "Settings" (Cài đặt).</li>
+                <li>Tìm mục "Google Calendar" và nhấn "Connect".</li>
+                <li>Đăng nhập vào tài khoản Google của bạn và cấp quyền cho LUMA.</li>
+                <li>Sau khi kết nối thành công, tất cả sự kiện bạn đăng ký sẽ tự động được thêm vào Google Calendar.</li>
+            </ol>
+        </div>
+
+        <p>Bạn có thể bật/tắt tính năng tự động đồng bộ trong phần cài đặt. Khi đồng bộ được bật, mỗi khi đăng ký sự kiện mới, sự kiện đó sẽ tự động xuất hiện trong lịch Google của bạn với đầy đủ thông tin về thời gian, địa điểm và liên kết đến sự kiện.</p>
+
+        <h3>2.8. Nhận Xét và Đánh Giá Sự Kiện</h3>
+
+        <p>Sau khi sự kiện kết thúc và bạn đã check-in tham dự, bạn có thể để lại đánh giá cho sự kiện đó.</p>
+
+        <div class="steps">
+            <h4>Các bước đánh giá:</h4>
+            <ol>
+                <li>Vào phần "Tickets" và tìm sự kiện đã tham dự (trạng thái "Attended" hoặc "Completed").</li>
+                <li>Nhấn vào sự kiện và chọn "Write Review".</li>
+                <li>Chọn số sao đánh giá từ 1 đến 5 (5 sao là tốt nhất).</li>
+                <li>Viết nhận xét chi tiết về trải nghiệm của bạn.</li>
+                <li>Nhấn "Submit" để gửi đánh giá.</li>
+            </ol>
+        </div>
+
+        <p>Đánh giá của bạn sẽ được kiểm duyệt bởi hệ thống AI trước khi hiển thị công khai. Điều này đảm bảo nội dung đánh giá phù hợp và không chứa ngôn từ không phù hợp.</p>
+
+        <h3>2.9. Nhận Chứng Chỉ</h3>
+
+        <p>Đối với các sự kiện có cấp chứng chỉ (workshop, khóa học, hội thảo chuyên môn), sau khi sự kiện kết thúc và bạn đã check-in, chứng chỉ sẽ được hệ thống tự động tạo và gửi đến bạn.</p>
+
+        <ul>
+            <li>Chứng chỉ được gửi qua email đính kèm file PDF.</li>
+            <li>Chứng chỉ cũng được lưu trong phần "Certificates" của ứng dụng.</li>
+            <li>Mỗi chứng chỉ có mã QR để xác minh tính xác thực.</li>
+            <li>Bạn có thể tải chứng chỉ về máy hoặc chia sẻ lên LinkedIn và các mạng xã hội khác.</li>
+        </ul>
+
+        <h3>2.10. Chat với Nhà Tổ Chức</h3>
+
+        <p>Nếu có thắc mắc về sự kiện, bạn có thể liên hệ trực tiếp với nhà tổ chức qua tính năng chat.</p>
+
+        <div class="steps">
+            <h4>Các bước sử dụng:</h4>
+            <ol>
+                <li>Tại trang chi tiết sự kiện, nhấn vào nút "Chat" hoặc biểu tượng tin nhắn.</li>
+                <li>Viết nội dung tin nhắn và gửi.</li>
+                <li>Nhà tổ chức sẽ nhận được thông báo và trả lời bạn.</li>
+                <li>Tất cả cuộc trò chuyện được lưu trong phần "Messages" của ứng dụng.</li>
+            </ol>
+        </div>
+
+        <p>Tính năng chat hoạt động theo thời gian thực, nghĩa là bạn sẽ nhận được tin nhắn ngay khi nhà tổ chức gửi.</p>
+
+    </div>
+
+    <!-- Section 3: Organiser Guide -->
+    <div class="section" id="organiser-guide">
+        <h2>3. Hướng Dẫn Dành Cho Người Tổ Chức (Web Portal)</h2>
+
+        <p>Người tổ chức sự kiện sử dụng trang web quản trị để quản lý toàn bộ hoạt động liên quan đến sự kiện của mình. Phần này hướng dẫn chi tiết cách sử dụng các tính năng dành cho người tổ chức.</p>
+
+        <h3>3.1. Đăng Ký Tài Khoản Tổ Chức</h3>
+
+        <p>Để trở thành người tổ chức trên LUMA, bạn cần đăng ký một tài khoản và đăng ký làm Organiser.</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Truy cập trang web LUMA và nhấn "Sign Up".</li>
+                <li>Điền đầy đủ thông tin cá nhân: họ tên, email, mật khẩu.</li>
+                <li>Sau khi tạo tài khoản, đăng nhập và vào phần "Settings".</li>
+                <li>Chọn "Become an Organiser" và điền thông tin tổ chức: tên tổ chức, mô tả, logo, liên kết website và mạng xã hội.</li>
+                <li>Gửi yêu cầu và đợi Admin phê duyệt.</li>
+                <li>Khi được phê duyệt, bạn sẽ nhận email thông báo và có thể bắt đầu tạo sự kiện.</li>
+            </ol>
+        </div>
+
+        <h3>3.2. Đăng Nhập và Tổng Quan Dashboard</h3>
+
+        <p>Sau khi đăng nhập vào trang quản trị, bạn sẽ thấy Dashboard tổng quan với các thông tin:</p>
+
+        <ul>
+            <li><strong>Tổng số sự kiện:</strong> Số lượng sự kiện bạn đã tạo, phân loại theo trạng thái (Draft, Pending, Approved, Completed).</li>
+            <li><strong>Tổng số đăng ký:</strong> Số người đã đăng ký tham dự các sự kiện của bạn.</li>
+            <li><strong>Tổng doanh thu:</strong> Tổng số tiền đã thu được từ bán vé, sau khi trừ phí nền tảng.</li>
+            <li><strong>Số người theo dõi:</strong> Số người dùng đang theo dõi trang tổ chức của bạn.</li>
+            <li><strong>Biểu đồ tăng trưởng:</strong> Biểu đồ thể hiện số đăng ký theo thời gian.</li>
+            <li><strong>AI Insights:</strong> Các gợi ý và nhận xét tự động từ hệ thống AI giúp bạn cải thiện sự kiện.</li>
+        </ul>
+
+        <h3>3.3. Tạo Sự Kiện Mới</h3>
+
+        <p>Đây là tính năng quan trọng nhất của người tổ chức. Để tạo một sự kiện mới:</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Từ Dashboard, nhấn nút "Create Event" hoặc vào menu "Events" và chọn "New Event".</li>
+                <li>
+                    <strong>Thông tin cơ bản:</strong>
+                    <ul>
+                        <li>Nhập tên sự kiện (tối đa 100 ký tự).</li>
+                        <li>Chọn danh mục phù hợp (Technology, Music, Business, v.v.).</li>
+                        <li>Chọn thành phố diễn ra sự kiện.</li>
+                        <li>Nhập địa chỉ cụ thể của địa điểm tổ chức.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Thời gian:</strong>
+                    <ul>
+                        <li>Chọn ngày và giờ bắt đầu sự kiện.</li>
+                        <li>Chọn ngày và giờ kết thúc sự kiện.</li>
+                        <li>Nếu là sự kiện định kỳ, bật tính năng "Recurring Event" và thiết lập lịch lặp (hàng tuần, hàng tháng).</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Mô tả sự kiện:</strong>
+                    <ul>
+                        <li>Viết mô tả ngắn (summary) trong khoảng 200 ký tự.</li>
+                        <li>Viết mô tả chi tiết bằng Markdown editor. Bạn có thể định dạng văn bản, thêm tiêu đề, danh sách, liên kết.</li>
+                        <li>Hoặc sử dụng tính năng "AI Generate" để hệ thống AI tự động tạo mô tả dựa trên thông tin cơ bản.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Hình ảnh:</strong>
+                    <ul>
+                        <li>Tải lên hình ảnh chính của sự kiện (Cover Image). Kích thước đề xuất: 1200x630 pixels.</li>
+                        <li>Có thể tải thêm hình ảnh bổ sung cho gallery.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Diễn giả/Nghệ sĩ (nếu có):</strong>
+                    <ul>
+                        <li>Nhấn "Add Speaker" để thêm thông tin diễn giả.</li>
+                        <li>Nhập tên, chức danh, tiểu sử ngắn và ảnh đại diện.</li>
+                        <li>Có thể thêm nhiều diễn giả cho một sự kiện.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Cấu hình vé:</strong>
+                    <ul>
+                        <li>Tạo các loại vé khác nhau (VIP, Standard, Early Bird, v.v.).</li>
+                        <li>Với mỗi loại vé, nhập tên, giá tiền, số lượng tối đa, thời gian mở/đóng bán.</li>
+                        <li>Nếu sự kiện miễn phí, đặt giá vé là 0.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Form đăng ký (tùy chọn):</strong>
+                    <ul>
+                        <li>Tạo các câu hỏi bổ sung mà người đăng ký cần trả lời.</li>
+                        <li>Chọn loại câu hỏi: văn bản ngắn, văn bản dài, lựa chọn đơn, lựa chọn nhiều.</li>
+                        <li>Đánh dấu câu hỏi bắt buộc hoặc không bắt buộc.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Cài đặt nâng cao:</strong>
+                    <ul>
+                        <li>Bật/tắt yêu cầu duyệt đăng ký (Approval Required).</li>
+                        <li>Bật/tắt tính năng danh sách chờ (Waitlist) khi hết vé.</li>
+                        <li>Bật/tắt cấp chứng chỉ sau sự kiện.</li>
+                    </ul>
+                </li>
+                <li>Nhấn "Save as Draft" để lưu bản nháp, hoặc "Submit for Review" để gửi Admin duyệt.</li>
+            </ol>
+        </div>
+
+        <div class="note">
+            <strong>Lưu ý về duyệt sự kiện:</strong>
+            Sau khi gửi duyệt, Admin sẽ xem xét nội dung sự kiện trong vòng 24-48 giờ. Hệ thống AI sẽ tự động kiểm tra nội dung trước. Nếu sự kiện bị từ chối, bạn sẽ nhận được lý do cụ thể và có thể chỉnh sửa rồi gửi lại.
+        </div>
+
+        <h3>3.4. Quản Lý Người Đăng Ký</h3>
+
+        <p>Khi có người đăng ký sự kiện của bạn, bạn có thể quản lý họ trong phần "Registrations".</p>
+
+        <h4>Xem Danh Sách Đăng Ký</h4>
+        <p>Vào sự kiện và chọn tab "Registrations" để xem danh sách tất cả người đã đăng ký. Mỗi dòng hiển thị thông tin người đăng ký, loại vé, thời gian đăng ký, trạng thái thanh toán và trạng thái đăng ký.</p>
+
+        <h4>Duyệt Đăng Ký (nếu bật tính năng Approval Required)</h4>
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Xem chi tiết đăng ký bằng cách nhấn vào tên người đăng ký.</li>
+                <li>Đọc các câu trả lời form mà người đăng ký đã điền.</li>
+                <li>Nhấn "Approve" để phê duyệt hoặc "Reject" để từ chối.</li>
+                <li>Nếu từ chối, nhập lý do để người đăng ký biết.</li>
+                <li>Người đăng ký sẽ nhận được email thông báo kết quả.</li>
+            </ol>
+        </div>
+
+        <h4>Xuất Danh Sách</h4>
+        <p>Bạn có thể xuất danh sách người đăng ký ra file Excel để sử dụng ngoài hệ thống. Nhấn nút "Export" và chọn định dạng mong muốn.</p>
+
+        <h3>3.5. Check-in Người Tham Dự</h3>
+
+        <p>Khi sự kiện diễn ra, bạn cần check-in người tham dự để xác nhận họ đã đến.</p>
+
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Vào sự kiện và chọn "Check-in" hoặc mở trang check-in trên điện thoại/máy tính bảng.</li>
+                <li>Sử dụng camera để quét mã QR code trên vé của người tham dự.</li>
+                <li>Hệ thống sẽ tự động xác minh vé và hiển thị thông tin người tham dự.</li>
+                <li>Nếu vé hợp lệ, màn hình sẽ hiện màu xanh và thông báo "Check-in Successful".</li>
+                <li>Nếu vé không hợp lệ (đã sử dụng, không tồn tại, sai sự kiện), màn hình sẽ hiện màu đỏ và thông báo lỗi.</li>
+            </ol>
+        </div>
+
+        <p>Bạn có thể theo dõi số người đã check-in theo thời gian thực trong Dashboard của sự kiện.</p>
+
+        <h3>3.6. Quản Lý Chứng Chỉ</h3>
+
+        <p>Nếu sự kiện có cấp chứng chỉ, hệ thống sẽ tự động tạo chứng chỉ cho những người đã check-in sau khi sự kiện kết thúc.</p>
+
+        <ul>
+            <li>Vào sự kiện và chọn tab "Certificates" để xem danh sách chứng chỉ đã cấp.</li>
+            <li>Mỗi chứng chỉ bao gồm tên người nhận, tên sự kiện, ngày cấp và mã xác nhận.</li>
+            <li>Bạn có thể tải chứng chỉ về hoặc gửi lại cho người nhận nếu họ cần.</li>
+        </ul>
+
+        <h3>3.7. Xem Báo Cáo và Thống Kê</h3>
+
+        <p>LUMA cung cấp các báo cáo chi tiết giúp bạn đánh giá hiệu quả của sự kiện.</p>
+
+        <h4>Báo Cáo Sự Kiện</h4>
+        <ul>
+            <li>Tổng số vé đã bán theo từng loại.</li>
+            <li>Doanh thu theo thời gian.</li>
+            <li>Tỷ lệ chuyển đổi (số người xem vs số người đăng ký).</li>
+            <li>Tỷ lệ check-in (số người đăng ký vs số người đến).</li>
+        </ul>
+
+        <h4>Báo Cáo Tổng Thể</h4>
+        <ul>
+            <li>Số sự kiện đã tổ chức.</li>
+            <li>Tổng số người tham dự.</li>
+            <li>Tổng doanh thu.</li>
+            <li>Đánh giá trung bình từ người tham dự.</li>
+        </ul>
+
+        <h3>3.8. Nhận Thanh Toán Tự Động</h3>
+
+        <p>LUMA tích hợp Stripe Connect để tự động thanh toán cho người tổ chức sau mỗi sự kiện.</p>
+
+        <div class="steps">
+            <h4>Thiết lập tài khoản nhận tiền:</h4>
+            <ol>
+                <li>Vào "Settings" và chọn "Payout Settings".</li>
+                <li>Nhấn "Connect with Stripe" để liên kết tài khoản Stripe của bạn.</li>
+                <li>Hoàn tất quy trình xác minh của Stripe (cung cấp thông tin cá nhân, tài khoản ngân hàng).</li>
+                <li>Sau khi xác minh, tài khoản của bạn sẽ sẵn sàng nhận tiền.</li>
+            </ol>
+        </div>
+
+        <h4>Quy Trình Thanh Toán</h4>
+        <p>Sau khi sự kiện kết thúc 48 giờ, hệ thống sẽ tự động tính toán và chuyển tiền vào tài khoản Stripe của bạn:</p>
+        <ul>
+            <li><strong>Tổng doanh thu:</strong> Tổng số tiền thu được từ bán vé.</li>
+            <li><strong>Phí nền tảng:</strong> LUMA thu 5% phí nền tảng.</li>
+            <li><strong>Phí Stripe:</strong> Phí xử lý thanh toán của Stripe (khoảng 2.9% + $0.30/giao dịch).</li>
+            <li><strong>Số tiền nhận:</strong> Tổng doanh thu trừ các loại phí.</li>
+        </ul>
+
+        <p>Bạn có thể xem lịch sử thanh toán trong phần "Payouts" với đầy đủ chi tiết từng giao dịch.</p>
+
+        <h3>3.9. Trả Lời Tin Nhắn Từ Người Dùng</h3>
+
+        <p>Khi người dùng gửi tin nhắn hỏi về sự kiện, bạn sẽ nhận được thông báo. Vào phần "Messages" để xem và trả lời các tin nhắn. Hệ thống hỗ trợ chat theo thời gian thực, giúp bạn tương tác nhanh chóng với người quan tâm đến sự kiện.</p>
+
+        <h3>3.10. Gói Subscription Cho Người Tổ Chức</h3>
+
+        <p>LUMA cung cấp 4 gói subscription cho người tổ chức với các mức giá và quyền lợi khác nhau:</p>
+
+        <h4>Bảng So Sánh 4 Gói:</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background: var(--primary); color: white;">
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Tính năng</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">FREE</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">STANDARD<br>$19.99/tháng</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">PREMIUM<br>$49.99/tháng</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">VIP<br>$99.99/tháng</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Số sự kiện/tháng</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">3</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">10</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">30</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">Unlimited</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 10px; border: 1px solid #ddd;">Số người tham dự/sự kiện</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">100</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">500</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">2,000</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">Unlimited</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">AI Features (lần/tháng)</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">3</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">30</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">Unlimited</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">Unlimited</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 10px; border: 1px solid #ddd;">Tạo chứng chỉ</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">❌</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">Export Excel</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">❌</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">✅</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 10px; border: 1px solid #ddd;">Giảm giá Boost</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">0%</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">10%</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">20%</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">30%</td>
+            </tr>
+        </table>
+
+        <div class="steps">
+            <h4>Nâng cấp gói subscription:</h4>
+            <ol>
+                <li>Vào menu "Settings" và chọn "Subscription".</li>
+                <li>Xem các gói hiện có và so sánh tính năng.</li>
+                <li>Chọn gói muốn nâng cấp và nhấn "Upgrade".</li>
+                <li>Hoàn tất thanh toán qua Stripe.</li>
+                <li>Gói mới sẽ có hiệu lực ngay lập tức.</li>
+            </ol>
+        </div>
+
+        <h3>3.11. Boost Sự Kiện</h3>
+
+        <p>Tính năng Boost giúp sự kiện của bạn được hiển thị nổi bật hơn trên nền tảng, thu hút nhiều người tham gia hơn.</p>
+
+        <h4>4 Gói Boost:</h4>
+        <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background: var(--primary); color: white;">
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Gói Boost</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Giá</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Thời hạn</th>
+                <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Độ hiển thị</th>
+                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Quyền lợi</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: #3B82F6; color: white; padding: 2px 8px; border-radius: 10px;">BASIC</span></td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">$9.99</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">7 ngày</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">1.5x</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">Ưu tiên trong kết quả tìm kiếm</td>
+            </tr>
+            <tr style="background: #f8fafc;">
+                <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: #8B5CF6; color: white; padding: 2px 8px; border-radius: 10px;">STANDARD</span></td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">$24.99</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">14 ngày</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">2x</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">+ Hiển thị nổi bật trong danh mục</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: #7C3AED; color: white; padding: 2px 8px; border-radius: 10px;">PREMIUM</span></td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">$49.99</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">30 ngày</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">3x</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">+ Hiển thị trên trang chủ</td>
+            </tr>
+            <tr style="background: #fef3c7;">
+                <td style="padding: 10px; border: 1px solid #ddd;"><span style="background: linear-gradient(135deg, #FFD700, #FFA500); color: white; padding: 2px 8px; border-radius: 10px;">VIP</span></td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">$99.99</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">30 ngày</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">5x</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">+ Banner nổi bật trên trang chủ</td>
+            </tr>
+        </table>
+
+        <div class="steps">
+            <h4>Cách boost sự kiện:</h4>
+            <ol>
+                <li>Vào sự kiện muốn boost và chọn "Boost Event" hoặc vào menu "Boosts".</li>
+                <li>Chọn gói boost phù hợp với nhu cầu và ngân sách.</li>
+                <li>Xem giá sau khi áp dụng giảm giá từ subscription (nếu có).</li>
+                <li>Nhấn "Purchase Boost" và hoàn tất thanh toán.</li>
+                <li>Boost sẽ được kích hoạt ngay sau khi thanh toán thành công.</li>
+                <li>Theo dõi hiệu quả boost trong Dashboard với số liệu views và registrations.</li>
+            </ol>
+        </div>
+
+        <div class="note success">
+            <strong>Lưu ý về Boost Discount:</strong>
+            Nếu bạn đang sử dụng gói subscription STANDARD, PREMIUM hoặc VIP, bạn sẽ được giảm giá tương ứng 10%, 20% hoặc 30% khi mua boost. Giá sau giảm sẽ được hiển thị tự động khi chọn gói boost.
+        </div>
+
+    </div>
+
+    <!-- Section 4: Admin Guide -->
+    <div class="section" id="admin-guide">
+        <h2>4. Hướng Dẫn Dành Cho Quản Trị Viên (Admin Portal)</h2>
+
+        <p>Quản trị viên có quyền truy cập cao nhất trong hệ thống, chịu trách nhiệm quản lý toàn bộ nền tảng LUMA. Phần này hướng dẫn các chức năng chính dành cho Admin.</p>
+
+        <h3>4.1. Đăng Nhập Admin</h3>
+
+        <p>Quản trị viên đăng nhập tại trang Admin Portal riêng biệt. Sau khi đăng nhập, Admin sẽ thấy Dashboard tổng quan với các số liệu quan trọng của toàn hệ thống.</p>
+
+        <h3>4.2. Dashboard Tổng Quan</h3>
+
+        <p>Dashboard Admin hiển thị:</p>
+        <ul>
+            <li><strong>Thống kê người dùng:</strong> Tổng số người dùng, người dùng mới trong tháng, phân loại theo vai trò.</li>
+            <li><strong>Thống kê sự kiện:</strong> Tổng số sự kiện, sự kiện đang chờ duyệt, sự kiện sắp diễn ra.</li>
+            <li><strong>Thống kê doanh thu:</strong> Tổng doanh thu hệ thống, phí nền tảng đã thu.</li>
+            <li><strong>Biểu đồ tăng trưởng:</strong> Biểu đồ thể hiện sự tăng trưởng người dùng, sự kiện, doanh thu theo thời gian.</li>
+            <li><strong>Phân bố sự kiện:</strong> Biểu đồ tròn thể hiện tỷ lệ sự kiện theo danh mục, thành phố.</li>
+            <li><strong>Top Organisers:</strong> Danh sách người tổ chức có nhiều sự kiện và doanh thu cao nhất.</li>
+            <li><strong>AI Insights:</strong> Các nhận xét và cảnh báo tự động từ hệ thống AI.</li>
+        </ul>
+
+        <h3>4.3. Duyệt Sự Kiện</h3>
+
+        <p>Mỗi sự kiện trước khi được hiển thị cho người dùng đều cần Admin phê duyệt. Đây là bước quan trọng để đảm bảo chất lượng nội dung trên nền tảng.</p>
+
+        <div class="steps">
+            <h4>Quy trình duyệt sự kiện:</h4>
+            <ol>
+                <li>Vào menu "Events" và chọn "Pending Approval" để xem danh sách sự kiện chờ duyệt.</li>
+                <li>Nhấn vào sự kiện để xem chi tiết đầy đủ: thông tin cơ bản, mô tả, hình ảnh, loại vé, người tổ chức.</li>
+                <li>Hệ thống AI sẽ tự động phân tích nội dung và đưa ra đánh giá: Safe (an toàn), Warning (cần xem xét), Unsafe (không phù hợp).</li>
+                <li>Dựa trên nội dung và đánh giá AI, quyết định:
+                    <ul>
+                        <li><strong>Approve:</strong> Phê duyệt sự kiện, sự kiện sẽ được hiển thị cho người dùng.</li>
+                        <li><strong>Reject:</strong> Từ chối sự kiện, nhập lý do từ chối. Có thể sử dụng AI để tạo lý do tự động.</li>
+                        <li><strong>Request Changes:</strong> Yêu cầu người tổ chức chỉnh sửa trước khi duyệt.</li>
+                    </ul>
+                </li>
+                <li>Người tổ chức sẽ nhận email thông báo kết quả.</li>
+            </ol>
+        </div>
+
+        <h3>4.4. Quản Lý Người Dùng</h3>
+
+        <p>Admin có thể xem và quản lý tất cả tài khoản người dùng trên hệ thống.</p>
+
+        <h4>Xem Danh Sách Người Dùng</h4>
+        <p>Vào menu "Users" để xem danh sách người dùng. Bạn có thể lọc theo vai trò (User, Organiser, Admin), trạng thái (Active, Inactive), hoặc tìm kiếm theo tên, email.</p>
+
+        <h4>Xem Chi Tiết Người Dùng</h4>
+        <p>Nhấn vào người dùng để xem thông tin chi tiết: thông tin cá nhân, lịch sử hoạt động, các sự kiện đã tham gia, các sự kiện đã tổ chức (nếu là Organiser).</p>
+
+        <h4>Khóa/Mở Khóa Tài Khoản</h4>
+        <div class="steps">
+            <h4>Các bước thực hiện:</h4>
+            <ol>
+                <li>Tìm người dùng cần xử lý trong danh sách.</li>
+                <li>Nhấn vào menu hành động (ba chấm) và chọn "Deactivate" để khóa hoặc "Activate" để mở khóa.</li>
+                <li>Nhập lý do khóa tài khoản (bắt buộc khi khóa).</li>
+                <li>Xác nhận hành động.</li>
+                <li>Người dùng sẽ nhận email thông báo.</li>
+            </ol>
+        </div>
+
+        <h3>4.5. Quản Lý Người Tổ Chức</h3>
+
+        <p>Admin quản lý các tài khoản Organiser và có thể cấp "Verified Badge" cho những người tổ chức uy tín.</p>
+
+        <h4>Duyệt Yêu Cầu Organiser</h4>
+        <p>Khi có người dùng đăng ký làm Organiser, Admin sẽ nhận thông báo. Xem thông tin tổ chức và quyết định phê duyệt hoặc từ chối.</p>
+
+        <h4>Cấp Verified Badge</h4>
+        <p>Verified Badge là dấu hiệu uy tín, giúp người dùng tin tưởng hơn vào người tổ chức. Để cấp badge:</p>
+        <ol>
+            <li>Vào chi tiết Organiser.</li>
+            <li>Nhấn "Grant Verified Badge".</li>
+            <li>Nhập lý do cấp badge.</li>
+            <li>Organiser sẽ nhận thông báo và badge sẽ hiển thị trên trang của họ.</li>
+        </ol>
+
+        <h3>4.6. Quản Lý Danh Mục và Thành Phố</h3>
+
+        <p>Admin có thể thêm, sửa, xóa các danh mục sự kiện và thành phố.</p>
+
+        <h4>Quản Lý Danh Mục (Categories)</h4>
+        <ul>
+            <li>Vào menu "Settings" và chọn "Categories".</li>
+            <li>Nhấn "Add Category" để thêm danh mục mới. Nhập tên, mô tả và tải lên icon.</li>
+            <li>Nhấn vào danh mục để chỉnh sửa hoặc xóa.</li>
+            <li>Có thể bật/tắt danh mục để ẩn/hiện trên ứng dụng.</li>
+        </ul>
+
+        <h4>Quản Lý Thành Phố (Cities)</h4>
+        <ul>
+            <li>Vào menu "Settings" và chọn "Cities".</li>
+            <li>Nhấn "Add City" để thêm thành phố mới. Nhập tên và tải lên hình ảnh đại diện.</li>
+            <li>Chỉnh sửa hoặc xóa thành phố tương tự như danh mục.</li>
+        </ul>
+
+        <h3>4.7. Gửi Thông Báo</h3>
+
+        <p>Admin có thể gửi thông báo đến người dùng trong hệ thống.</p>
+
+        <div class="steps">
+            <h4>Các bước gửi thông báo:</h4>
+            <ol>
+                <li>Vào menu "Notifications" và chọn "Send Notification".</li>
+                <li>Chọn đối tượng nhận:
+                    <ul>
+                        <li>All Users: Tất cả người dùng.</li>
+                        <li>All Organisers: Tất cả người tổ chức.</li>
+                        <li>Specific Users: Chọn người dùng cụ thể.</li>
+                    </ul>
+                </li>
+                <li>Nhập tiêu đề và nội dung thông báo.</li>
+                <li>Hoặc sử dụng "AI Compose" để hệ thống AI viết nội dung dựa trên mục đích bạn mô tả.</li>
+                <li>Xem trước thông báo và nhấn "Send" để gửi.</li>
+            </ol>
+        </div>
+
+        <h3>4.8. Analytics Nâng Cao</h3>
+
+        <p>Admin có quyền truy cập các báo cáo phân tích chi tiết về toàn bộ hệ thống.</p>
+
+        <h4>Biểu Đồ Tăng Trưởng</h4>
+        <p>Xem biểu đồ thể hiện sự tăng trưởng theo thời gian của:</p>
+        <ul>
+            <li>Số lượng người dùng mới.</li>
+            <li>Số lượng sự kiện được tạo.</li>
+            <li>Số lượng đăng ký.</li>
+            <li>Doanh thu.</li>
+        </ul>
+
+        <h4>Phân Bố Sự Kiện</h4>
+        <ul>
+            <li>Theo danh mục: Bao nhiêu sự kiện thuộc mỗi danh mục.</li>
+            <li>Theo thành phố: Sự kiện phân bố như thế nào theo địa lý.</li>
+            <li>Theo trạng thái: Draft, Pending, Approved, Completed.</li>
+        </ul>
+
+        <h4>Top Lists</h4>
+        <ul>
+            <li>Top Organisers: Người tổ chức có nhiều sự kiện và doanh thu nhất.</li>
+            <li>Top Events: Sự kiện có nhiều người đăng ký nhất.</li>
+            <li>Top Categories: Danh mục phổ biến nhất.</li>
+        </ul>
+
+        <h3>4.9. Email Marketing</h3>
+
+        <p>Admin có thể tạo và quản lý các chiến dịch email marketing để tiếp cận người dùng.</p>
+
+        <div class="steps">
+            <h4>Tạo chiến dịch email:</h4>
+            <ol>
+                <li>Vào menu "Email Marketing" và chọn "Create Campaign".</li>
+                <li>Nhập tên chiến dịch để dễ quản lý.</li>
+                <li>Nhập tiêu đề email (Subject).</li>
+                <li>Soạn nội dung email bằng HTML editor. Có thể chèn hình ảnh, liên kết, định dạng văn bản.</li>
+                <li>Chọn đối tượng nhận:
+                    <ul>
+                        <li>Tất cả người dùng.</li>
+                        <li>Theo vai trò (User, Organiser).</li>
+                        <li>Người đã đăng ký sự kiện cụ thể.</li>
+                    </ul>
+                </li>
+                <li>Chọn gửi ngay hoặc hẹn giờ gửi.</li>
+                <li>Nhấn "Send" hoặc "Schedule" để hoàn tất.</li>
+            </ol>
+        </div>
+
+        <h4>Theo Dõi Hiệu Quả</h4>
+        <p>Sau khi gửi email, bạn có thể theo dõi:</p>
+        <ul>
+            <li><strong>Open Rate:</strong> Tỷ lệ người mở email.</li>
+            <li><strong>Click Rate:</strong> Tỷ lệ người nhấn vào liên kết trong email.</li>
+            <li><strong>Unsubscribe:</strong> Số người hủy đăng ký nhận email.</li>
+            <li><strong>Bounce:</strong> Số email không gửi được.</li>
+        </ul>
+
+        <h3>4.10. Quản Lý Thanh Toán</h3>
+
+        <p>Admin giám sát toàn bộ quá trình thanh toán trên hệ thống.</p>
+
+        <h4>Xem Lịch Sử Thanh Toán</h4>
+        <p>Vào menu "Payments" để xem tất cả giao dịch thanh toán từ người dùng. Mỗi giao dịch hiển thị người thanh toán, sự kiện, số tiền, trạng thái và thời gian.</p>
+
+        <h4>Xem Lịch Sử Payout</h4>
+        <p>Vào menu "Payouts" để xem tất cả các khoản đã chuyển cho Organiser. Có thể lọc theo trạng thái: Pending, Processing, Completed, Failed.</p>
+
+        <h4>Xử Lý Vấn Đề</h4>
+        <p>Nếu có vấn đề với giao dịch, Admin có thể:</p>
+        <ul>
+            <li>Tạm dừng payout để điều tra.</li>
+            <li>Hoàn tiền cho người dùng nếu cần.</li>
+            <li>Liên hệ Stripe để xử lý các vấn đề kỹ thuật.</li>
+        </ul>
+
+    </div>
+
+    <!-- Section 5: Kết Luận -->
+    <div class="section" id="ket-luan">
+        <h2>5. Kết Luận</h2>
+
+        <p>LUMA là một nền tảng sàn thương mại sự kiện toàn diện, cung cấp đầy đủ các công cụ cần thiết cho ba nhóm đối tượng chính: người dùng, người tổ chức và quản trị viên. Hệ thống được thiết kế với giao diện thân thiện, dễ sử dụng và tích hợp nhiều tính năng hiện đại.</p>
+
+        <h3>Tổng Kết Các Tính Năng Chính</h3>
+
+        <h4>Dành Cho Người Dùng:</h4>
+        <ul>
+            <li>Đăng ký, đăng nhập với email hoặc Google.</li>
+            <li>Tìm kiếm và khám phá sự kiện đa dạng.</li>
+            <li>Đăng ký tham dự và thanh toán trực tuyến.</li>
+            <li>Nhận vé điện tử với mã QR code.</li>
+            <li>Đồng bộ sự kiện với Google Calendar.</li>
+            <li>Chat trực tiếp với người tổ chức.</li>
+            <li>Đánh giá sự kiện sau khi tham dự.</li>
+            <li>Nhận chứng chỉ tự động.</li>
+        </ul>
+
+        <h4>Dành Cho Người Tổ Chức:</h4>
+        <ul>
+            <li>Tạo và quản lý sự kiện dễ dàng.</li>
+            <li>Cấu hình nhiều loại vé với giá khác nhau.</li>
+            <li>Duyệt đăng ký người tham dự.</li>
+            <li>Check-in bằng mã QR.</li>
+            <li>Xem báo cáo và thống kê chi tiết.</li>
+            <li>Nhận thanh toán tự động qua Stripe Connect.</li>
+            <li>Tương tác với người dùng qua chat.</li>
+        </ul>
+
+        <h4>Dành Cho Quản Trị Viên:</h4>
+        <ul>
+            <li>Quản lý người dùng và người tổ chức.</li>
+            <li>Duyệt sự kiện với hỗ trợ AI.</li>
+            <li>Quản lý danh mục và thành phố.</li>
+            <li>Gửi thông báo và email marketing.</li>
+            <li>Xem analytics nâng cao.</li>
+            <li>Giám sát thanh toán toàn hệ thống.</li>
+        </ul>
+
+        <div class="note success">
+            <strong>Cảm ơn bạn đã đọc hướng dẫn này!</strong>
+            Nếu có bất kỳ thắc mắc nào trong quá trình sử dụng, vui lòng liên hệ bộ phận hỗ trợ qua email hoặc tính năng chat trong ứng dụng. Chúng tôi luôn sẵn sàng hỗ trợ bạn.
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p><strong>LUMA</strong> - Sàn Thương Mại Sự Kiện</p>
+        <p>Tài liệu hướng dẫn sử dụng - Phiên bản 1.0</p>
+        <p>Năm 2024</p>
+    </div>
+
+</div>
+
+</body>
+</html>

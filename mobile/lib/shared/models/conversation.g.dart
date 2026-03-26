@@ -1,0 +1,65 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'conversation.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+Conversation _$ConversationFromJson(Map<String, dynamic> json) => Conversation(
+      id: json['id'] as String,
+      type: $enumDecode(_$ConversationTypeEnumMap, json['type']),
+      name: json['name'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+      eventId: json['eventId'] as String?,
+      eventTitle: json['eventTitle'] as String?,
+      lastMessageContent: json['lastMessageContent'] as String?,
+      lastMessageAt: json['lastMessageAt'] == null
+          ? null
+          : DateTime.parse(json['lastMessageAt'] as String),
+      unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+      muted: json['muted'] as bool? ?? false,
+      participants: (json['participants'] as List<dynamic>?)
+          ?.map((e) => ChatParticipant.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      participantCount: (json['participantCount'] as num?)?.toInt(),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+    );
+
+Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'type': _$ConversationTypeEnumMap[instance.type]!,
+      'name': instance.name,
+      'imageUrl': instance.imageUrl,
+      'eventId': instance.eventId,
+      'eventTitle': instance.eventTitle,
+      'lastMessageContent': instance.lastMessageContent,
+      'lastMessageAt': instance.lastMessageAt?.toIso8601String(),
+      'unreadCount': instance.unreadCount,
+      'muted': instance.muted,
+      'participants': instance.participants,
+      'participantCount': instance.participantCount,
+      'createdAt': instance.createdAt?.toIso8601String(),
+    };
+
+const _$ConversationTypeEnumMap = {
+  ConversationType.eventGroup: 'EVENT_GROUP',
+  ConversationType.direct: 'DIRECT',
+};
+
+ChatParticipant _$ChatParticipantFromJson(Map<String, dynamic> json) =>
+    ChatParticipant(
+      userId: json['userId'] as String,
+      fullName: json['fullName'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+    );
+
+Map<String, dynamic> _$ChatParticipantToJson(ChatParticipant instance) =>
+    <String, dynamic>{
+      'userId': instance.userId,
+      'fullName': instance.fullName,
+      'avatarUrl': instance.avatarUrl,
+    };
