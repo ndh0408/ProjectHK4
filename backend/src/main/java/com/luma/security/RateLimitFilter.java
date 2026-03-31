@@ -21,10 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Filter để áp dụng rate limiting cho các request
- * Chạy trước tất cả các filter khác
- */
 @Component
 @Order(1)
 @RequiredArgsConstructor
@@ -39,7 +35,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        // Bỏ qua nếu rate limiting bị tắt
         if (!rateLimitConfig.isEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -51,7 +46,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         Bucket bucket = selectBucket(path, method, clientIp);
 
-        // Nếu không cần rate limit cho path này
         if (bucket == null) {
             filterChain.doFilter(request, response);
             return;
@@ -60,11 +54,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
         if (probe.isConsumed()) {
-            // Request được chấp nhận
             response.addHeader("X-Rate-Limit-Remaining", String.valueOf(probe.getRemainingTokens()));
             filterChain.doFilter(request, response);
         } else {
-            // Rate limit exceeded
             long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
             log.warn("Rate limit exceeded for IP: {} on path: {}", clientIp, path);
 
@@ -82,69 +74,51 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    /**
-     * Chọn bucket phù hợp dựa trên path
-     */
     private Bucket selectBucket(String path, String method, String clientIp) {
-        // Login endpoint - strict rate limiting
         if (path.equals("/api/auth/login") && "POST".equals(method)) {
             return rateLimitConfig.getLoginBucket(clientIp);
         }
 
-        // Register endpoint - very strict
         if (path.equals("/api/auth/register") && "POST".equals(method)) {
             return rateLimitConfig.getRegisterBucket(clientIp);
         }
 
-        // Forgot password - strict
         if (path.equals("/api/auth/forgot-password") && "POST".equals(method)) {
-            return rateLimitConfig.getRegisterBucket(clientIp); // Dùng chung với register
+            return rateLimitConfig.getRegisterBucket(clientIp);
         }
 
-        // Refresh token
         if (path.equals("/api/auth/refresh-token") && "POST".equals(method)) {
             return rateLimitConfig.getLoginBucket(clientIp);
         }
 
-        // Google OAuth
         if (path.equals("/api/auth/google") && "POST".equals(method)) {
             return rateLimitConfig.getLoginBucket(clientIp);
         }
 
-        // General API rate limiting cho các endpoints khác
         if (path.startsWith("/api/") && !path.startsWith("/api/public/")) {
             return rateLimitConfig.getApiBucket(clientIp);
         }
 
-        // Không rate limit cho static resources, swagger, etc.
         return null;
     }
 
-    /**
-     * Lấy IP thực của client (xử lý proxy/load balancer)
-     */
     private String getClientIpAddress(HttpServletRequest request) {
-        // Check X-Forwarded-For header (khi có proxy/load balancer)
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            // Lấy IP đầu tiên trong chain
             return xForwardedFor.split(",")[0].trim();
         }
 
-        // Check X-Real-IP header (Nginx)
         String xRealIp = request.getHeader("X-Real-IP");
         if (xRealIp != null && !xRealIp.isEmpty()) {
             return xRealIp;
         }
 
-        // Fallback to remote address
         return request.getRemoteAddr();
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        // Không filter cho swagger, actuator, static resources
         return path.startsWith("/swagger") ||
                path.startsWith("/api-docs") ||
                path.startsWith("/actuator") ||

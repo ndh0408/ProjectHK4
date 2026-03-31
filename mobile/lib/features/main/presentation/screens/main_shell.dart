@@ -8,7 +8,6 @@ import '../../../../services/api_service.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../chat/presentation/screens/conversations_screen.dart';
 
-// Notifier for unread notification count - allows immediate updates
 class UnreadCountNotifier extends StateNotifier<AsyncValue<int>> {
   UnreadCountNotifier(this._api, {bool isLoggedIn = false})
       : super(const AsyncValue.data(0)) {
@@ -50,11 +49,9 @@ class UnreadCountNotifier extends StateNotifier<AsyncValue<int>> {
   }
 }
 
-// Use autoDispose to ensure state is cleared when user changes
 final unreadNotificationCountProvider =
     StateNotifierProvider.autoDispose<UnreadCountNotifier, AsyncValue<int>>(
         (ref) {
-  // Watch current user to refresh when user changes
   final user = ref.watch(currentUserProvider);
   final api = ref.watch(apiServiceProvider);
   return UnreadCountNotifier(api, isLoggedIn: user != null);
@@ -88,28 +85,22 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   int _getIndexFromRoute(String route) {
-    // Main tabs
     if (route == '/home') return 0;
     if (route == '/explore') return 1;
     if (route == '/my-events') return 2;
     if (route == '/notifications') return 3;
     if (route == '/profile') return 4;
 
-    // Explore related pages - keep Explore tab selected
     if (route.startsWith('/search') ||
         route.startsWith('/categories') ||
         route.startsWith('/cities') ||
         route.startsWith('/organisers') ||
         route.startsWith('/events')) return 1;
 
-    // My Events related pages - keep My Events tab selected
     if (route.startsWith('/ticket')) return 2;
 
-    // Alerts related pages - keep Alerts tab selected
     if (route.startsWith('/chat')) return 3;
 
-    // For other pages (event detail, organiser profile, speaker events),
-    // keep the current index to avoid tab jumping
     return _currentIndex;
   }
 
@@ -129,7 +120,6 @@ class _MainShellState extends ConsumerState<MainShell> {
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final unreadMessages = ref.watch(unreadMessageCountProvider);
 
-    // Combine both counts for the badge
     final totalUnread = (unreadNotifications.valueOrNull ?? 0) +
         (unreadMessages.valueOrNull ?? 0);
 

@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * DTO for creating a withdrawal request
- */
 @Data
 @Builder
 @NoArgsConstructor

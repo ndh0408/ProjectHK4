@@ -103,7 +103,6 @@ const OrganiserEvents = () => {
     const [aiImproving, setAiImproving] = useState(false);
     const [geocoding, setGeocoding] = useState(false);
 
-    // Geocode address to get coordinates using OpenStreetMap Nominatim API
     const handleGeocodeAddress = async () => {
         if (!formData.address.trim()) {
             toast.error('Please enter an address first');
@@ -537,7 +536,6 @@ const OrganiserEvents = () => {
                         color={statusColors[params.value] || 'default'}
                     />
                 );
-                // Show tooltip with rejection reason if rejected
                 if (params.value === 'REJECTED' && params.row.rejectionReason) {
                     return (
                         <Tooltip title={`Reason: ${params.row.rejectionReason}`} arrow>

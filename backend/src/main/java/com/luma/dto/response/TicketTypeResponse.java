@@ -30,7 +30,7 @@ public class TicketTypeResponse {
     private LocalDateTime saleEndDate;
     private Boolean isVisible;
     private Integer displayOrder;
-    private String status; // AVAILABLE, SOLD_OUT, NOT_STARTED, ENDED, HIDDEN
+    private String status;
     private Boolean isFree;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

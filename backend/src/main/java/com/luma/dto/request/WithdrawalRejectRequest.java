@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO for admin to reject a withdrawal request
- */
 @Data
 @Builder
 @NoArgsConstructor

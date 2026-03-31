@@ -7,14 +7,10 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.LocalDateTime;
 
-/**
- * Validator for event time constraints
- */
 public class EventTimeValidator implements ConstraintValidator<ValidEventTime, Object> {
 
     @Override
     public void initialize(ValidEventTime constraintAnnotation) {
-        // No initialization needed
     }
 
     @Override
@@ -41,11 +37,9 @@ public class EventTimeValidator implements ConstraintValidator<ValidEventTime, O
             return true;
         }
 
-        // Disable default constraint violation
         context.disableDefaultConstraintViolation();
         boolean isValid = true;
 
-        // Validate start time is in the future (only for new events)
         if (!isUpdate && startTime != null && startTime.isBefore(LocalDateTime.now())) {
             context.buildConstraintViolationWithTemplate("Start time must be in the future")
                    .addPropertyNode("startTime")
@@ -53,7 +47,6 @@ public class EventTimeValidator implements ConstraintValidator<ValidEventTime, O
             isValid = false;
         }
 
-        // Validate end time is after start time
         if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
             context.buildConstraintViolationWithTemplate("End time must be after start time")
                    .addPropertyNode("endTime")
@@ -61,7 +54,6 @@ public class EventTimeValidator implements ConstraintValidator<ValidEventTime, O
             isValid = false;
         }
 
-        // Validate registration deadline is before or equal to start time
         if (registrationDeadline != null && startTime != null && registrationDeadline.isAfter(startTime)) {
             context.buildConstraintViolationWithTemplate("Registration deadline must be before or at event start time")
                    .addPropertyNode("registrationDeadline")
@@ -69,7 +61,6 @@ public class EventTimeValidator implements ConstraintValidator<ValidEventTime, O
             isValid = false;
         }
 
-        // Validate registration deadline is in the future (for new events)
         if (!isUpdate && registrationDeadline != null && registrationDeadline.isBefore(LocalDateTime.now())) {
             context.buildConstraintViolationWithTemplate("Registration deadline must be in the future")
                    .addPropertyNode("registrationDeadline")
@@ -77,7 +68,6 @@ public class EventTimeValidator implements ConstraintValidator<ValidEventTime, O
             isValid = false;
         }
 
-        // Validate event duration is reasonable (max 30 days)
         if (startTime != null && endTime != null) {
             long daysBetween = java.time.Duration.between(startTime, endTime).toDays();
             if (daysBetween > 30) {

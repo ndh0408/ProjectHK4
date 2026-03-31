@@ -59,9 +59,6 @@ public class GoogleCalendarService {
     private static final NetHttpTransport HTTP_TRANSPORT = new NetHttpTransport();
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
-    /**
-     * Generate OAuth2 authorization URL
-     */
     public String getAuthorizationUrl(String redirectUri) {
         String effectiveRedirectUri = redirectUri != null ? redirectUri : defaultRedirectUri;
         return "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -73,9 +70,6 @@ public class GoogleCalendarService {
                 "&prompt=consent";
     }
 
-    /**
-     * Exchange authorization code for tokens and save
-     */
     @Transactional
     public void connectGoogleCalendar(User user, GoogleCalendarAuthRequest request) {
         try {
@@ -92,10 +86,8 @@ public class GoogleCalendarService {
                     effectiveRedirectUri
             ).execute();
 
-            // Remove existing token if any
             tokenRepository.deleteByUserId(user.getId());
 
-            // Save new token
             GoogleCalendarToken token = GoogleCalendarToken.builder()
                     .user(user)
                     .accessToken(tokenResponse.getAccessToken())
@@ -113,12 +105,8 @@ public class GoogleCalendarService {
         }
     }
 
-    /**
-     * Disconnect Google Calendar
-     */
     @Transactional
     public void disconnectGoogleCalendar(User user) {
-        // Delete all synced events from Google Calendar first
         List<CalendarSync> syncs = calendarSyncRepository.findByUserId(user.getId());
         for (CalendarSync sync : syncs) {
             try {
@@ -128,17 +116,12 @@ public class GoogleCalendarService {
             }
         }
 
-        // Delete all sync records
         calendarSyncRepository.deleteAllByUserId(user.getId());
 
-        // Delete token
         tokenRepository.deleteByUserId(user.getId());
         log.info("Google Calendar disconnected for user: {}", user.getEmail());
     }
 
-    /**
-     * Get Google Calendar connection status
-     */
     public GoogleCalendarStatusResponse getConnectionStatus(User user) {
         return tokenRepository.findByUserIdAndIsActiveTrue(user.getId())
                 .map(token -> {
@@ -156,17 +139,12 @@ public class GoogleCalendarService {
                         .build());
     }
 
-    /**
-     * Sync a registered event to Google Calendar
-     */
     @Transactional
     public CalendarSyncResponse syncEventToCalendar(User user, CalendarSyncRequest request) {
-        // Check if already synced
         if (calendarSyncRepository.existsByUserIdAndRegistrationId(user.getId(), request.getRegistrationId())) {
             throw new BadRequestException("Event is already synced to Google Calendar");
         }
 
-        // Get registration
         Registration registration = registrationRepository.findById(request.getRegistrationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
 
@@ -177,10 +155,8 @@ public class GoogleCalendarService {
         Event event = registration.getEvent();
         String calendarId = request.getCalendarId() != null ? request.getCalendarId() : "primary";
 
-        // Create Google Calendar event
         String googleEventId = createGoogleEvent(user, event, calendarId);
 
-        // Save sync record
         CalendarSync sync = CalendarSync.builder()
                 .user(user)
                 .registration(registration)
@@ -196,34 +172,23 @@ public class GoogleCalendarService {
         return mapToResponse(sync);
     }
 
-    /**
-     * Remove event from Google Calendar
-     */
     @Transactional
     public void unsyncEventFromCalendar(User user, UUID registrationId) {
         CalendarSync sync = calendarSyncRepository.findByUserIdAndRegistrationId(user.getId(), registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Calendar sync not found"));
 
-        // Delete from Google Calendar
         deleteGoogleEvent(user, sync.getGoogleEventId(), sync.getCalendarId());
 
-        // Delete sync record
         calendarSyncRepository.delete(sync);
         log.info("Event unsynced from Google Calendar for user: {}", user.getEmail());
     }
 
-    /**
-     * Get all synced events for user
-     */
     public List<CalendarSyncResponse> getSyncedEvents(User user) {
         return calendarSyncRepository.findByUserId(user.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Sync all registered events to Google Calendar
-     */
     @Transactional
     public int syncAllEventsToCalendar(User user) {
         List<Registration> registrations = registrationRepository.findByUserIdAndStatusIn(
@@ -251,9 +216,6 @@ public class GoogleCalendarService {
         return syncedCount;
     }
 
-    /**
-     * Update synced event when event details change
-     */
     @Transactional
     public void updateSyncedEvent(UUID eventId) {
         List<CalendarSync> syncs = calendarSyncRepository.findByEventId(eventId);
@@ -268,8 +230,6 @@ public class GoogleCalendarService {
             }
         }
     }
-
-    // Private helper methods
 
     private String createGoogleEvent(User user, Event event, String calendarId) {
         try {
@@ -317,7 +277,6 @@ public class GoogleCalendarService {
                 .setSummary(event.getTitle())
                 .setDescription(buildEventDescription(event));
 
-        // Set start time
         DateTime startDateTime = new DateTime(
                 java.util.Date.from(event.getStartTime().atZone(ZoneId.systemDefault()).toInstant())
         );
@@ -326,7 +285,6 @@ public class GoogleCalendarService {
                 .setTimeZone(ZoneId.systemDefault().getId());
         googleEvent.setStart(start);
 
-        // Set end time
         DateTime endDateTime = new DateTime(
                 java.util.Date.from(event.getEndTime().atZone(ZoneId.systemDefault()).toInstant())
         );
@@ -335,17 +293,15 @@ public class GoogleCalendarService {
                 .setTimeZone(ZoneId.systemDefault().getId());
         googleEvent.setEnd(end);
 
-        // Set location if available
         if (event.getAddress() != null && !event.getAddress().isEmpty()) {
             googleEvent.setLocation(event.getAddress());
         } else if (event.getVenue() != null && !event.getVenue().isEmpty()) {
             googleEvent.setLocation(event.getVenue());
         }
 
-        // Set reminder
         EventReminder[] reminderOverrides = new EventReminder[]{
                 new EventReminder().setMethod("popup").setMinutes(60),
-                new EventReminder().setMethod("popup").setMinutes(1440) // 1 day before
+                new EventReminder().setMethod("popup").setMinutes(1440)
         };
         com.google.api.services.calendar.model.Event.Reminders reminders =
                 new com.google.api.services.calendar.model.Event.Reminders()
@@ -363,10 +319,10 @@ public class GoogleCalendarService {
             desc.append(event.getDescription()).append("\n\n");
         }
 
-        desc.append("📍 Venue: ").append(event.getVenue() != null ? event.getVenue() : "TBA").append("\n");
+        desc.append("Venue: ").append(event.getVenue() != null ? event.getVenue() : "TBA").append("\n");
 
         if (event.getAddress() != null) {
-            desc.append("📌 Address: ").append(event.getAddress()).append("\n");
+            desc.append("Address: ").append(event.getAddress()).append("\n");
         }
 
         desc.append("\n---\n");
@@ -380,7 +336,6 @@ public class GoogleCalendarService {
         GoogleCalendarToken token = tokenRepository.findByUserIdAndIsActiveTrue(user.getId())
                 .orElseThrow(() -> new BadRequestException("Google Calendar not connected"));
 
-        // Refresh token if expired
         if (token.isExpired()) {
             refreshAccessToken(token);
         }

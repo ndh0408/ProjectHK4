@@ -89,7 +89,6 @@ class _QuestionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Event title & status
               Row(
                 children: [
                   Expanded(
@@ -129,7 +128,6 @@ class _QuestionCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Question
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -150,7 +148,6 @@ class _QuestionCard extends StatelessWidget {
                 ],
               ),
 
-              // Answer (if exists)
               if (question.isAnswered && question.answer != null) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -196,7 +193,6 @@ class _QuestionCard extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Date
               Row(
                 children: [
                   Icon(

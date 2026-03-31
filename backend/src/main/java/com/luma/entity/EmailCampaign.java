@@ -47,9 +47,8 @@ public class EmailCampaign {
     @Builder.Default
     private EmailCampaignStatus status = EmailCampaignStatus.DRAFT;
 
-    // Target audience filters (stored as JSON)
     @Column(columnDefinition = "NVARCHAR(2000)")
-    private String audienceFilter; // {"role": "USER", "cities": [1,2], "categories": [3,4]}
+    private String audienceFilter;
 
     private LocalDateTime scheduledAt;
 

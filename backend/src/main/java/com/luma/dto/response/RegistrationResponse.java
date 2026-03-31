@@ -39,7 +39,6 @@ public class RegistrationResponse {
     private boolean eligibleForCertificate;
     private CertificateResponse certificate;
 
-    // Ticket type fields
     private UUID ticketTypeId;
     private String ticketTypeName;
     private BigDecimal ticketTypePrice;
@@ -57,7 +56,6 @@ public class RegistrationResponse {
         var event = registration.getEvent();
         var ticketType = registration.getTicketType();
 
-        // Determine price: use ticketType price if available, otherwise event's ticketPrice
         BigDecimal actualPrice = ticketType != null
                 ? ticketType.getPrice()
                 : (event.getTicketPrice() != null ? event.getTicketPrice() : BigDecimal.ZERO);
@@ -68,7 +66,6 @@ public class RegistrationResponse {
                 && !hasPaidPayment;
         Double ticketPrice = actualPrice.doubleValue();
 
-        // Check certificate eligibility: approved, checked-in, event ended
         boolean eligibleForCertificate = registration.getStatus() == RegistrationStatus.APPROVED
                 && registration.getCheckedInAt() != null
                 && event.getEndTime() != null
@@ -98,7 +95,6 @@ public class RegistrationResponse {
                 .certificate(certificate)
                 .quantity(registration.getQuantity());
 
-        // Add ticket type info if available
         if (ticketType != null) {
             builder.ticketTypeId(ticketType.getId())
                    .ticketTypeName(ticketType.getName())

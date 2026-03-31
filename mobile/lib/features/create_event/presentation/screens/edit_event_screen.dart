@@ -154,7 +154,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         _selectedImageBytes = bytes;
       });
 
-      // Upload image
       try {
         final api = ref.read(apiServiceProvider);
         final url = await api.uploadImageBytes(bytes, picked.name);
@@ -210,7 +209,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
 
       await api.updateMyEvent(widget.eventId, data);
 
-      // Invalidate caches
       ref.invalidate(eventDetailProvider(widget.eventId));
       ref.invalidate(myCreatedEventsProvider);
 
@@ -290,7 +288,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Rejection reason banner
                 if (_event?.status == EventStatus.rejected) ...[
                   Container(
                     width: double.infinity,
@@ -327,12 +324,10 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                   ),
                 ],
 
-                // Image picker
                 _buildImagePicker(),
 
                 const SizedBox(height: 16),
 
-                // Title
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
@@ -355,7 +350,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
 
                 const Divider(height: 32),
 
-                // Date/Time
                 _buildDateTimeRow(
                   icon: Icons.circle,
                   iconColor: Colors.green,
@@ -373,33 +367,27 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
 
                 const SizedBox(height: 16),
 
-                // Location
                 _buildLocationRow(),
 
                 const SizedBox(height: 12),
 
-                // Description
                 _buildDescriptionRow(),
 
                 const Divider(height: 32),
 
-                // Category
                 _buildCategorySelector(categoriesAsync),
 
                 const SizedBox(height: 12),
 
-                // City
                 _buildCitySelector(citiesAsync),
 
                 const Divider(height: 32),
 
-                // Ticketing
                 _buildSectionHeader(AppLocalizations.of(context)!.ticketing),
                 _buildPriceRow(),
 
                 const Divider(height: 32),
 
-                // Options
                 _buildSectionHeader(AppLocalizations.of(context)!.options),
                 _buildVisibilityRow(),
                 const SizedBox(height: 8),
@@ -410,7 +398,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             ),
           ),
 
-          // Save button
           Positioned(
             left: 16,
             right: 16,
@@ -632,7 +619,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Latitude & Longitude inputs
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -683,7 +669,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Apply coordinates button
                     IconButton(
                       onPressed: () {
                         final lat = double.tryParse(latController.text);
@@ -777,7 +762,6 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Get values from text fields in case user typed but didn't submit
                       final lat = double.tryParse(latController.text) ?? selectedLocation.latitude;
                       final lng = double.tryParse(lngController.text) ?? selectedLocation.longitude;
 

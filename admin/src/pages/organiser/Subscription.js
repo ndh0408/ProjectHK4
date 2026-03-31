@@ -21,16 +21,11 @@ import {
     ListItemText,
 } from '@mui/material';
 import {
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
     Star as StarIcon,
     Rocket as RocketIcon,
     WorkspacePremium as PremiumIcon,
     Diamond as DiamondIcon,
     Event as EventIcon,
-    SmartToy as AIIcon,
-    CardMembership as CertificateIcon,
-    TableChart as ExcelIcon,
     TrendingUp as BoostIcon,
     Warning as WarningIcon,
 } from '@mui/icons-material';
@@ -61,15 +56,12 @@ const Subscription = () => {
     const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
-        // Check URL for payment success/cancel
         const params = new URLSearchParams(window.location.search);
         if (params.get('success') === 'true') {
             const plan = params.get('plan');
-            // Confirm payment and upgrade subscription
             confirmPayment(plan);
         } else if (params.get('canceled') === 'true') {
             toast.info('Payment was canceled. Your subscription was not changed.');
-            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
             fetchData();
         } else {
@@ -82,7 +74,6 @@ const Subscription = () => {
             setLoading(true);
             await organiserApi.confirmSubscriptionPayment(plan);
             toast.success(`Successfully upgraded to ${plan} plan!`);
-            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
             await fetchData();
         } catch (err) {
@@ -90,7 +81,6 @@ const Subscription = () => {
             setError(errorMsg);
             toast.error(errorMsg);
             console.error('Confirm payment error:', err);
-            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
             setLoading(false);
         }
@@ -119,7 +109,6 @@ const Subscription = () => {
         try {
             setProcessing(true);
 
-            // For FREE plan, downgrade directly
             if (upgradeDialog.plan === 'FREE') {
                 await organiserApi.cancelSubscription();
                 toast.success('Successfully downgraded to FREE plan!');
@@ -128,11 +117,9 @@ const Subscription = () => {
                 return;
             }
 
-            // For paid plans, create Stripe checkout session
             const response = await organiserApi.createSubscriptionCheckout(upgradeDialog.plan);
             const checkoutUrl = response.data.data.checkoutUrl;
 
-            // Redirect to Stripe checkout
             window.location.href = checkoutUrl;
         } catch (err) {
             const errorMsg = err.response?.data?.message || 'Failed to create checkout session';
@@ -157,7 +144,7 @@ const Subscription = () => {
     };
 
     const getUsagePercentage = (used, max) => {
-        if (max === -1) return 0; // Unlimited
+        if (max === -1) return 0;
         return Math.min((used / max) * 100, 100);
     };
 
@@ -184,7 +171,6 @@ const Subscription = () => {
                 </Alert>
             )}
 
-            {/* Near Quota Warnings */}
             {subscription && subscription.remainingEvents !== -1 && subscription.remainingEvents <= 2 && subscription.remainingEvents > 0 && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                     <Typography variant="body2">
@@ -201,24 +187,7 @@ const Subscription = () => {
                     </Typography>
                 </Alert>
             )}
-            {subscription && subscription.remainingAIUsage !== -1 && subscription.remainingAIUsage <= 2 && subscription.remainingAIUsage > 0 && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                    <Typography variant="body2">
-                        <strong>Warning:</strong> You only have <strong>{subscription.remainingAIUsage}</strong> AI generation{subscription.remainingAIUsage > 1 ? 's' : ''} remaining this month.
-                        Consider upgrading for more AI features.
-                    </Typography>
-                </Alert>
-            )}
-            {subscription && subscription.remainingAIUsage === 0 && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    <Typography variant="body2">
-                        <strong>Limit Reached:</strong> You have used all your AI quota for this month.
-                        Upgrade your plan for more AI features.
-                    </Typography>
-                </Alert>
-            )}
 
-            {/* Current Plan Card */}
             {subscription && (
                 <Card sx={{ mb: 4, border: `2px solid ${planColors[subscription.plan]}` }}>
                     <CardContent>
@@ -258,13 +227,11 @@ const Subscription = () => {
 
                         <Divider sx={{ my: 2 }} />
 
-                        {/* Usage Stats */}
                         <Typography variant="h6" gutterBottom>
                             Monthly Usage
                         </Typography>
                         <Grid container spacing={3}>
-                            {/* Events Usage */}
-                            <Grid item xs={12} md={4}>
+                            <Grid item xs={12} md={6}>
                                 <Box>
                                     <Box display="flex" justifyContent="space-between" mb={1}>
                                         <Box display="flex" alignItems="center" gap={1}>
@@ -288,34 +255,7 @@ const Subscription = () => {
                                 </Box>
                             </Grid>
 
-                            {/* AI Usage */}
-                            <Grid item xs={12} md={4}>
-                                <Box>
-                                    <Box display="flex" justifyContent="space-between" mb={1}>
-                                        <Box display="flex" alignItems="center" gap={1}>
-                                            <AIIcon fontSize="small" color="secondary" />
-                                            <Typography variant="body2">AI Usage</Typography>
-                                        </Box>
-                                        <Typography variant="body2" fontWeight="bold">
-                                            {subscription.aiUsageThisMonth} / {subscription.maxAIUsagePerMonth === -1 ? '∞' : subscription.maxAIUsagePerMonth}
-                                        </Typography>
-                                    </Box>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={getUsagePercentage(subscription.aiUsageThisMonth, subscription.maxAIUsagePerMonth)}
-                                        color="secondary"
-                                        sx={{ height: 8, borderRadius: 4 }}
-                                    />
-                                    {subscription.remainingAIUsage !== -1 && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            {subscription.remainingAIUsage} remaining
-                                        </Typography>
-                                    )}
-                                </Box>
-                            </Grid>
-
-                            {/* Boost Discount */}
-                            <Grid item xs={12} md={4}>
+                            <Grid item xs={12} md={6}>
                                 <Box>
                                     <Box display="flex" alignItems="center" gap={1} mb={1}>
                                         <BoostIcon fontSize="small" color="warning" />
@@ -334,7 +274,6 @@ const Subscription = () => {
                 </Card>
             )}
 
-            {/* Available Plans */}
             <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mt: 4 }}>
                 Available Plans
             </Typography>
@@ -400,26 +339,6 @@ const Subscription = () => {
                                     </ListItem>
                                     <ListItem>
                                         <ListItemIcon sx={{ minWidth: 36 }}>
-                                            <AIIcon fontSize="small" />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={plan.aiUsagePerMonth === 'Unlimited' ? 'Unlimited AI/month' : `${plan.aiUsagePerMonth} AI/month`}
-                                        />
-                                    </ListItem>
-                                    <ListItem>
-                                        <ListItemIcon sx={{ minWidth: 36 }}>
-                                            {plan.canGenerateCertificates ? <CheckIcon color="success" fontSize="small" /> : <CancelIcon color="error" fontSize="small" />}
-                                        </ListItemIcon>
-                                        <ListItemText primary="Certificates" />
-                                    </ListItem>
-                                    <ListItem>
-                                        <ListItemIcon sx={{ minWidth: 36 }}>
-                                            {plan.canExportExcel ? <CheckIcon color="success" fontSize="small" /> : <CancelIcon color="error" fontSize="small" />}
-                                        </ListItemIcon>
-                                        <ListItemText primary="Export Excel" />
-                                    </ListItem>
-                                    <ListItem>
-                                        <ListItemIcon sx={{ minWidth: 36 }}>
                                             <BoostIcon fontSize="small" color="warning" />
                                         </ListItemIcon>
                                         <ListItemText primary={`${plan.boostDiscountPercent}% Boost Discount`} />
@@ -454,7 +373,6 @@ const Subscription = () => {
                 ))}
             </Grid>
 
-            {/* Upgrade Dialog */}
             <Dialog open={upgradeDialog.open} onClose={() => setUpgradeDialog({ open: false, plan: null })}>
                 <DialogTitle>
                     {upgradeDialog.plan === 'FREE'
@@ -483,7 +401,6 @@ const Subscription = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Cancel Dialog */}
             <Dialog open={cancelDialog} onClose={() => setCancelDialog(false)}>
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <WarningIcon color="warning" />

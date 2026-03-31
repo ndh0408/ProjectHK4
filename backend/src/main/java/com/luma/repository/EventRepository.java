@@ -61,7 +61,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "LOWER(e.description) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Event> searchEvents(@Param("query") String query, Pageable pageable);
 
-    // Search with boosted events prioritized (boosted events first, ordered by package tier)
     @Query("SELECT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' AND " +
@@ -72,7 +71,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "e.startTime ASC")
     Page<Event> searchEventsWithBoostPriority(@Param("query") String query, @Param("now") LocalDateTime now, Pageable pageable);
 
-    // Upcoming events with boosted events prioritized
     @Query("SELECT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
@@ -85,7 +83,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    // Events by category with boosted events prioritized
     @Query("SELECT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.category = :category AND e.status = 'PUBLISHED' " +
@@ -98,7 +95,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("now") LocalDateTime now,
             Pageable pageable);
 
-    // Events by city with boosted events prioritized
     @Query("SELECT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.city = :city AND e.status = 'PUBLISHED' " +
@@ -202,17 +198,10 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "AND r.status IN ('APPROVED', 'PENDING', 'WAITING_LIST')")
     long countActiveRegistrations(@Param("eventId") UUID eventId);
 
-    /**
-     * Find events that should be marked as ONGOING (startTime has passed)
-     */
     List<Event> findByStatusAndStartTimeBefore(EventStatus status, LocalDateTime dateTime);
 
-    /**
-     * Find events that should be marked as COMPLETED (endTime has passed)
-     */
     List<Event> findByStatusAndEndTimeBefore(EventStatus status, LocalDateTime dateTime);
 
-    // Analytics queries
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByOrganiserId(UUID organiserId);

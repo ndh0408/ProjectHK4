@@ -1,21 +1,13 @@
 import 'package:dio/dio.dart';
 
-/// Utility class for extracting user-friendly error messages from exceptions
 class ErrorUtils {
   ErrorUtils._();
 
-  /// Extracts a user-friendly error message from various exception types.
-  ///
-  /// This function attempts to:
-  /// 1. Parse error messages from DioException response body
-  /// 2. Match common error patterns for localized messages
-  /// 3. Provide a generic fallback message
   static String extractMessage(dynamic error, {String? fallback}) {
     if (error is DioException) {
       return _extractFromDioException(error, fallback: fallback);
     }
 
-    // Check for common patterns in error string
     final errorStr = error.toString().toLowerCase();
     return _matchCommonPatterns(errorStr) ??
         fallback ??
@@ -23,28 +15,23 @@ class ErrorUtils {
   }
 
   static String _extractFromDioException(DioException error, {String? fallback}) {
-    // Try to get the message from the response body
     final responseData = error.response?.data;
 
     if (responseData is Map<String, dynamic>) {
-      // Backend returns error in 'message' field
       if (responseData.containsKey('message')) {
         return responseData['message'] as String;
       }
-      // Or 'error' field
       if (responseData.containsKey('error')) {
         return responseData['error'] as String;
       }
     }
 
-    // Check for common patterns
     final errorStr = error.toString().toLowerCase();
     final patternMatch = _matchCommonPatterns(errorStr);
     if (patternMatch != null) {
       return patternMatch;
     }
 
-    // Handle specific status codes
     final statusCode = error.response?.statusCode;
     if (statusCode != null) {
       switch (statusCode) {
@@ -71,7 +58,6 @@ class ErrorUtils {
       }
     }
 
-    // Handle connection errors
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout) {
@@ -85,7 +71,6 @@ class ErrorUtils {
     return fallback ?? 'An error occurred. Please try again.';
   }
 
-  /// Match common error message patterns and return user-friendly messages
   static String? _matchCommonPatterns(String errorStr) {
     if (errorStr.contains('already registered')) {
       return 'You have already registered for this event.';

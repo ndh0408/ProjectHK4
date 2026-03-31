@@ -221,7 +221,6 @@ public class OrganiserService {
     public OrganiserResponse updateOrganiserSignature(User user, String signatureUrl) {
         OrganiserProfile profile = organiserProfileRepository.findByUser(user)
                 .orElseThrow(() -> new ResourceNotFoundException("You do not have an organiser profile"));
-        // Signature is stored in User entity
         user.setSignatureUrl(signatureUrl);
         userRepository.save(user);
         return OrganiserResponse.fromEntity(profile);

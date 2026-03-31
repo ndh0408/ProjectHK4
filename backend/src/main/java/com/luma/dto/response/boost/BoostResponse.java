@@ -26,7 +26,6 @@ public class BoostResponse {
     private boolean isActive;
     private int daysRemaining;
 
-    // Stats
     private int viewsBeforeBoost;
     private int viewsDuringBoost;
     private int clicksBeforeBoost;

@@ -83,28 +83,27 @@ public class Event {
     @Column(columnDefinition = "NVARCHAR(2000)")
     private String rejectionReason;
 
-    // Recurring event fields
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private RecurrenceType recurrenceType = RecurrenceType.NONE;
 
-    private Integer recurrenceInterval;  // Khoảng cách lặp (VD: mỗi 2 tuần)
+    private Integer recurrenceInterval;
 
-    private String recurrenceDaysOfWeek;  // "MON,WED,FRI" cho weekly
+    private String recurrenceDaysOfWeek;
 
-    private LocalDateTime recurrenceEndDate;  // Ngày kết thúc chuỗi lặp
+    private LocalDateTime recurrenceEndDate;
 
-    private Integer recurrenceCount;  // Số lần lặp tối đa
+    private Integer recurrenceCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_event_id")
-    private Event parentEvent;  // Event gốc (nếu là instance con)
+    private Event parentEvent;
 
     @OneToMany(mappedBy = "parentEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Event> childEvents = new ArrayList<>();  // Các event con
+    private List<Event> childEvents = new ArrayList<>();
 
-    private Integer occurrenceIndex;  // Số thứ tự trong chuỗi (1, 2, 3...)
+    private Integer occurrenceIndex;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -112,7 +111,6 @@ public class Event {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // Soft delete fields
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private boolean deleted = false;

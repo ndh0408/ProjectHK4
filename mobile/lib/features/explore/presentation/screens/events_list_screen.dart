@@ -12,7 +12,6 @@ import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
 import '../../../home/providers/events_provider.dart';
 
-// State notifier for paginated events
 class EventsListState {
   const EventsListState({
     this.events = const [],
@@ -97,7 +96,6 @@ final eventsListProvider = StateNotifierProvider.autoDispose
   },
 );
 
-// Provider to get category name
 final categoryNameProvider = FutureProvider.family<String?, int>((ref, id) async {
   final api = ref.watch(apiServiceProvider);
   final categories = await api.getCategories();
@@ -105,14 +103,12 @@ final categoryNameProvider = FutureProvider.family<String?, int>((ref, id) async
   return category?.name;
 });
 
-// Provider to get city details
 final cityDetailProvider = FutureProvider.family<City?, int>((ref, id) async {
   final api = ref.watch(apiServiceProvider);
   final cities = await api.getCities();
   return cities.where((c) => c.id == id).firstOrNull;
 });
 
-// City image mapping
 String _getCityImageUrl(String cityName) {
   final lower = cityName.toLowerCase();
   if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
@@ -151,7 +147,6 @@ String _getCityImageUrl(String cityName) {
   return 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&h=400&fit=crop';
 }
 
-// City description mapping
 String _getCityDescription(String cityName) {
   final lower = cityName.toLowerCase();
   if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
@@ -210,17 +205,14 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
     final params = (categoryId: widget.categoryId, cityId: widget.cityId);
     final state = ref.watch(eventsListProvider(params));
 
-    // Get city details if filtering by city
     final cityDetail = widget.cityId != null
         ? ref.watch(cityDetailProvider(widget.cityId!))
         : null;
 
-    // Get category name if filtering by category
     final categoryName = widget.categoryId != null
         ? ref.watch(categoryNameProvider(widget.categoryId!))
         : null;
 
-    // Determine title
     String title = 'Events';
     String? cityName;
     if (cityDetail != null && cityDetail.hasValue && cityDetail.value != null) {
@@ -230,7 +222,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
       title = categoryName.value ?? 'Events';
     }
 
-    // Check if we're showing city view (with header image)
     final isCityView = widget.cityId != null && cityName != null;
     final resolvedCityName = cityName;
 
@@ -254,7 +245,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
-        // Hero Header with City Image
         SliverAppBar(
           expandedHeight: 280,
           pinned: true,
@@ -292,7 +282,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                 child: const Icon(Icons.share, color: Colors.white, size: 20),
               ),
               onPressed: () {
-                // TODO: Share functionality
               },
             ),
           ],
@@ -300,7 +289,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
             background: Stack(
               fit: StackFit.expand,
               children: [
-                // City Image
                 CachedNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
@@ -308,7 +296,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                     color: AppColors.primary,
                   ),
                 ),
-                // Gradient Overlay
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -322,7 +309,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                     ),
                   ),
                 ),
-                // City Info
                 Positioned(
                   left: 20,
                   right: 20,
@@ -354,7 +340,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
           ),
         ),
 
-        // City Description & Subscribe
         SliverToBoxAdapter(
           child: Container(
             color: Colors.white,
@@ -375,7 +360,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // TODO: Subscribe to city
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Subscribed to city updates!'),
@@ -405,7 +389,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
           ),
         ),
 
-        // Events List
         _buildEventsList(state, params),
       ],
     );
@@ -421,7 +404,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
-        // App Bar
         SliverAppBar(
           pinned: true,
           title: Text(title),
@@ -429,7 +411,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
           foregroundColor: Colors.white,
         ),
 
-        // Filter Chips
         if (widget.categoryId != null || widget.cityId != null)
           SliverToBoxAdapter(
             child: Container(
@@ -460,7 +441,6 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
             ),
           ),
 
-        // Events List
         _buildEventsList(state, params),
       ],
     );
@@ -489,14 +469,12 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
       );
     }
 
-    // Group events by date
     final groupedEvents = _groupEventsByDate(state.events);
     final dateKeys = groupedEvents.keys.toList();
 
     return SliverList(
       delegate: SliverChildBuilderDelegate(
         (context, index) {
-          // Show loading at the end
           if (index >= dateKeys.length) {
             if (state.hasMore) {
               return const Padding(
@@ -569,7 +547,6 @@ class _DateSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Date Header
         Container(
           color: Colors.grey[100],
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -583,7 +560,6 @@ class _DateSection extends StatelessWidget {
           ),
         ),
 
-        // Events
         ...events.map((event) => _EventListItem(
           event: event,
           onTap: () => onEventTap(event),
@@ -615,7 +591,6 @@ class _EventListItem extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Container(
@@ -641,12 +616,10 @@ class _EventListItem extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Event Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser Row
                   Row(
                     children: [
                       Container(
@@ -682,7 +655,6 @@ class _EventListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Event Title
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -696,7 +668,6 @@ class _EventListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Time with Price Badge
                   Row(
                     children: [
                       Icon(
@@ -713,7 +684,6 @@ class _EventListItem extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      // Price Badge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
@@ -733,7 +703,6 @@ class _EventListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Location
                   Row(
                     children: [
                       Icon(

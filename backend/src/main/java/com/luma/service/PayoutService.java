@@ -55,11 +55,6 @@ public class PayoutService {
     @Value("${payout.delay-hours:48}")
     private int payoutDelayHours;
 
-    // ==================== Organiser Bank Account Management ====================
-
-    /**
-     * Create Stripe Connect account for organiser
-     */
     @Transactional
     public OrganiserBankAccountResponse createStripeConnectAccount(User organiser) {
         if (bankAccountRepository.existsByOrganiserId(organiser.getId())) {
@@ -69,7 +64,6 @@ public class PayoutService {
         Stripe.apiKey = stripeSecretKey;
 
         try {
-            // Create Stripe Connect Express account
             AccountCreateParams params = AccountCreateParams.builder()
                     .setType(AccountCreateParams.Type.EXPRESS)
                     .setEmail(organiser.getEmail())
@@ -85,7 +79,6 @@ public class PayoutService {
 
             Account account = Account.create(params);
 
-            // Save bank account record
             OrganiserBankAccount bankAccount = OrganiserBankAccount.builder()
                     .organiser(organiser)
                     .stripeAccountId(account.getId())
@@ -96,7 +89,6 @@ public class PayoutService {
 
             bankAccountRepository.save(bankAccount);
 
-            // Generate onboarding link
             String onboardingUrl = createOnboardingLink(account.getId());
 
             OrganiserBankAccountResponse response = OrganiserBankAccountResponse.fromEntity(bankAccount);
@@ -109,9 +101,6 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Get onboarding link for incomplete account setup
-     */
     public String getOnboardingLink(User organiser) {
         OrganiserBankAccount account = bankAccountRepository.findByOrganiserId(organiser.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Bank account not found"));
@@ -138,9 +127,6 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Refresh account status from Stripe
-     */
     @Transactional
     public OrganiserBankAccountResponse refreshAccountStatus(User organiser) {
         OrganiserBankAccount bankAccount = bankAccountRepository.findByOrganiserId(organiser.getId())
@@ -163,11 +149,9 @@ public class PayoutService {
                 bankAccount.setAccountStatus("pending");
             }
 
-            // Get bank account details if available
             if (account.getExternalAccounts() != null &&
                     account.getExternalAccounts().getData() != null &&
                     !account.getExternalAccounts().getData().isEmpty()) {
-                // Get first external account
                 var externalAccount = account.getExternalAccounts().getData().get(0);
                 if (externalAccount instanceof com.stripe.model.BankAccount) {
                     com.stripe.model.BankAccount stripeBankAccount = (com.stripe.model.BankAccount) externalAccount;
@@ -186,27 +170,18 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Get organiser's bank account
-     */
     public OrganiserBankAccountResponse getBankAccount(User organiser) {
         return bankAccountRepository.findByOrganiserId(organiser.getId())
                 .map(OrganiserBankAccountResponse::fromEntity)
                 .orElse(null);
     }
 
-    // ==================== Payout Management ====================
-
-    /**
-     * Create payout record for an event (called when event is published)
-     */
     @Transactional
     public void createPayoutRecord(Event event) {
         if (event.isFree() || payoutRepository.existsByEventId(event.getId())) {
             return;
         }
 
-        // Get commission rate from CommissionService (synced with platform config)
         BigDecimal commissionRate = commissionService.getCommissionRateForOrganiser(event.getOrganiser().getId());
 
         Payout payout = Payout.builder()
@@ -225,13 +200,9 @@ public class PayoutService {
         payoutRepository.save(payout);
     }
 
-    /**
-     * Update payout amounts when a ticket is sold
-     */
     @Transactional
     public void updatePayoutOnTicketSale(UUID eventId, BigDecimal ticketAmount, BigDecimal stripeFee) {
         payoutRepository.findByEventId(eventId).ifPresent(payout -> {
-            // Use the commission rate stored in the payout (synced from CommissionService)
             BigDecimal commissionRate = payout.getPlatformFeePercent();
 
             BigDecimal newGross = payout.getGrossAmount().add(ticketAmount);
@@ -250,13 +221,9 @@ public class PayoutService {
         });
     }
 
-    /**
-     * Update payout on refund
-     */
     @Transactional
     public void updatePayoutOnRefund(UUID eventId, BigDecimal refundAmount) {
         payoutRepository.findByEventId(eventId).ifPresent(payout -> {
-            // Use the commission rate stored in the payout (synced from CommissionService)
             BigDecimal commissionRate = payout.getPlatformFeePercent();
 
             BigDecimal newGross = payout.getGrossAmount().subtract(refundAmount);
@@ -273,10 +240,7 @@ public class PayoutService {
         });
     }
 
-    /**
-     * Process payouts for completed events (scheduled job)
-     */
-    @Scheduled(cron = "0 0 * * * *") // Run every hour
+    @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void processPayouts() {
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(payoutDelayHours);
@@ -300,7 +264,6 @@ public class PayoutService {
                 payout.setFailureReason(e.getMessage());
                 payoutRepository.save(payout);
 
-                // Notify organiser
                 notificationService.sendNotification(
                         payout.getOrganiser(),
                         "Payout Failed",
@@ -313,12 +276,8 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Process a single payout
-     */
     @Transactional
     public void processSinglePayout(Payout payout) {
-        // Check if organiser has verified bank account
         OrganiserBankAccount bankAccount = bankAccountRepository.findByOrganiserId(payout.getOrganiser().getId())
                 .orElseThrow(() -> new BadRequestException("Organiser has no connected bank account"));
 
@@ -333,9 +292,8 @@ public class PayoutService {
             payout.setProcessedAt(LocalDateTime.now());
             payoutRepository.save(payout);
 
-            // Create transfer to connected account
             TransferCreateParams params = TransferCreateParams.builder()
-                    .setAmount(payout.getNetAmount().multiply(new BigDecimal("100")).longValue()) // Convert to cents
+                    .setAmount(payout.getNetAmount().multiply(new BigDecimal("100")).longValue())
                     .setCurrency("usd")
                     .setDestination(bankAccount.getStripeAccountId())
                     .setTransferGroup("event_" + payout.getEvent().getId())
@@ -350,7 +308,6 @@ public class PayoutService {
             payout.setCompletedAt(LocalDateTime.now());
             payoutRepository.save(payout);
 
-            // Notify organiser
             notificationService.sendNotification(
                     payout.getOrganiser(),
                     "Payout Completed",
@@ -368,9 +325,6 @@ public class PayoutService {
         }
     }
 
-    /**
-     * Manually trigger payout (admin)
-     */
     @Transactional
     public PayoutResponse manualProcessPayout(UUID payoutId) {
         Payout payout = payoutRepository.findById(payoutId)
@@ -384,9 +338,6 @@ public class PayoutService {
         return PayoutResponse.fromEntity(payout);
     }
 
-    /**
-     * Put payout on hold (admin)
-     */
     @Transactional
     public PayoutResponse putPayoutOnHold(UUID payoutId, String reason) {
         Payout payout = payoutRepository.findById(payoutId)
@@ -400,7 +351,6 @@ public class PayoutService {
         payout.setFailureReason(reason);
         payoutRepository.save(payout);
 
-        // Notify organiser
         notificationService.sendNotification(
                 payout.getOrganiser(),
                 "Payout On Hold",
@@ -413,9 +363,6 @@ public class PayoutService {
         return PayoutResponse.fromEntity(payout);
     }
 
-    /**
-     * Release payout from hold (admin)
-     */
     @Transactional
     public PayoutResponse releasePayoutFromHold(UUID payoutId) {
         Payout payout = payoutRepository.findById(payoutId)
@@ -431,8 +378,6 @@ public class PayoutService {
 
         return PayoutResponse.fromEntity(payout);
     }
-
-    // ==================== Query Methods ====================
 
     public Page<PayoutResponse> getPayoutsByOrganiser(UUID organiserId, Pageable pageable) {
         return payoutRepository.findByOrganiserId(organiserId, pageable)

@@ -99,7 +99,6 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
   final bool isLoggedIn;
 
   Future<void> loadConversations({bool refresh = false}) async {
-    // Don't load if not logged in
     if (!isLoggedIn) return;
     if (state.isLoading) return;
     if (!refresh && !state.hasMore) return;
@@ -171,7 +170,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     _scrollController.addListener(_onScroll);
     Future.microtask(() {
       ref.read(conversationsProvider.notifier).loadConversations(refresh: true);
-      // Also load notifications for LUMA tile preview
       ref.read(notificationsProvider.notifier).loadNotifications(refresh: true);
     });
   }
@@ -212,7 +210,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final notificationsState = ref.watch(notificationsProvider);
 
-    // Debug logs
     debugPrint('=== ConversationsScreen Debug ===');
     debugPrint('Conversations count: ${state.conversations.length}');
     debugPrint('Conversations isLoading: ${state.isLoading}');
@@ -221,7 +218,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     debugPrint('Notifications isLoading: ${notificationsState.isLoading}');
     debugPrint('Notifications error: ${notificationsState.error}');
 
-    // Get latest notification for preview
     final latestNotification = notificationsState.notifications.isNotEmpty
         ? notificationsState.notifications.first
         : null;
@@ -242,10 +238,8 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
       child: ListView.builder(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        // +1 for LUMA Notifications at top
         itemCount: state.conversations.length + 1 + (state.isLoading ? 1 : 0),
         itemBuilder: (context, index) {
-          // First item: LUMA Notifications
           if (index == 0) {
             return _LumaNotificationsTile(
               unreadCount: unreadNotifications.maybeWhen(
@@ -258,7 +252,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
             );
           }
 
-          // Loading indicator at the end
           if (index == state.conversations.length + 1) {
             return const Padding(
               padding: EdgeInsets.all(20),
@@ -272,7 +265,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
             );
           }
 
-          final conversation = state.conversations[index - 1]; // -1 because of notifications tile
+          final conversation = state.conversations[index - 1];
           return _ConversationTile(
             conversation: conversation,
             timeText: _formatTime(conversation.lastMessageAt),
@@ -286,7 +279,6 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
   }
 }
 
-// LUMA Notifications tile - appears at top of conversations list
 class _LumaNotificationsTile extends StatelessWidget {
   const _LumaNotificationsTile({
     required this.unreadCount,
@@ -338,7 +330,6 @@ class _LumaNotificationsTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // LUMA Avatar with notification icon
             Stack(
               children: [
                 Container(
@@ -361,7 +352,6 @@ class _LumaNotificationsTile extends StatelessWidget {
                     size: 28,
                   ),
                 ),
-                // Online indicator
                 Positioned(
                   right: 2,
                   bottom: 2,
@@ -379,7 +369,6 @@ class _LumaNotificationsTile extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +388,6 @@ class _LumaNotificationsTile extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 6),
-                            // Verified badge
                             Container(
                               padding: const EdgeInsets.all(2),
                               decoration: const BoxDecoration(
@@ -508,7 +496,6 @@ class _ConversationTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Avatar
             Stack(
               children: [
                 Container(
@@ -562,7 +549,6 @@ class _ConversationTile extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

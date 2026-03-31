@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'local_notification_service.dart';
 
-/// Stub implementation for Web platform
 LocalNotificationService createLocalNotificationService() => _WebNotificationService();
 
 class _WebNotificationService implements LocalNotificationService {
@@ -17,7 +16,6 @@ class _WebNotificationService implements LocalNotificationService {
     required String body,
     String? payload,
   }) async {
-    // Web doesn't support local notifications in the same way
     debugPrint('Web notification: $title - $body');
   }
 }

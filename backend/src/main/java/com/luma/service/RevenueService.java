@@ -35,17 +35,14 @@ public class RevenueService {
         LocalDateTime startOfLastMonth = startOfMonth.minusMonths(1);
         LocalDateTime endOfLastMonth = startOfMonth.minusSeconds(1);
 
-        // Get all paid boosts
         List<EventBoost> allBoosts = boostRepository.findAll().stream()
                 .filter(b -> b.getPaidAt() != null && b.getAmount() != null)
                 .collect(Collectors.toList());
 
-        // Get all subscriptions
         List<OrganiserSubscription> allSubscriptions = subscriptionRepository.findAll().stream()
                 .filter(s -> s.getStartDate() != null && s.getPlan() != SubscriptionPlan.FREE)
                 .collect(Collectors.toList());
 
-        // Calculate Total Revenue
         BigDecimal totalBoostRevenue = allBoosts.stream()
                 .map(EventBoost::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -56,7 +53,6 @@ public class RevenueService {
 
         BigDecimal totalRevenue = totalBoostRevenue.add(totalSubscriptionRevenue);
 
-        // Calculate This Month Revenue
         BigDecimal monthlyBoostRevenue = allBoosts.stream()
                 .filter(b -> b.getPaidAt() != null && b.getPaidAt().isAfter(startOfMonth))
                 .map(EventBoost::getAmount)
@@ -69,7 +65,6 @@ public class RevenueService {
 
         BigDecimal monthlyRevenue = monthlyBoostRevenue.add(monthlySubscriptionRevenue);
 
-        // Calculate Last Month Revenue
         BigDecimal lastMonthBoostRevenue = allBoosts.stream()
                 .filter(b -> b.getPaidAt() != null &&
                         b.getPaidAt().isAfter(startOfLastMonth) &&
@@ -86,12 +81,10 @@ public class RevenueService {
 
         BigDecimal lastMonthRevenue = lastMonthBoostRevenue.add(lastMonthSubscriptionRevenue);
 
-        // Calculate Growth Percentages
         Double revenueGrowth = calculateGrowthPercent(lastMonthRevenue, monthlyRevenue);
         Double subscriptionGrowth = calculateGrowthPercent(lastMonthSubscriptionRevenue, monthlySubscriptionRevenue);
         Double boostGrowth = calculateGrowthPercent(lastMonthBoostRevenue, monthlyBoostRevenue);
 
-        // Counts
         int totalSubscriptionCount = allSubscriptions.size();
         int activeSubscriptionCount = (int) allSubscriptions.stream()
                 .filter(OrganiserSubscription::isValid)
@@ -101,13 +94,10 @@ public class RevenueService {
                 .filter(b -> b.getStatus() == BoostStatus.ACTIVE && b.isActive())
                 .count();
 
-        // By Subscription Plan
         Map<String, PlanStats> subscriptionByPlan = calculateSubscriptionByPlan(allSubscriptions);
 
-        // By Boost Package
         Map<String, PackageStats> boostByPackage = calculateBoostByPackage(allBoosts);
 
-        // Monthly Trend (last 12 months)
         List<MonthlyRevenue> monthlyTrend = calculateMonthlyTrend(allBoosts, allSubscriptions);
 
         return RevenueStatsResponse.builder()
@@ -143,7 +133,7 @@ public class RevenueService {
     private Double calculateGrowthPercent(BigDecimal lastMonth, BigDecimal thisMonth) {
         if (lastMonth == null || lastMonth.compareTo(BigDecimal.ZERO) == 0) {
             if (thisMonth != null && thisMonth.compareTo(BigDecimal.ZERO) > 0) {
-                return 100.0; // 100% growth from zero
+                return 100.0;
             }
             return 0.0;
         }
@@ -168,7 +158,6 @@ public class RevenueService {
                     .map(this::calculateSubscriptionRevenue)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // MRR = active subscriptions * monthly price
             long activeCount = planSubs.stream()
                     .filter(OrganiserSubscription::isValid)
                     .count();

@@ -13,5 +13,5 @@ public class NotificationBroadcastRequest {
     @NotBlank(message = "Message is required")
     private String message;
     
-    private UserRole targetRole; // null = all users
+    private UserRole targetRole;
 }

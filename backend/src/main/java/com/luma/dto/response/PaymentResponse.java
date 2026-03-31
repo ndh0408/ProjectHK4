@@ -28,7 +28,6 @@ public class PaymentResponse {
     private LocalDateTime paidAt;
     private LocalDateTime createdAt;
 
-    // Refund info
     private BigDecimal refundAmount;
     private String refundReason;
     private LocalDateTime refundedAt;

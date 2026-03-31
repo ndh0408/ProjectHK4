@@ -75,33 +75,6 @@ public class OrganiserSubscriptionController {
                 subscriptionService.canCreateEvent(organiser.getId())));
     }
 
-    @GetMapping("/can-use-ai")
-    @Operation(summary = "Check if organiser can use AI features")
-    public ResponseEntity<ApiResponse<Boolean>> canUseAI(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User organiser = userService.getEntityByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(
-                subscriptionService.canUseAI(organiser.getId())));
-    }
-
-    @GetMapping("/can-generate-certificates")
-    @Operation(summary = "Check if organiser can generate certificates")
-    public ResponseEntity<ApiResponse<Boolean>> canGenerateCertificates(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User organiser = userService.getEntityByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(
-                subscriptionService.canGenerateCertificates(organiser.getId())));
-    }
-
-    @GetMapping("/can-export-excel")
-    @Operation(summary = "Check if organiser can export to Excel")
-    public ResponseEntity<ApiResponse<Boolean>> canExportExcel(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User organiser = userService.getEntityByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(
-                subscriptionService.canExportExcel(organiser.getId())));
-    }
-
     @GetMapping("/boost-discount")
     @Operation(summary = "Get boost discount percentage for current plan")
     public ResponseEntity<ApiResponse<Integer>> getBoostDiscount(
@@ -118,7 +91,6 @@ public class OrganiserSubscriptionController {
             @PathVariable SubscriptionPlan plan) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Get plan price
         BigDecimal amount = switch (plan) {
             case STANDARD -> BigDecimal.valueOf(19.99);
             case PREMIUM -> BigDecimal.valueOf(49.99);
@@ -145,7 +117,6 @@ public class OrganiserSubscriptionController {
             @PathVariable SubscriptionPlan plan) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Upgrade the subscription after payment confirmed
         OrganiserSubscriptionResponse response = subscriptionService.upgradePlan(organiser.getId(), plan);
 
         return ResponseEntity.ok(ApiResponse.success(response));

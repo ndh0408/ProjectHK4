@@ -3,6 +3,7 @@ package com.luma.controller.organiser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luma.dto.request.AIGenerateDescriptionRequest;
+import com.luma.dto.request.AIGenerateEventRequest;
 import com.luma.dto.request.AIGenerateNotificationRequest;
 import com.luma.dto.request.AIGenerateQuestionsRequest;
 import com.luma.dto.request.AIGenerateSpeakerBioRequest;
@@ -10,19 +11,23 @@ import com.luma.dto.request.AIImproveDescriptionRequest;
 import com.luma.dto.request.EventCreateRequest;
 import com.luma.dto.request.EventUpdateRequest;
 import com.luma.dto.response.AIDescriptionResponse;
+import com.luma.dto.response.AIGeneratedEventResponse;
 import com.luma.dto.response.AINotificationResponse;
 import com.luma.dto.response.AIQuestionsResponse;
 import com.luma.dto.response.AISpeakerBioResponse;
 import com.luma.dto.response.ApiResponse;
 import com.luma.dto.response.EventResponse;
 import com.luma.dto.response.PageResponse;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import com.luma.entity.City;
 import com.luma.entity.User;
 import com.luma.entity.enums.EventStatus;
+import com.luma.repository.CityRepository;
 import com.luma.service.AIService;
 import com.luma.service.EventService;
 import com.luma.service.ExcelExportService;
-import com.luma.service.OrganiserSubscriptionService;
 import com.luma.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,7 +55,7 @@ public class OrganiserEventController {
     private final UserService userService;
     private final ExcelExportService excelExportService;
     private final AIService aiService;
-    private final OrganiserSubscriptionService subscriptionService;
+    private final CityRepository cityRepository;
 
     @GetMapping
     @Operation(summary = "Get all events by organiser")
@@ -134,7 +139,6 @@ public class OrganiserEventController {
             @PathVariable UUID eventId,
             @AuthenticationPrincipal UserDetails userDetails) throws IOException {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateExcelExport(user.getId());
 
         byte[] excelData = excelExportService.exportEventRegistrations(eventId);
 
@@ -151,7 +155,7 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateDescriptionRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateAIUsage(user.getId());
+        
 
         String description = aiService.generateEventDescription(
                 request.getTitle(),
@@ -162,7 +166,7 @@ public class OrganiserEventController {
                 request.getEndTime()
         );
 
-        subscriptionService.incrementAIUsage(user.getId());
+        
         AIDescriptionResponse response = AIDescriptionResponse.builder()
                 .description(description)
                 .build();
@@ -175,14 +179,14 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIImproveDescriptionRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateAIUsage(user.getId());
+        
 
         String description = aiService.improveEventDescription(
                 request.getTitle(),
                 request.getDescription()
         );
 
-        subscriptionService.incrementAIUsage(user.getId());
+        
         AIDescriptionResponse response = AIDescriptionResponse.builder()
                 .description(description)
                 .build();
@@ -195,7 +199,7 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateSpeakerBioRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateAIUsage(user.getId());
+        
 
         String bio = aiService.generateSpeakerBio(
                 request.getName(),
@@ -203,7 +207,7 @@ public class OrganiserEventController {
                 request.getEventTitle()
         );
 
-        subscriptionService.incrementAIUsage(user.getId());
+        
         AISpeakerBioResponse response = AISpeakerBioResponse.builder()
                 .bio(bio)
                 .build();
@@ -216,7 +220,7 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateNotificationRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateAIUsage(user.getId());
+        
 
         String message = aiService.generateNotificationMessage(
                 request.getEventTitle(),
@@ -224,7 +228,7 @@ public class OrganiserEventController {
                 request.getAdditionalContext()
         );
 
-        subscriptionService.incrementAIUsage(user.getId());
+        
         AINotificationResponse response = AINotificationResponse.builder()
                 .message(message)
                 .build();
@@ -237,7 +241,7 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateQuestionsRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        subscriptionService.validateAIUsage(user.getId());
+        
 
         String jsonResponse = aiService.suggestRegistrationQuestions(
                 request.getEventTitle(),
@@ -246,12 +250,10 @@ public class OrganiserEventController {
                 request.getNumberOfQuestions()
         );
 
-        subscriptionService.incrementAIUsage(user.getId());
+        
 
-        // Parse the JSON response
         try {
             ObjectMapper mapper = new ObjectMapper();
-            // Clean up the response in case AI adds extra text
             String cleanJson = jsonResponse.trim();
             if (cleanJson.startsWith("```json")) {
                 cleanJson = cleanJson.substring(7);
@@ -273,6 +275,81 @@ public class OrganiserEventController {
                     .questions(questions)
                     .build();
             return ResponseEntity.ok(ApiResponse.success("Questions suggested", response));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse AI response: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/ai/generate-event")
+    @Operation(summary = "Generate complete event using AI")
+    public ResponseEntity<ApiResponse<AIGeneratedEventResponse>> generateFullEvent(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody AIGenerateEventRequest request) {
+
+        String cityName = null;
+        if (request.getCityId() != null) {
+            cityName = cityRepository.findById(request.getCityId())
+                    .map(City::getName)
+                    .orElse(null);
+        }
+
+        String jsonResponse = aiService.generateFullEvent(
+                request.getEventIdea(),
+                request.getEventType(),
+                request.getTargetAudience(),
+                request.getPreferredDate(),
+                request.getPreferredTime(),
+                cityName,
+                request.getLanguage()
+        );
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String cleanJson = jsonResponse.trim();
+            if (cleanJson.startsWith("```json")) {
+                cleanJson = cleanJson.substring(7);
+            }
+            if (cleanJson.startsWith("```")) {
+                cleanJson = cleanJson.substring(3);
+            }
+            if (cleanJson.endsWith("```")) {
+                cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+            }
+            cleanJson = cleanJson.trim();
+
+            var jsonNode = mapper.readTree(cleanJson);
+
+            List<String> titleSuggestions = new ArrayList<>();
+            if (jsonNode.has("titleSuggestions")) {
+                for (var title : jsonNode.get("titleSuggestions")) {
+                    titleSuggestions.add(title.asText());
+                }
+            }
+
+            List<AIGeneratedEventResponse.SpeakerSuggestion> speakers = new ArrayList<>();
+            if (jsonNode.has("suggestedSpeakers") && jsonNode.get("suggestedSpeakers").isArray()) {
+                for (var speaker : jsonNode.get("suggestedSpeakers")) {
+                    speakers.add(AIGeneratedEventResponse.SpeakerSuggestion.builder()
+                            .name(speaker.has("name") ? speaker.get("name").asText() : "")
+                            .title(speaker.has("title") ? speaker.get("title").asText() : "")
+                            .bio(speaker.has("bio") ? speaker.get("bio").asText() : "")
+                            .build());
+                }
+            }
+
+            AIGeneratedEventResponse response = AIGeneratedEventResponse.builder()
+                    .titleSuggestions(titleSuggestions)
+                    .description(jsonNode.has("description") ? jsonNode.get("description").asText() : "")
+                    .suggestedCategory(jsonNode.has("suggestedCategory") ? jsonNode.get("suggestedCategory").asText() : "")
+                    .suggestedVenue(jsonNode.has("suggestedVenue") ? jsonNode.get("suggestedVenue").asText() : "")
+                    .suggestedAddress(jsonNode.has("suggestedAddress") ? jsonNode.get("suggestedAddress").asText() : "")
+                    .suggestedCapacity(jsonNode.has("suggestedCapacity") ? jsonNode.get("suggestedCapacity").asInt() : 100)
+                    .suggestedPrice(jsonNode.has("suggestedPrice") ? BigDecimal.valueOf(jsonNode.get("suggestedPrice").asDouble()) : BigDecimal.ZERO)
+                    .isFree(jsonNode.has("isFree") ? jsonNode.get("isFree").asBoolean() : true)
+                    .suggestedSpeakers(speakers)
+                    .build();
+
+            return ResponseEntity.ok(ApiResponse.success("Event generated successfully", response));
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse AI response: " + e.getMessage());
         }

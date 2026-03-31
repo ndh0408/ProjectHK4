@@ -12,11 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Scheduler để tự động cập nhật trạng thái event
- * - Chuyển PUBLISHED -> ONGOING khi event bắt đầu
- * - Chuyển ONGOING -> COMPLETED khi event kết thúc
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -24,21 +19,16 @@ public class EventAutoCompleteScheduler {
 
     private final EventRepository eventRepository;
 
-    /**
-     * Chạy mỗi 5 phút để cập nhật trạng thái events
-     */
-    @Scheduled(fixedRate = 300000) // 5 minutes
+    @Scheduled(fixedRate = 300000)
     @Transactional
     public void updateEventStatuses() {
         LocalDateTime now = LocalDateTime.now();
 
-        // Update PUBLISHED -> ONGOING (event đã bắt đầu)
         int startedCount = markEventsAsOngoing(now);
         if (startedCount > 0) {
             log.info("Marked {} events as ONGOING", startedCount);
         }
 
-        // Update ONGOING -> COMPLETED (event đã kết thúc)
         int completedCount = markEventsAsCompleted(now);
         if (completedCount > 0) {
             log.info("Marked {} events as COMPLETED", completedCount);

@@ -11,7 +11,6 @@ import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../home/providers/events_provider.dart';
 
-// Provider to fetch events by speaker name
 final speakerEventsProvider = FutureProvider.family
     .autoDispose<List<Event>, String>((ref, speakerName) async {
   final api = ref.watch(apiServiceProvider);
@@ -50,13 +49,11 @@ class SpeakerEventsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.share_outlined, color: Colors.black),
             onPressed: () {
-              // Share speaker profile
             },
           ),
           IconButton(
             icon: const Icon(Icons.more_horiz, color: Colors.black),
             onPressed: () {
-              // More options
             },
           ),
         ],
@@ -73,7 +70,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref, List<Event> events) {
-    // Separate upcoming and past events
     final now = DateTime.now();
     final upcomingEvents = events.where((e) => e.startTime.isAfter(now)).toList();
     final pastEvents = events.where((e) => e.startTime.isBefore(now)).toList();
@@ -82,13 +78,11 @@ class SpeakerEventsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Profile Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -110,7 +104,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Name
                 Text(
                   speakerName,
                   style: const TextStyle(
@@ -120,7 +113,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Title/Bio
                 if (speakerTitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -134,7 +126,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
 
                 const SizedBox(height: 12),
 
-                // Stats row
                 Row(
                   children: [
                     _buildStatItem(
@@ -151,7 +142,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
 
                 const SizedBox(height: 16),
 
-                // Social icons (placeholder)
                 Row(
                   children: [
                     _buildSocialIcon(Icons.language),
@@ -166,7 +156,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           const Divider(height: 1),
 
-          // Hosting Section (Upcoming Events)
           if (upcomingEvents.isNotEmpty) ...[
             _buildSectionHeader(context, 'Hosting', upcomingEvents.length),
             ListView.builder(
@@ -187,7 +176,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
             ),
           ],
 
-          // Past Events Section
           if (pastEvents.isNotEmpty) ...[
             _buildSectionHeader(context, 'Past Events', pastEvents.length),
             ListView.builder(
@@ -209,7 +197,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
             ),
           ],
 
-          // Empty state
           if (events.isEmpty)
             Padding(
               padding: const EdgeInsets.all(40),
@@ -282,7 +269,6 @@ class SpeakerEventsScreen extends ConsumerWidget {
           if (count > 3)
             TextButton(
               onPressed: () {
-                // View all
               },
               child: const Text(
                 'View All',
@@ -321,7 +307,6 @@ class _EventListItem extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
@@ -338,12 +323,10 @@ class _EventListItem extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Event Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Text(
                     event.title,
                     style: TextStyle(
@@ -356,7 +339,6 @@ class _EventListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Date & Time
                   Row(
                     children: [
                       Icon(
@@ -380,7 +362,6 @@ class _EventListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
 
-                  // Location
                   Row(
                     children: [
                       Icon(
@@ -406,7 +387,6 @@ class _EventListItem extends StatelessWidget {
               ),
             ),
 
-            // Status badge for past events
             if (isPast)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

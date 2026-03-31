@@ -150,14 +150,12 @@ const OrganiserBoost = () => {
     const [selectedEvent, setSelectedEvent] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Upgrade/Extend state
     const [upgradeInfo, setUpgradeInfo] = useState(null);
     const [checkingUpgrade, setCheckingUpgrade] = useState(false);
 
     useEffect(() => {
         loadData();
 
-        // Check URL for payment success/cancel
         const params = new URLSearchParams(window.location.search);
         const handlePaymentCallback = async () => {
             if (params.get('success') === 'true') {
@@ -166,7 +164,6 @@ const OrganiserBoost = () => {
                 const existingBoostId = params.get('existingBoostId');
                 if (boostId) {
                     try {
-                        // Confirm payment and activate/extend/upgrade boost
                         await organiserApi.confirmBoostPayment(boostId, action, existingBoostId);
                         const actionMessage = action === 'EXTEND'
                             ? 'Boost extended successfully!'
@@ -174,18 +171,15 @@ const OrganiserBoost = () => {
                             ? 'Boost upgraded successfully!'
                             : 'Payment successful! Your boost is now active.';
                         toast.success(actionMessage);
-                        // Reload data to show updated boost
                         await loadData();
                     } catch (error) {
                         console.error('Error confirming boost payment:', error);
                         toast.error('Payment successful but failed to activate boost. Please contact support.');
                     }
                 }
-                // Clean up URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (params.get('canceled') === 'true') {
                 toast.info('Payment was canceled. You can try again or delete the pending boost.');
-                // Clean up URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         };
@@ -193,7 +187,6 @@ const OrganiserBoost = () => {
         handlePaymentCallback();
     }, [page, rowsPerPage]);
 
-    // Check for upgrade info when event and package change
     useEffect(() => {
         const checkUpgrade = async () => {
             if (!selectedEvent || !selectedPackage) {
@@ -245,14 +238,12 @@ const OrganiserBoost = () => {
 
         try {
             setSubmitting(true);
-            // Create Stripe checkout session
             const response = await organiserApi.createBoostCheckout({
                 eventId: selectedEvent,
                 boostPackage: selectedPackage.packageType,
             });
             const checkoutUrl = response.data.data.checkoutUrl;
 
-            // Redirect to Stripe checkout
             window.location.href = checkoutUrl;
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to create checkout session');
@@ -347,7 +338,6 @@ const OrganiserBoost = () => {
                 </Box>
             </Box>
 
-            {/* Subscription Discount Info */}
             {discountPercent > 0 && (
                 <Alert severity="success" sx={{ mb: 3 }}>
                     <Typography variant="body2">
@@ -356,7 +346,6 @@ const OrganiserBoost = () => {
                 </Alert>
             )}
 
-            {/* Info Alert */}
             <Alert severity="info" sx={{ mb: 3 }}>
                 <Typography variant="body2">
                     <strong>Event Boost</strong> helps your events appear in prominent positions, increasing views and registrations.
@@ -364,7 +353,6 @@ const OrganiserBoost = () => {
                 </Typography>
             </Alert>
 
-            {/* My Boosts */}
             <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                     Boost History
@@ -471,7 +459,6 @@ const OrganiserBoost = () => {
                 )}
             </Paper>
 
-            {/* Create/Extend/Upgrade Boost Dialog */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle sx={{ fontWeight: 'bold' }}>
                     {upgradeInfo?.hasExistingBoost ? 'Extend or Upgrade Boost' : 'Create New Boost'}
@@ -510,7 +497,6 @@ const OrganiserBoost = () => {
                             noOptionsText="No events found"
                         />
 
-                        {/* Upgrade Info Alert */}
                         {upgradeInfo?.hasExistingBoost && (
                             <Alert
                                 severity={upgradeInfo.action === 'EXTEND' ? 'info' : 'warning'}
@@ -551,7 +537,6 @@ const OrganiserBoost = () => {
                             ))}
                         </Grid>
 
-                        {/* Price Summary */}
                         {upgradeInfo && selectedPackage && (
                             <Paper sx={{ mt: 3, p: 2, bgcolor: 'grey.50' }}>
                                 <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>

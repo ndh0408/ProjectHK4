@@ -39,7 +39,6 @@ public class OrganiserBoostController {
     public ResponseEntity<ApiResponse<List<BoostPackageInfo>>> getAvailablePackages(
             @AuthenticationPrincipal UserDetails userDetails) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
-        // Return packages with subscription discount applied
         return ResponseEntity.ok(ApiResponse.success(
                 boostService.getAvailablePackagesWithDiscount(organiser.getId())));
     }
@@ -56,18 +55,14 @@ public class OrganiserBoostController {
         String message;
 
         if ("EXTEND".equals(action)) {
-            // Extend existing boost - boostId IS the existing boost (no pending boost created for EXTEND)
             boost = boostService.extendBoost(boostId, organiser, "payment_confirmed");
             message = "Boost extended successfully";
         } else if (("UPGRADE".equals(action) || "DOWNGRADE".equals(action)) && existingBoostId != null) {
-            // Get the new package from the pending boost
             BoostResponse pendingBoost = boostService.getBoostById(boostId);
             boost = boostService.upgradeBoost(existingBoostId, pendingBoost.getBoostPackage(), organiser, "payment_confirmed");
-            // Delete the pending boost
             boostService.deletePendingBoost(boostId, organiser);
             message = "Boost upgraded successfully";
         } else {
-            // New boost - activate the pending boost
             boost = boostService.activateBoost(boostId, "manual_activation");
             message = "Boost activated successfully";
         }
@@ -104,9 +99,6 @@ public class OrganiserBoostController {
         return ResponseEntity.ok(ApiResponse.success(boostService.isEventBoosted(eventId)));
     }
 
-    /**
-     * Check if event can be boosted and get upgrade/extend info if already boosted
-     */
     @GetMapping("/check-upgrade/{eventId}")
     public ResponseEntity<ApiResponse<BoostUpgradeInfo>> checkBoostUpgrade(
             @PathVariable UUID eventId,
@@ -117,9 +109,6 @@ public class OrganiserBoostController {
         return ResponseEntity.ok(ApiResponse.success(info));
     }
 
-    /**
-     * Extend existing boost (same package - add more days)
-     */
     @PostMapping("/{boostId}/extend")
     public ResponseEntity<ApiResponse<BoostResponse>> extendBoost(
             @PathVariable UUID boostId,
@@ -129,9 +118,6 @@ public class OrganiserBoostController {
         return ResponseEntity.ok(ApiResponse.success("Boost extended successfully", boost));
     }
 
-    /**
-     * Upgrade boost to different package
-     */
     @PostMapping("/{boostId}/upgrade")
     public ResponseEntity<ApiResponse<BoostResponse>> upgradeBoost(
             @PathVariable UUID boostId,
@@ -148,7 +134,6 @@ public class OrganiserBoostController {
             @AuthenticationPrincipal UserDetails userDetails) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Check if event has existing boost - determine action (NEW, EXTEND, UPGRADE)
         BoostUpgradeInfo upgradeInfo = boostService.checkExistingBoost(
                 request.getEventId(), request.getBoostPackage(), organiser.getId());
 
@@ -159,7 +144,6 @@ public class OrganiserBoostController {
         UUID boostIdForCheckout;
 
         if (upgradeInfo.getAction() == BoostUpgradeInfo.BoostAction.NEW) {
-            // No existing boost - create new PENDING boost
             List<BoostPackageInfo> packages = boostService.getAvailablePackagesWithDiscount(organiser.getId());
             BoostPackageInfo selectedPackage = packages.stream()
                     .filter(p -> p.getPackageType().equals(request.getBoostPackage()))
@@ -167,15 +151,12 @@ public class OrganiserBoostController {
                     .orElseThrow(() -> new IllegalArgumentException("Invalid boost package"));
             priceToCharge = selectedPackage.getPrice();
 
-            // Create new PENDING boost
             BoostResponse boost = boostService.createBoost(request, organiser);
             boostIdForCheckout = boost.getId();
         } else if (upgradeInfo.getAction() == BoostUpgradeInfo.BoostAction.EXTEND) {
-            // EXTEND: Don't create new boost, just use existing boost ID
             priceToCharge = upgradeInfo.getPrice();
-            boostIdForCheckout = existingBoostId; // Use existing boost ID
+            boostIdForCheckout = existingBoostId;
         } else {
-            // UPGRADE/DOWNGRADE: Create new PENDING boost for the new package
             priceToCharge = upgradeInfo.getPrice();
             BoostResponse boost = boostService.createBoost(request, organiser);
             boostIdForCheckout = boost.getId();

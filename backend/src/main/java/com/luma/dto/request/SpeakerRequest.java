@@ -18,10 +18,10 @@ public class SpeakerRequest {
     private String name;
 
     @Size(max = 100, message = "Title must be less than 100 characters")
-    private String title; // Job title, e.g., "CEO at TechCorp"
+    private String title;
 
     @Size(max = 500, message = "Bio must be less than 500 characters")
-    private String bio; // Short biography
+    private String bio;
 
-    private String imageUrl; // Profile photo URL (from Cloudinary)
+    private String imageUrl;
 }

@@ -33,6 +33,7 @@ public class UserEventController {
     private final CategoryService categoryService;
     private final CityService cityService;
     private final RegistrationQuestionService registrationQuestionService;
+    private final UserEventLimitService userEventLimitService;
 
     @GetMapping("/upcoming")
     @Operation(summary = "Get upcoming events (next month)")
@@ -192,7 +193,16 @@ public class UserEventController {
             @Valid @RequestBody EventCreateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        EventResponse response = eventService.createEvent(user, request);
+
+        userEventLimitService.validateEventCreation(user.getId());
+        if (request.getCapacity() != null) {
+            userEventLimitService.validateAttendeeCapacity(request.getCapacity());
+        }
+
+        EventResponse response = eventService.createEventForUser(user, request);
+
+        userEventLimitService.useEventSlot(user.getId());
+
         return ResponseEntity.ok(ApiResponse.success("Event created successfully", response));
     }
 

@@ -104,7 +104,6 @@ class ApiService {
     return content.map((item) => Event.fromJson(item as Map<String, dynamic>)).toList();
   }
 
-  /// Get VIP boosted events for home page banner (PREMIUM and VIP packages)
   Future<List<Event>> getBoostedFeaturedEvents() async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/events/boosted/featured',
@@ -113,7 +112,6 @@ class ApiService {
     return data.map((item) => Event.fromJson(item as Map<String, dynamic>)).toList();
   }
 
-  /// Get VIP only boosted events for home page banner carousel
   Future<List<Event>> getHomeBannerEvents() async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/events/boosted/banner',
@@ -819,8 +817,6 @@ class ApiService {
     return PaginatedResponse.fromJson(data, Question.fromJson);
   }
 
-  // ==================== Google Calendar API ====================
-
   Future<String> getGoogleCalendarAuthUrl({String? redirectUri}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/calendar/auth-url',
@@ -887,8 +883,6 @@ class ApiService {
     return data['syncedCount'] as int? ?? 0;
   }
 }
-
-// ==================== Google Calendar Models ====================
 
 class GoogleCalendarStatus {
   final bool connected;

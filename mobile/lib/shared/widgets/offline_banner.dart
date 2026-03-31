@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/services/connectivity_service.dart';
 
-/// Widget hiển thị banner khi offline
 class OfflineBanner extends ConsumerWidget {
   const OfflineBanner({super.key, required this.child});
 
@@ -15,7 +14,6 @@ class OfflineBanner extends ConsumerWidget {
 
     return Column(
       children: [
-        // Offline banner
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           height: connectivityState.isOffline ? 32 : 0,
@@ -51,14 +49,12 @@ class OfflineBanner extends ConsumerWidget {
                 )
               : const SizedBox.shrink(),
         ),
-        // Main content
         Expanded(child: child),
       ],
     );
   }
 }
 
-/// Mixin để thêm offline awareness vào các screens
 mixin OfflineAwareMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   bool _wasOffline = false;
 
@@ -73,15 +69,12 @@ mixin OfflineAwareMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     _wasOffline = state.isOffline;
   }
 
-  /// Override này trong screen để refresh data khi online trở lại
   void onBackOnline() {
-    // Override trong subclass để refresh data
   }
 
   void listenToConnectivityChanges() {
     ref.listen<ConnectivityState>(connectivityProvider, (previous, next) {
       if (_wasOffline && next.isOnline) {
-        // Vừa online trở lại
         onBackOnline();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

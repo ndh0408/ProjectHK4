@@ -8,7 +8,6 @@ import '../../../../shared/models/notification.dart';
 import '../../../main/presentation/screens/main_shell.dart';
 import 'notifications_screen.dart';
 
-/// Screen that displays notifications in a chat-like format
 class LumaNotificationsScreen extends ConsumerStatefulWidget {
   const LumaNotificationsScreen({super.key});
 
@@ -45,7 +44,6 @@ class _LumaNotificationsScreenState
 
   Future<void> _openChatWithUser(String userId) async {
     try {
-      // Get or create direct chat with this user
       final api = ref.read(apiServiceProvider);
       final conversation = await api.getDirectChat(userId);
 
@@ -164,7 +162,6 @@ class _LumaNotificationsScreenState
         ),
         title: Row(
           children: [
-            // LUMA Avatar
             Container(
               width: 40,
               height: 40,
@@ -336,7 +333,6 @@ class _LumaNotificationsScreenState
                     }
                   }
 
-                  // If NEW_QUESTION with senderId, open chat with the sender
                   if (notification.canReply && notification.senderId != null) {
                     if (mounted) {
                       _openChatWithUser(notification.senderId!);
@@ -408,7 +404,6 @@ class _NotificationBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // LUMA Avatar
           Container(
             width: 36,
             height: 36,
@@ -429,7 +424,6 @@ class _NotificationBubble extends StatelessWidget {
             ),
           ),
 
-          // Message bubble
           Flexible(
             child: GestureDetector(
               onTap: onTap,
@@ -467,7 +461,6 @@ class _NotificationBubble extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Icon and title row
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -495,7 +488,6 @@ class _NotificationBubble extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        // Body
                         Text(
                           notification.body,
                           style: TextStyle(
@@ -504,7 +496,6 @@ class _NotificationBubble extends StatelessWidget {
                             height: 1.3,
                           ),
                         ),
-                        // Reply button for questions
                         if (onReply != null) ...[
                           const SizedBox(height: 8),
                           GestureDetector(
@@ -535,7 +526,6 @@ class _NotificationBubble extends StatelessWidget {
                             ),
                           ),
                         ],
-                        // View event link
                         if (notification.relatedEventId != null &&
                             onReply == null) ...[
                           const SizedBox(height: 8),
@@ -562,7 +552,6 @@ class _NotificationBubble extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Time
                   Padding(
                     padding: const EdgeInsets.only(top: 3, left: 4),
                     child: Text(

@@ -5,7 +5,6 @@ import '../../../../shared/models/category.dart';
 import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
 
-// Form state for creating event
 class CreateEventState {
   const CreateEventState({
     this.title = '',
@@ -132,7 +131,6 @@ class CreateEventNotifier extends StateNotifier<CreateEventState> {
 
   void updateStartTime(DateTime value) {
     state = state.copyWith(startTime: value);
-    // Auto-set end time to 1 hour after start if not set
     if (state.endTime == null || state.endTime!.isBefore(value)) {
       state = state.copyWith(endTime: value.add(const Duration(hours: 1)));
     }
@@ -285,13 +283,11 @@ final createEventProvider =
   },
 );
 
-// Categories provider
 final categoriesProvider = FutureProvider.autoDispose<List<Category>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getCategories();
 });
 
-// Cities provider
 final citiesProvider = FutureProvider.autoDispose<List<City>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getCities();

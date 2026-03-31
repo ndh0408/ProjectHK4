@@ -24,6 +24,6 @@ public class ChatMessageEvent {
     private EventType type;
     private UUID conversationId;
     private MessageResponse message;
-    private UUID userId; // For typing indicator
-    private String userName; // For typing indicator
+    private UUID userId;
+    private String userName;
 }

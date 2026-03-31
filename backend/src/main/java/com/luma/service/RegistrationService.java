@@ -88,9 +88,6 @@ public class RegistrationService {
                 .orElse(RegistrationStatusResponse.notRegistered());
     }
 
-    /**
-     * Get actual price for a registration - from ticketType if available, otherwise from event
-     */
     public BigDecimal getActualPrice(Registration registration) {
         if (registration.getTicketType() != null) {
             BigDecimal unitPrice = registration.getTicketType().getPrice();
@@ -113,13 +110,11 @@ public class RegistrationService {
             throw new BadRequestException("Event has already started, registration is closed");
         }
 
-        // Use pessimistic lock to check existing registration (prevents duplicate registrations)
         Optional<Registration> existingReg = registrationRepository.findByUserAndEventWithLock(user, event);
         if (existingReg.isPresent()) {
             Registration oldReg = existingReg.get();
             if (oldReg.getStatus() == RegistrationStatus.CANCELLED ||
                 oldReg.getStatus() == RegistrationStatus.REJECTED) {
-                // Return tickets to pool if old registration had ticket type
                 returnTicketsToPool(oldReg);
                 paymentRepository.deleteByRegistrationId(oldReg.getId());
                 answerRepository.deleteAll(oldReg.getAnswers());
@@ -130,7 +125,6 @@ public class RegistrationService {
             }
         }
 
-        // Validate and get ticket type if provided (with lock to prevent overselling)
         TicketType ticketType = null;
         int qty = quantity != null ? quantity : 1;
 
@@ -157,11 +151,9 @@ public class RegistrationService {
 
         if (event.isFull()) {
             registration.setStatus(RegistrationStatus.WAITING_LIST);
-            // Use locked query to prevent duplicate waiting list positions
             registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
         } else {
             registration.setStatus(RegistrationStatus.PENDING);
-            // Reserve tickets (query already has condition to prevent overselling)
             if (ticketType != null) {
                 int updated = ticketTypeRepository.incrementSoldCount(ticketType.getId(), qty);
                 if (updated == 0) {
@@ -191,7 +183,6 @@ public class RegistrationService {
             throw new BadRequestException("Event has already started, registration is closed");
         }
 
-        // Use pessimistic lock to check existing registration (prevents duplicate registrations)
         Optional<Registration> existingReg = registrationRepository.findByUserAndEventWithLock(user, event);
         if (existingReg.isPresent()) {
             Registration oldReg = existingReg.get();
@@ -207,7 +198,6 @@ public class RegistrationService {
             }
         }
 
-        // Validate and get ticket type if provided (with lock to prevent overselling)
         TicketType ticketType = null;
         int qty = quantity != null ? quantity : 1;
 
@@ -246,11 +236,9 @@ public class RegistrationService {
 
         if (event.isFull()) {
             registration.setStatus(RegistrationStatus.WAITING_LIST);
-            // Use locked query to prevent duplicate waiting list positions
             registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
         } else {
             registration.setStatus(RegistrationStatus.PENDING);
-            // Reserve tickets (query already has condition to prevent overselling)
             if (ticketType != null) {
                 int updated = ticketTypeRepository.incrementSoldCount(ticketType.getId(), qty);
                 if (updated == 0) {
@@ -367,7 +355,6 @@ public class RegistrationService {
             eventService.decrementApprovedCount(event);
         }
 
-        // Return tickets to pool
         returnTicketsToPool(registration);
 
         registration.setStatus(RegistrationStatus.REJECTED);
@@ -406,7 +393,6 @@ public class RegistrationService {
 
         Event event = registration.getEvent();
 
-        // Return tickets to pool
         returnTicketsToPool(registration);
 
         if (registration.getStatus() == RegistrationStatus.APPROVED) {
@@ -470,7 +456,6 @@ public class RegistrationService {
     public void promoteFromWaitingList(Event event) {
         registrationRepository.findFirstByEventAndStatusOrderByWaitingListPositionAsc(event, RegistrationStatus.WAITING_LIST)
                 .ifPresent(registration -> {
-                    // Reserve tickets for promoted registration
                     if (registration.getTicketType() != null) {
                         try {
                             validateTicketTypePurchase(registration.getTicketType(), registration.getQuantity());
@@ -589,7 +574,6 @@ public class RegistrationService {
             throw new BadRequestException("Can only reject pending or waiting list registrations");
         }
 
-        // Return tickets to pool
         returnTicketsToPool(registration);
 
         registration.setStatus(RegistrationStatus.REJECTED);
