@@ -45,7 +45,7 @@ public class Payout {
 
     @Column(precision = 5, scale = 2)
     @Builder.Default
-    private BigDecimal platformFeePercent = new BigDecimal("5.00"); // 5% platform fee
+    private BigDecimal platformFeePercent = new BigDecimal("5.00");
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

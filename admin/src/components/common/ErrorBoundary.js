@@ -2,10 +2,6 @@ import React from 'react';
 import { Box, Typography, Button, Paper, Container } from '@mui/material';
 import { ErrorOutline, Refresh, Home } from '@mui/icons-material';
 
-/**
- * Error Boundary component to catch JavaScript errors anywhere in the child component tree
- * and display a fallback UI instead of crashing the whole app
- */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -17,19 +13,12 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    // Log the error to console (in production, send to error tracking service)
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
-
-    // TODO: Send error to monitoring service (e.g., Sentry, LogRocket)
-    // if (process.env.NODE_ENV === 'production') {
-    //   sendErrorToService(error, errorInfo);
-    // }
   }
 
   handleRefresh = () => {
@@ -46,7 +35,6 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // Fallback UI
       return (
         <Container maxWidth="sm">
           <Box
@@ -81,7 +69,6 @@ class ErrorBoundary extends React.Component {
                 We're sorry, but something unexpected happened. Please try refreshing the page or go back to the home page.
               </Typography>
 
-              {/* Show error details in development */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <Paper
                   variant="outlined"

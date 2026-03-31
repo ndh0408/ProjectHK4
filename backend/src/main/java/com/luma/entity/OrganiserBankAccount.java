@@ -29,7 +29,7 @@ public class OrganiserBankAccount {
     private String stripeAccountId;
 
     @Column(length = 50)
-    private String accountStatus; // not_created, pending, verified, restricted
+    private String accountStatus;
 
     @Column(length = 100)
     private String bankName;

@@ -58,7 +58,6 @@ public class AdminAIController {
                     event.getTicketPrice() != null ? event.getTicketPrice().doubleValue() : null
             );
 
-            // Parse JSON response
             String cleanJson = cleanJsonResponse(aiResponse);
             Map<String, Object> analysis = objectMapper.readValue(cleanJson, Map.class);
 
@@ -127,12 +126,10 @@ public class AdminAIController {
             long totalEvents = eventRepository.count();
             long totalRegistrations = registrationRepository.countAll();
 
-            // Get this month's stats
             LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
             long newUsersThisMonth = userRepository.countByCreatedAtAfter(startOfMonth);
             long newEventsThisMonth = eventRepository.countByCreatedAtAfter(startOfMonth);
 
-            // Get admin-relevant metrics
             long pendingEvents = eventRepository.countByStatus(EventStatus.PENDING);
             long verifiedOrganisers = 0;
             long unverifiedOrganisers = 0;
@@ -149,7 +146,6 @@ public class AdminAIController {
                 log.warn("Could not count low registration events: {}", e.getMessage());
             }
 
-            // Get top categories
             List<Object[]> categoryData = eventRepository.countEventsByCategory();
             StringBuilder topCategories = new StringBuilder();
             int count = 0;
@@ -160,7 +156,6 @@ public class AdminAIController {
                 }
             }
 
-            // Get top cities
             List<Object[]> cityData = eventRepository.countEventsByCity();
             StringBuilder topCities = new StringBuilder();
             count = 0;

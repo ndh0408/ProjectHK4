@@ -26,9 +26,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     Optional<Registration> findByUserAndEvent(User user, Event event);
 
-    /**
-     * Find registration with pessimistic lock to prevent race conditions
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Registration r WHERE r.user = :user AND r.event = :event")
     Optional<Registration> findByUserAndEventWithLock(@Param("user") User user, @Param("event") Event event);
@@ -66,10 +63,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
            "WHERE r.event = :event AND r.status = 'WAITING_LIST'")
     int getMaxWaitingListPosition(@Param("event") Event event);
 
-    /**
-     * Get max waiting list position with pessimistic lock
-     * Use this when assigning new waiting list positions to prevent duplicates
-     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT COALESCE(MAX(r.waitingListPosition), 0) FROM Registration r " +
            "WHERE r.event = :event AND r.status = 'WAITING_LIST'")
@@ -105,7 +98,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query(value = "SELECT CAST(r.created_at AS DATE) as date, COUNT(*) as count " +
            "FROM registrations r JOIN events e ON r.event_id = e.id " +
            "WHERE e.organiser_id = :organiserId AND r.status = 'APPROVED' " +
-           "AND r.created_at >= :startDate GROUP BY CAST(r.created_at AS DATE) ORDER BY date", 
+           "AND r.created_at >= :startDate GROUP BY CAST(r.created_at AS DATE) ORDER BY date",
            nativeQuery = true)
     List<Object[]> getRegistrationGrowthByOrganiser(@Param("organiserId") UUID organiserId,
                                                      @Param("startDate") LocalDateTime startDate);
@@ -154,7 +147,6 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query("SELECT r FROM Registration r WHERE r.user.id = :userId AND r.status IN :statuses")
     List<Registration> findByUserIdAndStatusIn(@Param("userId") UUID userId, @Param("statuses") List<RegistrationStatus> statuses);
 
-    // Analytics queries
     long countByCreatedAtAfter(LocalDateTime date);
 
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);

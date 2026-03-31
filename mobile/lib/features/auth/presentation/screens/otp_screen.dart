@@ -95,7 +95,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         setState(() {
           _errorMessage = e.toString().replaceAll('Exception: ', '');
         });
-        // Clear OTP fields on error
         for (final controller in _controllers) {
           controller.clear();
         }
@@ -305,5 +304,4 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   }
 }
 
-/// Mark a future as intentionally not awaited.
 void unawaited(Future<void>? future) {}

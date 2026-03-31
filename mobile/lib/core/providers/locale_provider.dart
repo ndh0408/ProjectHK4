@@ -24,7 +24,6 @@ class LocaleNotifier extends StateNotifier<Locale?> {
     if (savedLocale != null) {
       state = Locale(savedLocale);
     } else {
-      // Use device locale as default
       final deviceLocale = PlatformDispatcher.instance.locale;
       if (deviceLocale.languageCode == 'vi') {
         state = const Locale('vi');

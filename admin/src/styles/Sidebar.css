@@ -1,7 +1,3 @@
-/* ========================================
-   LUMA Admin - Sidebar Styles
-   ======================================== */
-
 .sidebar {
     height: 100%;
     background: var(--gradient-dark);
@@ -12,7 +8,6 @@
     overflow: hidden;
 }
 
-/* Logo Section */
 .sidebar-logo {
     padding: 24px;
     display: flex;
@@ -49,7 +44,6 @@
     color: rgba(255, 255, 255, 0.6);
 }
 
-/* User Card */
 .sidebar-user-card {
     margin: 16px;
     padding: 16px;
@@ -95,7 +89,6 @@
     text-overflow: ellipsis;
 }
 
-/* Menu Section - Scrollable */
 .sidebar-menu-container {
     flex: 1;
     overflow-y: auto;
@@ -103,7 +96,6 @@
     padding-bottom: 16px;
 }
 
-/* Custom scrollbar for sidebar */
 .sidebar-menu-container::-webkit-scrollbar {
     width: 6px;
 }
@@ -184,7 +176,6 @@
     margin-left: auto;
 }
 
-/* Footer */
 .sidebar-footer {
     flex-shrink: 0;
     padding: 16px;

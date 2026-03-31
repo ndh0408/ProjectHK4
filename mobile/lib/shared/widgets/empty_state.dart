@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/config/theme.dart';
 
-/// Beautiful empty state widget with animation
 class EmptyState extends StatefulWidget {
   const EmptyState({
     super.key,
@@ -76,7 +75,6 @@ class _EmptyStateState extends State<EmptyState>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Animated Icon Container
                 Container(
                   width: iconSize * 1.5,
                   height: iconSize * 1.5,
@@ -101,7 +99,6 @@ class _EmptyStateState extends State<EmptyState>
                 ),
                 SizedBox(height: widget.compact ? 12.0 : 24.0),
 
-                // Title
                 Text(
                   widget.title,
                   style: titleStyle?.copyWith(
@@ -111,7 +108,6 @@ class _EmptyStateState extends State<EmptyState>
                 ),
                 SizedBox(height: widget.compact ? 4.0 : 8.0),
 
-                // Subtitle
                 Text(
                   widget.subtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -120,7 +116,6 @@ class _EmptyStateState extends State<EmptyState>
                   textAlign: TextAlign.center,
                 ),
 
-                // Action Button
                 if (widget.actionLabel != null && widget.onAction != null) ...[
                   SizedBox(height: widget.compact ? 16.0 : 24.0),
                   ElevatedButton.icon(
@@ -144,7 +139,6 @@ class _EmptyStateState extends State<EmptyState>
   }
 }
 
-/// Loading state widget with shimmer effect
 class LoadingState extends StatelessWidget {
   const LoadingState({
     super.key,
@@ -179,7 +173,6 @@ class LoadingState extends StatelessWidget {
   }
 }
 
-/// Error state widget
 class ErrorState extends StatelessWidget {
   const ErrorState({
     super.key,

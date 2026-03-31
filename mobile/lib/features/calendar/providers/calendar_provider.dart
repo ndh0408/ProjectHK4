@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/api_service.dart';
 
-// State class for Google Calendar
 class GoogleCalendarState {
   final bool isLoading;
   final bool isConnecting;
@@ -37,7 +36,6 @@ class GoogleCalendarState {
   bool get isConnected => status?.connected ?? false;
 }
 
-// Provider
 final googleCalendarProvider =
     StateNotifierProvider<GoogleCalendarNotifier, GoogleCalendarState>((ref) {
   return GoogleCalendarNotifier(ref.watch(apiServiceProvider));
@@ -47,7 +45,6 @@ class GoogleCalendarNotifier extends StateNotifier<GoogleCalendarState> {
   final ApiService _apiService;
 
   GoogleCalendarNotifier(this._apiService) : super(const GoogleCalendarState()) {
-    // Load status on init
     loadStatus();
   }
 
@@ -156,7 +153,6 @@ class GoogleCalendarNotifier extends StateNotifier<GoogleCalendarState> {
   }
 }
 
-// Convenience provider to check if a specific event is synced
 final isEventSyncedProvider = Provider.family<bool, String>((ref, registrationId) {
   final calendarState = ref.watch(googleCalendarProvider);
   return calendarState.syncedEvents.any((e) => e.registrationId == registrationId);

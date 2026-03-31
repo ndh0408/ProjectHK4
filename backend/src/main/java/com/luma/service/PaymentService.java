@@ -199,7 +199,6 @@ public class PaymentService {
 
                 eventService.incrementApprovedCount(payment.getEvent());
 
-                // Create commission transaction for this payment
                 commissionService.createCommissionTransaction(payment);
 
                 log.info("Payment confirmed and registration approved for registration {}", registrationId);
@@ -252,7 +251,6 @@ public class PaymentService {
             registrationRepository.save(registration);
             eventService.incrementApprovedCount(payment.getEvent());
 
-            // Create commission transaction for this payment
             commissionService.createCommissionTransaction(payment);
         }
 
@@ -287,10 +285,6 @@ public class PaymentService {
         return PaymentResponse.fromEntity(payment);
     }
 
-    /**
-     * Process refund for a payment
-     * Can be full refund or partial refund
-     */
     @Transactional
     public PaymentResponse processRefund(UUID registrationId, User organiser, String reason, BigDecimal refundAmount) {
         Payment payment = paymentRepository.findByRegistrationId(registrationId)
@@ -299,7 +293,6 @@ public class PaymentService {
         Registration registration = payment.getRegistration();
         Event event = registration.getEvent();
 
-        // Only organiser can process refunds
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You don't have permission to process refunds for this event");
         }
@@ -312,14 +305,13 @@ public class PaymentService {
             throw new BadRequestException("Payment has already been refunded");
         }
 
-        // Validate refund amount
         BigDecimal maxRefundable = payment.getAmount();
         if (payment.getRefundAmount() != null) {
             maxRefundable = maxRefundable.subtract(payment.getRefundAmount());
         }
 
         if (refundAmount == null) {
-            refundAmount = maxRefundable; // Full refund
+            refundAmount = maxRefundable;
         }
 
         if (refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -343,7 +335,6 @@ public class PaymentService {
 
             Refund refund = Refund.create(paramsBuilder.build());
 
-            // Update payment
             BigDecimal totalRefunded = payment.getRefundAmount() != null
                     ? payment.getRefundAmount().add(refundAmount)
                     : refundAmount;
@@ -352,15 +343,12 @@ public class PaymentService {
             payment.setRefundReason(reason);
             payment.setRefundedAt(LocalDateTime.now());
 
-            // Mark as fully refunded if total refund equals payment amount
             if (totalRefunded.compareTo(payment.getAmount()) >= 0) {
                 payment.setStatus(PaymentStatus.REFUNDED);
 
-                // Cancel registration and return tickets
                 registration.setStatus(RegistrationStatus.CANCELLED);
                 registrationRepository.save(registration);
 
-                // Return tickets to pool
                 if (registration.getTicketType() != null && registration.getQuantity() != null) {
                     ticketTypeRepository.decrementSoldCount(
                             registration.getTicketType().getId(),
@@ -368,7 +356,6 @@ public class PaymentService {
                     );
                 }
 
-                // Decrement event approved count
                 eventService.decrementApprovedCount(event);
             }
 
@@ -385,9 +372,6 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Handle refund webhook from Stripe
-     */
     @Transactional
     public void handleRefundSucceeded(String paymentIntentId, String refundId, long amountRefunded) {
         Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
@@ -521,9 +505,6 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Create Stripe Checkout Session for Subscription Upgrade
-     */
     public String createSubscriptionCheckoutSession(UUID userId, String planName, BigDecimal amount) {
         try {
             SessionCreateParams params = SessionCreateParams.builder()
@@ -562,10 +543,6 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Create Stripe Checkout Session for Boost Package Purchase
-     * Supports NEW, EXTEND, and UPGRADE actions
-     */
     public String createBoostCheckoutSession(UUID userId, UUID eventId, String packageName,
             BigDecimal amount, int days, UUID boostId, String action, UUID existingBoostId) {
         try {
@@ -585,13 +562,12 @@ public class PaymentService {
                     productName = "Change Boost to " + packageName;
                     description = "Change your boost to " + packageName + " package for " + days + " days";
                     break;
-                default: // NEW
+                default:
                     productName = "Event Boost - " + packageName;
                     description = "Boost your event for " + days + " days";
                     break;
             }
 
-            // Build success URL with all necessary parameters
             String successUrl = frontendUrl + "/organiser/boost?success=true&boost=" + boostId + "&action=" + action;
             if (existingBoostId != null) {
                 successUrl += "&existingBoostId=" + existingBoostId;
@@ -626,7 +602,6 @@ public class PaymentService {
                     .putMetadata("days", String.valueOf(days))
                     .putMetadata("action", action);
 
-            // Add existing boost ID for EXTEND/UPGRADE actions
             if (existingBoostId != null) {
                 paramsBuilder.putMetadata("existing_boost_id", existingBoostId.toString());
             }
@@ -639,6 +614,103 @@ public class PaymentService {
         } catch (StripeException e) {
             log.error("Stripe error creating boost checkout: {}", e.getMessage());
             throw new BadRequestException("Failed to create boost checkout: " + e.getMessage());
+        }
+    }
+
+    public String createUserBoostCheckoutSession(UUID userId, UUID eventId, String packageName,
+            BigDecimal amount, int days, UUID boostId) {
+        try {
+            String productName = "Mini Boost - " + packageName;
+            String description = "Boost your event for " + days + " days with " + packageName + " package";
+
+            String successUrl = appBaseUrl + "/#/my-events?boost_success=true&boost=" + boostId;
+            String cancelUrl = appBaseUrl + "/#/my-events?boost_canceled=true";
+
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setSuccessUrl(successUrl)
+                    .setCancelUrl(cancelUrl)
+                    .addLineItem(
+                            SessionCreateParams.LineItem.builder()
+                                    .setPriceData(
+                                            SessionCreateParams.LineItem.PriceData.builder()
+                                                    .setCurrency(defaultCurrency)
+                                                    .setUnitAmount(amount.multiply(BigDecimal.valueOf(100)).longValue())
+                                                    .setProductData(
+                                                            SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                    .setName(productName)
+                                                                    .setDescription(description)
+                                                                    .build()
+                                                    )
+                                                    .build()
+                                    )
+                                    .setQuantity(1L)
+                                    .build()
+                    )
+                    .putMetadata("type", "user_boost")
+                    .putMetadata("boost_id", boostId.toString())
+                    .putMetadata("user_id", userId.toString())
+                    .putMetadata("event_id", eventId.toString())
+                    .putMetadata("package", packageName)
+                    .putMetadata("days", String.valueOf(days))
+                    .build();
+
+            Session session = Session.create(params);
+            log.info("Created user boost checkout session {} for boost {} - user {} - event {}",
+                    session.getId(), boostId, userId, eventId);
+            return session.getUrl();
+
+        } catch (StripeException e) {
+            log.error("Stripe error creating user boost checkout: {}", e.getMessage());
+            throw new BadRequestException("Failed to create boost checkout: " + e.getMessage());
+        }
+    }
+
+    public String createExtraEventCheckoutSession(UUID userId, int quantity, BigDecimal pricePerEvent) {
+        try {
+            BigDecimal totalAmount = pricePerEvent.multiply(BigDecimal.valueOf(quantity));
+
+            String productName = "Extra Event Slot" + (quantity > 1 ? "s" : "");
+            String description = quantity + " additional event slot" + (quantity > 1 ? "s" : "") + " for creating events";
+
+            String successUrl = appBaseUrl + "/#/my-events?purchase_success=true&quantity=" + quantity;
+            String cancelUrl = appBaseUrl + "/#/my-events?purchase_canceled=true";
+
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setSuccessUrl(successUrl)
+                    .setCancelUrl(cancelUrl)
+                    .addLineItem(
+                            SessionCreateParams.LineItem.builder()
+                                    .setPriceData(
+                                            SessionCreateParams.LineItem.PriceData.builder()
+                                                    .setCurrency(defaultCurrency)
+                                                    .setUnitAmount(pricePerEvent.multiply(BigDecimal.valueOf(100)).longValue())
+                                                    .setProductData(
+                                                            SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                    .setName(productName)
+                                                                    .setDescription(description)
+                                                                    .build()
+                                                    )
+                                                    .build()
+                                    )
+                                    .setQuantity((long) quantity)
+                                    .build()
+                    )
+                    .putMetadata("type", "extra_event")
+                    .putMetadata("user_id", userId.toString())
+                    .putMetadata("quantity", String.valueOf(quantity))
+                    .putMetadata("price_per_event", pricePerEvent.toString())
+                    .build();
+
+            Session session = Session.create(params);
+            log.info("Created extra event checkout session {} for user {} - quantity {}",
+                    session.getId(), userId, quantity);
+            return session.getUrl();
+
+        } catch (StripeException e) {
+            log.error("Stripe error creating extra event checkout: {}", e.getMessage());
+            throw new BadRequestException("Failed to create checkout: " + e.getMessage());
         }
     }
 }

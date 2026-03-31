@@ -16,16 +16,10 @@ import java.util.UUID;
 @Repository
 public interface OrganiserCommissionRepository extends JpaRepository<OrganiserCommission, UUID> {
 
-    /**
-     * Find custom commission for an organiser
-     */
     Optional<OrganiserCommission> findByOrganiser(User organiser);
 
     Optional<OrganiserCommission> findByOrganiserId(UUID organiserId);
 
-    /**
-     * Find active and valid custom commission for an organiser
-     */
     @Query("SELECT oc FROM OrganiserCommission oc " +
            "WHERE oc.organiser.id = :organiserId " +
            "AND oc.isActive = true " +
@@ -35,18 +29,9 @@ public interface OrganiserCommissionRepository extends JpaRepository<OrganiserCo
             @Param("organiserId") UUID organiserId,
             @Param("now") LocalDateTime now);
 
-    /**
-     * Find all custom commissions (for admin)
-     */
     Page<OrganiserCommission> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    /**
-     * Find all active custom commissions
-     */
     Page<OrganiserCommission> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
 
-    /**
-     * Check if organiser has custom commission
-     */
     boolean existsByOrganiserId(UUID organiserId);
 }

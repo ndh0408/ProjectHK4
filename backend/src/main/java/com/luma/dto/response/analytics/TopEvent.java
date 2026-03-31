@@ -21,5 +21,5 @@ public class TopEvent {
     private LocalDateTime startTime;
     private long registrationCount;
     private BigDecimal revenue;
-    private double fillRate; // percentage of capacity filled
+    private double fillRate;
 }

@@ -72,7 +72,6 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
 
     try {
       final response = await _api.getMessages(_conversationId, page: page);
-      // Reverse to show oldest first (for chat UI)
       final newMessages = response.content.reversed.toList();
 
       final allMessages = refresh
@@ -86,7 +85,6 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
         currentPage: response.number + 1,
       );
 
-      // Mark as read
       if (refresh) {
         _api.markConversationAsRead(_conversationId);
       }
@@ -146,7 +144,6 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     try {
       await _api.deleteMessage(messageId);
 
-      // Update local state - mark as deleted
       state = state.copyWith(
         messages: state.messages.map((m) {
           if (m.id == messageId) {
@@ -345,7 +342,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         title: Row(
           children: [
-            // Avatar
             Container(
               width: 40,
               height: 40,
@@ -370,7 +366,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   : null,
             ),
             const SizedBox(width: 12),
-            // Name
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,11 +403,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: Column(
         children: [
-          // Messages
           Expanded(
             child: GestureDetector(
               onTap: () {
-                // Hide emoji picker when tapping on messages area
                 if (_showEmojiPicker) {
                   setState(() => _showEmojiPicker = false);
                 }
@@ -425,13 +418,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
 
-          // Reply preview
           if (_replyingTo != null) _buildReplyPreview(),
 
-          // Input bar
           _buildInputBar(state.isSending),
 
-          // Emoji picker
           if (_showEmojiPicker) _buildEmojiPicker(),
         ],
       ),
@@ -649,7 +639,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         top: false,
         child: Row(
           children: [
-            // Emoji button
             GestureDetector(
               onTap: _toggleEmojiPicker,
               child: Icon(
@@ -659,7 +648,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Image picker button
             GestureDetector(
               onTap: isSending ? null : _pickAndSendImage,
               child: Icon(
@@ -670,7 +658,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(width: 12),
 
-            // Text input
             Expanded(
               child: Container(
                 constraints: const BoxConstraints(maxHeight: 100),
@@ -700,7 +687,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
 
             const SizedBox(width: 12),
-            // Send button
             GestureDetector(
               onTap: isSending ? null : _sendMessage,
               child: Container(
@@ -752,7 +738,6 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isMe) ...[
-            // Avatar
             Container(
               width: 32,
               height: 32,
@@ -773,7 +758,6 @@ class _MessageBubble extends StatelessWidget {
             ),
           ],
 
-          // Message bubble
           Flexible(
             child: GestureDetector(
               onLongPress: onReply,
@@ -817,7 +801,6 @@ class _MessageBubble extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Reply preview
                         if (message.replyTo != null) ...[
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -860,7 +843,6 @@ class _MessageBubble extends StatelessWidget {
                             ),
                           ),
                         ],
-                        // Message content - check if deleted or image
                         if (message.isDeleted)
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -921,7 +903,6 @@ class _MessageBubble extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Time and delete button
                   Padding(
                     padding: const EdgeInsets.only(top: 3, left: 4, right: 4),
                     child: Row(

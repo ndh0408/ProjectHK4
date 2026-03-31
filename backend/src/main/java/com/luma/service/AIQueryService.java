@@ -24,10 +24,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * AI Service với khả năng query database để cung cấp context thông minh hơn
- * Kết hợp: Database Query + AI Generation
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -47,29 +43,17 @@ public class AIQueryService {
 
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-    // ==================== AI + Database: Smart Answer Suggestion ====================
-
-    /**
-     * Gợi ý câu trả lời thông minh dựa trên:
-     * 1. Các câu hỏi tương tự đã được trả lời (FAQ)
-     * 2. Thông tin sự kiện
-     * 3. Lịch sử trả lời của organiser
-     */
     public Map<String, Object> suggestAnswerWithContext(Question question) {
         Event event = question.getEvent();
         User organiser = event.getOrganiser();
 
-        // 1. Query database: Tìm câu hỏi tương tự đã được trả lời
         List<Question> similarQuestions = findSimilarAnsweredQuestions(question);
 
-        // 2. Query: Các câu hỏi đã trả lời trong cùng sự kiện
         List<Question> eventFAQs = questionRepository.findAnsweredByEvent(event);
 
-        // 3. Query: Lịch sử trả lời của organiser (để học style)
         List<Question> organiserHistory = questionRepository.findAnsweredHistoryByOrganiser(
                 organiser, PageRequest.of(0, 10)).getContent();
 
-        // Build context từ database
         StringBuilder dbContext = new StringBuilder();
 
         if (!similarQuestions.isEmpty()) {
@@ -93,7 +77,6 @@ public class AIQueryService {
             }
         }
 
-        // Build AI prompt với database context
         String systemPrompt = buildSmartAnswerSystemPrompt(event, dbContext.toString());
         String userPrompt = buildSmartAnswerUserPrompt(question);
 
@@ -106,7 +89,6 @@ public class AIQueryService {
             result.put("eventFAQsCount", eventFAQs.size());
             result.put("contextUsed", !similarQuestions.isEmpty() || !eventFAQs.isEmpty());
 
-            // Thêm danh sách câu hỏi tương tự để hiển thị
             if (!similarQuestions.isEmpty()) {
                 List<Map<String, String>> similarList = similarQuestions.stream()
                         .limit(3)
@@ -128,7 +110,6 @@ public class AIQueryService {
     private List<Question> findSimilarAnsweredQuestions(Question question) {
         String questionText = question.getQuestion().toLowerCase();
 
-        // Extract keywords từ câu hỏi
         List<String> keywords = extractKeywords(questionText);
 
         Set<Question> similarQuestions = new LinkedHashSet<>();
@@ -142,26 +123,24 @@ public class AIQueryService {
             if (similarQuestions.size() >= 5) break;
         }
 
-        // Loại bỏ câu hỏi hiện tại (nếu có)
         similarQuestions.removeIf(q -> q.getId().equals(question.getId()));
 
         return new ArrayList<>(similarQuestions).subList(0, Math.min(5, similarQuestions.size()));
     }
 
     private List<String> extractKeywords(String text) {
-        // Loại bỏ stop words tiếng Việt và tiếng Anh
         Set<String> stopWords = Set.of(
-                "là", "và", "của", "cho", "có", "được", "này", "đó", "các", "một", "những",
-                "tôi", "bạn", "chúng", "họ", "nó", "em", "anh", "chị",
+                "la", "va", "cua", "cho", "co", "duoc", "nay", "do", "cac", "mot", "nhung",
+                "toi", "ban", "chung", "ho", "no", "em", "anh", "chi",
                 "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
                 "have", "has", "had", "do", "does", "did", "will", "would", "could", "should",
                 "what", "when", "where", "who", "how", "why", "which",
-                "không", "như", "thế", "nào", "sao", "gì", "bao", "nhiêu", "khi", "ở", "đâu"
+                "khong", "nhu", "the", "nao", "sao", "gi", "bao", "nhieu", "khi", "o", "dau"
         );
 
         return Arrays.stream(text.split("\\s+"))
                 .map(String::toLowerCase)
-                .map(word -> word.replaceAll("[^a-zA-Zàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]", ""))
+                .map(word -> word.replaceAll("[^a-zA-Z]", ""))
                 .filter(word -> word.length() >= 3 && !stopWords.contains(word))
                 .distinct()
                 .limit(5)
@@ -200,7 +179,6 @@ public class AIQueryService {
             sb.append("Price: ").append(event.getTicketPrice()).append(" VND\n");
         }
 
-        // Thêm database context (FAQ)
         if (!dbContext.isEmpty()) {
             sb.append("\n").append(dbContext);
             sb.append("\nIMPORTANT: Use the above FAQ answers as reference. Be consistent with previous responses.\n");
@@ -214,23 +192,13 @@ public class AIQueryService {
         boolean isVietnamese = questionText.matches(".*[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđĐ].*");
 
         return "Question from attendee:\n" + questionText + "\n\n" +
-               (isVietnamese ? "Trả lời bằng tiếng Việt." : "Answer in English.");
+               (isVietnamese ? "Tra loi bang tieng Viet." : "Answer in English.");
     }
 
-    // ==================== AI + Database: Smart Dashboard Insights ====================
-
-    /**
-     * Tạo insights thông minh cho Organiser Dashboard dựa trên:
-     * 1. Thống kê sự kiện và đăng ký từ DB
-     * 2. So sánh với các organiser khác (benchmarking)
-     * 3. Phân tích xu hướng
-     */
     public Map<String, Object> generateSmartOrganiserInsights(User organiser) {
-        // Query database để lấy đầy đủ context
         Map<String, Object> dbStats = gatherOrganiserStats(organiser);
         Map<String, Object> benchmarks = gatherBenchmarks(organiser);
 
-        // Build AI prompt với database context
         String systemPrompt = buildOrganiserInsightsSystemPrompt();
         String userPrompt = buildOrganiserInsightsUserPrompt(dbStats, benchmarks);
 
@@ -240,7 +208,6 @@ public class AIQueryService {
 
             Map<String, Object> insights = objectMapper.readValue(cleanJson, Map.class);
 
-            // Thêm raw stats cho frontend
             insights.put("rawStats", dbStats);
             insights.put("benchmarks", benchmarks);
 
@@ -254,7 +221,6 @@ public class AIQueryService {
     private Map<String, Object> gatherOrganiserStats(User organiser) {
         Map<String, Object> stats = new LinkedHashMap<>();
 
-        // Event stats
         long totalEvents = eventRepository.countByOrganiser(organiser);
         long publishedEvents = eventRepository.countByOrganiserAndStatus(organiser, EventStatus.PUBLISHED);
         long completedEvents = eventRepository.countByOrganiserAndStatus(organiser, EventStatus.COMPLETED);
@@ -265,7 +231,6 @@ public class AIQueryService {
         stats.put("completedEvents", completedEvents);
         stats.put("draftEvents", draftEvents);
 
-        // Registration stats
         long totalRegistrations = registrationRepository.countAllByOrganiser(organiser);
         long approvedRegistrations = registrationRepository.countByOrganiserAndStatus(organiser, RegistrationStatus.APPROVED);
         long pendingRegistrations = registrationRepository.countByOrganiserAndStatus(organiser, RegistrationStatus.PENDING);
@@ -274,33 +239,27 @@ public class AIQueryService {
         stats.put("approvedRegistrations", approvedRegistrations);
         stats.put("pendingRegistrations", pendingRegistrations);
 
-        // Calculate approval rate
         double approvalRate = totalRegistrations > 0
                 ? (double) approvedRegistrations / totalRegistrations * 100
                 : 0;
         stats.put("approvalRate", Math.round(approvalRate * 10) / 10.0);
 
-        // Followers
         long followers = followRepository.countByOrganiser(organiser);
         stats.put("followers", followers);
 
-        // Revenue
         BigDecimal revenue = registrationRepository.calculateTotalRevenueByOrganiser(organiser);
         stats.put("totalRevenue", revenue != null ? revenue : BigDecimal.ZERO);
 
-        // Question stats
         long totalQuestions = questionRepository.countByOrganiser(organiser);
         long unansweredQuestions = questionRepository.countUnansweredByOrganiser(organiser);
         stats.put("totalQuestions", totalQuestions);
         stats.put("unansweredQuestions", unansweredQuestions);
 
-        // Response rate
         double responseRate = totalQuestions > 0
                 ? (double) (totalQuestions - unansweredQuestions) / totalQuestions * 100
                 : 100;
         stats.put("questionResponseRate", Math.round(responseRate * 10) / 10.0);
 
-        // Recent events performance
         List<Event> recentEvents = eventRepository.findByOrganiserOrderByCreatedAtDesc(
                 organiser, PageRequest.of(0, 5)).getContent();
         List<Map<String, Object>> recentPerformance = new ArrayList<>();
@@ -324,17 +283,12 @@ public class AIQueryService {
         Map<String, Object> benchmarks = new LinkedHashMap<>();
 
         try {
-            // Platform averages
             long totalOrganisers = eventRepository.count() > 0 ?
                     eventRepository.findAll(PageRequest.of(0, 1)).getTotalElements() : 1;
 
-            // Average events per organiser
-            // Average registrations per event
-            // These would need custom queries - simplified here
-
-            benchmarks.put("platformAvgEventsPerOrganiser", 5); // Placeholder
-            benchmarks.put("platformAvgRegistrationsPerEvent", 25); // Placeholder
-            benchmarks.put("platformAvgApprovalRate", 85.0); // Placeholder
+            benchmarks.put("platformAvgEventsPerOrganiser", 5);
+            benchmarks.put("platformAvgRegistrationsPerEvent", 25);
+            benchmarks.put("platformAvgApprovalRate", 85.0);
 
         } catch (Exception e) {
             log.warn("Could not gather benchmarks: {}", e.getMessage());
@@ -428,17 +382,16 @@ public class AIQueryService {
 
     private Map<String, Object> createFallbackInsights(Map<String, Object> stats) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("summary", "Phân tích dữ liệu của bạn.");
+        result.put("summary", "Phan tich du lieu cua ban.");
         result.put("performanceScore", 70);
 
         List<Map<String, Object>> insights = new ArrayList<>();
 
-        // Basic insights from stats
         Map<String, Object> insight1 = new LinkedHashMap<>();
         insight1.put("type", "info");
-        insight1.put("title", "Tổng quan sự kiện");
-        insight1.put("description", "Bạn có " + stats.get("totalEvents") + " sự kiện với " +
-                stats.get("totalRegistrations") + " đăng ký.");
+        insight1.put("title", "Tong quan su kien");
+        insight1.put("description", "Ban co " + stats.get("totalEvents") + " su kien voi " +
+                stats.get("totalRegistrations") + " dang ky.");
         insight1.put("priority", "medium");
         insights.add(insight1);
 
@@ -446,8 +399,8 @@ public class AIQueryService {
         if (pending > 0) {
             Map<String, Object> insight2 = new LinkedHashMap<>();
             insight2.put("type", "warning");
-            insight2.put("title", "Đăng ký chờ xử lý");
-            insight2.put("description", "Bạn có " + pending + " đăng ký đang chờ duyệt.");
+            insight2.put("title", "Dang ky cho xu ly");
+            insight2.put("description", "Ban co " + pending + " dang ky dang cho duyet.");
             insight2.put("actionText", "Xem ngay");
             insight2.put("priority", "high");
             insights.add(insight2);
@@ -457,9 +410,9 @@ public class AIQueryService {
         if (unanswered > 0) {
             Map<String, Object> insight3 = new LinkedHashMap<>();
             insight3.put("type", "warning");
-            insight3.put("title", "Câu hỏi chưa trả lời");
-            insight3.put("description", "Bạn có " + unanswered + " câu hỏi chưa được trả lời.");
-            insight3.put("actionText", "Trả lời ngay");
+            insight3.put("title", "Cau hoi chua tra loi");
+            insight3.put("description", "Ban co " + unanswered + " cau hoi chua duoc tra loi.");
+            insight3.put("actionText", "Tra loi ngay");
             insight3.put("priority", "high");
             insights.add(insight3);
         }
@@ -469,8 +422,6 @@ public class AIQueryService {
 
         return result;
     }
-
-    // ==================== Common Utilities ====================
 
     private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {

@@ -41,7 +41,6 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
     final selection = _controller.selection;
 
     if (selection.isValid && selection.start != selection.end) {
-      // Text is selected - wrap it
       final selectedText = text.substring(selection.start, selection.end);
       final newText = text.replaceRange(
         selection.start,
@@ -53,7 +52,6 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
         offset: selection.start + prefix.length + selectedText.length + suffix.length,
       );
     } else {
-      // No selection - insert placeholder
       final insertText = '$prefix${placeholder ?? ''}$suffix';
       final cursorPos = selection.baseOffset;
       final newText = text.substring(0, cursorPos) + insertText + text.substring(cursorPos);
@@ -109,7 +107,6 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
       ),
       body: Column(
         children: [
-          // Markdown Toolbar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -180,12 +177,10 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
             ),
           ),
 
-          // Tab Content
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Write Tab
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: TextField(
@@ -207,7 +202,6 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                   ),
                 ),
 
-                // Preview Tab
                 _controller.text.isEmpty
                     ? Center(
                         child: Column(
@@ -268,7 +262,6 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
             ),
           ),
 
-          // Character count
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(

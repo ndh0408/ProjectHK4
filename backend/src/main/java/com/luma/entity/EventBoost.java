@@ -48,11 +48,9 @@ public class EventBoost {
 
     private LocalDateTime endTime;
 
-    // Payment info
     private String paymentIntentId;
     private LocalDateTime paidAt;
 
-    // Stats
     @Builder.Default
     private int viewsBeforeBoost = 0;
 
@@ -82,7 +80,6 @@ public class EventBoost {
         if (startTime == null || endTime == null) return false;
 
         LocalDateTime now = LocalDateTime.now();
-        // Use isAfter or equals for startTime to include the exact start moment
         return (now.isAfter(startTime) || now.isEqual(startTime)) && now.isBefore(endTime);
     }
 

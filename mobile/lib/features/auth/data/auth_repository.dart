@@ -59,7 +59,6 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    // Backend wraps response in {"success":true,"data":{...}}
     final data = json['data'] as Map<String, dynamic>? ?? json;
     print('=== LoginResponse.fromJson ===');
     print('accessToken: ${data['accessToken']}');
@@ -163,8 +162,6 @@ class AuthRepository {
     }
   }
 
-  /// Verify OTP code. Returns a map with 'verified' boolean and 'message' string.
-  /// Note: This is a mock implementation - backend doesn't return user/tokens for OTP verification
   Future<Map<String, dynamic>> verifyOtp(String phone, String code) async {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
@@ -186,7 +183,6 @@ class AuthRepository {
     try {
       await _apiClient.post<void>(ApiConstants.logout);
     } catch (_) {
-      // Ignore logout API errors
     } finally {
       await _storage.deleteAll();
     }
@@ -245,7 +241,6 @@ class AuthRepository {
     }
   }
 
-  /// Google auth using access token (for Web platform where idToken is not available)
   Future<User> googleAuthWithAccessToken({
     required String accessToken,
     required String email,

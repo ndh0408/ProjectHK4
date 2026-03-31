@@ -27,37 +27,37 @@ public class TicketType {
     private Event event;
 
     @Column(nullable = false)
-    private String name; // VIP, Standard, Early Bird, etc.
+    private String name;
 
     @Column(columnDefinition = "NVARCHAR(1000)")
-    private String description; // Benefits description
+    private String description;
 
     @Column(nullable = false, precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal price = BigDecimal.ZERO; // Price in USD (0 = free)
+    private BigDecimal price = BigDecimal.ZERO;
 
     @Column(nullable = false)
-    private Integer quantity; // Total available tickets
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer soldCount = 0; // Number of tickets sold
+    private Integer quantity;
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer maxPerOrder = 10; // Max tickets per order
-
-    private LocalDateTime saleStartDate; // When ticket sales begin
-
-    private LocalDateTime saleEndDate; // When ticket sales end
+    private Integer soldCount = 0;
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean isVisible = true; // Show/hide ticket type
+    private Integer maxPerOrder = 10;
+
+    private LocalDateTime saleStartDate;
+
+    private LocalDateTime saleEndDate;
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer displayOrder = 0; // Order in list
+    private Boolean isVisible = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer displayOrder = 0;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -67,7 +67,6 @@ public class TicketType {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Helper methods
     public boolean isFree() {
         return price == null || price.compareTo(BigDecimal.ZERO) == 0;
     }
@@ -83,12 +82,10 @@ public class TicketType {
     public boolean isSaleActive() {
         LocalDateTime now = LocalDateTime.now();
 
-        // Check if sale has started
         if (saleStartDate != null && now.isBefore(saleStartDate)) {
             return false;
         }
 
-        // Check if sale has ended
         if (saleEndDate != null && now.isAfter(saleEndDate)) {
             return false;
         }

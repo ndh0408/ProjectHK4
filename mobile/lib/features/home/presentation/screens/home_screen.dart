@@ -129,7 +129,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               const SizedBox(height: 24),
 
-              // VIP Banner Carousel - shows VIP boosted events
               const VipBannerCarousel(),
 
               const SizedBox(height: 24),
@@ -147,7 +146,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -351,7 +349,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
@@ -366,7 +363,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         const SizedBox(height: 8),
 
-        // Location Filter
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: _buildLocationFilter(locationFilter),
@@ -579,7 +575,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event Image with registered indicator
             Stack(
               children: [
                 ClipRRect(
@@ -594,7 +589,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         )
                       : _buildListItemPlaceholder(),
                 ),
-                // Only show check icon when fully registered (approved + paid if needed)
                 if (isFullyRegistered)
                   Positioned(
                     top: 4,
@@ -618,15 +612,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(width: 12),
 
-            // Event Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser row with avatar
                   Row(
                     children: [
-                      // Organiser avatar
                       CircleAvatar(
                         radius: 10,
                         backgroundColor: Colors.grey[300],
@@ -652,7 +643,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Only show "Registered" badge when fully registered
                       if (isFullyRegistered)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -681,7 +671,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 4),
 
-                  // Event Title
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -694,7 +683,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   const SizedBox(height: 6),
 
-                  // Time and Location
                   Row(
                     children: [
                       Icon(Icons.access_time, size: 14, color: Colors.grey[500]),

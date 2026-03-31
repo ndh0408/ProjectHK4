@@ -60,7 +60,6 @@ class PaymentCancelledScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Go back to try payment again
                         context.go('/my-events');
                       },
                       style: ElevatedButton.styleFrom(

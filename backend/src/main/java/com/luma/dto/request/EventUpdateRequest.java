@@ -16,47 +16,46 @@ import java.util.List;
 @Data
 @ValidEventTime
 public class EventUpdateRequest {
-    
+
     private String title;
-    
+
     private String description;
-    
+
     private String imageUrl;
-    
+
     private LocalDateTime startTime;
-    
+
     private LocalDateTime endTime;
 
     private LocalDateTime registrationDeadline;
 
     private String venue;
-    
+
     private String address;
-    
+
     private Double latitude;
-    
+
     private Double longitude;
-    
+
     private Long cityId;
-    
+
     private Long categoryId;
-    
+
     private Boolean isFree;
-    
+
     private BigDecimal ticketPrice;
-    
+
     private Integer capacity;
-    
+
     private EventVisibility visibility;
-    
+
     private EventStatus status;
-    
+
     private Boolean requiresApproval;
 
     @Valid
     private List<SpeakerRequest> speakers;
 
-    // Recurring event fields
     private RecurrenceType recurrenceType;
 
     @Min(value = 1, message = "Recurrence interval must be at least 1")
@@ -70,6 +69,5 @@ public class EventUpdateRequest {
     @Max(value = 52, message = "Recurrence count cannot exceed 52")
     private Integer recurrenceCount;
 
-    // Cập nhật toàn bộ series hay chỉ event này
     private Boolean updateSeries = false;
 }

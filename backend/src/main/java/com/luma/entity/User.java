@@ -70,7 +70,6 @@ public class User {
 
     private LocalDateTime lastLoginAt;
 
-    // Email notification preferences
     @Column(columnDefinition = "BIT DEFAULT 1")
     @Builder.Default
     private boolean emailNotificationsEnabled = true;
@@ -79,7 +78,6 @@ public class User {
     @Builder.Default
     private boolean emailEventReminders = true;
 
-    // Soft delete fields
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private boolean deleted = false;

@@ -21,7 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventResponse {
-    
+
     private UUID id;
     private String title;
     private String description;
@@ -56,11 +56,9 @@ public class EventResponse {
     private boolean hasRegistrationQuestions;
     private int registrationQuestionsCount;
 
-    // Review stats
     private Double averageRating;
     private int reviewCount;
 
-    // Recurring event fields
     private RecurrenceType recurrenceType;
     private Integer recurrenceInterval;
     private List<String> recurrenceDaysOfWeek;
@@ -72,7 +70,6 @@ public class EventResponse {
     @JsonProperty("isRecurring")
     private boolean isRecurring;
 
-    // Boost fields
     @JsonProperty("isBoosted")
     private Boolean isBoosted;
     private String boostPackage;
@@ -156,7 +153,6 @@ public class EventResponse {
             response.setRegistrationQuestionsCount(0);
         }
 
-        // Recurring event fields
         response.setRecurrenceType(event.getRecurrenceType());
         response.setRecurrenceInterval(event.getRecurrenceInterval());
         if (event.getRecurrenceDaysOfWeek() != null && !event.getRecurrenceDaysOfWeek().isEmpty()) {

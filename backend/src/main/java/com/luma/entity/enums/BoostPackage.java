@@ -6,22 +6,18 @@ import java.math.BigDecimal;
 
 @Getter
 public enum BoostPackage {
-    // BASIC: 1.5x visibility, priority in search
     BASIC("Basic", 7, BigDecimal.valueOf(9.99), 1.5, false, false, true, false),
 
-    // STANDARD: 2x visibility, featured in category
     STANDARD("Standard", 14, BigDecimal.valueOf(24.99), 2.0, true, false, true, false),
 
-    // PREMIUM: 3x visibility, featured on home page
     PREMIUM("Premium", 30, BigDecimal.valueOf(49.99), 3.0, true, true, true, false),
 
-    // VIP: 5x visibility, banner on home page
     VIP("VIP", 30, BigDecimal.valueOf(99.99), 5.0, true, true, true, true);
 
     private final String displayName;
     private final int durationDays;
     private final BigDecimal price;
-    private final double boostMultiplier; // Visibility multiplier
+    private final double boostMultiplier;
     private final boolean featuredInCategory;
     private final boolean featuredOnHome;
     private final boolean priorityInSearch;

@@ -30,20 +30,15 @@ public class ReviewReportService {
     private final ReviewReportRepository reportRepository;
     private final ReviewRepository reviewRepository;
 
-    /**
-     * User reports a review
-     */
     @Transactional
     public ReviewReportResponse reportReview(User reporter, UUID reviewId, ReportReviewRequest request) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
-        // Check if already reported by this user
         if (reportRepository.existsByReporterAndReview(reporter, review)) {
             throw new BadRequestException("You have already reported this review");
         }
 
-        // Cannot report own review
         if (review.getUser().getId().equals(reporter.getId())) {
             throw new BadRequestException("You cannot report your own review");
         }
@@ -62,9 +57,6 @@ public class ReviewReportService {
         return ReviewReportResponse.fromEntity(report);
     }
 
-    /**
-     * Get reports for organiser's events
-     */
     public PageResponse<ReviewReportResponse> getOrganiserReports(User organiser, ReportStatus status, Pageable pageable) {
         Page<ReviewReport> reports;
         if (status != null) {
@@ -83,27 +75,19 @@ public class ReviewReportService {
                 .build();
     }
 
-    /**
-     * Get pending reports count for organiser
-     */
     public long getPendingReportsCount(User organiser) {
         return reportRepository.countByOrganiserAndStatus(organiser, ReportStatus.PENDING);
     }
 
-    /**
-     * Organiser resolves a report
-     */
     @Transactional
     public ReviewReportResponse resolveReport(User organiser, UUID reportId, ResolveReportRequest request) {
         ReviewReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
 
-        // Verify organiser owns the event
         if (!report.getReview().getEvent().getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only resolve reports for your own events");
         }
 
-        // Check if already resolved
         if (report.getStatus() != ReportStatus.PENDING) {
             throw new BadRequestException("Report has already been resolved");
         }
@@ -113,7 +97,6 @@ public class ReviewReportService {
         report.setResolvedBy(organiser);
         report.setResolvedAt(LocalDateTime.now());
 
-        // If status is REMOVED, hide the review
         if (request.getStatus() == ReportStatus.REMOVED) {
             Review review = report.getReview();
             reviewRepository.delete(review);
@@ -126,14 +109,10 @@ public class ReviewReportService {
         return ReviewReportResponse.fromEntity(report);
     }
 
-    /**
-     * Get single report detail
-     */
     public ReviewReportResponse getReport(User organiser, UUID reportId) {
         ReviewReport report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found"));
 
-        // Verify organiser owns the event
         if (!report.getReview().getEvent().getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only view reports for your own events");
         }

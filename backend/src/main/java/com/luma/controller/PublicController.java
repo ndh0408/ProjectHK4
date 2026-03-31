@@ -76,7 +76,6 @@ public class PublicController {
         if (download) {
             headers.setContentDispositionFormData("attachment", code + ".pdf");
         } else {
-            // Inline display in browser
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + code + ".pdf\"");
         }
 

@@ -29,7 +29,6 @@ class TicketScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Use registrationId for QR code if available, otherwise ticketId
     final qrData = registrationId ?? ticketId;
 
     return Scaffold(
@@ -56,7 +55,6 @@ class TicketScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Checked-in badge
                     if (isCheckedIn) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -104,7 +102,6 @@ class TicketScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Divider(),
                     const SizedBox(height: 24),
-                    // QR Code with overlay if checked in
                     Stack(
                       alignment: Alignment.center,
                       children: [

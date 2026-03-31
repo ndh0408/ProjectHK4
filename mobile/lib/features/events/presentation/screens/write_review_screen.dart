@@ -60,7 +60,7 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
             backgroundColor: AppColors.success,
           ),
         );
-        context.pop(true); // Return true to indicate success
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
@@ -91,7 +91,6 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event title
             Text(
               widget.eventTitle,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -100,7 +99,6 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Rating section
             Text(
               l10n.rating,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -121,7 +119,6 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Comment section
             Text(
               l10n.comment,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -142,7 +139,6 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Submit button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

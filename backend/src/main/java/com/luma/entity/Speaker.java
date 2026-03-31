@@ -19,12 +19,12 @@ public class Speaker {
     @Column(nullable = false)
     private String name;
 
-    private String title; // Job title, e.g., "CEO at TechCorp"
+    private String title;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
-    private String bio; // Short biography
+    private String bio;
 
-    private String imageUrl; // Profile photo
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)

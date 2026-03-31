@@ -38,24 +38,17 @@ public class ReviewService {
     private final AIService aiService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * Create a review for an event
-     * Prerequisites: User must have attended (APPROVED, checked-in, event ended)
-     */
     @Transactional
     public ReviewResponse createReview(User user, UUID eventId, ReviewRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        // Validate eligibility
         validateCanReview(user, event);
 
-        // Check if already reviewed
         if (reviewRepository.existsByEventAndUser(event, user)) {
             throw new BadRequestException("You have already reviewed this event");
         }
 
-        // Create review
         Review review = Review.builder()
                 .user(user)
                 .event(event)
@@ -63,14 +56,12 @@ public class ReviewService {
                 .comment(request.getComment())
                 .build();
 
-        // AI Content Moderation
         try {
             moderateReviewContent(review, event.getTitle());
         } catch (Exception e) {
             log.warn("AI moderation failed, saving review without moderation: {}", e.getMessage());
         }
 
-        // If review is flagged as inappropriate, reject it
         if (review.isFlagged() && review.getToxicityScore() != null && review.getToxicityScore() >= 80) {
             throw new BadRequestException("Your review contains inappropriate content. Please revise and try again. Reason: " + review.getModerationReason());
         }
@@ -82,9 +73,6 @@ public class ReviewService {
         return ReviewResponse.fromEntity(review);
     }
 
-    /**
-     * Moderate review content using AI
-     */
     private void moderateReviewContent(Review review, String eventTitle) {
         String result = aiService.moderateReviewContent(
                 review.getComment(),
@@ -93,7 +81,6 @@ public class ReviewService {
         );
 
         try {
-            // Parse JSON response
             JsonNode json = objectMapper.readTree(result);
 
             boolean isAppropriate = json.has("isAppropriate") && json.get("isAppropriate").asBoolean(true);
@@ -120,9 +107,6 @@ public class ReviewService {
         }
     }
 
-    /**
-     * Get reviews for an event
-     */
     public PageResponse<ReviewResponse> getEventReviews(UUID eventId, Pageable pageable) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -139,9 +123,6 @@ public class ReviewService {
                 .build();
     }
 
-    /**
-     * Get reviews by a user
-     */
     public PageResponse<ReviewResponse> getUserReviews(User user, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByUserOrderByCreatedAtDesc(user, pageable);
 
@@ -155,9 +136,6 @@ public class ReviewService {
                 .build();
     }
 
-    /**
-     * Check if user can review an event
-     */
     public boolean canReview(User user, UUID eventId) {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event == null) return false;
@@ -170,36 +148,26 @@ public class ReviewService {
         }
     }
 
-    /**
-     * Get average rating for an event
-     */
     public Double getAverageRating(UUID eventId) {
         return reviewRepository.getAverageRatingByEventId(eventId);
     }
 
-    /**
-     * Get review count for an event
-     */
     public long getReviewCount(UUID eventId) {
         return reviewRepository.countByEventId(eventId);
     }
 
     private void validateCanReview(User user, Event event) {
-        // Check if user has a valid registration
         Registration registration = registrationRepository.findByUserAndEvent(user, event)
                 .orElseThrow(() -> new BadRequestException("You must register for this event to review it"));
 
-        // Check if registration is approved
         if (registration.getStatus() != RegistrationStatus.APPROVED) {
             throw new BadRequestException("Your registration must be approved to review this event");
         }
 
-        // Check if user checked in
         if (registration.getCheckedInAt() == null) {
             throw new BadRequestException("You must check in to the event to write a review");
         }
 
-        // Check if event has ended
         if (event.getEndTime() == null || event.getEndTime().isAfter(LocalDateTime.now())) {
             throw new BadRequestException("Event has not ended yet");
         }

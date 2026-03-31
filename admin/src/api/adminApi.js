@@ -51,12 +51,10 @@ const adminApi = {
     generateBroadcastMessage: (data) => api.post('/admin/ai/generate-broadcast-message', data),
     getAIInsights: () => api.get('/admin/ai/dashboard-insights'),
 
-    // Boost Management
     getBoosts: (params) => api.get('/admin/boosts', { params }),
     getBoostById: (id) => api.get(`/admin/boosts/${id}`),
     getBoostStats: () => api.get('/admin/boosts/stats'),
 
-    // Revenue
     getRevenueStats: () => api.get('/admin/revenue/stats'),
 
 };

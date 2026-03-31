@@ -15,7 +15,6 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
   @override
   void initState() {
     super.initState();
-    // Refresh status when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(googleCalendarProvider.notifier).loadStatus();
     });
@@ -29,7 +28,6 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
 
-        // Show dialog to enter authorization code
         if (mounted) {
           _showAuthCodeDialog();
         }
@@ -168,7 +166,6 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Connection status card
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -273,7 +270,6 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
 
                   const SizedBox(height: 24),
 
-                  // Synced events list
                   if (calendarState.isConnected && calendarState.syncedEvents.isNotEmpty) ...[
                     Text(
                       'Synced Events',
@@ -306,7 +302,6 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                     ),
                   ],
 
-                  // Info section
                   const SizedBox(height: 24),
                   Card(
                     color: theme.colorScheme.surfaceContainerHighest,

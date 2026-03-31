@@ -19,18 +19,15 @@ public class ReviewResponse {
     private int rating;
     private String comment;
 
-    // User info
     private UUID userId;
     private String userName;
     private String userAvatarUrl;
 
-    // Event info
     private UUID eventId;
     private String eventTitle;
 
     private LocalDateTime createdAt;
 
-    // AI Moderation info (for organiser view)
     private Integer toxicityScore;
     private String moderationCategories;
     private String moderationReason;

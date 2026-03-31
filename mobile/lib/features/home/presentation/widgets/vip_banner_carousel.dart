@@ -9,7 +9,6 @@ import '../../../../shared/models/boost.dart';
 import '../../../../shared/widgets/boost_badge.dart';
 import '../../providers/events_provider.dart';
 
-/// A carousel widget that displays VIP boosted events as a banner on the home page
 class VipBannerCarousel extends ConsumerStatefulWidget {
   const VipBannerCarousel({super.key});
 

@@ -18,7 +18,7 @@ import java.util.List;
 @Data
 @ValidEventTime
 public class EventCreateRequest {
-    
+
     @NotBlank(message = "Event title is required")
     private String title;
 
@@ -35,37 +35,36 @@ public class EventCreateRequest {
     private LocalDateTime registrationDeadline;
 
     private String venue;
-    
+
     private String address;
-    
+
     private Double latitude;
-    
+
     private Double longitude;
-    
+
     private Long cityId;
-    
+
     private Long categoryId;
-    
+
     private boolean isFree = true;
-    
+
     private BigDecimal ticketPrice;
-    
-    private Integer capacity; // null = unlimited
-    
+
+    private Integer capacity;
+
     private EventVisibility visibility = EventVisibility.PUBLIC;
-    
+
     private boolean requiresApproval = false;
 
     @Valid
     private List<SpeakerRequest> speakers = new ArrayList<>();
 
-    // Recurring event fields
     private RecurrenceType recurrenceType = RecurrenceType.NONE;
 
     @Min(value = 1, message = "Recurrence interval must be at least 1")
     private Integer recurrenceInterval = 1;
 
-    private List<String> recurrenceDaysOfWeek;  // ["MON", "WED", "FRI"]
+    private List<String> recurrenceDaysOfWeek;
 
     private LocalDateTime recurrenceEndDate;
 
