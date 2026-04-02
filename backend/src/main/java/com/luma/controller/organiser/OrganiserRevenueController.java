@@ -68,7 +68,6 @@ public class OrganiserRevenueController {
             @PathVariable UUID eventId) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Verify organiser owns this event
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BadRequestException("Event not found"));
 
@@ -88,7 +87,6 @@ public class OrganiserRevenueController {
             @PathVariable UUID eventId) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Verify organiser owns this event
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new BadRequestException("Event not found"));
 

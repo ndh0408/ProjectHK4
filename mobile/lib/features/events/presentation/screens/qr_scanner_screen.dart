@@ -47,7 +47,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     final String? code = barcodes.first.rawValue;
     if (code == null || code.isEmpty) return;
 
-    // Avoid processing same code multiple times
     if (code == _lastScannedCode) return;
 
     setState(() {
@@ -57,7 +56,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
     await _processCheckIn(code);
 
-    // Reset after a delay to allow scanning another code
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() {
@@ -85,7 +83,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       if (mounted) {
         String errorMessage = l10n.checkInFailed;
 
-        // Extract error message from DioException
         if (e is DioException) {
           final responseData = e.response?.data;
           if (responseData is Map<String, dynamic>) {
@@ -93,7 +90,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           }
         }
 
-        // Check for specific error messages
         if (errorMessage.contains('already been checked in')) {
           errorMessage = l10n.alreadyCheckedIn;
         } else if (errorMessage.contains('not found')) {
@@ -247,9 +243,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             controller: _scannerController,
             onDetect: _onDetect,
           ),
-          // Overlay
           _buildScannerOverlay(),
-          // Instructions
           Positioned(
             bottom: 100,
             left: 0,
@@ -271,7 +265,6 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               ),
             ),
           ),
-          // Processing indicator
           if (_isProcessing)
             const Center(
               child: CircularProgressIndicator(

@@ -23,7 +23,6 @@ public class BoostPackageInfo {
     private String description;
     private List<String> features;
 
-    // Feature flags
     private boolean priorityInSearch;
     private boolean featuredInCategory;
     private boolean featuredOnHome;
@@ -41,7 +40,7 @@ public class BoostPackageInfo {
                 features.add("✓ 7 days duration");
                 features.add("✓ \"BOOSTED\" badge on event");
                 description = "Get noticed first in search results with priority placement";
-                badgeColor = "#3B82F6"; // Blue
+                badgeColor = "#3B82F6";
             }
             case STANDARD -> {
                 features.add("✓ All BASIC features");
@@ -50,7 +49,7 @@ public class BoostPackageInfo {
                 features.add("✓ Featured in category listings");
                 features.add("✓ \"FEATURED\" badge on event");
                 description = "Stand out in your category with featured placement and enhanced visibility";
-                badgeColor = "#8B5CF6"; // Purple
+                badgeColor = "#8B5CF6";
             }
             case PREMIUM -> {
                 features.add("✓ All STANDARD features");
@@ -60,7 +59,7 @@ public class BoostPackageInfo {
                 features.add("✓ \"PREMIUM\" badge on event");
                 features.add("★ Recommended for maximum reach");
                 description = "Maximum exposure with home page featuring and premium badge";
-                badgeColor = "#7C3AED"; // Deep purple
+                badgeColor = "#7C3AED";
             }
             case VIP -> {
                 features.add("✓ All PREMIUM features");
@@ -71,11 +70,11 @@ public class BoostPackageInfo {
                 features.add("★ Highest priority placement");
                 features.add("★ Best for major events");
                 description = "Ultimate visibility with exclusive banner placement and VIP treatment";
-                badgeColor = "#F59E0B"; // Gold/Orange
+                badgeColor = "#F59E0B";
             }
             default -> {
                 description = "";
-                badgeColor = "#6B7280"; // Gray
+                badgeColor = "#6B7280";
             }
         }
 

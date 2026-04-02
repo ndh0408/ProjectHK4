@@ -45,19 +45,13 @@ public class OrganiserSubscription {
     @Builder.Default
     private boolean autoRenew = false;
 
-    // Usage tracking for current billing period
     @Column(name = "events_created_this_month")
     @Builder.Default
     private int eventsCreatedThisMonth = 0;
 
-    @Column(name = "ai_usage_this_month")
-    @Builder.Default
-    private int aiUsageThisMonth = 0;
-
     @Column(name = "billing_cycle_start")
     private LocalDateTime billingCycleStart;
 
-    // Stripe subscription ID for paid plans
     @Column(name = "stripe_subscription_id")
     private String stripeSubscriptionId;
 
@@ -69,60 +63,34 @@ public class OrganiserSubscription {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Check if subscription is valid (active and not expired)
     public boolean isValid() {
         if (!isActive) return false;
         if (plan == SubscriptionPlan.FREE) return true;
         return endDate == null || endDate.isAfter(LocalDateTime.now());
     }
 
-    // Get effective plan (FREE if subscription expired)
     public SubscriptionPlan getEffectivePlan() {
         return isValid() ? plan : SubscriptionPlan.FREE;
     }
 
-    // Reset monthly usage counters
     public void resetMonthlyUsage() {
         this.eventsCreatedThisMonth = 0;
-        this.aiUsageThisMonth = 0;
         this.billingCycleStart = LocalDateTime.now();
     }
 
-    // Check if can create more events
     public boolean canCreateEvent() {
         SubscriptionPlan effectivePlan = getEffectivePlan();
         if (effectivePlan.isUnlimitedEvents()) return true;
         return eventsCreatedThisMonth < effectivePlan.getMaxEventsPerMonth();
     }
 
-    // Check if can use AI
-    public boolean canUseAI() {
-        SubscriptionPlan effectivePlan = getEffectivePlan();
-        if (effectivePlan.isUnlimitedAI()) return true;
-        return aiUsageThisMonth < effectivePlan.getAiUsagePerMonth();
-    }
-
-    // Get remaining events quota
     public int getRemainingEvents() {
         SubscriptionPlan effectivePlan = getEffectivePlan();
         if (effectivePlan.isUnlimitedEvents()) return -1;
         return Math.max(0, effectivePlan.getMaxEventsPerMonth() - eventsCreatedThisMonth);
     }
 
-    // Get remaining AI usage quota
-    public int getRemainingAIUsage() {
-        SubscriptionPlan effectivePlan = getEffectivePlan();
-        if (effectivePlan.isUnlimitedAI()) return -1;
-        return Math.max(0, effectivePlan.getAiUsagePerMonth() - aiUsageThisMonth);
-    }
-
-    // Increment event count
     public void incrementEventCount() {
         this.eventsCreatedThisMonth++;
-    }
-
-    // Increment AI usage
-    public void incrementAIUsage() {
-        this.aiUsageThisMonth++;
     }
 }

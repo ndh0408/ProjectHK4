@@ -151,13 +151,11 @@ const Revenue = () => {
 
     const pieColors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b'];
 
-    // Prepare data for monthly trend chart
     const monthlyTrend = stats?.monthlyTrend || [];
     const trendLabels = monthlyTrend.map(item => item.month);
     const subscriptionData = monthlyTrend.map(item => parseFloat(item.subscriptionRevenue) || 0);
     const boostData = monthlyTrend.map(item => parseFloat(item.boostRevenue) || 0);
 
-    // Prepare data for subscription plan breakdown
     const subscriptionByPlan = stats?.subscriptionByPlan || {};
     const planData = Object.entries(subscriptionByPlan).map(([key, value], index) => ({
         id: index,
@@ -166,7 +164,6 @@ const Revenue = () => {
         color: pieColors[index % pieColors.length],
     })).filter(item => item.value > 0);
 
-    // Prepare data for boost package breakdown
     const boostByPackage = stats?.boostByPackage || {};
     const packageData = Object.entries(boostByPackage).map(([key, value], index) => ({
         id: index,
@@ -192,7 +189,6 @@ const Revenue = () => {
                 </Button>
             </div>
 
-            {/* Summary Stats */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
@@ -235,7 +231,6 @@ const Revenue = () => {
                 </Grid>
             </Grid>
 
-            {/* Monthly Trend Chart */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12}>
                     <ChartCard title="Monthly Revenue Trend (Last 12 Months)" height={350}>
@@ -274,7 +269,6 @@ const Revenue = () => {
                 </Grid>
             </Grid>
 
-            {/* Breakdown Charts */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
                 <Grid item xs={12} md={6}>
                     <ChartCard title="Revenue by Subscription Plan">
@@ -318,7 +312,6 @@ const Revenue = () => {
                 </Grid>
             </Grid>
 
-            {/* Detailed Tables */}
             <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 3 }}>
@@ -409,7 +402,6 @@ const Revenue = () => {
                 </Grid>
             </Grid>
 
-            {/* Monthly Comparison */}
             <Grid container spacing={3} sx={{ mt: 2 }}>
                 <Grid item xs={12}>
                     <Paper sx={{ p: 3 }}>

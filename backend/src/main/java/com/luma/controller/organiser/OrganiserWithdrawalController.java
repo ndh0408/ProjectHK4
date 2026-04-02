@@ -75,7 +75,6 @@ public class OrganiserWithdrawalController {
     public ResponseEntity<ApiResponse<WithdrawalResponse>> getWithdrawalDetails(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable UUID id) {
-        // Note: Service will verify ownership
         WithdrawalResponse response = withdrawalService.getWithdrawalById(id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

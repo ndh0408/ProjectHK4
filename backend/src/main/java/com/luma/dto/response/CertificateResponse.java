@@ -20,13 +20,11 @@ public class CertificateResponse {
     private String certificateUrl;
     private LocalDateTime generatedAt;
 
-    // Event info
     private UUID eventId;
     private String eventTitle;
     private LocalDateTime eventDate;
     private String eventLocation;
 
-    // User info
     private UUID userId;
     private String userName;
     private String userEmail;

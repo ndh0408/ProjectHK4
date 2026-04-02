@@ -261,12 +261,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Large Event Image
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
             actions: [
-              // Bookmark button
               _BookmarkButton(eventId: event.id),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -360,7 +358,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser Info (clickable)
                   InkWell(
                     onTap: () =>
                         context.push('/organiser/${event.organiserId}'),
@@ -424,7 +421,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Category & Price
                   Row(
                     children: [
                       Container(
@@ -475,7 +471,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Event Title
                   Text(
                     event.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -485,7 +480,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Date & Time
                   _InfoRow(
                     icon: Icons.calendar_today,
                     title: AppLocalizations.of(context)!.date,
@@ -499,7 +493,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         '${timeFormat.format(event.startDate)} - ${timeFormat.format(event.endDate)}',
                   ),
 
-                  // Registration Deadline (if set)
                   if (event.registrationDeadline != null) ...[
                     const SizedBox(height: 12),
                     _InfoRow(
@@ -515,7 +508,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   const SizedBox(height: 12),
 
-                  // Add to Calendar button
                   InkWell(
                     onTap: () => _addToCalendar(event),
                     borderRadius: BorderRadius.circular(8),
@@ -553,7 +545,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                     ),
                   ),
 
-                  // Recurring Event Info (if recurring)
                   if (event.isRecurring) ...[
                     const SizedBox(height: 16),
                     _buildRecurringInfoSection(context, event),
@@ -561,13 +552,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Action Buttons with registration status
                   Consumer(
                     builder: (context, ref, _) {
                       final currentUser = ref.watch(currentUserProvider);
                       final isOrganiser = currentUser != null && event.organiserId == currentUser.id;
 
-                      // If user is the organiser, show management buttons instead
                       if (isOrganiser) {
                         return _buildOrganiserActions(event);
                       }
@@ -1169,7 +1158,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         )),
                   ],
 
-                  // Reviews Section
                   const SizedBox(height: 24),
                   _ReviewsSection(
                     event: event,
@@ -1198,7 +1186,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   Widget _buildOrganiserActions(Event event) {
     return Column(
       children: [
-        // Organiser banner
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -1241,7 +1228,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        // Management buttons
         Row(
           children: [
             Expanded(
@@ -1368,7 +1354,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               ),
             ],
           ),
-          // Show days of week if weekly
           if (event.recurrenceType == RecurrenceType.weekly &&
               event.recurrenceDaysOfWeek != null &&
               event.recurrenceDaysOfWeek!.isNotEmpty) ...[
@@ -1398,7 +1383,6 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               }).toList(),
             ),
           ],
-          // Show recurrence end date if set
           if (event.recurrenceEndDate != null) ...[
             const SizedBox(height: 8),
             Row(
@@ -1609,7 +1593,6 @@ class _ReviewsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with title and rating summary
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1645,7 +1628,6 @@ class _ReviewsSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
 
-        // Write review button (if eligible)
         canReviewAsync.when(
           data: (canReview) {
             if (canReview) {
@@ -1671,7 +1653,6 @@ class _ReviewsSection extends ConsumerWidget {
           error: (_, __) => const SizedBox.shrink(),
         ),
 
-        // Reviews list
         reviewsAsync.when(
           data: (reviews) {
             if (reviews.isEmpty) {
@@ -1716,7 +1697,6 @@ class _ReviewsSection extends ConsumerWidget {
                 if (event.reviewCount > 3)
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to all reviews screen
                     },
                     child: Text(l10n.seeAllReviews),
                   ),

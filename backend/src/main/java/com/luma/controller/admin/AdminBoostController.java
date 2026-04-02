@@ -44,7 +44,6 @@ public class AdminBoostController {
         stats.put("totalActive", boostService.getBoostedEventIds().size());
         stats.put("totalFeatured", boostService.getFeaturedEvents().size());
         stats.put("totalHomeBanner", boostService.getHomeBannerEvents().size());
-        // Add revenue stats here if needed
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
 }

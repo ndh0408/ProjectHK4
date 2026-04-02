@@ -255,9 +255,6 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Notify all attendees when an event is cancelled
-     */
     @Transactional
     public int notifyAttendeesEventCancelled(Event event, String reason) {
         List<Registration> registrations = registrationRepository.findByEventAndStatusIn(
@@ -285,7 +282,6 @@ public class NotificationService {
                     event.getOrganiser().getFullName()
             );
 
-            // Send email notification
             emailService.sendEventCancelledEmail(
                     attendee.getEmail(),
                     attendee.getFullName(),

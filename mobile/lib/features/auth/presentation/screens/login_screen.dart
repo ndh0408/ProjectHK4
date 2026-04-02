@@ -13,7 +13,6 @@ import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../domain/auth_state.dart';
 import '../../providers/auth_provider.dart';
 
-// Provider to fetch featured events for the carousel
 final featuredEventsProvider = FutureProvider<List<Event>>((ref) async {
   try {
     final apiService = ref.watch(apiServiceProvider);
@@ -78,7 +77,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is Authenticated) {
-        // Clear all cached data when new user logs in
         ref.invalidate(myFutureRegistrationsProvider);
         ref.invalidate(myFutureEventsProvider);
         ref.invalidate(myPastRegistrationsProvider);
@@ -108,7 +106,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Event Carousel Section
               SizedBox(
                 height: 280,
                 child: featuredEvents.when(
@@ -120,7 +117,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 32),
 
-              // Branding Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Builder(
@@ -179,7 +175,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 32),
 
-              // Auth Buttons Section
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _showEmailForm
@@ -189,7 +184,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
               const SizedBox(height: 24),
 
-              // Terms
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text.rich(
@@ -222,7 +216,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        // Continue with Email button (Primary)
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -255,7 +248,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         const SizedBox(height: 12),
 
-        // Sign Up button (Secondary)
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -287,7 +279,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         const SizedBox(height: 16),
 
-        // Google login button
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -342,7 +333,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Back button
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
@@ -369,7 +359,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           const SizedBox(height: 24),
 
-          // Full Name field (only for registration)
           if (!_isLoginMode) ...[
             TextFormField(
               controller: _fullNameController,
@@ -463,8 +452,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (value == null || value.isEmpty) {
                 return l10n.pleaseEnterPassword;
               }
-              if (!_isLoginMode && value.length < 6) {
-                return l10n.passwordTooShort;
+              if (!_isLoginMode) {
+                if (value.length < 8) {
+                  return 'Password must be at least 8 characters';
+                }
+                if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                  return 'Must contain at least one uppercase letter';
+                }
+                if (!RegExp(r'[a-z]').hasMatch(value)) {
+                  return 'Must contain at least one lowercase letter';
+                }
+                if (!RegExp(r'[0-9]').hasMatch(value)) {
+                  return 'Must contain at least one digit';
+                }
+                if (!RegExp(r'[!@#$%^&*()_+\-=\[\]{};:"|\\,.<>/?]').hasMatch(value)) {
+                  return 'Must contain at least one special character (!@#\$%...)';
+                }
               }
               return null;
             },
@@ -506,7 +509,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           const SizedBox(height: 16),
 
-          // Toggle login/register
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -539,7 +541,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-// Event Carousel with 3D tilt effect
 class _EventCarousel extends StatelessWidget {
   const _EventCarousel({required this.events});
 
@@ -551,7 +552,6 @@ class _EventCarousel extends StatelessWidget {
       return const _EventCarouselPlaceholder();
     }
 
-    // Prepare cards - fill up to 3 cards, reusing events if needed
     final List<Event> displayEvents = [];
     if (events.length == 1) {
       displayEvents.addAll([events[0], events[0], events[0]]);
@@ -564,7 +564,6 @@ class _EventCarousel extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Background gradient
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -577,13 +576,11 @@ class _EventCarousel extends StatelessWidget {
             ),
           ),
         ),
-        // Event cards with 3D effect
         SizedBox(
           height: 250,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Render in order: left (0), right (2), center (1) - so center is on top
               _buildEventCard(displayEvents[0], 0),
               _buildEventCard(displayEvents[2], 2),
               _buildEventCard(displayEvents[1], 1),
@@ -595,7 +592,6 @@ class _EventCarousel extends StatelessWidget {
   }
 
   Widget _buildEventCard(Event event, int position) {
-    // Position: 0 = left, 1 = center, 2 = right
     final double offsetX = (position - 1) * 90.0;
     final double offsetY = position == 1 ? 0 : 25.0;
     final double rotation = (position - 1) * 0.12;
@@ -604,7 +600,7 @@ class _EventCarousel extends StatelessWidget {
     return Transform(
       alignment: Alignment.center,
       transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.001) // perspective
+        ..setEntry(3, 2, 0.001)
         ..rotateY(rotation)
         ..translate(offsetX, offsetY)
         ..scale(scale),
@@ -694,7 +690,6 @@ class _EventCarousel extends StatelessWidget {
   }
 }
 
-// Placeholder carousel when loading or no events
 class _EventCarouselPlaceholder extends StatelessWidget {
   const _EventCarouselPlaceholder();
 

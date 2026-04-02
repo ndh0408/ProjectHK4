@@ -44,8 +44,6 @@ public class EventReminderScheduler {
 
         log.info("Checking reminders for events starting tomorrow between {} and {}", tomorrowStart, tomorrowEnd);
 
-        // Only send reminders for events starting TOMORROW (not today or past)
-        // This ensures we only send reminders 1 day before the event
         List<Registration> missedRegistrations = registrationRepository
                 .findByEventStartTimeBetweenAndStatusAndReminderNotSent(tomorrowStart, tomorrowEnd, RegistrationStatus.APPROVED);
 

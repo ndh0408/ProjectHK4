@@ -32,8 +32,6 @@ public class AdminCommissionController {
 
     private final CommissionService commissionService;
 
-    // ==================== Platform Config ====================
-
     @GetMapping("/config")
     @Operation(summary = "Get platform configuration")
     public ResponseEntity<ApiResponse<PlatformConfigResponse>> getPlatformConfig() {
@@ -56,8 +54,6 @@ public class AdminCommissionController {
         return ResponseEntity.ok(ApiResponse.success("Platform configuration updated successfully",
                 PlatformConfigResponse.fromEntity(config)));
     }
-
-    // ==================== Organiser Commission ====================
 
     @GetMapping("/organisers")
     @Operation(summary = "Get all custom organiser commissions")
@@ -98,8 +94,6 @@ public class AdminCommissionController {
         return ResponseEntity.ok(ApiResponse.success("Custom commission rate removed successfully", null));
     }
 
-    // ==================== Commission Transactions ====================
-
     @GetMapping("/transactions/organiser/{organiserId}")
     @Operation(summary = "Get commission transactions for an organiser")
     public ResponseEntity<ApiResponse<PageResponse<CommissionTransactionResponse>>> getOrganiserTransactions(
@@ -134,8 +128,6 @@ public class AdminCommissionController {
                 response));
     }
 
-    // ==================== Statistics ====================
-
     @GetMapping("/stats")
     @Operation(summary = "Get platform commission statistics")
     public ResponseEntity<ApiResponse<PlatformStatsResponse>> getPlatformStats() {
@@ -163,7 +155,6 @@ public class AdminCommissionController {
     @Operation(summary = "Get revenue statistics for an event")
     public ResponseEntity<ApiResponse<EventRevenueResponse>> getEventStats(@PathVariable UUID eventId) {
         CommissionService.EventRevenueStats stats = commissionService.getEventRevenueStats(eventId);
-        // Note: eventTitle would need to be fetched from EventService in real implementation
         return ResponseEntity.ok(ApiResponse.success(
                 EventRevenueResponse.fromStats(stats, eventId, null)));
     }

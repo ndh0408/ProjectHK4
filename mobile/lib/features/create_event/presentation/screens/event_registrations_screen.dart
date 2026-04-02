@@ -10,7 +10,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration.dart';
 
-// Provider for event registrations
 final eventRegistrationsProvider = FutureProvider.autoDispose
     .family<List<Registration>, String>((ref, eventId) async {
   final api = ref.watch(apiServiceProvider);
@@ -53,7 +52,7 @@ class _EventRegistrationsScreenState
       setState(() {
         switch (_tabController.index) {
           case 0:
-            _filterStatus = null; // All
+            _filterStatus = null;
             break;
           case 1:
             _filterStatus = 'PENDING';
@@ -350,7 +349,6 @@ class _EventRegistrationsScreenState
       if (mounted) {
         String errorMessage = 'Failed to check in';
 
-        // Extract error message from DioException or API response
         if (e is DioException) {
           final responseData = e.response?.data;
           if (responseData is Map<String, dynamic>) {
@@ -408,10 +406,8 @@ class _RegistrationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User info row
             Row(
               children: [
-                // Avatar
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -432,7 +428,6 @@ class _RegistrationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
 
-                // Name & Email
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,14 +451,12 @@ class _RegistrationCard extends StatelessWidget {
                   ),
                 ),
 
-                // Status badge
                 _buildStatusBadge(),
               ],
             ),
 
             const SizedBox(height: 12),
 
-            // Registration date
             Row(
               children: [
                 Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
@@ -478,7 +471,6 @@ class _RegistrationCard extends StatelessWidget {
               ],
             ),
 
-            // Phone if available
             if (registration.userPhone != null) ...[
               const SizedBox(height: 4),
               Row(
@@ -496,7 +488,6 @@ class _RegistrationCard extends StatelessWidget {
               ),
             ],
 
-            // Checked-in status
             if (registration.isCheckedIn) ...[
               const SizedBox(height: 8),
               Container(
@@ -522,7 +513,6 @@ class _RegistrationCard extends StatelessWidget {
               ),
             ],
 
-            // Rejection reason if rejected
             if (registration.isRejected &&
                 registration.rejectionReason != null) ...[
               const SizedBox(height: 8),
@@ -550,14 +540,12 @@ class _RegistrationCard extends StatelessWidget {
               ),
             ],
 
-            // Action buttons
             if (registration.isPending || registration.isApproved) ...[
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (registration.isPending) ...[
-                    // Reject button
                     OutlinedButton.icon(
                       onPressed: onReject,
                       icon: const Icon(Icons.close, size: 18),
@@ -570,7 +558,6 @@ class _RegistrationCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Approve button
                     ElevatedButton.icon(
                       onPressed: onApprove,
                       icon: const Icon(Icons.check, size: 18),
@@ -583,7 +570,6 @@ class _RegistrationCard extends StatelessWidget {
                       ),
                     ),
                   ] else if (registration.isApproved && !registration.isCheckedIn) ...[
-                    // Check-in button (only show if not checked in)
                     ElevatedButton.icon(
                       onPressed: onCheckIn,
                       icon: const Icon(Icons.qr_code_scanner, size: 18),

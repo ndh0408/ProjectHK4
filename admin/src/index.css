@@ -23,9 +23,6 @@ code {
     monospace;
 }
 
-/* ========== Custom Scrollbar Styles ========== */
-
-/* Chrome, Safari, Edge */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -46,19 +43,16 @@ code {
   background: #888;
 }
 
-/* Firefox */
 * {
   scrollbar-width: auto;
   scrollbar-color: #b0b0b0 #f1f1f1;
 }
 
-/* Ensure main content area has visible scrollbar */
 main, [role="main"] {
   overflow-y: auto !important;
   scrollbar-gutter: stable;
 }
 
-/* Fix MUI components scrollbar */
 .MuiDialogContent-root,
 .MuiTableContainer-root,
 .MuiDataGrid-virtualScroller,
@@ -83,7 +77,6 @@ main, [role="main"] {
   border-radius: 5px !important;
 }
 
-/* Fix overflow hidden issues */
 .MuiDialog-paper {
   overflow: visible !important;
 }

@@ -12,7 +12,6 @@ import '../../../../shared/widgets/empty_state.dart';
 import '../../../home/presentation/widgets/event_card.dart';
 import '../../../home/providers/events_provider.dart';
 
-// Search state
 class SearchState {
   const SearchState({
     this.query = '',
@@ -114,7 +113,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.initState();
     _controller = TextEditingController(text: widget.query);
 
-    // Trigger initial search if query is provided
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.query.isNotEmpty) {
         unawaited(ref.read(searchProvider.notifier).search(widget.query));
@@ -171,12 +169,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildBody(BuildContext context, SearchState state) {
-    // Loading state
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Error state
     if (state.error != null) {
       return ErrorState(
         message: state.error!,
@@ -186,7 +182,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    // Empty search state (no query entered yet)
     if (!state.hasSearched) {
       return Center(
         child: Column(
@@ -212,7 +207,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    // No results state
     if (state.results.isEmpty) {
       return Center(
         child: Column(
@@ -238,7 +232,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    // Results list
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

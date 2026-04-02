@@ -97,7 +97,6 @@ public class OrganiserNotificationController {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
         Event event = eventService.getEntityById(request.getEventId());
 
-        // Verify organiser owns the event
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only send notifications to your own event attendees");
         }
@@ -119,7 +118,6 @@ public class OrganiserNotificationController {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
         Event event = eventService.getEntityById(eventId);
 
-        // Verify organiser owns the event
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only view recipient counts for your own events");
         }

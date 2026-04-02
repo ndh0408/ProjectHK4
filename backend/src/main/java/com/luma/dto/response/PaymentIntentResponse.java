@@ -16,5 +16,5 @@ public class PaymentIntentResponse {
     private String paymentIntentId;
     private BigDecimal amount;
     private String currency;
-    private String checkoutUrl; // For web checkout sessions
+    private String checkoutUrl;
 }

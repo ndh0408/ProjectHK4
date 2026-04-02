@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/config/theme.dart';
 import '../models/boost.dart';
 
-/// A badge widget that displays when an event is boosted
 class BoostBadge extends StatelessWidget {
   const BoostBadge({
     super.key,
@@ -131,7 +130,6 @@ enum BoostBadgeSize {
   medium,
 }
 
-/// A simple "Featured" badge for boosted events
 class FeaturedBadge extends StatelessWidget {
   const FeaturedBadge({
     super.key,
@@ -189,7 +187,6 @@ class FeaturedBadge extends StatelessWidget {
   }
 }
 
-/// A banner-style boost indicator for home page featured events
 class BoostBanner extends StatelessWidget {
   const BoostBanner({
     super.key,

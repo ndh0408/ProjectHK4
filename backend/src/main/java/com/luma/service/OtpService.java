@@ -11,9 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
-/**
- * Service để quản lý OTP cho phone verification
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,9 +21,6 @@ public class OtpService {
     private static final int OTP_EXPIRY_MINUTES = 5;
     private static final SecureRandom random = new SecureRandom();
 
-    /**
-     * Generate và lưu OTP cho user
-     */
     @Transactional
     public String generateOtp(String phone) {
         User user = userRepository.findByPhone(phone)
@@ -40,16 +34,11 @@ public class OtpService {
 
         log.info("OTP generated for phone: {} (expires in {} minutes)", phone, OTP_EXPIRY_MINUTES);
 
-        // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
-        // For now, just log the OTP for development
         log.debug("OTP for {}: {}", phone, otp);
 
         return otp;
     }
 
-    /**
-     * Verify OTP
-     */
     @Transactional
     public boolean verifyOtp(String phone, String otp) {
         User user = userRepository.findByPhone(phone)
@@ -68,7 +57,6 @@ public class OtpService {
             throw new BadRequestException("Invalid OTP");
         }
 
-        // OTP verified successfully - mark phone as verified
         user.setPhoneVerified(true);
         user.setVerificationCode(null);
         user.setVerificationCodeExpiry(null);
@@ -78,23 +66,17 @@ public class OtpService {
         return true;
     }
 
-    /**
-     * Send OTP để verify phone mới đăng ký
-     */
     @Transactional
     public String sendOtpForRegistration(String phone) {
-        // Check if phone already exists
         if (userRepository.findByPhone(phone).isPresent()) {
             throw new BadRequestException("Phone number is already registered");
         }
 
-        // Generate OTP (lưu tạm vào cache hoặc session)
         String otp = generateRandomOtp();
 
         log.info("OTP generated for new registration: {} (expires in {} minutes)", phone, OTP_EXPIRY_MINUTES);
         log.debug("OTP for new phone {}: {}", phone, otp);
 
-        // TODO: Send SMS via provider
         return otp;
     }
 

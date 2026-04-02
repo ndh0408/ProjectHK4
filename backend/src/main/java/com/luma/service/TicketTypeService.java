@@ -27,9 +27,6 @@ public class TicketTypeService {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventRepository eventRepository;
 
-    /**
-     * Get all ticket types for an event (for organiser - includes hidden)
-     */
     public List<TicketTypeResponse> getTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(eventId);
         return ticketTypes.stream()
@@ -37,9 +34,6 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get visible ticket types for an event (for users/public)
-     */
     public List<TicketTypeResponse> getVisibleTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdAndIsVisibleTrueOrderByDisplayOrderAsc(eventId);
         return ticketTypes.stream()
@@ -47,9 +41,6 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get available ticket types for purchase
-     */
     public List<TicketTypeResponse> getAvailableTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findAvailableByEventId(eventId);
         return ticketTypes.stream()
@@ -57,26 +48,17 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get a single ticket type by ID
-     */
     public TicketTypeResponse getTicketTypeById(UUID ticketTypeId) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
         return TicketTypeResponse.fromEntity(ticketType);
     }
 
-    /**
-     * Get ticket type entity by ID (for internal use)
-     */
     public TicketType getEntityById(UUID ticketTypeId) {
         return ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
     }
 
-    /**
-     * Create a new ticket type for an event
-     */
     @Transactional
     public TicketTypeResponse createTicketType(UUID eventId, TicketTypeRequest request, User organiser) {
         Event event = eventRepository.findById(eventId)
@@ -106,15 +88,11 @@ public class TicketTypeService {
         ticketType = ticketTypeRepository.save(ticketType);
         log.info("Created ticket type {} for event {}", ticketType.getId(), eventId);
 
-        // Update event's isFree flag based on ticket types
         updateEventFreeStatus(event);
 
         return TicketTypeResponse.fromEntity(ticketType);
     }
 
-    /**
-     * Update an existing ticket type
-     */
     @Transactional
     public TicketTypeResponse updateTicketType(UUID ticketTypeId, TicketTypeRequest request, User organiser) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
@@ -122,7 +100,6 @@ public class TicketTypeService {
 
         validateOrganiserAccess(ticketType.getEvent(), organiser);
 
-        // Cannot reduce quantity below sold count
         if (request.getQuantity() < ticketType.getSoldCount()) {
             throw new BadRequestException("Cannot reduce quantity below sold count (" + ticketType.getSoldCount() + ")");
         }
@@ -145,15 +122,11 @@ public class TicketTypeService {
         ticketType = ticketTypeRepository.save(ticketType);
         log.info("Updated ticket type {}", ticketTypeId);
 
-        // Update event's isFree flag based on ticket types
         updateEventFreeStatus(ticketType.getEvent());
 
         return TicketTypeResponse.fromEntity(ticketType);
     }
 
-    /**
-     * Delete a ticket type
-     */
     @Transactional
     public void deleteTicketType(UUID ticketTypeId, User organiser) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
@@ -161,7 +134,6 @@ public class TicketTypeService {
 
         validateOrganiserAccess(ticketType.getEvent(), organiser);
 
-        // Cannot delete if tickets have been sold
         if (ticketType.getSoldCount() > 0) {
             throw new BadRequestException("Cannot delete ticket type with sold tickets. Consider hiding it instead.");
         }
@@ -170,13 +142,9 @@ public class TicketTypeService {
         ticketTypeRepository.delete(ticketType);
         log.info("Deleted ticket type {}", ticketTypeId);
 
-        // Update event's isFree flag based on remaining ticket types
         updateEventFreeStatus(event);
     }
 
-    /**
-     * Reorder ticket types for an event
-     */
     @Transactional
     public List<TicketTypeResponse> reorderTicketTypes(UUID eventId, List<UUID> ticketTypeIds, User organiser) {
         Event event = eventRepository.findById(eventId)
@@ -195,9 +163,6 @@ public class TicketTypeService {
         return getTicketTypesByEventId(eventId);
     }
 
-    /**
-     * Toggle visibility of a ticket type
-     */
     @Transactional
     public TicketTypeResponse toggleVisibility(UUID ticketTypeId, User organiser) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
@@ -212,9 +177,6 @@ public class TicketTypeService {
         return TicketTypeResponse.fromEntity(ticketType);
     }
 
-    /**
-     * Increment sold count when a ticket is purchased
-     */
     @Transactional
     public boolean incrementSoldCount(UUID ticketTypeId, int quantity) {
         int updated = ticketTypeRepository.incrementSoldCount(ticketTypeId, quantity);
@@ -226,9 +188,6 @@ public class TicketTypeService {
         return true;
     }
 
-    /**
-     * Decrement sold count when a ticket is cancelled/refunded
-     */
     @Transactional
     public boolean decrementSoldCount(UUID ticketTypeId, int quantity) {
         int updated = ticketTypeRepository.decrementSoldCount(ticketTypeId, quantity);
@@ -240,53 +199,37 @@ public class TicketTypeService {
         return true;
     }
 
-    /**
-     * Check if a ticket type can be purchased
-     */
     public boolean canPurchase(UUID ticketTypeId, int quantity) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
         return ticketType.canPurchase(quantity);
     }
 
-    /**
-     * Validate that the user is the organiser of the event
-     */
     private void validateOrganiserAccess(Event event, User organiser) {
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You are not the organiser of this event");
         }
     }
 
-    /**
-     * Validate ticket type request
-     */
     private void validateTicketTypeRequest(TicketTypeRequest request, Event event) {
-        // Validate sale dates
         if (request.getSaleStartDate() != null && request.getSaleEndDate() != null) {
             if (request.getSaleStartDate().isAfter(request.getSaleEndDate())) {
                 throw new BadRequestException("Sale start date must be before sale end date");
             }
         }
 
-        // Validate sale end date is before event end
         if (request.getSaleEndDate() != null && request.getSaleEndDate().isAfter(event.getEndTime())) {
             throw new BadRequestException("Sale end date cannot be after event end time");
         }
     }
 
-    /**
-     * Update event's isFree flag based on ticket types
-     */
     private void updateEventFreeStatus(Event event) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(event.getId());
 
         if (ticketTypes.isEmpty()) {
-            // No ticket types, use legacy ticketPrice field
             return;
         }
 
-        // Event is free only if ALL visible ticket types are free
         boolean allFree = ticketTypes.stream()
                 .filter(TicketType::getIsVisible)
                 .allMatch(tt -> tt.getPrice().compareTo(BigDecimal.ZERO) == 0);
@@ -295,9 +238,6 @@ public class TicketTypeService {
         eventRepository.save(event);
     }
 
-    /**
-     * Get statistics for ticket types of an event
-     */
     public TicketTypeStats getTicketTypeStats(UUID eventId) {
         int totalAvailable = ticketTypeRepository.getTotalAvailableByEventId(eventId);
         int totalSold = ticketTypeRepository.getTotalSoldByEventId(eventId);
@@ -306,8 +246,5 @@ public class TicketTypeService {
         return new TicketTypeStats(totalAvailable, totalSold, ticketTypeCount);
     }
 
-    /**
-     * Stats record for ticket types
-     */
     public record TicketTypeStats(int totalAvailable, int totalSold, int ticketTypeCount) {}
 }

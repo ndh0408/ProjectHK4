@@ -15,10 +15,6 @@ public interface ProcessedWebhookEventRepository extends JpaRepository<Processed
 
     boolean existsByEventId(String eventId);
 
-    /**
-     * Cleanup old webhook events (older than specified date)
-     * Should be run periodically to prevent table from growing indefinitely
-     */
     @Modifying
     @Transactional
     @Query("DELETE FROM ProcessedWebhookEvent p WHERE p.createdAt < :cutoffDate")

@@ -25,5 +25,5 @@ public class SendEventNotificationRequest {
     private String message;
 
     @NotBlank(message = "Notification type is required")
-    private String notificationType; // EVENT_REMINDER, EVENT_UPDATE, ANNOUNCEMENT, THANK_YOU, FEEDBACK_REQUEST
+    private String notificationType;
 }

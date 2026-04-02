@@ -15,39 +15,31 @@ import java.util.Map;
 @AllArgsConstructor
 public class RevenueStatsResponse {
 
-    // Total Revenue
     private BigDecimal totalRevenue;
     private BigDecimal subscriptionRevenue;
     private BigDecimal boostRevenue;
 
-    // This Month
     private BigDecimal monthlyRevenue;
     private BigDecimal monthlySubscriptionRevenue;
     private BigDecimal monthlyBoostRevenue;
 
-    // Last Month (for comparison)
     private BigDecimal lastMonthRevenue;
     private BigDecimal lastMonthSubscriptionRevenue;
     private BigDecimal lastMonthBoostRevenue;
 
-    // Growth percentages
     private Double revenueGrowthPercent;
     private Double subscriptionGrowthPercent;
     private Double boostGrowthPercent;
 
-    // Counts
     private int totalSubscriptions;
     private int activeSubscriptions;
     private int totalBoosts;
     private int activeBoosts;
 
-    // By Subscription Plan
     private Map<String, PlanStats> subscriptionByPlan;
 
-    // By Boost Package
     private Map<String, PackageStats> boostByPackage;
 
-    // Monthly Trend (last 12 months)
     private List<MonthlyRevenue> monthlyTrend;
 
     @Data
@@ -58,7 +50,7 @@ public class RevenueStatsResponse {
         private String plan;
         private int count;
         private BigDecimal revenue;
-        private BigDecimal monthlyRecurringRevenue; // MRR
+        private BigDecimal monthlyRecurringRevenue;
     }
 
     @Data
@@ -76,7 +68,7 @@ public class RevenueStatsResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MonthlyRevenue {
-        private String month; // "2024-01"
+        private String month;
         private BigDecimal subscriptionRevenue;
         private BigDecimal boostRevenue;
         private BigDecimal totalRevenue;

@@ -14,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class DashboardAnalyticsResponse {
 
-    // Overview metrics
     private long totalUsers;
     private long newUsersThisMonth;
     private double userGrowthPercent;
@@ -31,18 +30,15 @@ public class DashboardAnalyticsResponse {
     private BigDecimal revenueThisMonth;
     private double revenueGrowthPercent;
 
-    // Charts data
     private List<TimeSeriesData> userGrowthChart;
     private List<TimeSeriesData> eventGrowthChart;
     private List<TimeSeriesData> registrationGrowthChart;
     private List<TimeSeriesData> revenueChart;
 
-    // Distribution data
     private List<CategoryDistribution> eventsByCategory;
     private List<CityDistribution> eventsByCity;
     private List<StatusDistribution> eventsByStatus;
 
-    // Top performers
     private List<TopOrganiser> topOrganisers;
     private List<TopEvent> topEvents;
 }

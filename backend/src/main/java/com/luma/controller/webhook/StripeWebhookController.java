@@ -3,6 +3,8 @@ package com.luma.controller.webhook;
 import com.luma.service.PaymentService;
 import com.luma.service.OrganiserSubscriptionService;
 import com.luma.service.EventBoostService;
+import com.luma.service.UserBoostService;
+import com.luma.service.UserEventLimitService;
 import com.luma.service.WebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 import com.luma.entity.enums.SubscriptionPlan;
-import com.luma.entity.enums.BoostPackage;
 
 @Slf4j
 @RestController
@@ -30,6 +31,8 @@ public class StripeWebhookController {
     private final WebhookService webhookService;
     private final OrganiserSubscriptionService subscriptionService;
     private final EventBoostService boostService;
+    private final UserBoostService userBoostService;
+    private final UserEventLimitService userEventLimitService;
 
     @Value("${stripe.webhook-secret}")
     private String webhookSecret;
@@ -49,7 +52,6 @@ public class StripeWebhookController {
 
         log.info("Received Stripe webhook event: {} (id: {})", event.getType(), event.getId());
 
-        // Check idempotency - skip if already processed
         if (!webhookService.markEventAsProcessed(event.getId(), event.getType(), "stripe")) {
             log.info("Webhook event {} already processed, returning success", event.getId());
             return ResponseEntity.ok("Event already processed");
@@ -101,8 +103,6 @@ public class StripeWebhookController {
             }
         } catch (Exception e) {
             log.error("Error processing webhook event {}: {}", event.getId(), e.getMessage(), e);
-            // Still return 200 to prevent Stripe from retrying
-            // The event is already marked as processed
         }
 
         return ResponseEntity.ok("Webhook received");
@@ -112,7 +112,6 @@ public class StripeWebhookController {
         String type = session.getMetadata().get("type");
 
         if ("subscription".equals(type)) {
-            // Handle subscription payment
             String userId = session.getMetadata().get("user_id");
             String planName = session.getMetadata().get("plan");
 
@@ -125,7 +124,6 @@ public class StripeWebhookController {
             }
 
         } else if ("boost".equals(type)) {
-            // Handle boost payment - activate existing pending boost
             String boostIdStr = session.getMetadata().get("boost_id");
             String paymentIntentId = session.getPaymentIntent();
 
@@ -135,6 +133,32 @@ public class StripeWebhookController {
                 log.info("Boost {} activated after successful payment {}", boostId, paymentIntentId);
             } catch (Exception e) {
                 log.error("Error activating boost: {}", e.getMessage(), e);
+            }
+
+        } else if ("user_boost".equals(type)) {
+            String boostIdStr = session.getMetadata().get("boost_id");
+            String paymentIntentId = session.getPaymentIntent();
+
+            try {
+                UUID boostId = UUID.fromString(boostIdStr);
+                userBoostService.activateBoost(boostId, paymentIntentId);
+                log.info("User boost {} activated after successful payment {}", boostId, paymentIntentId);
+            } catch (Exception e) {
+                log.error("Error activating user boost: {}", e.getMessage(), e);
+            }
+
+        } else if ("extra_event".equals(type)) {
+            String userId = session.getMetadata().get("user_id");
+            String quantityStr = session.getMetadata().get("quantity");
+            String paymentIntentId = session.getPaymentIntent();
+
+            try {
+                int quantity = Integer.parseInt(quantityStr);
+                userEventLimitService.purchaseExtraEventAfterPayment(
+                        UUID.fromString(userId), quantity, paymentIntentId);
+                log.info("User {} purchased {} extra event(s) after payment {}", userId, quantity, paymentIntentId);
+            } catch (Exception e) {
+                log.error("Error processing extra event purchase: {}", e.getMessage(), e);
             }
         }
     }

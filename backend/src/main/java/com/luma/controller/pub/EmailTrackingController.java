@@ -14,12 +14,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/email")
 @RequiredArgsConstructor
-@Hidden // Hide from Swagger
+@Hidden
 public class EmailTrackingController {
 
     private final EmailMarketingService emailMarketingService;
 
-    // 1x1 transparent GIF
     private static final byte[] TRACKING_PIXEL = {
         0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00,
         (byte) 0x80, 0x00, 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xff,
@@ -33,7 +32,6 @@ public class EmailTrackingController {
         try {
             emailMarketingService.trackOpen(recipientId);
         } catch (Exception e) {
-            // Silently ignore tracking errors
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -50,7 +48,6 @@ public class EmailTrackingController {
         try {
             emailMarketingService.trackClick(recipientId);
         } catch (Exception e) {
-            // Silently ignore tracking errors
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -101,7 +98,6 @@ public class EmailTrackingController {
         try {
             emailMarketingService.handleUnsubscribe(recipientId, reason);
         } catch (Exception e) {
-            // Silently ignore errors
         }
 
         String html = """

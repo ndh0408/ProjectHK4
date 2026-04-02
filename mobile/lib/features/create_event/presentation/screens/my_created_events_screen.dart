@@ -8,7 +8,6 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 
-// Provider for user's created events
 final myCreatedEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
   final apiService = ref.watch(apiServiceProvider);
   final response = await apiService.getMyCreatedEvents();
@@ -124,7 +123,6 @@ class MyCreatedEventsScreen extends ConsumerWidget {
   }
 
   Widget _buildEventsList(BuildContext context, WidgetRef ref, List<Event> events) {
-    // Group events by status
     final draftEvents = events.where((e) => e.status == EventStatus.draft).toList();
     final pendingEvents = events.where((e) => e.status == EventStatus.pending).toList();
     final publishedEvents = events.where((e) => e.status == EventStatus.published || e.status == EventStatus.approved).toList();
@@ -224,7 +222,6 @@ class _EventCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Event Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: event.imageUrl != null
@@ -239,16 +236,13 @@ class _EventCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // Event Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Status Badge
                     _buildStatusBadge(),
                     const SizedBox(height: 6),
 
-                    // Title
                     Text(
                       event.title,
                       style: const TextStyle(
@@ -261,7 +255,6 @@ class _EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Date
                     Text(
                       dateFormat.format(event.startDate),
                       style: TextStyle(
@@ -270,7 +263,6 @@ class _EventCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Registered count
                     if (event.status == EventStatus.published || event.status == EventStatus.approved)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -292,7 +284,6 @@ class _EventCard extends StatelessWidget {
                 ),
               ),
 
-              // More options
               IconButton(
                 icon: const Icon(Icons.more_vert, size: 20),
                 onPressed: () => _showOptionsMenu(context),
@@ -402,7 +393,6 @@ class _EventCard extends StatelessWidget {
                 context.push('/event/${event.id}');
               },
             ),
-            // Manage Registrations - only for published events
             if (event.status == EventStatus.published || event.status == EventStatus.approved)
               ListTile(
                 leading: const Icon(Icons.people_outline),
@@ -425,7 +415,6 @@ class _EventCard extends StatelessWidget {
                 title: const Text('Edit Event'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to edit event screen
                 },
               ),
             if (event.status == EventStatus.draft)
@@ -434,7 +423,6 @@ class _EventCard extends StatelessWidget {
                 title: const Text('Delete Event', style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Show delete confirmation
                 },
               ),
             const SizedBox(height: 8),

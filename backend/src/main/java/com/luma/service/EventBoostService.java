@@ -45,9 +45,6 @@ public class EventBoostService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get available packages with subscription discount applied
-     */
     public List<BoostPackageInfo> getAvailablePackagesWithDiscount(UUID organiserId) {
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiserId);
 
@@ -67,38 +64,29 @@ public class EventBoostService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Create boost directly with ACTIVE status after successful payment.
-     * Used by Stripe webhook after payment confirmation.
-     */
     @Transactional
     public BoostResponse createBoostAfterPayment(CreateBoostRequest request, User organiser, String paymentIntentId) {
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        // Validate ownership
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only boost your own events");
         }
 
-        // Validate event status
         if (event.getStatus() != EventStatus.PUBLISHED) {
             throw new BadRequestException("Only published events can be boosted");
         }
 
-        // Check if event already has active boost
         if (boostRepository.hasActiveBoost(event.getId(), LocalDateTime.now())) {
             throw new BadRequestException("Event already has an active boost");
         }
 
-        // Check if event is in the future
         if (event.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Cannot boost past events");
         }
 
         BoostPackage pkg = request.getBoostPackage();
 
-        // Apply subscription discount to boost price
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
         java.math.BigDecimal finalPrice = pkg.getPrice();
         if (discountPercent > 0) {
@@ -115,7 +103,7 @@ public class EventBoostService {
                 .event(event)
                 .organiser(organiser)
                 .boostPackage(pkg)
-                .status(BoostStatus.ACTIVE)  // Directly set to ACTIVE
+                .status(BoostStatus.ACTIVE)
                 .amount(finalPrice)
                 .paymentIntentId(paymentIntentId)
                 .paidAt(now)
@@ -128,13 +116,9 @@ public class EventBoostService {
         return mapToResponse(boost);
     }
 
-    /**
-     * Check if event has an existing active boost and return info for upgrade/extend
-     */
     public BoostUpgradeInfo checkExistingBoost(UUID eventId, BoostPackage newPackage, UUID organiserId) {
         LocalDateTime now = LocalDateTime.now();
 
-        // Check for active boost - get the most recent one if multiple exist
         List<EventBoost> activeBoosts = boostRepository.findByEventIdAndStatus(eventId, BoostStatus.ACTIVE);
         EventBoost currentBoost = activeBoosts.stream()
                 .filter(EventBoost::isActive)
@@ -142,7 +126,6 @@ public class EventBoostService {
                 .orElse(null);
 
         if (currentBoost == null) {
-            // No active boost - allow new boost
             return BoostUpgradeInfo.builder()
                     .hasExistingBoost(false)
                     .canBoost(true)
@@ -151,7 +134,6 @@ public class EventBoostService {
         }
         BoostPackage currentPackage = currentBoost.getBoostPackage();
 
-        // Calculate remaining days
         LocalDateTime endTime = currentBoost.getEndTime();
         long remainingDays = 0;
         if (endTime != null) {
@@ -159,11 +141,9 @@ public class EventBoostService {
             if (remainingDays < 0) remainingDays = 0;
         }
 
-        // Apply subscription discount
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiserId);
 
         if (currentPackage == newPackage) {
-            // Same package - EXTEND (add more days)
             java.math.BigDecimal extendPrice = newPackage.getPrice();
             if (discountPercent > 0) {
                 extendPrice = extendPrice
@@ -190,7 +170,6 @@ public class EventBoostService {
                             currentPackage.getDisplayName(), newPackage.getDurationDays()))
                     .build();
         } else {
-            // Different package - UPGRADE
             int currentTier = getPackageTier(currentPackage);
             int newTier = getPackageTier(newPackage);
 
@@ -201,7 +180,6 @@ public class EventBoostService {
                         .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
             }
 
-            // Calculate prorated refund for remaining days (optional)
             java.math.BigDecimal currentAmount = currentBoost.getAmount();
             java.math.BigDecimal refundAmount = java.math.BigDecimal.ZERO;
             java.math.BigDecimal finalPrice = newPrice;
@@ -252,34 +230,27 @@ public class EventBoostService {
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        // Validate ownership
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You can only boost your own events");
         }
 
-        // Validate event status
         if (event.getStatus() != EventStatus.PUBLISHED) {
             throw new BadRequestException("Only published events can be boosted");
         }
 
-        // Check if event is in the future
         if (event.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Cannot boost past events");
         }
 
         BoostPackage pkg = request.getBoostPackage();
 
-        // Check for existing active boost
         List<EventBoost> activeBoosts = boostRepository.findByEventIdAndStatus(event.getId(), BoostStatus.ACTIVE);
         boolean hasActiveBoost = activeBoosts.stream().anyMatch(EventBoost::isActive);
 
         if (hasActiveBoost) {
-            // Has active boost - handle extend/upgrade scenario
-            // Create PENDING boost with reference to existing boost for processing after payment
             log.info("Event {} has active boost, creating extend/upgrade request", event.getId());
         }
 
-        // Apply subscription discount to boost price
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
         java.math.BigDecimal finalPrice = pkg.getPrice();
         if (discountPercent > 0) {
@@ -302,9 +273,6 @@ public class EventBoostService {
         return mapToResponse(boost);
     }
 
-    /**
-     * Delete a pending boost (used when extend/upgrade is confirmed, the temporary pending boost is no longer needed)
-     */
     @Transactional
     public void deletePendingBoost(UUID boostId, User organiser) {
         EventBoost boost = boostRepository.findById(boostId)
@@ -322,9 +290,6 @@ public class EventBoostService {
         log.info("Deleted pending boost {}", boostId);
     }
 
-    /**
-     * Extend existing boost (same package) - add more days
-     */
     @Transactional
     public BoostResponse extendBoost(UUID existingBoostId, User organiser, String paymentIntentId) {
         EventBoost existingBoost = boostRepository.findById(existingBoostId)
@@ -338,7 +303,6 @@ public class EventBoostService {
             throw new BadRequestException("Can only extend active boosts");
         }
 
-        // Add more days to endTime
         int additionalDays = existingBoost.getBoostPackage().getDurationDays();
         LocalDateTime currentEndTime = existingBoost.getEndTime();
         if (currentEndTime == null) {
@@ -346,7 +310,6 @@ public class EventBoostService {
         }
         existingBoost.setEndTime(currentEndTime.plusDays(additionalDays));
 
-        // Update payment info (optional: track extension payments separately)
         log.info("Extended boost {} by {} days. New end time: {}",
                 existingBoostId, additionalDays, existingBoost.getEndTime());
 
@@ -354,9 +317,6 @@ public class EventBoostService {
         return mapToResponse(existingBoost);
     }
 
-    /**
-     * Upgrade/change boost to different package
-     */
     @Transactional
     public BoostResponse upgradeBoost(UUID existingBoostId, BoostPackage newPackage, User organiser, String paymentIntentId) {
         EventBoost existingBoost = boostRepository.findById(existingBoostId)
@@ -370,11 +330,9 @@ public class EventBoostService {
             throw new BadRequestException("Can only upgrade active boosts");
         }
 
-        // Cancel old boost
         existingBoost.setStatus(BoostStatus.CANCELLED);
         boostRepository.save(existingBoost);
 
-        // Apply subscription discount
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
         java.math.BigDecimal finalPrice = newPackage.getPrice();
         if (discountPercent > 0) {
@@ -383,7 +341,6 @@ public class EventBoostService {
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
         }
 
-        // Create new boost with new package
         LocalDateTime now = LocalDateTime.now();
         EventBoost newBoost = EventBoost.builder()
                 .event(existingBoost.getEvent())
@@ -489,7 +446,6 @@ public class EventBoostService {
                 .orElse(null);
     }
 
-    // Admin methods
     public Page<BoostResponse> getAllBoosts(BoostStatus status, Pageable pageable) {
         Page<EventBoost> boosts;
         if (status != null) {
@@ -500,8 +456,7 @@ public class EventBoostService {
         return boosts.map(this::mapToResponse);
     }
 
-    // Scheduled task to expire boosts
-    @Scheduled(fixedRate = 60000) // Every minute
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void expireBoosts() {
         int expired = boostRepository.expireBoosts(LocalDateTime.now());

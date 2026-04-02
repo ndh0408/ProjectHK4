@@ -6,10 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Entity để track các webhook events đã xử lý
- * Đảm bảo idempotency - không xử lý duplicate events
- */
 @Entity
 @Table(name = "processed_webhook_events", indexes = {
     @Index(name = "idx_webhook_event_id", columnList = "eventId", unique = true),
@@ -33,7 +29,7 @@ public class ProcessedWebhookEvent {
     private String eventType;
 
     @Column(name = "source", nullable = false, length = 50)
-    private String source; // e.g., "stripe"
+    private String source;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
