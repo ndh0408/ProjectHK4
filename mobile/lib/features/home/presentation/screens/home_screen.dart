@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
+import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/registration.dart';
@@ -87,27 +89,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final pickedEvents = ref.watch(pickedForYouEventsProvider);
     final locationFilter = ref.watch(locationFilterProvider);
 
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         title: Row(
           children: [
             const Text('🟡 ', style: TextStyle(fontSize: 20)),
             Text(
               'luma',
-              style: TextStyle(
+              style: textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
-                color: Colors.grey[800],
               ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Colors.black54),
+            icon: Icon(Icons.settings_outlined, color: AppColors.textSecondary),
             onPressed: () => context.push('/profile'),
           ),
         ],
@@ -143,20 +146,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildYourEventsSection(AsyncValue<List<Event>> eventsAsync) {
     final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 l10n.yourEvents,
-                style: const TextStyle(
-                  fontSize: 20,
+                style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
                 ),
               ),
               TextButton(
@@ -166,12 +171,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       l10n.viewAll,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      style: textTheme.bodyMedium,
                     ),
-                    Icon(Icons.chevron_right, size: 18, color: Colors.grey[600]),
+                    const Icon(Icons.chevron_right, size: 18, color: AppColors.textSecondary),
                   ],
                 ),
               ),
@@ -187,10 +189,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               return _buildNoUpcomingEventsCard();
             }
             return SizedBox(
-              height: 100,
+              height: screenHeight * 0.125,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: hPadding),
                 itemCount: events.length,
                 itemBuilder: (context, index) {
                   return _buildYourEventCard(events[index]);
@@ -213,13 +215,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildNoUpcomingEventsCard() {
     final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: hPadding),
+      padding: EdgeInsets.all(hPadding),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Row(
         children: [
@@ -239,18 +244,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Text(
                   l10n.noUpcomingEvents,
-                  style: const TextStyle(
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.noUpcomingEventsSubtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 13,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -262,19 +264,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildYourEventCard(Event event) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textTheme = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: () {
         ref.read(selectedEventProvider.notifier).state = event;
         context.push('/event/${event.id}');
       },
       child: Container(
-        width: 280,
+        width: screenWidth * 0.75,
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: AppColors.divider),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -305,9 +310,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Text(
                     event.title,
-                    style: const TextStyle(
+                    style: textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -315,9 +319,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _formatEventDate(event.startTime),
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -346,17 +349,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     LocationFilter locationFilter,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final textTheme = Theme.of(context).textTheme;
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
           child: Text(
             l10n.pickedForYou,
-            style: const TextStyle(
-              fontSize: 20,
+            style: textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
             ),
           ),
         ),
@@ -364,7 +368,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SizedBox(height: 8),
 
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
           child: _buildLocationFilter(locationFilter),
         ),
 
@@ -432,23 +436,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    final textTheme = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.grey[200] : Colors.transparent,
+          color: isSelected ? AppColors.divider : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.grey[400]! : Colors.grey[300]!,
+            color: isSelected ? AppColors.border : AppColors.divider,
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.black87 : Colors.grey[600],
+          style: textTheme.bodyMedium?.copyWith(
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
           ),
         ),
       ),
@@ -516,34 +520,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
     }
 
+    final textTheme = Theme.of(context).textTheme;
+    final hPadding = Responsive.horizontalPadding(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 12),
           child: Row(
             children: [
               Text(
                 dateLabel,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
                 ),
               ),
               if (dayOfWeek.isNotEmpty) ...[
                 Text(
                   ' / ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[400],
+                  style: textTheme.titleMedium?.copyWith(
+                    color: AppColors.textLight,
                   ),
                 ),
                 Text(
                   dayOfWeek,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[500],
+                  style: textTheme.titleMedium?.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -571,7 +574,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         context.push('/event/${event.id}');
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context), vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -620,7 +623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       CircleAvatar(
                         radius: 10,
-                        backgroundColor: Colors.grey[300],
+                        backgroundColor: AppColors.divider,
                         backgroundImage: event.organiser?.avatarUrl != null
                             ? NetworkImage(event.organiser!.avatarUrl!)
                             : null,
@@ -635,9 +638,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(
                         child: Text(
                           event.organiser?.fullName ?? 'Unknown Organiser',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -673,10 +675,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   Text(
                     event.title,
-                    style: const TextStyle(
-                      fontSize: 15,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      fontSize: 15,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -685,24 +686,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('h:mm a').format(event.startTime),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

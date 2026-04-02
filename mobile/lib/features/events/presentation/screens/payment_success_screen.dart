@@ -102,7 +102,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -110,7 +110,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           'Please wait while we verify your payment',
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
           ),
         ),
       ],
@@ -140,7 +140,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -149,7 +149,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -182,7 +182,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
             'Back to Home',
             style: TextStyle(
               fontSize: 15,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ),
@@ -213,7 +213,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -222,7 +222,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
             height: 1.5,
           ),
         ),
@@ -260,7 +260,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
             'Back to Home',
             style: TextStyle(
               fontSize: 15,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ),

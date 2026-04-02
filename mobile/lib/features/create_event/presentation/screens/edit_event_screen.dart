@@ -335,10 +335,10 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.eventName,
                       border: InputBorder.none,
-                      hintStyle: const TextStyle(
+                      hintStyle: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w300,
-                        color: Colors.grey,
+                        color: AppColors.textLight,
                       ),
                     ),
                     style: const TextStyle(
@@ -446,7 +446,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         height: 200,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.divider,
           image: _selectedImageBytes != null
               ? DecorationImage(
                   image: MemoryImage(_selectedImageBytes!),
@@ -463,11 +463,11 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey[400]),
+                  Icon(Icons.add_photo_alternate, size: 48, color: AppColors.textLight),
                   const SizedBox(height: 8),
                   Text(
                     AppLocalizations.of(context)!.addCoverImage,
-                    style: TextStyle(color: Colors.grey[600]),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               )
@@ -479,7 +479,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(Icons.edit, color: Colors.white, size: 20),
@@ -511,7 +511,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
             const SizedBox(width: 12),
             Text(
               label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 15),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
             ),
             const Spacer(),
             if (dateTime != null) ...[
@@ -522,12 +522,12 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               const SizedBox(width: 8),
               Text(
                 timeFormat.format(dateTime),
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: AppColors.textSecondary),
               ),
             ] else
               Text(
                 AppLocalizations.of(context)!.selectDate,
-                style: TextStyle(color: Colors.grey[400]),
+                style: TextStyle(color: AppColors.textLight),
               ),
           ],
         ),
@@ -542,18 +542,18 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.location_on_outlined, size: 20, color: Colors.grey[600]),
+            Icon(Icons.location_on_outlined, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 _venueController.text.isEmpty ? AppLocalizations.of(context)!.chooseLocation : _venueController.text,
                 style: TextStyle(
-                  color: _venueController.text.isEmpty ? Colors.grey[600] : AppColors.textPrimary,
+                  color: _venueController.text.isEmpty ? AppColors.textSecondary : AppColors.textPrimary,
                   fontSize: 15,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: AppColors.textLight),
           ],
         ),
       ),
@@ -754,7 +754,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
               const SizedBox(height: 8),
               Text(
                 AppLocalizations.of(context)!.tapOnMapOrEnterCoordinates,
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -798,7 +798,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.notes_outlined, size: 20, color: Colors.grey[600]),
+            Icon(Icons.notes_outlined, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -807,7 +807,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                   Text(
                     hasDescription ? AppLocalizations.of(context)!.description : AppLocalizations.of(context)!.addDescription,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                       fontSize: hasDescription ? 12 : 15,
                     ),
                   ),
@@ -826,7 +826,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: AppColors.textLight),
           ],
         ),
       ),
@@ -898,7 +898,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.grey[500],
+          color: AppColors.textLight,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -914,7 +914,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(Icons.category_outlined, size: 20, color: Colors.grey[600]),
+              Icon(Icons.category_outlined, size: 20, color: AppColors.textSecondary),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -922,11 +922,11 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                       ? categories.firstWhere((c) => c.id == _categoryId, orElse: () => categories.first).name
                       : AppLocalizations.of(context)!.selectCategory,
                   style: TextStyle(
-                    color: _categoryId != null ? AppColors.textPrimary : Colors.grey[600],
+                    color: _categoryId != null ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              Icon(Icons.chevron_right, color: AppColors.textLight),
             ],
           ),
         ),
@@ -950,7 +950,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
           return ListTile(
             leading: Icon(
               Icons.category,
-              color: _categoryId == category.id ? AppColors.primary : Colors.grey,
+              color: _categoryId == category.id ? AppColors.primary : AppColors.textLight,
             ),
             title: Text(category.name),
             trailing: _categoryId == category.id ? const Icon(Icons.check, color: AppColors.primary) : null,
@@ -972,7 +972,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(Icons.location_city_outlined, size: 20, color: Colors.grey[600]),
+              Icon(Icons.location_city_outlined, size: 20, color: AppColors.textSecondary),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -980,11 +980,11 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
                       ? cities.firstWhere((c) => c.id == _cityId, orElse: () => cities.first).name
                       : AppLocalizations.of(context)!.selectCity,
                   style: TextStyle(
-                    color: _cityId != null ? AppColors.textPrimary : Colors.grey[600],
+                    color: _cityId != null ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              Icon(Icons.chevron_right, color: AppColors.textLight),
             ],
           ),
         ),
@@ -1008,7 +1008,7 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
           return ListTile(
             leading: Icon(
               Icons.location_city,
-              color: _cityId == city.id ? AppColors.primary : Colors.grey,
+              color: _cityId == city.id ? AppColors.primary : AppColors.textLight,
             ),
             title: Text(city.name),
             trailing: _cityId == city.id ? const Icon(Icons.check, color: AppColors.primary) : null,
@@ -1029,16 +1029,16 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(Icons.attach_money, size: 20, color: Colors.grey[600]),
+            Icon(Icons.attach_money, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Text(AppLocalizations.of(context)!.price),
             const Spacer(),
             Text(
               _isFree ? AppLocalizations.of(context)!.free : '\$${_priceController.text}',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1106,16 +1106,16 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(Icons.visibility_outlined, size: 20, color: Colors.grey[600]),
+            Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Text(AppLocalizations.of(context)!.visibility),
             const Spacer(),
             Text(
               _visibility == 'PUBLIC' ? AppLocalizations.of(context)!.public : AppLocalizations.of(context)!.private,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1160,16 +1160,16 @@ class _EditEventScreenState extends ConsumerState<EditEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            Icon(Icons.people_outline, size: 20, color: Colors.grey[600]),
+            Icon(Icons.people_outline, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Text(AppLocalizations.of(context)!.capacity),
             const Spacer(),
             Text(
               _capacityController.text.isEmpty ? AppLocalizations.of(context)!.unlimited : _capacityController.text,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: AppColors.textLight),
           ],
         ),
       ),

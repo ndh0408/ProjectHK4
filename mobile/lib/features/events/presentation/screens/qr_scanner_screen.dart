@@ -149,7 +149,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -185,7 +185,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
+        Icon(icon, size: 16, color: AppColors.textLight),
         const SizedBox(width: 8),
         Text(text, style: const TextStyle(fontSize: 14)),
       ],

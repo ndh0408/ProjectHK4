@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -182,15 +183,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
+    final theme = Theme.of(context);
+    final hPadding = Responsive.horizontalPadding(context);
+
     if (!state.hasSearched) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.search,
-              size: 64,
-              color: AppColors.textLight,
+              size: Responsive.iconSize(context, base: 64),
+              color: theme.textTheme.bodySmall?.color,
             ),
             const SizedBox(height: 16),
             Text(
@@ -212,10 +216,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.search_off,
-              size: 64,
-              color: AppColors.textLight,
+              size: Responsive.iconSize(context, base: 64),
+              color: theme.textTheme.bodySmall?.color,
             ),
             const SizedBox(height: 16),
             Text(
@@ -236,20 +240,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(hPadding),
           child: Text(
             '${state.results.length} result${state.results.length != 1 ? 's' : ''} for "${state.query}"',
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium,
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: hPadding),
             itemCount: state.results.length,
             itemBuilder: (context, index) {
               final event = state.results[index];
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: EdgeInsets.only(bottom: hPadding),
                 child: EventCard(
                   event: event,
                   showStatusLabel: true,

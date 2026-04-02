@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/config/theme.dart';
 import '../providers/calendar_provider.dart';
 
 class CalendarSettingsScreen extends ConsumerStatefulWidget {
@@ -180,7 +181,7 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                                     : Icons.error_outline,
                                 color: calendarState.isConnected
                                     ? Colors.green
-                                    : Colors.grey,
+                                    : AppColors.textLight,
                                 size: 28,
                               ),
                               const SizedBox(width: 12),
@@ -200,7 +201,7 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                                       Text(
                                         calendarState.status!.email!,
                                         style: theme.textTheme.bodySmall?.copyWith(
-                                          color: Colors.grey,
+                                          color: AppColors.textLight,
                                         ),
                                       ),
                                   ],

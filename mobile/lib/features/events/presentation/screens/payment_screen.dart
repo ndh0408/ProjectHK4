@@ -143,7 +143,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.checkPopupBlocker,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textLight),
                     ),
                   ],
                 ),
@@ -535,11 +535,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.lock_outline, size: 16, color: Colors.grey[600]),
+                      Icon(Icons.lock_outline, size: 16, color: AppColors.textSecondary),
                       const SizedBox(width: 8),
                       Text(
                         AppLocalizations.of(context)!.securePaymentByStripe,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
                     ],
                   ),

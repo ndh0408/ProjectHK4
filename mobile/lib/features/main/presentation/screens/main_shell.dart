@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../chat/presentation/screens/conversations_screen.dart';
@@ -151,14 +152,12 @@ class _MainShellState extends ConsumerState<MainShell> {
             backgroundColor: Colors.white,
             selectedItemColor: AppColors.primary,
             unselectedItemColor: AppColors.textLight,
-            selectedLabelStyle: const TextStyle(
+            selectedLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-            unselectedLabelStyle: const TextStyle(
+            ) ?? const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            unselectedLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.normal,
-              fontSize: 12,
-            ),
+            ) ?? const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home_outlined),
@@ -196,7 +195,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                           ),
                           child: Text(
                             totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: const TextStyle(
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontSize: 10 * Responsive.fontScale(context),
+                              fontWeight: FontWeight.bold,
+                            ) ?? const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -227,7 +230,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                           ),
                           child: Text(
                             totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: const TextStyle(
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontSize: 10 * Responsive.fontScale(context),
+                              fontWeight: FontWeight.bold,
+                            ) ?? const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,

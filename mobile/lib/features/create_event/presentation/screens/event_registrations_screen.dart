@@ -80,7 +80,7 @@ class _EventRegistrationsScreenState
         ref.watch(eventRegistrationsProvider(widget.eventId));
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +93,7 @@ class _EventRegistrationsScreenState
               widget.eventTitle,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.normal,
               ),
               maxLines: 1,
@@ -116,7 +116,7 @@ class _EventRegistrationsScreenState
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey[600],
+          unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
           tabs: const [
             Tab(text: 'All'),
@@ -164,11 +164,11 @@ class _EventRegistrationsScreenState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+                Icon(Icons.error_outline, size: 48, color: AppColors.textLight),
                 const SizedBox(height: 16),
                 Text(
                   'Failed to load registrations',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -216,12 +216,12 @@ class _EventRegistrationsScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: Colors.grey[300]),
+          Icon(icon, size: 64, color: AppColors.divider),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
               fontSize: 16,
             ),
           ),
@@ -399,7 +399,7 @@ class _RegistrationCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: AppColors.divider),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -443,7 +443,7 @@ class _RegistrationCard extends StatelessWidget {
                         Text(
                           registration.userEmail!,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                             fontSize: 13,
                           ),
                         ),
@@ -459,12 +459,12 @@ class _RegistrationCard extends StatelessWidget {
 
             Row(
               children: [
-                Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
+                Icon(Icons.schedule, size: 14, color: AppColors.textLight),
                 const SizedBox(width: 4),
                 Text(
                   'Registered ${dateFormat.format(registration.createdAt)}',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -475,12 +475,12 @@ class _RegistrationCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.phone_outlined, size: 14, color: Colors.grey[500]),
+                  Icon(Icons.phone_outlined, size: 14, color: AppColors.textLight),
                   const SizedBox(width: 4),
                   Text(
                     registration.userPhone!,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -623,8 +623,8 @@ class _RegistrationCard extends StatelessWidget {
         icon = Icons.access_time;
         break;
       case RegistrationStatusEnum.cancelled:
-        backgroundColor = Colors.grey[200]!;
-        textColor = Colors.grey[700]!;
+        backgroundColor = AppColors.divider;
+        textColor = AppColors.textPrimary;
         label = 'Cancelled';
         icon = Icons.block;
         break;

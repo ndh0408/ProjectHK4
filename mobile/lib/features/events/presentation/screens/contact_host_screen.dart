@@ -125,7 +125,7 @@ class _ContactHostScreenState extends ConsumerState<ContactHostScreen> {
           decoration: InputDecoration(
             hintText: AppLocalizations.of(context)!.enterQuestionForHost,
             hintStyle: TextStyle(
-              color: Colors.grey[400],
+              color: AppColors.textLight,
               fontSize: 16,
             ),
             border: InputBorder.none,

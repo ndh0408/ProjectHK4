@@ -763,7 +763,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[200]!, width: 1)),
+        border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -773,14 +773,14 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
               onTap: _toggleEmojiPicker,
               child: Icon(
                 _showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
-                color: _showEmojiPicker ? AppColors.primary : Colors.grey[500],
+                color: _showEmojiPicker ? AppColors.primary : AppColors.textLight,
                 size: 26,
               ),
             ),
             const SizedBox(width: 12),
             GestureDetector(
               onTap: _pickAndSendImage,
-              child: Icon(Icons.image_outlined, color: Colors.grey[500], size: 26),
+              child: Icon(Icons.image_outlined, color: AppColors.textLight, size: 26),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -862,14 +862,14 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.grey[400]?.withValues(alpha: 0.4),
+            color: AppColors.textLight?.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -896,7 +896,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                 ),
               ],
             ),
-            child: Icon(icon, size: 40, color: Colors.grey[400]),
+            child: Icon(icon, size: 40, color: AppColors.textLight),
           ),
           const SizedBox(height: 20),
           Text(
@@ -904,7 +904,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -1013,7 +1013,7 @@ class _NotificationBubble extends StatelessWidget {
                                   fontWeight: isUnread
                                       ? FontWeight.w700
                                       : FontWeight.w600,
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -1024,7 +1024,7 @@ class _NotificationBubble extends StatelessWidget {
                           notification.body,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: AppColors.textPrimary,
                             height: 1.3,
                           ),
                         ),
@@ -1056,7 +1056,7 @@ class _NotificationBubble extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 3, left: 4),
                     child: Text(
                       timeText,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                      style: TextStyle(fontSize: 11, color: AppColors.textLight),
                     ),
                   ),
                 ],
@@ -1162,7 +1162,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       children: [
                         Text(
                           timeText,
-                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          style: TextStyle(fontSize: 11, color: AppColors.textLight),
                         ),
                         const SizedBox(width: 4),
                         Icon(Icons.done_all, size: 14, color: AppColors.primary),
@@ -1233,7 +1233,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       notification.body,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[800],
+                        color: AppColors.textPrimary,
                         height: 1.4,
                       ),
                     ),
@@ -1245,7 +1245,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       children: [
                         Text(
                           timeText,
-                          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                          style: TextStyle(fontSize: 11, color: AppColors.textLight),
                         ),
                         if (notification.isRead) ...[
                           const SizedBox(width: 4),
@@ -1352,7 +1352,7 @@ class _UserChatTile extends StatelessWidget {
                 ? AppColors.primary.withValues(alpha: 0.05)
                 : Colors.white,
             border: Border(
-              bottom: BorderSide(color: Colors.grey[200]!, width: 0.5),
+              bottom: BorderSide(color: AppColors.divider, width: 0.5),
             ),
           ),
           child: Row(
@@ -1411,7 +1411,7 @@ class _UserChatTile extends StatelessWidget {
                             fontSize: 16,
                             fontWeight:
                                 hasUnread ? FontWeight.w700 : FontWeight.w500,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1423,7 +1423,7 @@ class _UserChatTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color:
-                              hasUnread ? AppColors.primary : Colors.grey[500],
+                              hasUnread ? AppColors.primary : AppColors.textLight,
                           fontWeight:
                               hasUnread ? FontWeight.w600 : FontWeight.normal,
                         ),
@@ -1441,7 +1441,7 @@ class _UserChatTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color:
-                                hasUnread ? Colors.black87 : Colors.grey[600],
+                                hasUnread ? AppColors.textPrimary : AppColors.textSecondary,
                             fontWeight:
                                 hasUnread ? FontWeight.w500 : FontWeight.normal,
                           ),
@@ -1537,7 +1537,7 @@ class _ConversationTile extends StatelessWidget {
               ? AppColors.primary.withValues(alpha: 0.05)
               : Colors.white,
           border: Border(
-            bottom: BorderSide(color: Colors.grey[200]!, width: 0.5),
+            bottom: BorderSide(color: AppColors.divider, width: 0.5),
           ),
         ),
         child: Row(
@@ -1550,7 +1550,7 @@ class _ConversationTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: conversation.type == ConversationType.eventGroup
                         ? AppColors.primary.withValues(alpha: 0.1)
-                        : Colors.grey[200],
+                        : AppColors.divider,
                     shape: BoxShape.circle,
                     image: conversation.displayImage != null
                         ? DecorationImage(
@@ -1566,7 +1566,7 @@ class _ConversationTile extends StatelessWidget {
                               : Icons.person,
                           color: conversation.type == ConversationType.eventGroup
                               ? AppColors.primary
-                              : Colors.grey[600],
+                              : AppColors.textSecondary,
                           size: 28,
                         )
                       : null,
@@ -1606,7 +1606,7 @@ class _ConversationTile extends StatelessWidget {
                             fontSize: 16,
                             fontWeight:
                                 hasUnread ? FontWeight.w700 : FontWeight.w500,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1618,7 +1618,7 @@ class _ConversationTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color:
-                              hasUnread ? AppColors.primary : Colors.grey[500],
+                              hasUnread ? AppColors.primary : AppColors.textLight,
                           fontWeight:
                               hasUnread ? FontWeight.w600 : FontWeight.normal,
                         ),
@@ -1634,7 +1634,7 @@ class _ConversationTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color:
-                                hasUnread ? Colors.black87 : Colors.grey[600],
+                                hasUnread ? AppColors.textPrimary : AppColors.textSecondary,
                             fontWeight:
                                 hasUnread ? FontWeight.w500 : FontWeight.normal,
                           ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -66,6 +67,11 @@ class _SavedEventItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final imageSize = screenWidth * 0.19;
+    final hPadding = Responsive.horizontalPadding(context);
 
     return GestureDetector(
       onTap: () {
@@ -73,7 +79,7 @@ class _SavedEventItem extends ConsumerWidget {
         context.push('/event/${event.id}');
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: Responsive.spacing(context, base: 12)),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -82,12 +88,12 @@ class _SavedEventItem extends ConsumerWidget {
               child: event.imageUrl != null
                   ? Image.network(
                       event.imageUrl!,
-                      width: 72,
-                      height: 72,
+                      width: imageSize,
+                      height: imageSize,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                      errorBuilder: (_, __, ___) => _buildPlaceholder(imageSize),
                     )
-                  : _buildPlaceholder(),
+                  : _buildPlaceholder(imageSize),
             ),
             const SizedBox(width: 12),
 
@@ -98,8 +104,8 @@ class _SavedEventItem extends ConsumerWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.grey[300],
+                        radius: Responsive.iconSize(context, base: 10),
+                        backgroundColor: theme.disabledColor,
                         backgroundImage: event.organiser?.avatarUrl != null
                             ? NetworkImage(event.organiser!.avatarUrl!)
                             : null,
@@ -114,10 +120,7 @@ class _SavedEventItem extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           event.organiser?.fullName ?? 'Unknown Organiser',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                          style: theme.textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -129,15 +132,15 @@ class _SavedEventItem extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(l10n.removedFromSaved),
-                                backgroundColor: Colors.grey[600],
+                                backgroundColor: theme.textTheme.bodyMedium?.color,
                                 duration: const Duration(seconds: 2),
                               ),
                             );
                           }
                         },
-                        child: const Icon(
+                        child: Icon(
                           Icons.bookmark,
-                          size: 20,
+                          size: Responsive.iconSize(context, base: 20),
                           color: Colors.amber,
                         ),
                       ),
@@ -147,10 +150,8 @@ class _SavedEventItem extends ConsumerWidget {
 
                   Text(
                     event.title,
-                    style: const TextStyle(
-                      fontSize: 15,
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -159,39 +160,30 @@ class _SavedEventItem extends ConsumerWidget {
 
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.calendar_today, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('EEE, MMM d').format(event.startTime),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: theme.textTheme.bodySmall,
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.access_time, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('h:mm a').format(event.startTime),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.location_on_outlined, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
+                          style: theme.textTheme.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -207,10 +199,10 @@ class _SavedEventItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(double size) {
     return Container(
-      width: 72,
-      height: 72,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -219,7 +211,7 @@ class _SavedEventItem extends ConsumerWidget {
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(Icons.event, color: Colors.orange[700], size: 32),
+      child: Icon(Icons.event, color: Colors.orange[700], size: size * 0.44),
     );
   }
 }
