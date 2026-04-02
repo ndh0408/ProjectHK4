@@ -704,7 +704,7 @@ class _ChatMessageBubble extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
 
-                        ..._buildMessageContent(notification.body),
+                        ..._buildMessageContent(context, notification.body),
 
                         if (notification.relatedEventId != null) ...[
                           SizedBox(height: Responsive.spacing(context, base: 10)),
@@ -768,7 +768,7 @@ class _ChatMessageBubble extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildMessageContent(String body) {
+  List<Widget> _buildMessageContent(BuildContext context, String body) {
     final theme = Theme.of(context);
     final contentPad = Responsive.spacing(context, base: 10);
     final smallIcon = Responsive.iconSize(context, base: 14);
