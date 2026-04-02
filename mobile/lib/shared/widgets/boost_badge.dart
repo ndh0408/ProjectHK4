@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/theme.dart';
+import '../../core/utils/responsive.dart';
 import '../models/boost.dart';
 
 class BoostBadge extends StatelessWidget {
@@ -18,11 +19,18 @@ class BoostBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = _getConfig();
+    final scale = Responsive.fontScale(context);
+    final smallHPad = Responsive.spacing(context, base: 6);
+    final mediumHPad = Responsive.spacing(context, base: 10);
+    final smallVPad = Responsive.spacing(context, base: 3);
+    final mediumVPad = Responsive.spacing(context, base: 5);
+    final smallIconSize = Responsive.iconSize(context, base: 10);
+    final mediumIconSize = Responsive.iconSize(context, base: 14);
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size == BoostBadgeSize.small ? 6 : 10,
-        vertical: size == BoostBadgeSize.small ? 3 : 5,
+        horizontal: size == BoostBadgeSize.small ? smallHPad : mediumHPad,
+        vertical: size == BoostBadgeSize.small ? smallVPad : mediumVPad,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -44,7 +52,7 @@ class BoostBadge extends StatelessWidget {
         children: [
           Icon(
             config.icon,
-            size: size == BoostBadgeSize.small ? 10 : 14,
+            size: size == BoostBadgeSize.small ? smallIconSize : mediumIconSize,
             color: Colors.white,
           ),
           if (showLabel) ...[
@@ -54,7 +62,7 @@ class BoostBadge extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
-                fontSize: size == BoostBadgeSize.small ? 9 : 11,
+                fontSize: size == BoostBadgeSize.small ? (10.0 * scale) : (12.0 * scale),
                 letterSpacing: 0.3,
               ),
             ),
@@ -140,10 +148,18 @@ class FeaturedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = Responsive.fontScale(context);
+    final smallHPad = Responsive.spacing(context, base: 6);
+    final mediumHPad = Responsive.spacing(context, base: 10);
+    final smallVPad = Responsive.spacing(context, base: 3);
+    final mediumVPad = Responsive.spacing(context, base: 5);
+    final smallIconSize = Responsive.iconSize(context, base: 10);
+    final mediumIconSize = Responsive.iconSize(context, base: 14);
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size == BoostBadgeSize.small ? 6 : 10,
-        vertical: size == BoostBadgeSize.small ? 3 : 5,
+        horizontal: size == BoostBadgeSize.small ? smallHPad : mediumHPad,
+        vertical: size == BoostBadgeSize.small ? smallVPad : mediumVPad,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -168,7 +184,7 @@ class FeaturedBadge extends StatelessWidget {
         children: [
           Icon(
             Icons.star_rounded,
-            size: size == BoostBadgeSize.small ? 10 : 14,
+            size: size == BoostBadgeSize.small ? smallIconSize : mediumIconSize,
             color: Colors.white,
           ),
           SizedBox(width: size == BoostBadgeSize.small ? 3 : 4),
@@ -177,7 +193,7 @@ class FeaturedBadge extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,
-              fontSize: size == BoostBadgeSize.small ? 9 : 11,
+              fontSize: size == BoostBadgeSize.small ? (10.0 * scale) : (12.0 * scale),
               letterSpacing: 0.3,
             ),
           ),
@@ -199,9 +215,12 @@ class BoostBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = _getConfig();
 
+    final scale = Responsive.fontScale(context);
+    final bannerIconSize = Responsive.iconSize(context, base: 14);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 6)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: config.gradientColors,
@@ -214,32 +233,35 @@ class BoostBanner extends StatelessWidget {
         children: [
           Icon(
             config.icon,
-            size: 14,
+            size: bannerIconSize,
             color: Colors.white,
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: Responsive.spacing(context, base: 6)),
           Text(
             config.label,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,
-              fontSize: 11,
+              fontSize: 11.0 * scale,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: Responsive.spacing(context)),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.spacing(context, base: 6),
+              vertical: 2,
+            ),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               config.multiplier,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
-                fontSize: 9,
+                fontSize: 10.0 * scale,
               ),
             ),
           ),

@@ -437,14 +437,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Icon(
             Icons.chat_bubble_outline,
             size: 60,
-            color: Colors.grey[400],
+            color: AppColors.textLight,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.noMessagesYet,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -452,7 +452,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             l10n.sendMessageToStart,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: AppColors.textLight,
             ),
           ),
         ],
@@ -514,14 +514,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.grey[400]?.withValues(alpha: 0.4),
+            color: AppColors.textLight?.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -534,9 +534,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: AppColors.background,
         border: Border(
-          top: BorderSide(color: Colors.grey[300]!, width: 1),
+          top: BorderSide(color: AppColors.divider, width: 1),
           left: BorderSide(color: AppColors.primary, width: 4),
         ),
       ),
@@ -560,7 +560,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   _replyingTo?.content ?? '',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -570,7 +570,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           IconButton(
             onPressed: () => setState(() => _replyingTo = null),
-            icon: Icon(Icons.close, color: Colors.grey[600], size: 20),
+            icon: Icon(Icons.close, color: AppColors.textSecondary, size: 20),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -632,7 +632,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: Colors.grey[200]!, width: 1),
+          top: BorderSide(color: AppColors.divider, width: 1),
         ),
       ),
       child: SafeArea(
@@ -643,7 +643,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onTap: _toggleEmojiPicker,
               child: Icon(
                 _showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
-                color: _showEmojiPicker ? AppColors.primary : Colors.grey[500],
+                color: _showEmojiPicker ? AppColors.primary : AppColors.textLight,
                 size: 26,
               ),
             ),
@@ -652,7 +652,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onTap: isSending ? null : _pickAndSendImage,
               child: Icon(
                 Icons.image_outlined,
-                color: isSending ? Colors.grey[300] : Colors.grey[500],
+                color: isSending ? AppColors.divider : AppColors.textLight,
                 size: 26,
               ),
             ),
@@ -693,7 +693,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isSending ? Colors.grey : AppColors.primary,
+                  color: isSending ? AppColors.textLight : AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: isSending
@@ -743,7 +743,7 @@ class _MessageBubble extends StatelessWidget {
               height: 32,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.divider,
                 shape: BoxShape.circle,
                 image: message.sender?.avatarUrl != null
                     ? DecorationImage(
@@ -753,7 +753,7 @@ class _MessageBubble extends StatelessWidget {
                     : null,
               ),
               child: message.sender?.avatarUrl == null
-                  ? Icon(Icons.person, color: Colors.grey[600], size: 18)
+                  ? Icon(Icons.person, color: AppColors.textSecondary, size: 18)
                   : null,
             ),
           ],
@@ -772,7 +772,7 @@ class _MessageBubble extends StatelessWidget {
                         message.sender!.fullName,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -808,7 +808,7 @@ class _MessageBubble extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isMe
                                   ? Colors.white.withValues(alpha: 0.2)
-                                  : Colors.grey[100],
+                                  : AppColors.background,
                               borderRadius: BorderRadius.circular(8),
                               border: Border(
                                 left: BorderSide(
@@ -834,7 +834,7 @@ class _MessageBubble extends StatelessWidget {
                                     fontSize: 12,
                                     color: isMe
                                         ? Colors.white.withValues(alpha: 0.8)
-                                        : Colors.grey[600],
+                                        : AppColors.textSecondary,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
@@ -850,7 +850,7 @@ class _MessageBubble extends StatelessWidget {
                               Icon(
                                 Icons.block,
                                 size: 14,
-                                color: isMe ? Colors.white70 : Colors.grey[500],
+                                color: isMe ? Colors.white70 : AppColors.textLight,
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -858,7 +858,7 @@ class _MessageBubble extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,
-                                  color: isMe ? Colors.white70 : Colors.grey[500],
+                                  color: isMe ? Colors.white70 : AppColors.textLight,
                                 ),
                               ),
                             ],
@@ -876,7 +876,7 @@ class _MessageBubble extends StatelessWidget {
                                 return Container(
                                   width: 200,
                                   height: 200,
-                                  color: Colors.grey[200],
+                                  color: AppColors.divider,
                                   child: const Center(
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   ),
@@ -886,7 +886,7 @@ class _MessageBubble extends StatelessWidget {
                                 return Container(
                                   width: 200,
                                   height: 200,
-                                  color: Colors.grey[200],
+                                  color: AppColors.divider,
                                   child: const Icon(Icons.broken_image, size: 40),
                                 );
                               },
@@ -897,7 +897,7 @@ class _MessageBubble extends StatelessWidget {
                             message.content,
                             style: TextStyle(
                               fontSize: 14,
-                              color: isMe ? Colors.white : Colors.black87,
+                              color: isMe ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
                       ],
@@ -912,7 +912,7 @@ class _MessageBubble extends StatelessWidget {
                           timeText,
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[500],
+                            color: AppColors.textLight,
                           ),
                         ),
                         if (onDelete != null) ...[
@@ -922,7 +922,7 @@ class _MessageBubble extends StatelessWidget {
                             child: Icon(
                               Icons.delete_outline,
                               size: 14,
-                              color: Colors.grey[500],
+                              color: AppColors.textLight,
                             ),
                           ),
                         ],

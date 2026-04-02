@@ -138,7 +138,7 @@ const AdminBoosts = () => {
                         title="Đang hoạt động"
                         value={stats.totalActive}
                         icon={<RocketIcon />}
-                        color="#10b981"
+                        color="success.main"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -146,7 +146,7 @@ const AdminBoosts = () => {
                         title="Featured Events"
                         value={stats.totalFeatured}
                         icon={<StarIcon />}
-                        color="#f59e0b"
+                        color="warning.main"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -154,7 +154,7 @@ const AdminBoosts = () => {
                         title="Home Banner"
                         value={stats.totalHomeBanner}
                         icon={<HomeIcon />}
-                        color="#6366f1"
+                        color="primary.main"
                     />
                 </Grid>
             </Grid>

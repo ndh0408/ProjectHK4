@@ -155,6 +155,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final hPadding = screenWidth < 600 ? 24.0 : 32.0;
+    final cardPadding = screenWidth < 600 ? 24.0 : 32.0;
+    final otpBoxWidth = (screenWidth * 0.12).clamp(36.0, 50.0);
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -167,42 +174,41 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(hPadding),
               child: Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(cardPadding),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lock_outline,
-                        size: 64,
+                        size: screenHeight * 0.08,
                         color: AppColors.primary,
                       ),
                       const SizedBox(height: 24),
                       Text(
                         'Verify OTP',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Enter the 6-digit code sent to\n${widget.phone}',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: List.generate(6, (index) {
                           return SizedBox(
-                            width: 45,
+                            width: otpBoxWidth,
                             child: TextFormField(
                               controller: _controllers[index],
                               focusNode: _focusNodes[index],
@@ -210,14 +216,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                               textAlign: TextAlign.center,
                               maxLength: 1,
                               enabled: !_isLoading,
-                              style: const TextStyle(
-                                fontSize: 24,
+                              style: textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                               decoration: InputDecoration(
                                 counterText: '',
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: screenHeight * 0.015,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -270,11 +275,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'Verify',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                                  style: textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),

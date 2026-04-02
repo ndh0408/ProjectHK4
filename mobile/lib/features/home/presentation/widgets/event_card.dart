@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/models/boost.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/boost_badge.dart';
@@ -24,6 +25,10 @@ class EventCard extends StatelessWidget {
     final dateFormat = DateFormat('EEE, MMM d • h:mm a');
     final spotsRemaining = event.remainingSpots;
     final isNearlyFull = event.isAlmostFull;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final textTheme = Theme.of(context).textTheme;
+    final cardPadding = Responsive.value(context, mobile: 10.0, tablet: 14.0);
+    final progressBarWidth = screenWidth * 0.11;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -158,7 +163,7 @@ class EventCard extends StatelessWidget {
                   ),
                 if (showStatusLabel && (event.isFull || isNearlyFull))
                   Positioned(
-                    top: event.isRecurring ? 45 : 10,
+                    top: event.isRecurring ? (screenWidth * 0.12).clamp(35.0, 50.0) : 10,
                     right: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -252,7 +257,7 @@ class EventCard extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(cardPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -282,8 +287,7 @@ class EventCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             event.category?.name ?? 'Event',
-                            style: const TextStyle(
-                              fontSize: 11,
+                            style: textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,
                             ),
@@ -295,9 +299,8 @@ class EventCard extends StatelessWidget {
 
                     Text(
                       event.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
                             height: 1.2,
                             color: AppColors.textPrimary,
                           ),
@@ -332,8 +335,7 @@ class EventCard extends StatelessWidget {
                           ),
                           child: Text(
                             event.isFree ? 'Free' : '\$${event.price.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 13,
+                            style: textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: event.isFree ? AppColors.success : AppColors.primary,
                             ),
@@ -343,7 +345,7 @@ class EventCard extends StatelessWidget {
                         Row(
                           children: [
                             SizedBox(
-                              width: 40,
+                              width: progressBarWidth,
                               height: 4,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(2),
@@ -363,8 +365,7 @@ class EventCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               '${event.registeredCount}/${event.capacity}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 10,
+                              style: textTheme.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.textSecondary,
                                   ),
@@ -465,7 +466,6 @@ class _InfoChip extends StatelessWidget {
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
                   color: AppColors.textSecondary,
                 ),
             maxLines: 1,

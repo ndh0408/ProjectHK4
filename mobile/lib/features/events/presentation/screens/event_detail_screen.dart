@@ -14,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -257,12 +258,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
     final isNearlyFull = event.isAlmostFull;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final hPadding = Responsive.horizontalPadding(context);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: screenHeight * 0.35,
             pinned: true,
             actions: [
               _BookmarkButton(eventId: event.id),
@@ -354,7 +360,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(hPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -363,7 +369,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         context.push('/organiser/${event.organiserId}'),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
@@ -390,9 +396,8 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                               children: [
                                 Text(
                                   event.organiserName,
-                                  style: const TextStyle(
+                                  style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
                                   ),
                                 ),
                                 Builder(
@@ -400,10 +405,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     final l10n = AppLocalizations.of(context)!;
                                     return Text(
                                       '${l10n.eventOrganiser} • ${l10n.tapToViewProfile}',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
+                                      style: theme.textTheme.bodySmall,
                                     );
                                   },
                                 ),
@@ -705,10 +707,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.withValues(alpha: 0.1),
+                                    color: AppColors.divider.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: Colors.grey.withValues(alpha: 0.3),
+                                      color: AppColors.divider,
                                     ),
                                   ),
                                   child: Row(
@@ -719,15 +721,15 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                             : event.isRegistrationClosed
                                                 ? Icons.lock_clock
                                                 : Icons.block,
-                                        color: Colors.grey[600],
+                                        color: AppColors.textSecondary,
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
                                           event.registrationStatusMessage!,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            color: Colors.grey[600],
+                                            color: AppColors.textSecondary,
                                           ),
                                         ),
                                       ),
@@ -887,7 +889,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       child: Column(
                         children: [
                           Container(
-                            height: 150,
+                            height: screenHeight * 0.18,
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
@@ -1093,10 +1095,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           },
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
+                            margin: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
+                            padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
                             decoration: BoxDecoration(
-                              color: Colors.grey[50],
+                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1482,33 +1484,31 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(Responsive.spacing(context, base: 10)),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Icon(icon, color: colorScheme.primary, size: Responsive.iconSize(context, base: 20)),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: Responsive.spacing(context, base: 12)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 12,
-                ),
+                style: theme.textTheme.bodySmall,
               ),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  fontSize: 14,
                 ),
               ),
             ],
@@ -1536,11 +1536,12 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 12)),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
@@ -1550,22 +1551,21 @@ class _ActionButton extends StatelessWidget {
           children: [
             if (isLoading)
               SizedBox(
-                height: 24,
-                width: 24,
+                height: Responsive.iconSize(context),
+                width: Responsive.iconSize(context),
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: color,
                 ),
               )
             else
-              Icon(icon, color: color),
+              Icon(icon, color: color, size: Responsive.iconSize(context)),
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: color,
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
               ),
             ),
           ],
@@ -1657,33 +1657,30 @@ class _ReviewsSection extends ConsumerWidget {
           data: (reviews) {
             if (reviews.isEmpty) {
               return Container(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(Responsive.spacing(context, base: 24)),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Column(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.rate_review_outlined,
-                        size: 48,
-                        color: AppColors.textSecondary,
+                        size: Responsive.iconSize(context, base: 48),
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         l10n.noReviews,
-                        style: const TextStyle(
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n.noReviewsSubtitle,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -1723,11 +1720,13 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
+      padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1736,16 +1735,16 @@ class _ReviewCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: 18,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                radius: Responsive.iconSize(context, base: 18),
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
                 backgroundImage: review.userAvatarUrl != null
                     ? CachedNetworkImageProvider(review.userAvatarUrl!)
                     : null,
                 child: review.userAvatarUrl == null
                     ? Text(
                         (review.userName ?? 'U')[0].toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.primary,
+                        style: TextStyle(
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       )
@@ -1758,7 +1757,7 @@ class _ReviewCard extends StatelessWidget {
                   children: [
                     Text(
                       review.userName ?? 'Anonymous',
-                      style: const TextStyle(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1769,7 +1768,7 @@ class _ReviewCard extends StatelessWidget {
                             index < review.rating
                                 ? Icons.star
                                 : Icons.star_border,
-                            size: 14,
+                            size: Responsive.iconSize(context, base: 14),
                             color: Colors.amber,
                           );
                         }),
@@ -1777,10 +1776,7 @@ class _ReviewCard extends StatelessWidget {
                         if (review.createdAt != null)
                           Text(
                             _formatDate(review.createdAt!),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: theme.textTheme.bodySmall,
                           ),
                       ],
                     ),

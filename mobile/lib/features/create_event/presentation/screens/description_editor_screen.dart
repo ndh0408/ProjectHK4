@@ -97,7 +97,7 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey[600],
+          unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
           tabs: [
             Tab(text: AppLocalizations.of(context)!.write),
@@ -110,9 +110,9 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.background,
               border: Border(
-                bottom: BorderSide(color: Colors.grey[300]!),
+                bottom: BorderSide(color: AppColors.divider),
               ),
             ),
             child: SingleChildScrollView(
@@ -190,7 +190,7 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                     textAlignVertical: TextAlignVertical.top,
                     decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)!.describeYourEvent,
-                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      hintStyle: TextStyle(color: AppColors.textLight),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -210,13 +210,13 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                             Icon(
                               Icons.preview_outlined,
                               size: 64,
-                              color: Colors.grey[400],
+                              color: AppColors.textLight,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               AppLocalizations.of(context)!.nothingToPreview,
                               style: TextStyle(
-                                color: Colors.grey[500],
+                                color: AppColors.textLight,
                                 fontSize: 16,
                               ),
                             ),
@@ -224,7 +224,7 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                             Text(
                               AppLocalizations.of(context)!.startWritingToPreview,
                               style: TextStyle(
-                                color: Colors.grey[400],
+                                color: AppColors.textLight,
                                 fontSize: 14,
                               ),
                             ),
@@ -241,17 +241,17 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                           h3: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           listBullet: const TextStyle(fontSize: 16),
                           code: TextStyle(
-                            backgroundColor: Colors.grey[200],
+                            backgroundColor: AppColors.divider,
                             fontFamily: 'monospace',
                           ),
                           blockquote: TextStyle(
-                            color: Colors.grey[700],
+                            color: AppColors.textPrimary,
                             fontStyle: FontStyle.italic,
                           ),
                           blockquoteDecoration: BoxDecoration(
                             border: Border(
                               left: BorderSide(
-                                color: Colors.grey[400]!,
+                                color: AppColors.textLight,
                                 width: 4,
                               ),
                             ),
@@ -265,9 +265,9 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.background,
               border: Border(
-                top: BorderSide(color: Colors.grey[300]!),
+                top: BorderSide(color: AppColors.divider),
               ),
             ),
             child: Row(
@@ -276,14 +276,14 @@ class _DescriptionEditorScreenState extends State<DescriptionEditorScreen>
                 Text(
                   AppLocalizations.of(context)!.supportsMarkdown,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
                 Text(
                   '${_controller.text.length} ${AppLocalizations.of(context)!.characters}',
                   style: TextStyle(
-                    color: _controller.text.length < 20 ? Colors.orange : Colors.grey[600],
+                    color: _controller.text.length < 20 ? Colors.orange : AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: _controller.text.length < 20 ? FontWeight.w500 : FontWeight.normal,
                   ),
@@ -369,7 +369,7 @@ class _ToolbarButton extends StatelessWidget {
       icon: Icon(icon, size: 20),
       tooltip: tooltip,
       onPressed: onPressed,
-      color: Colors.grey[700],
+      color: AppColors.textPrimary,
       splashRadius: 20,
     );
   }
@@ -384,7 +384,7 @@ class _ToolbarDivider extends StatelessWidget {
       height: 24,
       width: 1,
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: Colors.grey[300],
+      color: AppColors.divider,
     );
   }
 }
