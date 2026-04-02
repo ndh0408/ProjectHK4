@@ -300,8 +300,8 @@ const OrganiserDashboard = () => {
                             height={300}
                             tooltip={{ trigger: 'axis' }}
                             sx={{
-                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
-                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
+                                '& .MuiChartsAxis-line': { stroke: 'var(--neutral-200)' },
+                                '& .MuiChartsAxis-tick': { stroke: 'var(--neutral-200)' },
                                 '& .MuiAreaElement-root': {
                                     fillOpacity: 0.1,
                                 },

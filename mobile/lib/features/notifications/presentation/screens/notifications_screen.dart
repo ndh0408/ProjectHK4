@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/notification_service.dart' show notificationStreamProvider;
 import '../../../../shared/models/notification.dart';
@@ -298,42 +299,46 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         unreadCountAsync.maybeWhen(
             data: (count) => count > 0, orElse: () => false);
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appBarIconSize = Responsive.iconSize(context, base: 22);
+    final avatarSize = Responsive.value<double>(context, mobile: 40, tablet: 46);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE8E8E8),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: AppColors.primary,
+        backgroundColor: colorScheme.primary,
         leadingWidth: 40,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 22),
+          icon: Icon(Icons.arrow_back, size: appBarIconSize),
           onPressed: () => context.pop(),
         ),
         title: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: avatarSize,
+              height: avatarSize,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
                     color: Colors.white.withValues(alpha: 0.3), width: 2),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.notifications_active,
-                color: AppColors.primary,
-                size: 22,
+                color: colorScheme.primary,
+                size: appBarIconSize,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'LUMA Notifications',
-                    style: TextStyle(
-                      fontSize: 16,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -343,16 +348,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF22C55E),
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         'Online',
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
@@ -379,12 +383,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   });
                 }
               },
-              icon: const Icon(Icons.done_all, size: 22),
+              icon: Icon(Icons.done_all, size: appBarIconSize),
               tooltip: 'Mark all as read',
             ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.more_vert, size: 22),
+            icon: Icon(Icons.more_vert, size: appBarIconSize),
           ),
         ],
       ),
@@ -407,6 +411,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final emptyIconSize = (screenWidth * 0.2).clamp(60.0, 80.0);
+
     return ListView(
       children: [
         SizedBox(
@@ -416,10 +424,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: emptyIconSize,
+                  height: emptyIconSize,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.colorScheme.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -430,26 +438,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   ),
                   child: Icon(
                     Icons.chat_bubble_outline,
-                    size: 40,
-                    color: Colors.grey[400],
+                    size: emptyIconSize * 0.5,
+                    color: theme.textTheme.bodySmall?.color,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: Responsive.spacing(context, base: 20)),
                 Text(
                   'No notifications yet',
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: Responsive.spacing(context)),
                 Text(
                   'Your notifications will appear here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -463,7 +466,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.spacing(context, base: 12),
+        vertical: Responsive.spacing(context),
+      ),
       itemCount: state.notifications.length + (state.isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == state.notifications.length) {
@@ -520,20 +526,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildDateHeader(DateTime dateTime) {
+    final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
+      margin: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 16)),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          padding: EdgeInsets.symmetric(
+            horizontal: Responsive.spacing(context, base: 14),
+            vertical: Responsive.spacing(context, base: 5),
+          ),
           decoration: BoxDecoration(
-            color: Colors.grey[400]?.withValues(alpha: 0.4),
+            color: AppColors.textLight?.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
+            style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -543,13 +551,19 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildBottomBar() {
+    final theme = Theme.of(context);
+    final bottomIconSize = Responsive.iconSize(context, base: 26);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.spacing(context, base: 12),
+        vertical: Responsive.spacing(context, base: 10),
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Colors.grey[200]!,
+            color: theme.dividerColor,
             width: 1,
           ),
         ),
@@ -558,32 +572,29 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         child: Row(
           children: [
             Icon(Icons.emoji_emotions_outlined,
-                color: Colors.grey[500], size: 26),
-            const SizedBox(width: 16),
-            Icon(Icons.image_outlined, color: Colors.grey[500], size: 26),
-            const SizedBox(width: 12),
+                color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
+            SizedBox(width: Responsive.spacing(context, base: 16)),
+            Icon(Icons.image_outlined, color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
 
             Expanded(
               child: Container(
-                height: 38,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: Responsive.value(context, mobile: 38.0, tablet: 44.0),
+                padding: EdgeInsets.symmetric(horizontal: Responsive.spacing(context, base: 16)),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F2F5),
+                  color: theme.scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(19),
                 ),
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Notifications are read-only',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[500],
-                  ),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ),
             ),
 
-            const SizedBox(width: 12),
-            Icon(Icons.more_horiz, color: Colors.grey[500], size: 26),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
+            Icon(Icons.more_horiz, color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
           ],
         ),
       ),
@@ -609,16 +620,21 @@ class _ChatMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final avatarSize = Responsive.value<double>(context, mobile: 40, tablet: 46);
+    final bubblePad = Responsive.spacing(context, base: 12);
+    final smallIconSize = Responsive.iconSize(context, base: 14);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
-            margin: const EdgeInsets.only(right: 10),
+            width: avatarSize,
+            height: avatarSize,
+            margin: EdgeInsets.only(right: Responsive.spacing(context, base: 10)),
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
@@ -630,7 +646,7 @@ class _ChatMessageBubble extends StatelessWidget {
             child: Icon(
               icon,
               color: iconColor,
-              size: 20,
+              size: Responsive.iconSize(context, base: 20),
             ),
           ),
 
@@ -641,9 +657,9 @@ class _ChatMessageBubble extends StatelessWidget {
                 GestureDetector(
                   onTap: onTap,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(bubblePad),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
                         topRight: Radius.circular(18),
@@ -669,20 +685,18 @@ class _ChatMessageBubble extends StatelessWidget {
                                 width: 8,
                                 height: 8,
                                 margin: const EdgeInsets.only(right: 6),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                             Flexible(
                               child: Text(
                                 notification.title,
-                                style: TextStyle(
-                                  fontSize: 14,
+                                style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: isUnread
                                       ? FontWeight.w700
                                       : FontWeight.w600,
-                                  color: Colors.black87,
                                 ),
                               ),
                             ),
@@ -690,28 +704,28 @@ class _ChatMessageBubble extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
 
-                        ..._buildMessageContent(notification.body),
+                        ..._buildMessageContent(context, notification.body),
 
                         if (notification.relatedEventId != null) ...[
-                          const SizedBox(height: 10),
+                          SizedBox(height: Responsive.spacing(context, base: 10)),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: Responsive.spacing(context, base: 12),
+                                vertical: Responsive.spacing(context, base: 6)),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: colorScheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.open_in_new,
-                                    size: 14, color: AppColors.primary),
+                                    size: smallIconSize, color: colorScheme.primary),
                                 const SizedBox(width: 5),
                                 Text(
                                   'View Event',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.primary,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -731,16 +745,13 @@ class _ChatMessageBubble extends StatelessWidget {
                     children: [
                       Text(
                         timeText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
+                        style: theme.textTheme.bodySmall,
                       ),
                       if (notification.isRead) ...[
                         const SizedBox(width: 5),
                         Icon(
                           Icons.done_all,
-                          size: 15,
+                          size: Responsive.iconSize(context, base: 15),
                           color: const Color(0xFF0EA5E9),
                         ),
                       ],
@@ -751,13 +762,17 @@ class _ChatMessageBubble extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(width: 50),
+          SizedBox(width: Responsive.spacing(context, base: 50)),
         ],
       ),
     );
   }
 
-  List<Widget> _buildMessageContent(String body) {
+  List<Widget> _buildMessageContent(BuildContext context, String body) {
+    final theme = Theme.of(context);
+    final contentPad = Responsive.spacing(context, base: 10);
+    final smallIcon = Responsive.iconSize(context, base: 14);
+
     if (body.contains('Q:') && body.contains('A:')) {
       final parts = body.split('\n\n');
       final widgets = <Widget>[];
@@ -767,9 +782,9 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Container(
               margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(contentPad),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: AppColors.background,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -778,14 +793,12 @@ class _ChatMessageBubble extends StatelessWidget {
                   Row(
                     children: [
                       Icon(Icons.help_outline,
-                          size: 14, color: Colors.grey[600]),
+                          size: smallIcon, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         'Your Question',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
                         ),
                       ),
                     ],
@@ -793,7 +806,7 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ],
               ),
@@ -803,7 +816,7 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Container(
               margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(contentPad),
               decoration: BoxDecoration(
                 color: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -813,15 +826,14 @@ class _ChatMessageBubble extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.chat_bubble_outline,
-                          size: 14, color: Color(0xFF0EA5E9)),
+                      Icon(Icons.chat_bubble_outline,
+                          size: smallIcon, color: const Color(0xFF0EA5E9)),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'Answer',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0EA5E9),
+                          color: const Color(0xFF0EA5E9),
                         ),
                       ),
                     ],
@@ -829,7 +841,7 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ],
               ),
@@ -839,9 +851,7 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Text(
               part,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[700],
+              style: theme.textTheme.bodyMedium?.copyWith(
                 height: 1.4,
               ),
             ),
@@ -855,9 +865,7 @@ class _ChatMessageBubble extends StatelessWidget {
     return [
       Text(
         body,
-        style: TextStyle(
-          fontSize: 13,
-          color: Colors.grey[700],
+        style: theme.textTheme.bodyMedium?.copyWith(
           height: 1.4,
         ),
       ),

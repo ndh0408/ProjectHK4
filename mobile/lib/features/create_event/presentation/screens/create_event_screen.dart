@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/category.dart';
@@ -189,30 +190,32 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       }
     });
 
+    final theme = Theme.of(context);
+    final hPad = Responsive.horizontalPadding(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back, color: theme.textTheme.titleLarge?.color),
           onPressed: () => context.pop(),
         ),
         title: Text(
           l10n.createEvent,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: Responsive.spacing(context)),
             child: CircleAvatar(
-              radius: 16,
+              radius: Responsive.value(context, mobile: 16.0, tablet: 20.0),
               backgroundColor: Colors.orange[100],
-              child: const Text('😊', style: TextStyle(fontSize: 16)),
+              child: Text('😊', style: TextStyle(fontSize: Responsive.value(context, mobile: 16.0, tablet: 18.0))),
             ),
           ),
         ],
@@ -226,7 +229,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
               children: [
                 Container(
                   height: 3,
-                  color: Colors.grey[200],
+                  color: theme.dividerColor,
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
                     widthFactor: _calculateProgress(),
@@ -236,22 +239,19 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
                 _buildCoverImage(context),
 
-                const SizedBox(height: 16),
+                SizedBox(height: Responsive.spacing(context, base: 16)),
 
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: hPad),
                   child: TextField(
                     controller: _titleController,
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
                     ),
                     decoration: InputDecoration(
                       hintText: l10n.eventName,
-                      hintStyle: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 20,
+                      hintStyle: theme.textTheme.headlineSmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color,
                         fontWeight: FontWeight.w500,
                       ),
                       border: InputBorder.none,
@@ -322,15 +322,15 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           ),
 
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: MediaQuery.of(context).padding.bottom + 16,
+            left: hPad,
+            right: hPad,
+            bottom: MediaQuery.of(context).padding.bottom + Responsive.spacing(context, base: 16),
             child: ElevatedButton(
               onPressed: state.isLoading ? null : _createEvent,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 16)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -347,9 +347,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     )
                   : Text(
                       l10n.create,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
             ),
@@ -375,12 +375,13 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
   Widget _buildCoverImage(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final coverHeight = Responsive.value<double>(context, mobile: 200, tablet: 260);
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
       child: GestureDetector(
         onTap: _isUploadingImage ? null : _pickImage,
         child: Container(
-          height: 200,
+          height: coverHeight,
           decoration: BoxDecoration(
             color: Colors.pink[100],
             borderRadius: BorderRadius.circular(16),
@@ -398,13 +399,13 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                     children: [
                       Icon(
                         Icons.add_photo_alternate_outlined,
-                        size: 48,
+                        size: Responsive.iconSize(context, base: 48),
                         color: Colors.pink[300],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: Responsive.spacing(context)),
                       Text(
                         l10n.addCoverImage,
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.pink[300],
                           fontWeight: FontWeight.w500,
                         ),
@@ -443,24 +444,27 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                       Align(
                         alignment: Alignment.bottomRight,
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
                           child: CircleAvatar(
-                            radius: 18,
+                            radius: Responsive.value(context, mobile: 18.0, tablet: 22.0),
                             backgroundColor: Colors.white,
                             child: Icon(
                               Icons.edit,
-                              size: 18,
-                              color: Colors.grey[700],
+                              size: Responsive.iconSize(context, base: 18),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
                       ),
                     if (!_isUploadingImage && ref.read(createEventProvider).imageUrl != null)
                       Positioned(
-                        top: 12,
-                        right: 12,
+                        top: Responsive.spacing(context, base: 12),
+                        right: Responsive.spacing(context, base: 12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: Responsive.spacing(context, base: 8),
+                            vertical: Responsive.spacing(context, base: 4),
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success,
                             borderRadius: BorderRadius.circular(12),
@@ -468,13 +472,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.cloud_done, size: 14, color: Colors.white),
+                              Icon(Icons.cloud_done, size: Responsive.iconSize(context, base: 14), color: Colors.white),
                               const SizedBox(width: 4),
                               Text(
                                 l10n.uploaded,
-                                style: const TextStyle(
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Colors.white,
-                                  fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -501,35 +504,33 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     final dateFormat = DateFormat('EEE, MMM d');
     final timeFormat = DateFormat('h:mm a');
 
+    final theme = Theme.of(context);
+    final hPad = Responsive.horizontalPadding(context);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: Responsive.spacing(context)),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: iconColor),
-            const SizedBox(width: 12),
+            Icon(icon, size: Responsive.iconSize(context, base: 20), color: iconColor),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 15,
-              ),
+              style: theme.textTheme.bodyMedium,
             ),
             const Spacer(),
             Text(
               dateTime != null ? dateFormat.format(dateTime) : l10n.selectDate,
-              style: TextStyle(
-                color: dateTime != null ? AppColors.textPrimary : Colors.grey[400],
-                fontSize: 15,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: dateTime != null ? theme.textTheme.titleMedium?.color : theme.textTheme.bodySmall?.color,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: Responsive.spacing(context, base: 16)),
             Text(
               dateTime != null ? timeFormat.format(dateTime) : l10n.time,
-              style: TextStyle(
-                color: dateTime != null ? AppColors.textPrimary : Colors.grey[400],
-                fontSize: 15,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: dateTime != null ? theme.textTheme.titleMedium?.color : theme.textTheme.bodySmall?.color,
               ),
             ),
           ],
@@ -540,26 +541,26 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
   Widget _buildLocationRow(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return InkWell(
       onTap: () {
         _showLocationDialog();
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context), vertical: Responsive.spacing(context)),
         child: Row(
           children: [
-            Icon(Icons.location_on_outlined, size: 20, color: Colors.grey[600]),
-            const SizedBox(width: 12),
+            Icon(Icons.location_on_outlined, size: Responsive.iconSize(context, base: 20), color: theme.textTheme.bodyMedium?.color),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
             Expanded(
               child: Text(
                 _venueController.text.isEmpty ? l10n.chooseLocation : _venueController.text,
-                style: TextStyle(
-                  color: _venueController.text.isEmpty ? Colors.grey[600] : AppColors.textPrimary,
-                  fontSize: 15,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: _venueController.text.isEmpty ? theme.textTheme.bodySmall?.color : theme.textTheme.titleMedium?.color,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
           ],
         ),
       ),
@@ -770,7 +771,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
               Text(
                 l10n.tapOnMapOrEnterCoordinates,
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
 
               Padding(
@@ -810,33 +811,31 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Widget _buildDescriptionRow(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final hasDescription = _descriptionController.text.isNotEmpty;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return InkWell(
       onTap: () => _openDescriptionEditor(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context), vertical: Responsive.spacing(context)),
         child: Row(
           children: [
-            Icon(Icons.notes_outlined, size: 20, color: Colors.grey[600]),
-            const SizedBox(width: 12),
+            Icon(Icons.notes_outlined, size: Responsive.iconSize(context, base: 20), color: theme.textTheme.bodyMedium?.color),
+            SizedBox(width: Responsive.spacing(context, base: 12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     hasDescription ? l10n.description : l10n.addDescription,
-                    style: TextStyle(
-                      color: hasDescription ? Colors.grey[600] : Colors.grey[600],
-                      fontSize: hasDescription ? 12 : 15,
-                    ),
+                    style: hasDescription ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium,
                   ),
                   if (hasDescription) ...[
                     const SizedBox(height: 2),
                     Text(
                       _descriptionController.text,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.titleMedium?.color,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -847,22 +846,25 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             ),
             if (hasDescription)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.spacing(context, base: 6),
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: const Text(
+                child: Text(
                   'MD',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 10,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
+                    fontSize: 10,
                   ),
                 ),
               ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
+            SizedBox(width: Responsive.spacing(context)),
+            Icon(Icons.chevron_right, color: theme.textTheme.bodySmall?.color),
           ],
         ),
       ),
@@ -889,7 +891,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       child: Text(
         title,
         style: TextStyle(
-          color: Colors.grey[500],
+          color: AppColors.textLight,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -907,7 +909,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
+          Icon(icon, size: 20, color: AppColors.textSecondary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -938,7 +940,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.attach_money, size: 20, color: Colors.grey[600]),
+            Icon(Icons.attach_money, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -952,12 +954,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             Text(
               state.isFree ? l10n.freeEvent : '\$${state.ticketPrice?.toStringAsFixed(0) ?? '0'}',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 fontSize: 15,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1029,7 +1031,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.visibility_outlined, size: 20, color: Colors.grey[600]),
+            Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -1043,12 +1045,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             Text(
               state.visibility == 'PUBLIC' ? l10n.public : l10n.private,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 fontSize: 15,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1112,7 +1114,7 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.people_outline, size: 20, color: Colors.grey[600]),
+            Icon(Icons.people_outline, size: 20, color: AppColors.textSecondary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -1126,12 +1128,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             Text(
               state.capacity == null ? l10n.unlimited : '${state.capacity}',
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
                 fontSize: 15,
               ),
             ),
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1209,18 +1211,18 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.category_outlined, size: 20, color: Colors.grey[600]),
+                Icon(Icons.category_outlined, size: 20, color: AppColors.textSecondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     selectedCategory?.name ?? l10n.selectCategory,
                     style: TextStyle(
-                      color: selectedCategory != null ? AppColors.textPrimary : Colors.grey[600],
+                      color: selectedCategory != null ? AppColors.textPrimary : AppColors.textSecondary,
                       fontSize: 15,
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                Icon(Icons.chevron_right, color: AppColors.textLight),
               ],
             ),
           ),
@@ -1283,18 +1285,18 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.location_city_outlined, size: 20, color: Colors.grey[600]),
+                Icon(Icons.location_city_outlined, size: 20, color: AppColors.textSecondary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     selectedCity?.name ?? l10n.selectCity,
                     style: TextStyle(
-                      color: selectedCity != null ? AppColors.textPrimary : Colors.grey[600],
+                      color: selectedCity != null ? AppColors.textPrimary : AppColors.textSecondary,
                       fontSize: 15,
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                Icon(Icons.chevron_right, color: AppColors.textLight),
               ],
             ),
           ),

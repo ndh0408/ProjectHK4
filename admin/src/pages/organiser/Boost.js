@@ -56,11 +56,11 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
 
     const getColor = (type) => {
         switch (type) {
-            case 'BASIC': return '#64748b';
-            case 'STANDARD': return '#3b82f6';
-            case 'PREMIUM': return '#f59e0b';
-            case 'VIP': return '#ef4444';
-            default: return '#64748b';
+            case 'BASIC': return '#94a3b8';
+            case 'STANDARD': return '#6366f1';
+            case 'PREMIUM': return '#8b5cf6';
+            case 'VIP': return '#f59e0b';
+            default: return '#94a3b8';
         }
     };
 

@@ -132,7 +132,7 @@ const ImageUpload = ({
                     sx={{
                         position: 'relative',
                         width: '100%',
-                        maxWidth: 300,
+                        maxWidth: { xs: '100%', sm: 300 },
                         borderRadius: 2,
                         overflow: 'hidden',
                         border: error ? '2px solid' : '1px solid',
@@ -144,7 +144,9 @@ const ImageUpload = ({
                         alt="Uploaded"
                         style={{
                             width: '100%',
-                            height: 180,
+                            height: '100%',
+                            minHeight: 150,
+                            maxHeight: 180,
                             objectFit: 'cover',
                             display: 'block',
                         }}
@@ -197,8 +199,8 @@ const ImageUpload = ({
                     onDragLeave={handleDragLeave}
                     sx={{
                         width: '100%',
-                        maxWidth: 300,
-                        height: 180,
+                        maxWidth: { xs: '100%', sm: 300 },
+                        height: { xs: 150, sm: 180 },
                         border: '2px dashed',
                         borderColor: error ? 'error.main' : dragOver ? 'primary.main' : 'divider',
                         borderRadius: 2,

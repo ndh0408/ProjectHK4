@@ -147,14 +147,14 @@ class CitiesScreen extends ConsumerWidget {
                   Icon(
                     Icons.location_off_outlined,
                     size: 64,
-                    color: Colors.grey[300],
+                    color: AppColors.divider,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No cities with events',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -185,7 +185,7 @@ class CitiesScreen extends ConsumerWidget {
                     'Discover popular events in cities around the world and subscribe to receive weekly updates.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                       height: 1.4,
                     ),
                   ),
@@ -218,7 +218,7 @@ class CitiesScreen extends ConsumerWidget {
                 'Failed to load cities',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[700],
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -258,7 +258,7 @@ class _RegionSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[500],
+              color: AppColors.textLight,
               letterSpacing: 0.5,
             ),
           ),
@@ -293,7 +293,7 @@ class _CityListItem extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey[200]!,
+              color: AppColors.divider,
               width: 1,
             ),
           ),
@@ -330,14 +330,14 @@ class _CityListItem extends StatelessWidget {
               '${city.eventCount} ${city.eventCount == 1 ? 'Event' : 'Events'}',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[500],
+                color: AppColors.textLight,
               ),
             ),
             const SizedBox(width: 8),
 
             Icon(
               Icons.chevron_right,
-              color: Colors.grey[400],
+              color: AppColors.textLight,
               size: 20,
             ),
           ],

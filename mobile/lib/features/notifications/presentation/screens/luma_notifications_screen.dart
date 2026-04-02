@@ -272,7 +272,7 @@ class _LumaNotificationsScreenState
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -280,7 +280,7 @@ class _LumaNotificationsScreenState
             'Your notifications will appear here',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: AppColors.textLight,
             ),
           ),
         ],
@@ -361,14 +361,14 @@ class _LumaNotificationsScreenState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.grey[400]?.withValues(alpha: 0.4),
+            color: AppColors.textLight?.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[700],
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -481,7 +481,7 @@ class _NotificationBubble extends StatelessWidget {
                                   fontWeight: isUnread
                                       ? FontWeight.w700
                                       : FontWeight.w600,
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -492,7 +492,7 @@ class _NotificationBubble extends StatelessWidget {
                           notification.body,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: AppColors.textPrimary,
                             height: 1.3,
                           ),
                         ),
@@ -558,7 +558,7 @@ class _NotificationBubble extends StatelessWidget {
                       timeText,
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[500],
+                        color: AppColors.textLight,
                       ),
                     ),
                   ),

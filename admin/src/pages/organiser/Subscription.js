@@ -40,10 +40,10 @@ const planIcons = {
 };
 
 const planColors = {
-    FREE: '#9e9e9e',
-    STANDARD: '#2196f3',
-    PREMIUM: '#9c27b0',
-    VIP: '#ff9800',
+    FREE: '#94a3b8',
+    STANDARD: '#6366f1',
+    PREMIUM: '#8b5cf6',
+    VIP: '#f59e0b',
 };
 
 const Subscription = () => {
@@ -283,7 +283,7 @@ const Subscription = () => {
                         <Card
                             sx={{
                                 height: '100%',
-                                border: subscription?.plan === plan.name ? `3px solid ${planColors[plan.name]}` : '1px solid #e0e0e0',
+                                border: subscription?.plan === plan.name ? `2px solid ${planColors[plan.name]}` : '1px solid var(--neutral-200)',
                                 position: 'relative',
                                 transition: 'transform 0.2s, box-shadow 0.2s',
                                 '&:hover': {

@@ -323,7 +323,7 @@ class _LumaNotificationsTile extends StatelessWidget {
               : Colors.white,
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey[200]!,
+              color: AppColors.divider,
               width: 0.5,
             ),
           ),
@@ -384,7 +384,7 @@ class _LumaNotificationsTile extends StatelessWidget {
                                 fontSize: 16,
                                 fontWeight:
                                     hasUnread ? FontWeight.w700 : FontWeight.w500,
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -409,7 +409,7 @@ class _LumaNotificationsTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color:
-                              hasUnread ? AppColors.primary : Colors.grey[500],
+                              hasUnread ? AppColors.primary : AppColors.textLight,
                           fontWeight:
                               hasUnread ? FontWeight.w600 : FontWeight.normal,
                         ),
@@ -425,7 +425,7 @@ class _LumaNotificationsTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color:
-                                hasUnread ? Colors.black87 : Colors.grey[600],
+                                hasUnread ? AppColors.textPrimary : AppColors.textSecondary,
                             fontWeight:
                                 hasUnread ? FontWeight.w500 : FontWeight.normal,
                           ),
@@ -489,7 +489,7 @@ class _ConversationTile extends StatelessWidget {
               : Colors.white,
           border: Border(
             bottom: BorderSide(
-              color: Colors.grey[200]!,
+              color: AppColors.divider,
               width: 0.5,
             ),
           ),
@@ -504,7 +504,7 @@ class _ConversationTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: conversation.type == ConversationType.eventGroup
                         ? AppColors.primary.withValues(alpha: 0.1)
-                        : Colors.grey[200],
+                        : AppColors.divider,
                     shape: BoxShape.circle,
                     image: conversation.displayImage != null
                         ? DecorationImage(
@@ -521,7 +521,7 @@ class _ConversationTile extends StatelessWidget {
                           color:
                               conversation.type == ConversationType.eventGroup
                                   ? AppColors.primary
-                                  : Colors.grey[600],
+                                  : AppColors.textSecondary,
                           size: 28,
                         )
                       : null,
@@ -562,7 +562,7 @@ class _ConversationTile extends StatelessWidget {
                             fontSize: 16,
                             fontWeight:
                                 hasUnread ? FontWeight.w700 : FontWeight.w500,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -574,7 +574,7 @@ class _ConversationTile extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color:
-                              hasUnread ? AppColors.primary : Colors.grey[500],
+                              hasUnread ? AppColors.primary : AppColors.textLight,
                           fontWeight:
                               hasUnread ? FontWeight.w600 : FontWeight.normal,
                         ),
@@ -590,7 +590,7 @@ class _ConversationTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color:
-                                hasUnread ? Colors.black87 : Colors.grey[600],
+                                hasUnread ? AppColors.textPrimary : AppColors.textSecondary,
                             fontWeight:
                                 hasUnread ? FontWeight.w500 : FontWeight.normal,
                           ),

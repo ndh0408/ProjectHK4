@@ -22,7 +22,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(myCreatedEventsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -51,11 +51,11 @@ class MyCreatedEventsScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
+              Icon(Icons.error_outline, size: 64, color: AppColors.textLight),
               const SizedBox(height: 16),
               Text(
                 'Failed to load events',
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -85,7 +85,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
             Icon(
               Icons.event_note_outlined,
               size: 80,
-              color: Colors.grey[400],
+              color: AppColors.textLight,
             ),
             const SizedBox(height: 24),
             Text(
@@ -93,7 +93,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -102,7 +102,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[500],
+                color: AppColors.textLight,
               ),
             ),
             const SizedBox(height: 32),
@@ -147,7 +147,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
           ],
           if (draftEvents.isNotEmpty) ...[
-            _buildSectionHeader('Drafts', Colors.grey),
+            _buildSectionHeader('Drafts', AppColors.textLight),
             ...draftEvents.map((e) => _EventCard(event: e)),
             const SizedBox(height: 24),
           ],
@@ -162,7 +162,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
             const SizedBox(height: 24),
           ],
           if (otherEvents.isNotEmpty) ...[
-            _buildSectionHeader('Other', Colors.grey),
+            _buildSectionHeader('Other', AppColors.textLight),
             ...otherEvents.map((e) => _EventCard(event: e)),
           ],
         ],
@@ -189,7 +189,7 @@ class MyCreatedEventsScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: AppColors.textPrimary,
             ),
           ),
         ],
@@ -212,7 +212,7 @@ class _EventCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: AppColors.divider),
       ),
       child: InkWell(
         onTap: () => context.push('/event/${event.id}'),
@@ -259,7 +259,7 @@ class _EventCard extends StatelessWidget {
                       dateFormat.format(event.startDate),
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: AppColors.textSecondary,
                       ),
                     ),
 
@@ -268,13 +268,13 @@ class _EventCard extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.people_outline, size: 14, color: Colors.grey[500]),
+                            Icon(Icons.people_outline, size: 14, color: AppColors.textLight),
                             const SizedBox(width: 4),
                             Text(
                               '${event.registeredCount} registered',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[500],
+                                color: AppColors.textLight,
                               ),
                             ),
                           ],
@@ -302,10 +302,10 @@ class _EventCard extends StatelessWidget {
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: AppColors.divider,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(Icons.event, color: Colors.grey[400], size: 32),
+      child: Icon(Icons.event, color: AppColors.textLight, size: 32),
     );
   }
 
@@ -316,8 +316,8 @@ class _EventCard extends StatelessWidget {
 
     switch (event.status) {
       case EventStatus.draft:
-        bgColor = Colors.grey[200]!;
-        textColor = Colors.grey[700]!;
+        bgColor = AppColors.divider;
+        textColor = AppColors.textPrimary;
         text = 'Draft';
         break;
       case EventStatus.pending:
@@ -380,7 +380,7 @@ class _EventCard extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.divider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -399,7 +399,7 @@ class _EventCard extends StatelessWidget {
                 title: const Text('Manage Registrations'),
                 subtitle: Text(
                   '${event.registeredCount} registered',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 onTap: () {
                   Navigator.pop(context);
