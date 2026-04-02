@@ -10,6 +10,7 @@ import 'package:mobile/l10n/app_localizations.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/user.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -469,7 +470,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
         child: Form(
           key: _formKey,
           child: Column(
@@ -478,7 +479,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Stack(
                   children: [
                     CircleAvatar(
-                      radius: 60,
+                      radius: Responsive.value(context, mobile: 60.0, tablet: 72.0),
                       backgroundImage: user?.avatarUrl != null
                           ? CachedNetworkImageProvider(user!.avatarUrl!)
                           : null,
@@ -487,7 +488,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               (user?.fullName?.isNotEmpty ?? false)
                                   ? user!.fullName![0].toUpperCase()
                                   : '?',
-                              style: const TextStyle(fontSize: 48),
+                              style: TextStyle(
+                                fontSize: Responsive.value(context, mobile: 48.0, tablet: 56.0),
+                              ),
                             )
                           : null,
                     ),
@@ -496,10 +499,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         bottom: 0,
                         right: 0,
                         child: CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          radius: 18,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          radius: Responsive.value(context, mobile: 18.0, tablet: 22.0),
                           child: IconButton(
-                            icon: const Icon(Icons.camera_alt, size: 18),
+                            icon: Icon(Icons.camera_alt, size: Responsive.iconSize(context, base: 18)),
                             color: Colors.white,
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -515,7 +518,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: Responsive.spacing(context, base: 24)),
 
               TextFormField(
                 controller: _nameController,
@@ -532,7 +535,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 },
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: Responsive.spacing(context, base: 16)),
 
               TextFormField(
                 controller: _emailController,
@@ -543,7 +546,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 enabled: false,
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: Responsive.spacing(context, base: 16)),
 
               TextFormField(
                 controller: _phoneController,
@@ -563,29 +566,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 keyboardType: TextInputType.phone,
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: Responsive.spacing(context, base: 16)),
 
               if (user != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.spacing(context, base: 16),
+                    vertical: Responsive.spacing(context, base: 8),
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     user.role.name.toUpperCase(),
-                    style: const TextStyle(
-                      color: AppColors.primary,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
 
               if (user?.role == UserRole.organiser) ...[
-                const SizedBox(height: 24),
+                SizedBox(height: Responsive.spacing(context, base: 24)),
                 _SignatureSection(
                   signatureUrl: user?.signatureUrl,
                   isUploading: _isUploadingSignature,
@@ -595,7 +598,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
 
               if (_isEditing) ...[
-                const SizedBox(height: 24),
+                SizedBox(height: Responsive.spacing(context, base: 24)),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -614,9 +617,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ],
 
-              const SizedBox(height: 32),
+              SizedBox(height: Responsive.spacing(context, base: 32)),
               const Divider(),
-              const SizedBox(height: 16),
+              SizedBox(height: Responsive.spacing(context, base: 16)),
 
               _SettingsTile(
                 icon: Icons.bookmark_outline,
@@ -635,24 +638,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => _showNotificationPreferences(user),
               ),
 
-              const SizedBox(height: 16),
+              SizedBox(height: Responsive.spacing(context, base: 16)),
 
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: _handleLogout,
-                  icon: const Icon(Icons.logout, color: AppColors.error),
+                  icon: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
                   label: Text(
                     l10n.logout,
-                    style: const TextStyle(color: AppColors.error),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.error),
+                    side: BorderSide(color: Theme.of(context).colorScheme.error),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: Responsive.spacing(context, base: 32)),
             ],
           ),
         ),
@@ -675,7 +678,7 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary),
+      leading: Icon(icon, color: Theme.of(context).textTheme.bodyMedium?.color),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
@@ -761,49 +764,49 @@ class _SignatureSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardPad = Responsive.spacing(context, base: 16);
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
+        side: BorderSide(color: theme.dividerColor),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(cardPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.draw_outlined, color: AppColors.primary),
-                const SizedBox(width: 8),
+                Icon(Icons.draw_outlined, color: colorScheme.primary),
+                SizedBox(width: Responsive.spacing(context)),
                 Text(
                   l10n.signature,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: Responsive.spacing(context)),
             Text(
               l10n.signatureDescription,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade600,
-              ),
+              style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: Responsive.spacing(context, base: 16)),
             if (signatureUrl != null)
               Stack(
                 children: [
                   Container(
                     width: double.infinity,
-                    height: 120,
+                    height: Responsive.value(context, mobile: 120.0, tablet: 150.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: theme.dividerColor),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -813,8 +816,8 @@ class _SignatureSection extends StatelessWidget {
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(),
                         ),
-                        errorWidget: (context, url, error) => const Center(
-                          child: Icon(Icons.error_outline, color: AppColors.error),
+                        errorWidget: (context, url, error) => Center(
+                          child: Icon(Icons.error_outline, color: colorScheme.error),
                         ),
                       ),
                     ),
@@ -823,10 +826,10 @@ class _SignatureSection extends StatelessWidget {
                     top: 4,
                     right: 4,
                     child: IconButton(
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: Icon(Icons.close, size: Responsive.iconSize(context, base: 20)),
                       style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.error,
+                        backgroundColor: colorScheme.surface,
+                        foregroundColor: colorScheme.error,
                       ),
                       onPressed: onRemove,
                     ),
@@ -839,12 +842,12 @@ class _SignatureSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: double.infinity,
-                  height: 120,
+                  height: Responsive.value(context, mobile: 120.0, tablet: 150.0),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: theme.scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Colors.grey.shade300,
+                      color: theme.dividerColor,
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -857,23 +860,20 @@ class _SignatureSection extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.add_photo_alternate_outlined,
-                              size: 36,
-                              color: Colors.grey.shade500,
+                              size: Responsive.iconSize(context, base: 36),
+                              color: theme.textTheme.bodySmall?.color,
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: Responsive.spacing(context)),
                             Text(
                               l10n.tapToUploadSignature,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 13,
-                              ),
+                              style: theme.textTheme.bodyMedium,
                             ),
                           ],
                         ),
                 ),
               ),
             if (signatureUrl != null) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: Responsive.spacing(context, base: 12)),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -884,7 +884,7 @@ class _SignatureSection extends StatelessWidget {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.upload_outlined, size: 18),
+                      : Icon(Icons.upload_outlined, size: Responsive.iconSize(context, base: 18)),
                   label: Text(l10n.uploadSignature),
                 ),
               ),

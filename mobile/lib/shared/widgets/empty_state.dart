@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../core/config/theme.dart';
+import '../../core/utils/responsive.dart';
 
 class EmptyState extends StatefulWidget {
   const EmptyState({
@@ -60,10 +61,16 @@ class _EmptyStateState extends State<EmptyState>
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = widget.compact ? 48.0 : 80.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final iconSize = widget.compact
+        ? Responsive.iconSize(context, base: 48)
+        : (screenWidth * 0.2).clamp(48.0, 80.0);
     final titleStyle = widget.compact
         ? Theme.of(context).textTheme.titleMedium
         : Theme.of(context).textTheme.titleLarge;
+    final padding = widget.compact
+        ? Responsive.spacing(context, base: 16)
+        : Responsive.spacing(context, base: 32);
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -71,7 +78,7 @@ class _EmptyStateState extends State<EmptyState>
         scale: _scaleAnimation,
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(widget.compact ? 16.0 : 32.0),
+            padding: EdgeInsets.all(padding),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -185,15 +192,18 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final errorIconContainer = (screenWidth * 0.2).clamp(60.0, 80.0);
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(Responsive.spacing(context, base: 32)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: errorIconContainer,
+              height: errorIconContainer,
               decoration: BoxDecoration(
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,

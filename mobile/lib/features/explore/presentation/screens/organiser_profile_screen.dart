@@ -251,18 +251,18 @@ class OrganiserProfileScreen extends ConsumerWidget {
                               styleSheet: MarkdownStyleSheet(
                                 p: TextStyle(
                                   fontSize: 15,
-                                  color: Colors.grey[700],
+                                  color: AppColors.textPrimary,
                                   height: 1.5,
                                 ),
                                 strong: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
+                                  color: AppColors.textPrimary,
                                 ),
                                 em: TextStyle(
                                   fontSize: 15,
                                   fontStyle: FontStyle.italic,
-                                  color: Colors.grey[700],
+                                  color: AppColors.textPrimary,
                                 ),
                                 a: const TextStyle(
                                   fontSize: 15,
@@ -271,22 +271,22 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                 ),
                                 listBullet: TextStyle(
                                   fontSize: 15,
-                                  color: Colors.grey[700],
+                                  color: AppColors.textPrimary,
                                 ),
                                 h1: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
+                                  color: AppColors.textPrimary,
                                 ),
                                 h2: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
+                                  color: AppColors.textPrimary,
                                 ),
                                 h3: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                               onTapLink: (text, href, title) {
@@ -376,11 +376,11 @@ class OrganiserProfileScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Icon(Icons.error_outline,
-                              size: 48, color: Colors.grey[400]),
+                              size: 48, color: AppColors.textLight),
                           const SizedBox(height: 16),
                           Text(
                             'Failed to load events',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: AppColors.textSecondary),
                           ),
                         ],
                       ),
@@ -419,7 +419,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
         height: 40,
         width: 100,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.divider,
           borderRadius: BorderRadius.circular(20),
         ),
         child: const Center(
@@ -436,7 +436,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
       onPressed: () => _toggleFollow(ref, context),
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            followState.isFollowing ? Colors.grey[200] : AppColors.primary,
+            followState.isFollowing ? AppColors.divider : AppColors.primary,
         foregroundColor:
             followState.isFollowing ? AppColors.textPrimary : Colors.white,
         elevation: 0,
@@ -461,12 +461,12 @@ class OrganiserProfileScreen extends ConsumerWidget {
           child: Column(
             children: [
               Icon(Icons.event_busy_outlined,
-                  size: 64, color: Colors.grey[300]),
+                  size: 64, color: AppColors.divider),
               const SizedBox(height: 16),
               Text(
                 'No upcoming events',
                 style: TextStyle(
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -504,7 +504,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                         : '',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: AppColors.textLight,
                     ),
                   ),
                 ],
@@ -667,7 +667,7 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey[600]),
+        Icon(icon, size: 18, color: AppColors.textSecondary),
         const SizedBox(width: 6),
         Text(
           value,
@@ -682,7 +682,7 @@ class _StatItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
           ),
         ),
       ],
@@ -708,11 +708,11 @@ class _ActionButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: AppColors.background,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: AppColors.divider),
         ),
-        child: Icon(icon, size: 20, color: Colors.grey[700]),
+        child: Icon(icon, size: 20, color: AppColors.textPrimary),
       ),
     );
   }
@@ -800,7 +800,7 @@ class _OrganiserEventCard extends StatelessWidget {
                           event.organiserName,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -825,13 +825,13 @@ class _OrganiserEventCard extends StatelessWidget {
 
                   Row(
                     children: [
-                      Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
+                      Icon(Icons.schedule, size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Text(
                         '${timeFormat.format(event.startDate)} · ${timeFormat.format(event.endDate)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: AppColors.textSecondary,
                         ),
                       ),
                       const Spacer(),
@@ -864,14 +864,14 @@ class _OrganiserEventCard extends StatelessWidget {
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined,
-                          size: 14, color: Colors.grey[500]),
+                          size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           event.location,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

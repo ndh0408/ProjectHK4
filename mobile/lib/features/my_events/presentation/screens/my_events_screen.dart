@@ -6,6 +6,7 @@ import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -49,7 +50,7 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
             child: Row(
               children: [
                 _SubTabButton(
@@ -97,7 +98,7 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
                     }
                   },
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context)),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final reg = filtered[index];
@@ -249,8 +250,17 @@ class _RegistrationCard extends ConsumerWidget {
     final canCancel = isUpcoming &&
         registration.status != RegistrationStatusEnum.cancelled;
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardMargin = Responsive.spacing(context, base: 12);
+    final cardPad = Responsive.spacing(context, base: 12);
+    final badgePadH = Responsive.spacing(context, base: 8);
+    final badgePadV = Responsive.spacing(context, base: 4);
+    final smallIconSize = Responsive.iconSize(context, base: 14);
+    final buttonIconSize = Responsive.iconSize(context, base: 18);
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: cardMargin),
       child: InkWell(
         onTap: () {
           ref.read(selectedEventProvider.notifier).state = event;
@@ -258,16 +268,16 @@ class _RegistrationCard extends ConsumerWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(cardPad),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: badgePadH,
+                      vertical: badgePadV,
                     ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(registration.status)
@@ -276,8 +286,7 @@ class _RegistrationCard extends ConsumerWidget {
                     ),
                     child: Text(
                       _getStatusText(registration.status),
-                      style: TextStyle(
-                        fontSize: 11,
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: _getStatusColor(registration.status),
                       ),
@@ -287,56 +296,54 @@ class _RegistrationCard extends ConsumerWidget {
                   if (canViewTicket)
                     TextButton.icon(
                       onPressed: () => _viewTicket(context, ref),
-                      icon: const Icon(Icons.qr_code, size: 18),
-                      label: const Text('View Ticket'),
+                      icon: Icon(Icons.qr_code, size: buttonIconSize),
+                      label: Text('View Ticket', style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                      )),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: EdgeInsets.symmetric(horizontal: badgePadH),
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: Responsive.spacing(context)),
               Text(
                 event.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: Responsive.spacing(context)),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.calendar_today,
-                    size: 14,
-                    color: AppColors.textSecondary,
+                    size: smallIconSize,
+                    color: theme.textTheme.bodySmall?.color,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '${dateFormat.format(event.startDate)} • ${timeFormat.format(event.startDate)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_on_outlined,
-                    size: 14,
-                    color: AppColors.textSecondary,
+                    size: smallIconSize,
+                    color: theme.textTheme.bodySmall?.color,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       event.location,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                      style: theme.textTheme.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -344,16 +351,16 @@ class _RegistrationCard extends ConsumerWidget {
                 ],
               ),
               if (canCancel) ...[
-                const SizedBox(height: 12),
+                SizedBox(height: Responsive.spacing(context, base: 12)),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => _cancelRegistration(context, ref),
-                    icon: const Icon(Icons.cancel_outlined, size: 18),
+                    icon: Icon(Icons.cancel_outlined, size: buttonIconSize),
                     label: const Text('Cancel Registration'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
+                      foregroundColor: colorScheme.error,
+                      side: BorderSide(color: colorScheme.error),
                     ),
                   ),
                 ),
@@ -379,21 +386,27 @@ class _SubTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.spacing(context, base: 16),
+          vertical: Responsive.spacing(context, base: 8),
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
+          color: isSelected ? colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
+            color: isSelected ? colorScheme.primary : AppColors.border,
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: isSelected ? Colors.white : theme.textTheme.bodySmall?.color,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

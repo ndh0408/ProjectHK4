@@ -41,7 +41,7 @@ class PaymentCancelledScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -50,7 +50,7 @@ class PaymentCancelledScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     height: 1.5,
                   ),
                 ),
@@ -87,7 +87,7 @@ class PaymentCancelledScreen extends StatelessWidget {
                     'Back to Home',
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),

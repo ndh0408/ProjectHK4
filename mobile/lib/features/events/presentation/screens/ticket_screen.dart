@@ -133,14 +133,14 @@ class TicketScreen extends StatelessWidget {
                       userName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Ref: ${ticketId.length >= 8 ? ticketId.substring(0, 8).toUpperCase() : ticketId.toUpperCase()}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey,
+                            color: AppColors.textLight,
                           ),
                     ),
                     const SizedBox(height: 24),
@@ -154,7 +154,7 @@ class TicketScreen extends StatelessWidget {
               Text(
                 isCheckedIn ? l10n.youHaveCheckedIn : l10n.showQrAtEntrance,
                 style: TextStyle(
-                  color: isCheckedIn ? Colors.green : Colors.grey,
+                  color: isCheckedIn ? Colors.green : AppColors.textLight,
                   fontWeight: isCheckedIn ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
@@ -173,7 +173,7 @@ class TicketScreen extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.black87),
+            style: const TextStyle(color: AppColors.textPrimary),
           ),
         ),
       ],

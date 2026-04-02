@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/boost.dart';
 import '../../../../shared/widgets/boost_badge.dart';
@@ -41,26 +42,31 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
   }
 
   Widget _buildCarousel(List<Event> events) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final textTheme = Theme.of(context).textTheme;
+    final hPadding = Responsive.horizontalPadding(context);
+    final carouselHeight = screenHeight * 0.25;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Header
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -73,22 +79,19 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'VIP Events',
-                    style: TextStyle(
-                      fontSize: 18,
+                    style: textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E293B),
                     ),
                   ),
                   Text(
                     'Premium featured events',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
+                    style: textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -99,20 +102,19 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, size: 12, color: Colors.white),
-                    SizedBox(width: 4),
+                    const Icon(Icons.auto_awesome, size: 12, color: Colors.white),
+                    const SizedBox(width: 4),
                     Text(
                       '5x BOOST',
-                      style: TextStyle(
+                      style: textTheme.bodySmall?.copyWith(
                         color: Colors.white,
-                        fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -126,7 +128,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
 
         // Banner Carousel
         SizedBox(
-          height: 200,
+          height: carouselHeight,
           child: PageView.builder(
             controller: _pageController,
             itemCount: events.length,
@@ -156,7 +158,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                   borderRadius: BorderRadius.circular(4),
                   gradient: _currentPage == index
                       ? const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                         )
                       : null,
                   color: _currentPage == index ? null : const Color(0xFFE2E8F0),
@@ -178,7 +180,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -235,7 +237,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                 left: 0,
                 right: 0,
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -253,9 +255,8 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                           ),
                           child: Text(
                             event.category!.name,
-                            style: const TextStyle(
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.white,
-                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -267,9 +268,8 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                         event.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white,
-                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                           height: 1.2,
                         ),
@@ -287,9 +287,8 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                           const SizedBox(width: 4),
                           Text(
                             _formatDate(event.startTime),
-                            style: const TextStyle(
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.white70,
-                              fontSize: 12,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -304,9 +303,8 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                               event.venue ?? event.city?.name ?? 'Online',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.white70,
-                                fontSize: 12,
                               ),
                             ),
                           ),
@@ -326,7 +324,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFFFD700),
+                      color: const Color(0xFFF59E0B),
                       width: 2,
                     ),
                   ),
@@ -341,7 +339,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
                             event.organiser?.fullName?.substring(0, 1).toUpperCase() ?? 'O',
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFFFFD700),
+                              color: Color(0xFFF59E0B),
                             ),
                           )
                         : null,
@@ -356,32 +354,37 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
   }
 
   Widget _buildLoadingState() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final hPadding = Responsive.horizontalPadding(context);
+    final carouselHeight = screenHeight * 0.25;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: EdgeInsets.symmetric(horizontal: hPadding),
           child: Container(
             height: 24,
-            width: 120,
+            width: screenWidth * 0.32,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: AppColors.divider,
               borderRadius: BorderRadius.circular(6),
             ),
           ),
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 200,
+          height: carouselHeight,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: hPadding),
             itemCount: 2,
             itemBuilder: (_, __) => Container(
-              width: MediaQuery.of(context).size.width * 0.85,
+              width: screenWidth * 0.85,
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: AppColors.divider,
                 borderRadius: BorderRadius.circular(20),
               ),
             ),

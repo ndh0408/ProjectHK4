@@ -134,7 +134,7 @@ class _QuestionCard extends StatelessWidget {
                   Icon(
                     Icons.help_outline,
                     size: 18,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -198,13 +198,13 @@ class _QuestionCard extends StatelessWidget {
                   Icon(
                     Icons.access_time,
                     size: 14,
-                    color: Colors.grey[500],
+                    color: AppColors.textLight,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     dateFormat.format(question.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[500],
+                          color: AppColors.textLight,
                         ),
                   ),
                   if (question.answeredAt != null) ...[

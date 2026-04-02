@@ -8,7 +8,7 @@ const LoadingSpinner = ({ message = 'Loading...' }) => {
             flexDirection="column"
             justifyContent="center"
             alignItems="center"
-            minHeight="200px"
+            minHeight="20vh"
             gap={2}
         >
             <CircularProgress />
