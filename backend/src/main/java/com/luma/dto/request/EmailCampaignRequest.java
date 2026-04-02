@@ -32,13 +32,10 @@ public class EmailCampaignRequest {
     @NotNull(message = "Campaign type is required")
     private EmailCampaignType type;
 
-    // Audience targeting
     private AudienceFilter audienceFilter;
 
-    // Schedule (null for immediate send)
     private LocalDateTime scheduledAt;
 
-    // Related event for event-based campaigns
     private UUID relatedEventId;
 
     @Data
@@ -46,10 +43,10 @@ public class EmailCampaignRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AudienceFilter {
-        private String userRole; // USER, ORGANISER, or null for all
+        private String userRole;
         private List<Integer> cityIds;
         private List<Integer> categoryIds;
-        private Boolean registeredUsersOnly; // Only users who have registered for events
-        private Boolean subscribedToNewsletter; // Only users subscribed to newsletter
+        private Boolean registeredUsersOnly;
+        private Boolean subscribedToNewsletter;
     }
 }

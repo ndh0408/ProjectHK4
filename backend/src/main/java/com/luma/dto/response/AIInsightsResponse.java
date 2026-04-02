@@ -20,9 +20,9 @@ public class AIInsightsResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Insight {
-        private String type; // success, warning, info, tip
+        private String type;
         private String title;
         private String description;
-        private String actionText; // optional button text
+        private String actionText;
     }
 }

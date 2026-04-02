@@ -31,11 +31,6 @@ public class CommissionService {
 
     private static final BigDecimal DEFAULT_COMMISSION_RATE = new BigDecimal("10.00");
 
-    // ==================== Platform Config ====================
-
-    /**
-     * Get or create platform config
-     */
     public PlatformConfig getPlatformConfig() {
         return platformConfigRepository.findFirst()
                 .orElseGet(() -> {
@@ -44,9 +39,6 @@ public class CommissionService {
                 });
     }
 
-    /**
-     * Update platform config
-     */
     @Transactional
     public PlatformConfig updatePlatformConfig(BigDecimal defaultCommissionRate,
                                                 BigDecimal minCommissionRate,
@@ -78,21 +70,12 @@ public class CommissionService {
         return platformConfigRepository.save(config);
     }
 
-    // ==================== Organiser Commission ====================
-
-    /**
-     * Get commission rate for an organiser
-     * Returns custom rate if exists and valid, otherwise platform default
-     */
     public BigDecimal getCommissionRateForOrganiser(UUID organiserId) {
         return organiserCommissionRepository.findValidCommissionForOrganiser(organiserId, LocalDateTime.now())
                 .map(OrganiserCommission::getCommissionRate)
                 .orElseGet(() -> getPlatformConfig().getDefaultCommissionRate());
     }
 
-    /**
-     * Set custom commission rate for an organiser
-     */
     @Transactional
     public OrganiserCommission setCustomCommissionRate(UUID organiserId,
                                                         BigDecimal commissionRate,
@@ -102,7 +85,6 @@ public class CommissionService {
                                                         User admin) {
         PlatformConfig config = getPlatformConfig();
 
-        // Validate rate within bounds
         if (commissionRate.compareTo(config.getMinCommissionRate()) < 0 ||
             commissionRate.compareTo(config.getMaxCommissionRate()) > 0) {
             throw new BadRequestException(String.format(
@@ -110,7 +92,6 @@ public class CommissionService {
                     config.getMinCommissionRate(), config.getMaxCommissionRate()));
         }
 
-        // Check if organiser already has custom commission
         OrganiserCommission commission = organiserCommissionRepository.findByOrganiserId(organiserId)
                 .orElse(OrganiserCommission.builder()
                         .organiser(User.builder().id(organiserId).build())
@@ -130,9 +111,6 @@ public class CommissionService {
         return commission;
     }
 
-    /**
-     * Remove custom commission rate for an organiser (revert to platform default)
-     */
     @Transactional
     public void removeCustomCommissionRate(UUID organiserId) {
         organiserCommissionRepository.findByOrganiserId(organiserId)
@@ -143,18 +121,10 @@ public class CommissionService {
                 });
     }
 
-    /**
-     * Get all custom commission rates (for admin)
-     */
     public Page<OrganiserCommission> getAllCustomCommissions(Pageable pageable) {
         return organiserCommissionRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
-    // ==================== Commission Transactions ====================
-
-    /**
-     * Create commission transaction when payment is successful
-     */
     @Transactional
     public CommissionTransaction createCommissionTransaction(Payment payment) {
         Event event = payment.getEvent();
@@ -182,9 +152,6 @@ public class CommissionService {
         return transaction;
     }
 
-    /**
-     * Mark commission as refunded when payment is refunded
-     */
     @Transactional
     public void refundCommission(UUID paymentId, String reason) {
         commissionTransactionRepository.findByPaymentId(paymentId)
@@ -196,9 +163,6 @@ public class CommissionService {
                 });
     }
 
-    /**
-     * Settle commissions for an organiser (mark as paid out)
-     */
     @Transactional
     public List<CommissionTransaction> settleCommissions(UUID organiserId, String payoutReference) {
         List<CommissionTransaction> pendingTransactions =
@@ -221,25 +185,14 @@ public class CommissionService {
         return pendingTransactions;
     }
 
-    /**
-     * Get commission transactions for an organiser
-     */
     public Page<CommissionTransaction> getOrganiserTransactions(UUID organiserId, Pageable pageable) {
         return commissionTransactionRepository.findByOrganiserIdOrderByCreatedAtDesc(organiserId, pageable);
     }
 
-    /**
-     * Get commission transactions for an event
-     */
     public List<CommissionTransaction> getEventTransactions(UUID eventId) {
         return commissionTransactionRepository.findByEventIdOrderByCreatedAtDesc(eventId);
     }
 
-    // ==================== Statistics ====================
-
-    /**
-     * Get platform statistics (for admin dashboard)
-     */
     public PlatformCommissionStats getPlatformStats() {
         BigDecimal totalCommission = commissionTransactionRepository.getTotalPlatformCommission();
         BigDecimal totalSales = commissionTransactionRepository.getTotalSalesAmount();
@@ -256,16 +209,10 @@ public class CommissionService {
         );
     }
 
-    /**
-     * Get platform statistics for date range
-     */
     public BigDecimal getPlatformCommissionInRange(LocalDateTime startDate, LocalDateTime endDate) {
         return commissionTransactionRepository.getPlatformCommissionInRange(startDate, endDate);
     }
 
-    /**
-     * Get organiser statistics (for organiser dashboard)
-     */
     public OrganiserRevenueStats getOrganiserStats(UUID organiserId) {
         BigDecimal totalSales = commissionTransactionRepository.getTotalOrganiserSales(organiserId);
         BigDecimal totalEarnings = commissionTransactionRepository.getTotalOrganiserEarnings(organiserId);
@@ -286,9 +233,6 @@ public class CommissionService {
         );
     }
 
-    /**
-     * Get event revenue statistics
-     */
     public EventRevenueStats getEventRevenueStats(UUID eventId) {
         BigDecimal totalRevenue = commissionTransactionRepository.getTotalEventRevenue(eventId);
         BigDecimal totalCommission = commissionTransactionRepository.getTotalEventCommission(eventId);
@@ -297,15 +241,11 @@ public class CommissionService {
         return new EventRevenueStats(totalRevenue, totalCommission, netRevenue);
     }
 
-    // ==================== Helpers ====================
-
     private void validateCommissionRate(BigDecimal rate, String fieldName) {
         if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(new BigDecimal("100")) > 0) {
             throw new BadRequestException(fieldName + " must be between 0% and 100%");
         }
     }
-
-    // ==================== DTOs for Stats ====================
 
     public record PlatformCommissionStats(
             BigDecimal totalCommission,

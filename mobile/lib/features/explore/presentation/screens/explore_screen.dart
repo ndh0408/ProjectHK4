@@ -14,7 +14,6 @@ import '../../../../shared/models/event.dart';
 import '../../../../shared/models/organiser_profile.dart';
 import '../../../home/providers/events_provider.dart';
 
-// Providers
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   return api.getCategories();
@@ -39,7 +38,6 @@ final hcmEventsProvider = FutureProvider<List<Event>>((ref) async {
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
-// Category icon mapping
 IconData _getCategoryIcon(String name) {
   final lower = name.toLowerCase();
   if (lower.contains('tech') || lower.contains('technology')) {
@@ -120,7 +118,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             children: [
               const SizedBox(height: 8),
 
-              // ─── Search Bar ───
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: GestureDetector(
@@ -152,7 +149,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
               const SizedBox(height: 24),
 
-              // ─── Popular Events ───
               _SectionHeader(
                 title: 'Ho Chi Minh City',
                 subtitle: l10n.popularEvents,
@@ -203,7 +199,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
               const SizedBox(height: 28),
 
-              // ─── Browse by Category ───
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
@@ -241,7 +236,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
               const SizedBox(height: 28),
 
-              // ─── Cities ───
               _SectionHeader(
                 title: l10n.cities,
                 onViewAll: () => context.push('/cities'),
@@ -272,7 +266,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
               const SizedBox(height: 28),
 
-              // ─── Featured Calendars / Organisers ───
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
@@ -320,9 +313,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 }
 
-// ─────────────────────────────────────────────
-// Section Header - "Title" with "View All >"
-// ─────────────────────────────────────────────
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
@@ -395,10 +385,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// Popular Event Card (Eventbrite-style list item)
-// Thumbnail left | Organiser + Title + Date right
-// ─────────────────────────────────────────────
 class _PopularEventCard extends StatelessWidget {
   const _PopularEventCard({required this.event, required this.onTap});
 
@@ -418,7 +404,6 @@ class _PopularEventCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail
             Stack(
               children: [
                 ClipRRect(
@@ -444,7 +429,6 @@ class _PopularEventCard extends StatelessWidget {
                           ),
                   ),
                 ),
-                // Sold Out badge
                 if (event.isFull)
                   Positioned(
                     top: 6,
@@ -470,15 +454,12 @@ class _PopularEventCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser row
                   Row(
                     children: [
-                      // Organiser avatar
                       Container(
                         width: 20,
                         height: 20,
@@ -545,7 +526,6 @@ class _PopularEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Event title
                   Text(
                     event.title,
                     maxLines: 2,
@@ -559,7 +539,6 @@ class _PopularEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Date & Time + Price
                   Row(
                     children: [
                       const Icon(Icons.schedule,
@@ -574,7 +553,6 @@ class _PopularEventCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Price badge
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
@@ -602,9 +580,6 @@ class _PopularEventCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// Category Chip (horizontal pill with icon)
-// ─────────────────────────────────────────────
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({required this.category, required this.onTap});
 
@@ -650,9 +625,6 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// City Card (horizontal scroll list item)
-// ─────────────────────────────────────────────
 class _CityCard extends StatelessWidget {
   const _CityCard({
     required this.city,
@@ -676,7 +648,6 @@ class _CityCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Background image
               imageUrl != null
                   ? CachedNetworkImage(
                       imageUrl: imageUrl,
@@ -708,7 +679,6 @@ class _CityCard extends StatelessWidget {
                       ),
                     ),
 
-              // Gradient overlay
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -722,7 +692,6 @@ class _CityCard extends StatelessWidget {
                 ),
               ),
 
-              // City name
               Positioned(
                 left: 12,
                 bottom: 12,
@@ -753,24 +722,22 @@ class _CityCard extends StatelessWidget {
   }
 }
 
-// Strip markdown syntax from text
 String _stripMarkdown(String text) {
   return text
-      .replaceAll(RegExp(r'#{1,6}\s*'), '')  // Remove headers (# ## ### etc)
-      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')  // Remove bold **text**
-      .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')  // Remove italic *text*
-      .replaceAll(RegExp(r'__(.+?)__'), r'$1')  // Remove bold __text__
-      .replaceAll(RegExp(r'_(.+?)_'), r'$1')  // Remove italic _text_
-      .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')  // Remove strikethrough
-      .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1')  // Remove links [text](url)
-      .replaceAll(RegExp(r'`(.+?)`'), r'$1')  // Remove inline code
-      .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')  // Remove list markers
-      .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')  // Remove numbered list
-      .replaceAll(RegExp(r'\n{2,}'), '\n')  // Reduce multiple newlines
+      .replaceAll(RegExp(r'#{1,6}\s*'), '')
+      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
+      .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
+      .replaceAll(RegExp(r'__(.+?)__'), r'$1')
+      .replaceAll(RegExp(r'_(.+?)_'), r'$1')
+      .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
+      .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1')
+      .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+      .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'\n{2,}'), '\n')
       .trim();
 }
 
-// City image mapping
 String? _getCityImageUrl(String name) {
   final lower = name.toLowerCase();
   if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
@@ -810,10 +777,6 @@ String? _getCityImageUrl(String name) {
 }
 
 
-// ─────────────────────────────────────────────
-// Featured Calendar Card (organiser list item)
-// Compact: Avatar | Name + Stats only
-// ─────────────────────────────────────────────
 class _FeaturedCalendarCard extends StatelessWidget {
   const _FeaturedCalendarCard({
     required this.organiser,
@@ -831,7 +794,6 @@ class _FeaturedCalendarCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
-            // Avatar
             Container(
               width: 44,
               height: 44,
@@ -869,13 +831,11 @@ class _FeaturedCalendarCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Name + Stats
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name row
                   Row(
                     children: [
                       Flexible(
@@ -901,7 +861,6 @@ class _FeaturedCalendarCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  // Stats row
                   Text(
                     '${organiser.eventsCount} events • ${organiser.followersCount} followers',
                     style: TextStyle(
@@ -909,7 +868,6 @@ class _FeaturedCalendarCard extends StatelessWidget {
                       color: Colors.grey[500],
                     ),
                   ),
-                  // Bio (first 2 lines)
                   if (organiser.bio != null && organiser.bio!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -926,7 +884,6 @@ class _FeaturedCalendarCard extends StatelessWidget {
               ),
             ),
 
-            // Arrow icon
             Icon(
               Icons.chevron_right,
               color: Colors.grey[400],
@@ -939,9 +896,6 @@ class _FeaturedCalendarCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────
-// Error Message Widget
-// ─────────────────────────────────────────────
 class _ErrorMessage extends StatelessWidget {
   const _ErrorMessage({required this.message, this.onRetry});
 

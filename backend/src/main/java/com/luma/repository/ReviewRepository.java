@@ -16,21 +16,17 @@ import java.util.UUID;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
-    // Only show non-flagged reviews to public (or flagged with toxicity < 80)
     @Query("SELECT r FROM Review r WHERE r.event = :event AND (r.flagged = false OR r.toxicityScore < 80) ORDER BY r.createdAt DESC")
     Page<Review> findByEventOrderByCreatedAtDesc(@Param("event") Event event, Pageable pageable);
 
     Page<Review> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
-    // For organiser to see all reviews including flagged ones
     @Query("SELECT r FROM Review r WHERE r.event = :event ORDER BY r.createdAt DESC")
     Page<Review> findAllByEventOrderByCreatedAtDesc(@Param("event") Event event, Pageable pageable);
 
-    // Get flagged reviews for organiser
     @Query("SELECT r FROM Review r WHERE r.event.organiser = :organiser AND r.flagged = true ORDER BY r.createdAt DESC")
     Page<Review> findFlaggedReviewsByOrganiser(@Param("organiser") User organiser, Pageable pageable);
 
-    // Count flagged reviews for organiser
     @Query("SELECT COUNT(r) FROM Review r WHERE r.event.organiser = :organiser AND r.flagged = true")
     long countFlaggedByOrganiser(@Param("organiser") User organiser);
 

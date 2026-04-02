@@ -1,9 +1,4 @@
-/* ========================================
-   LUMA Admin - CSS Variables & Base Styles
-   ======================================== */
-
 :root {
-    /* Primary Colors - Indigo/Purple */
     --primary-50: #eef2ff;
     --primary-100: #e0e7ff;
     --primary-200: #c7d2fe;
@@ -15,7 +10,6 @@
     --primary-800: #3730a3;
     --primary-900: #312e81;
 
-    /* Secondary Colors - Pink */
     --secondary-50: #fdf2f8;
     --secondary-100: #fce7f3;
     --secondary-200: #fbcfe8;
@@ -27,7 +21,6 @@
     --secondary-800: #9d174d;
     --secondary-900: #831843;
 
-    /* Success Colors - Emerald */
     --success-50: #ecfdf5;
     --success-100: #d1fae5;
     --success-200: #a7f3d0;
@@ -39,7 +32,6 @@
     --success-800: #065f46;
     --success-900: #064e3b;
 
-    /* Warning Colors - Amber */
     --warning-50: #fffbeb;
     --warning-100: #fef3c7;
     --warning-200: #fde68a;
@@ -51,7 +43,6 @@
     --warning-800: #92400e;
     --warning-900: #78350f;
 
-    /* Error Colors - Red */
     --error-50: #fef2f2;
     --error-100: #fee2e2;
     --error-200: #fecaca;
@@ -63,7 +54,6 @@
     --error-800: #991b1b;
     --error-900: #7f1d1d;
 
-    /* Info Colors - Blue */
     --info-50: #eff6ff;
     --info-100: #dbeafe;
     --info-200: #bfdbfe;
@@ -75,7 +65,6 @@
     --info-800: #1e40af;
     --info-900: #1e3a8a;
 
-    /* Neutral Colors - Slate */
     --neutral-50: #f8fafc;
     --neutral-100: #f1f5f9;
     --neutral-200: #e2e8f0;
@@ -87,7 +76,6 @@
     --neutral-800: #1e293b;
     --neutral-900: #0f172a;
 
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
     --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
@@ -99,7 +87,6 @@
     --gradient-blue-cyan: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
     --gradient-green-teal: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
 
-    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -109,7 +96,6 @@
     --shadow-secondary: 0 4px 14px 0 rgba(236, 72, 153, 0.4);
     --shadow-success: 0 4px 14px 0 rgba(16, 185, 129, 0.4);
 
-    /* Border Radius */
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 12px;
@@ -117,17 +103,14 @@
     --radius-2xl: 20px;
     --radius-full: 9999px;
 
-    /* Transitions */
     --transition-fast: 150ms ease;
     --transition-normal: 200ms ease;
     --transition-slow: 300ms ease;
 
-    /* Spacing */
     --sidebar-width: 280px;
     --header-height: 70px;
 }
 
-/* Global Styles */
 * {
     margin: 0;
     padding: 0;
@@ -152,7 +135,6 @@ body {
     min-height: 100vh;
 }
 
-/* Scrollbar Styles */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -171,7 +153,6 @@ body {
     background: var(--neutral-400);
 }
 
-/* Selection */
 ::selection {
     background-color: var(--primary-200);
     color: var(--primary-900);

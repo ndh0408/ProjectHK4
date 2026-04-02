@@ -1,12 +1,7 @@
-/* ========================================
-   LUMA Admin - Dashboard Styles
-   ======================================== */
-
 .dashboard {
     padding: 0;
 }
 
-/* Page Header */
 .dashboard-header {
     margin-bottom: 32px;
 }
@@ -24,7 +19,6 @@
     margin: 0;
 }
 
-/* Stats Cards Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
@@ -44,7 +38,6 @@
     }
 }
 
-/* Stat Card */
 .stat-card {
     background: white;
     border-radius: var(--radius-xl);
@@ -172,7 +165,6 @@
     font-size: 28px;
 }
 
-/* Charts Grid */
 .charts-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -190,7 +182,6 @@
     grid-template-columns: 1fr;
 }
 
-/* Chart Card */
 .chart-card {
     background: white;
     border-radius: var(--radius-xl);
@@ -245,7 +236,6 @@
     background: var(--success-500);
 }
 
-/* Recent Activity / List */
 .activity-list {
     list-style: none;
     padding: 0;
@@ -350,7 +340,6 @@
     color: var(--neutral-600);
 }
 
-/* Empty State */
 .empty-state {
     text-align: center;
     padding: 48px 24px;
@@ -368,7 +357,6 @@
     margin: 0;
 }
 
-/* Quick Actions */
 .quick-actions {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

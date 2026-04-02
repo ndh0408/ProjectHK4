@@ -29,33 +29,26 @@ public class AnalyticsService {
     private final CategoryRepository categoryRepository;
     private final CityRepository cityRepository;
 
-    /**
-     * Get comprehensive dashboard analytics for admin
-     */
     public DashboardAnalyticsResponse getDashboardAnalytics() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
         LocalDateTime startOfLastMonth = startOfMonth.minusMonths(1);
 
-        // Users metrics
         long totalUsers = userRepository.count();
         long usersThisMonth = userRepository.countByCreatedAtAfter(startOfMonth);
         long usersLastMonth = userRepository.countByCreatedAtBetween(startOfLastMonth, startOfMonth);
         double userGrowth = calculateGrowthPercent(usersLastMonth, usersThisMonth);
 
-        // Events metrics
         long totalEvents = eventRepository.count();
         long eventsThisMonth = eventRepository.countByCreatedAtAfter(startOfMonth);
         long eventsLastMonth = eventRepository.countByCreatedAtBetween(startOfLastMonth, startOfMonth);
         double eventGrowth = calculateGrowthPercent(eventsLastMonth, eventsThisMonth);
 
-        // Registrations metrics
         long totalRegistrations = registrationRepository.count();
         long registrationsThisMonth = registrationRepository.countByCreatedAtAfter(startOfMonth);
         long registrationsLastMonth = registrationRepository.countByCreatedAtBetween(startOfLastMonth, startOfMonth);
         double registrationGrowth = calculateGrowthPercent(registrationsLastMonth, registrationsThisMonth);
 
-        // Revenue metrics
         BigDecimal totalRevenue = paymentRepository.calculateTotalRevenue();
         BigDecimal revenueThisMonth = paymentRepository.calculateRevenueBetween(startOfMonth, now);
         BigDecimal revenueLastMonth = paymentRepository.calculateRevenueBetween(startOfLastMonth, startOfMonth);
@@ -89,9 +82,6 @@ public class AnalyticsService {
                 .build();
     }
 
-    /**
-     * Get user growth over past N months
-     */
     public List<TimeSeriesData> getUserGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -111,9 +101,6 @@ public class AnalyticsService {
         return data;
     }
 
-    /**
-     * Get event growth over past N months
-     */
     public List<TimeSeriesData> getEventGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -133,9 +120,6 @@ public class AnalyticsService {
         return data;
     }
 
-    /**
-     * Get registration growth over past N months
-     */
     public List<TimeSeriesData> getRegistrationGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -155,9 +139,6 @@ public class AnalyticsService {
         return data;
     }
 
-    /**
-     * Get revenue chart over past N months
-     */
     public List<TimeSeriesData> getRevenueChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -177,9 +158,6 @@ public class AnalyticsService {
         return data;
     }
 
-    /**
-     * Get events distribution by category
-     */
     public List<CategoryDistribution> getEventsByCategory() {
         List<Object[]> results = eventRepository.countEventsByCategory();
         long totalEvents = eventRepository.count();
@@ -195,9 +173,6 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get events distribution by city (top N)
-     */
     public List<CityDistribution> getEventsByCity(int limit) {
         List<Object[]> results = eventRepository.countEventsByCity();
         long totalEvents = eventRepository.count();
@@ -215,9 +190,6 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get events distribution by status
-     */
     public List<StatusDistribution> getEventsByStatus() {
         List<StatusDistribution> data = new ArrayList<>();
         long totalEvents = eventRepository.count();
@@ -234,9 +206,6 @@ public class AnalyticsService {
         return data;
     }
 
-    /**
-     * Get top organisers by registrations
-     */
     public List<TopOrganiser> getTopOrganisers(int limit) {
         List<Object[]> results = eventRepository.findTopOrganisersByRegistrations(limit);
 
@@ -253,9 +222,6 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get top events by registrations
-     */
     public List<TopEvent> getTopEvents(int limit) {
         List<Object[]> results = eventRepository.findTopEventsByRegistrations(limit);
 
@@ -279,9 +245,6 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get organiser-specific analytics
-     */
     public OrganiserAnalyticsResponse getOrganiserAnalytics(UUID organiserId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);

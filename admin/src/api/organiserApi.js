@@ -60,6 +60,7 @@ const organiserApi = {
     generateSpeakerBio: (data) => api.post('/organiser/events/ai/generate-speaker-bio', data),
     generateNotification: (data) => api.post('/organiser/events/ai/generate-notification', data),
     suggestRegistrationQuestions: (data) => api.post('/organiser/events/ai/suggest-questions', data),
+    generateFullEvent: (data) => api.post('/organiser/events/ai/generate-event', data),
 
     getRegistrationQuestions: (eventId) => api.get(`/organiser/events/${eventId}/registration-questions`),
     saveRegistrationQuestions: (eventId, questions) => api.post(`/organiser/events/${eventId}/registration-questions/batch`, questions),
@@ -84,7 +85,6 @@ const organiserApi = {
 
     generateBio: (data) => api.post('/organiser/profile/ai/generate-bio', data),
 
-    // Event Boost
     getBoostPackages: () => api.get('/organiser/boosts/packages'),
     createBoost: (data) => api.post('/organiser/boosts', data),
     createBoostCheckout: (data) => api.post('/organiser/boosts/checkout', data),
@@ -100,7 +100,6 @@ const organiserApi = {
     extendBoost: (boostId) => api.post(`/organiser/boosts/${boostId}/extend`),
     upgradeBoost: (boostId, newPackage) => api.post(`/organiser/boosts/${boostId}/upgrade`, null, { params: { newPackage } }),
 
-    // Subscription
     getSubscriptionPlans: () => api.get('/organiser/subscription/plans'),
     getMySubscription: () => api.get('/organiser/subscription'),
     upgradePlan: (plan) => api.post(`/organiser/subscription/upgrade/${plan}`),

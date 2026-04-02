@@ -4,19 +4,16 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Provider for connectivity state
 final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, ConnectivityState>((ref) {
   return ConnectivityNotifier();
 });
 
-/// Connectivity state enum
 enum ConnectivityStatus {
   online,
   offline,
   checking,
 }
 
-/// Connectivity state class
 class ConnectivityState {
   const ConnectivityState({
     required this.status,
@@ -40,7 +37,6 @@ class ConnectivityState {
   }
 }
 
-/// Connectivity notifier that periodically checks internet connection
 class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
   ConnectivityNotifier() : super(const ConnectivityState(status: ConnectivityStatus.checking)) {
     _init();
@@ -57,7 +53,6 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
 
   Future<void> _checkConnectivity() async {
     try {
-      // Try to reach a reliable server
       final result = await InternetAddress.lookup('google.com')
           .timeout(_timeout);
 
@@ -87,7 +82,6 @@ class ConnectivityNotifier extends StateNotifier<ConnectivityState> {
     }
   }
 
-  /// Manually trigger a connectivity check
   Future<void> checkNow() async {
     await _checkConnectivity();
   }

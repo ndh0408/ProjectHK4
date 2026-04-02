@@ -77,7 +77,6 @@ class _SavedEventItem extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: event.imageUrl != null
@@ -92,15 +91,12 @@ class _SavedEventItem extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
 
-            // Event Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser row with avatar
                   Row(
                     children: [
-                      // Organiser avatar
                       CircleAvatar(
                         radius: 10,
                         backgroundColor: Colors.grey[300],
@@ -126,7 +122,6 @@ class _SavedEventItem extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Bookmark icon (tap to remove)
                       GestureDetector(
                         onTap: () async {
                           await ref.read(bookmarkNotifierProvider.notifier).toggle(event.id);
@@ -150,7 +145,6 @@ class _SavedEventItem extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Event Title
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -163,7 +157,6 @@ class _SavedEventItem extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Date, Time and Location
                   Row(
                     children: [
                       Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),

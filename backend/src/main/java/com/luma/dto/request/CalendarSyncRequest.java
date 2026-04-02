@@ -17,5 +17,5 @@ public class CalendarSyncRequest {
     @NotNull(message = "Registration ID is required")
     private UUID registrationId;
 
-    private String calendarId; // Optional, default to primary
+    private String calendarId;
 }

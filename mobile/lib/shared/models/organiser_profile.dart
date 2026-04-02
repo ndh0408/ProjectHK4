@@ -35,7 +35,6 @@ class OrganiserProfile {
       contactEmail: json['contactEmail'] as String?,
       contactPhone: json['contactPhone'] as String?,
       verified: json['verified'] as bool? ?? false,
-      // Backend returns totalFollowers and totalEvents
       followerCount: (json['totalFollowers'] as num?)?.toInt() ?? (json['followerCount'] as num?)?.toInt() ?? 0,
       eventsCount: (json['totalEvents'] as num?)?.toInt() ?? (json['eventsCount'] as num?)?.toInt() ?? 0,
     );
@@ -56,7 +55,6 @@ class OrganiserProfile {
   final int followerCount;
   final int eventsCount;
 
-  // Alias for backwards compatibility
   int get followersCount => followerCount;
 
   Map<String, dynamic> toJson() => _$OrganiserProfileToJson(this);

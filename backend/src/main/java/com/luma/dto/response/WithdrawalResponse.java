@@ -11,9 +11,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Response DTO for withdrawal request
- */
 @Data
 @Builder
 @NoArgsConstructor

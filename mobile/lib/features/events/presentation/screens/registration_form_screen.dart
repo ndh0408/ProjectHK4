@@ -51,10 +51,8 @@ class _RegistrationFormScreenState
     try {
       final api = ref.read(apiServiceProvider);
 
-      // Check if user already has a pending registration that needs payment
       final regStatus = await api.getRegistrationStatus(widget.eventId);
       if (regStatus.isRegistered && regStatus.requiresPayment && regStatus.registrationId != null) {
-        // Already registered but needs payment - redirect to payment screen
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -69,7 +67,6 @@ class _RegistrationFormScreenState
         return;
       }
 
-      // Load questions for new registration
       await _loadQuestions();
     } catch (e) {
       setState(() {
@@ -86,7 +83,6 @@ class _RegistrationFormScreenState
       setState(() {
         _questions = questions;
         _isLoading = false;
-        // Initialize answers map
         for (final q in questions) {
           if (q.questionType == QuestionType.multipleChoice) {
             _answers[q.id] = <String>[];
@@ -140,7 +136,6 @@ class _RegistrationFormScreenState
     try {
       final api = ref.read(apiServiceProvider);
 
-      // Check if user already has a pending registration (e.g., payment failed before)
       final regStatus = await api.getRegistrationStatus(widget.eventId);
       debugPrint('=== Registration Status Check ===');
       debugPrint('isRegistered: ${regStatus.isRegistered}');
@@ -150,9 +145,7 @@ class _RegistrationFormScreenState
       debugPrint('status: ${regStatus.status}');
 
       if (regStatus.isRegistered && regStatus.registrationId != null) {
-        // Already has registration - check if it needs payment
         if (regStatus.requiresPayment) {
-          // Go directly to payment screen
           debugPrint('=== Navigating to PaymentScreen (existing registration) ===');
           if (!mounted) return;
           Navigator.pushReplacement(
@@ -167,7 +160,6 @@ class _RegistrationFormScreenState
           );
           return;
         } else {
-          // Already registered and doesn't need payment - show message and go back
           debugPrint('=== Already registered, no payment needed ===');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -182,7 +174,6 @@ class _RegistrationFormScreenState
         }
       }
 
-      // Convert answers to list format
       final answersList = _questions.map((q) {
         final answer = _answers[q.id];
         String answerText;
@@ -275,7 +266,6 @@ class _RegistrationFormScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Event info header
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -306,7 +296,6 @@ class _RegistrationFormScreenState
 
           const SizedBox(height: 24),
 
-          // Questions list
           ...List.generate(_questions.length, (index) {
             final question = _questions[index];
             return Padding(
@@ -315,7 +304,7 @@ class _RegistrationFormScreenState
             );
           }),
 
-          const SizedBox(height: 80), // Space for submit button
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -325,7 +314,6 @@ class _RegistrationFormScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Question header
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

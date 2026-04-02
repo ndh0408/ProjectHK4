@@ -32,22 +32,21 @@ public class Review {
     private Event event;
 
     @Column(nullable = false)
-    private int rating; // 1-5
+    private int rating;
 
     @Column(columnDefinition = "NVARCHAR(1000)")
     private String comment;
 
-    // AI Moderation fields
-    private Integer toxicityScore; // 0-100
+    private Integer toxicityScore;
 
     @Column(columnDefinition = "NVARCHAR(200)")
-    private String moderationCategories; // Comma-separated: SPAM,TOXIC,etc.
+    private String moderationCategories;
 
     @Column(columnDefinition = "NVARCHAR(500)")
     private String moderationReason;
 
     @Builder.Default
-    private boolean flagged = false; // True if toxicityScore >= 60
+    private boolean flagged = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

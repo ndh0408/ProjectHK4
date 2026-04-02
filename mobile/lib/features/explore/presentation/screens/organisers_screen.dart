@@ -102,7 +102,6 @@ class _OrganiserCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Avatar
               Stack(
                 children: [
                   CircleAvatar(
@@ -143,7 +142,6 @@ class _OrganiserCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              // Name
               Text(
                 organiser.displayName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -155,7 +153,6 @@ class _OrganiserCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // Stats
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

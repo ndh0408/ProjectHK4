@@ -52,24 +52,6 @@ const SpeakerForm = ({ speakers = [], onChange, errors = [], eventTitle = '', su
             return;
         }
 
-        // Check AI quota before using
-        if (subscription) {
-            const remaining = subscription.remainingAIUsage;
-            if (remaining === 0) {
-                if (onUpgradeNeeded) {
-                    onUpgradeNeeded({
-                        message: `You have reached your monthly AI usage limit (${subscription.maxAIUsagePerMonth} generations). Upgrade your plan to use more AI features.`,
-                        feature: 'AI Generation',
-                    });
-                }
-                return;
-            }
-            // Warning if near quota (3 or less remaining)
-            if (remaining !== -1 && remaining <= 3) {
-                toast.warning(`You have ${remaining} AI generation${remaining > 1 ? 's' : ''} remaining this month.`);
-            }
-        }
-
         setAiLoading({ ...aiLoading, [index]: true });
         try {
             const response = await organiserApi.generateSpeakerBio({
@@ -79,7 +61,6 @@ const SpeakerForm = ({ speakers = [], onChange, errors = [], eventTitle = '', su
             });
             handleSpeakerChange(index, 'bio', response.data.data.bio);
             toast.success('Bio generated!');
-            // Notify parent to refresh subscription
             if (onAIUsed) {
                 onAIUsed();
             }

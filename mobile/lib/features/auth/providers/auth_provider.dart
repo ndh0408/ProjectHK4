@@ -108,8 +108,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final result = await _repository.verifyOtp(phone, code);
       final verified = result['verified'] as bool? ?? false;
       if (verified) {
-        // OTP verified but backend doesn't return user info
-        // User should then complete registration or login with phone
         state = const Unauthenticated();
         return true;
       } else {
@@ -133,7 +131,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        // User cancelled the sign-in
         state = const Unauthenticated();
         return;
       }
@@ -150,13 +147,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('ID Token: ${idToken != null ? '${idToken.substring(0, 50)}...' : 'NULL'}');
       debugPrint('Access Token: ${accessToken != null ? '${accessToken.substring(0, 50)}...' : 'NULL'}');
 
-      // On Web, idToken may be null. Use accessToken + user info instead
       if (idToken != null) {
-        // Mobile: Use idToken for verification
         final user = await _repository.googleAuth(idToken);
         state = Authenticated(user);
       } else if (accessToken != null) {
-        // Web: Use accessToken + Google user info
         final user = await _repository.googleAuthWithAccessToken(
           accessToken: accessToken,
           email: googleUser.email,
@@ -178,11 +172,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     state = const AuthLoading();
-    // Sign out from Google as well
     try {
       await _googleSignIn.signOut();
     } catch (_) {
-      // Ignore Google sign out errors
     }
     await _repository.logout();
     state = const Unauthenticated();
@@ -195,10 +187,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-/// Mark a future as intentionally not awaited.
 void unawaited(Future<void>? future) {}
 
-// Convenience providers
 final isAuthenticatedProvider = Provider<bool>((ref) {
   final authState = ref.watch(authProvider);
   return authState is Authenticated;

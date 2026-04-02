@@ -5,10 +5,8 @@ import '../../../shared/models/event.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../data/events_repository.dart';
 
-// Use autoDispose to ensure state is cleared when user changes
 final eventsProvider =
     StateNotifierProvider.autoDispose<EventsNotifier, EventsState>((ref) {
-  // Watch current user to ensure fresh data when user changes
   ref.watch(currentUserProvider);
   return EventsNotifier(ref.watch(eventsRepositoryProvider));
 });
@@ -88,9 +86,6 @@ class EventsNotifier extends StateNotifier<EventsState> {
 
 final selectedEventProvider = StateProvider.autoDispose<Event?>((ref) => null);
 
-// ==================== Bookmark Providers ====================
-
-/// Provider for bookmarked event IDs (for quick lookup)
 final bookmarkedEventIdsProvider = FutureProvider.autoDispose<Set<String>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return {};
@@ -100,7 +95,6 @@ final bookmarkedEventIdsProvider = FutureProvider.autoDispose<Set<String>>((ref)
   return ids.toSet();
 });
 
-/// Provider for bookmarked events list
 final bookmarkedEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
@@ -110,7 +104,6 @@ final bookmarkedEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) a
   return response.content;
 });
 
-/// Notifier for managing bookmark state
 class BookmarkNotifier extends StateNotifier<Set<String>> {
   BookmarkNotifier(this._ref) : super({}) {
     _loadBookmarks();
@@ -124,7 +117,6 @@ class BookmarkNotifier extends StateNotifier<Set<String>> {
       final ids = await api.getBookmarkedEventIds();
       state = ids.toSet();
     } catch (_) {
-      // Ignore errors on initial load
     }
   }
 
@@ -138,7 +130,6 @@ class BookmarkNotifier extends StateNotifier<Set<String>> {
       state = {...state}..remove(eventId);
     }
 
-    // Refresh bookmarked events list
     _ref.invalidate(bookmarkedEventsProvider);
 
     return isNowBookmarked;
@@ -152,15 +143,11 @@ final bookmarkNotifierProvider = StateNotifierProvider.autoDispose<BookmarkNotif
   return BookmarkNotifier(ref);
 });
 
-// ==================== VIP Banner Providers ====================
-
-/// Provider for VIP banner events (VIP package only - for home page banner carousel)
 final vipBannerEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   return api.getHomeBannerEvents();
 });
 
-/// Provider for boosted featured events (PREMIUM + VIP - for featured section)
 final boostedFeaturedEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   return api.getBoostedFeaturedEvents();

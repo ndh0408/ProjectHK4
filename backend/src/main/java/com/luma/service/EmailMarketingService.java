@@ -48,8 +48,6 @@ public class EmailMarketingService {
     @Value("${app.base-url}")
     private String baseUrl;
 
-    // ==================== Campaign CRUD ====================
-
     @Transactional
     public EmailCampaignResponse createCampaign(User admin, EmailCampaignRequest request) {
         EmailCampaign campaign = EmailCampaign.builder()
@@ -62,7 +60,6 @@ public class EmailMarketingService {
                 .createdBy(admin)
                 .build();
 
-        // Set audience filter as JSON
         if (request.getAudienceFilter() != null) {
             try {
                 campaign.setAudienceFilter(objectMapper.writeValueAsString(request.getAudienceFilter()));
@@ -71,14 +68,12 @@ public class EmailMarketingService {
             }
         }
 
-        // Set related event
         if (request.getRelatedEventId() != null) {
             Event event = eventRepository.findById(request.getRelatedEventId())
                     .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
             campaign.setRelatedEvent(event);
         }
 
-        // Set schedule
         if (request.getScheduledAt() != null) {
             if (request.getScheduledAt().isBefore(LocalDateTime.now())) {
                 throw new BadRequestException("Scheduled time must be in the future");
@@ -89,7 +84,6 @@ public class EmailMarketingService {
 
         campaignRepository.save(campaign);
 
-        // Build recipient list
         buildRecipientList(campaign, request.getAudienceFilter());
 
         return EmailCampaignResponse.fromEntity(campaign);
@@ -127,7 +121,6 @@ public class EmailMarketingService {
             campaign.setStatus(EmailCampaignStatus.SCHEDULED);
         }
 
-        // Rebuild recipient list
         recipientRepository.deleteByCampaignId(campaignId);
         buildRecipientList(campaign, request.getAudienceFilter());
 
@@ -164,8 +157,6 @@ public class EmailMarketingService {
         campaignRepository.delete(campaign);
     }
 
-    // ==================== Campaign Actions ====================
-
     @Transactional
     public EmailCampaignResponse sendCampaignNow(UUID campaignId) {
         EmailCampaign campaign = campaignRepository.findById(campaignId)
@@ -180,7 +171,6 @@ public class EmailMarketingService {
         campaign.setScheduledAt(null);
         campaignRepository.save(campaign);
 
-        // Send asynchronously
         sendCampaignEmails(campaign);
 
         return EmailCampaignResponse.fromEntity(campaign);
@@ -217,9 +207,7 @@ public class EmailMarketingService {
         return EmailCampaignResponse.fromEntity(campaign);
     }
 
-    // ==================== Scheduled Tasks ====================
-
-    @Scheduled(fixedRate = 60000) // Check every minute
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void processScheduledCampaigns() {
         List<EmailCampaign> scheduledCampaigns = campaignRepository.findScheduledCampaignsToSend(
@@ -232,8 +220,6 @@ public class EmailMarketingService {
         }
     }
 
-    // ==================== Email Sending ====================
-
     @Async
     @Transactional
     public void sendCampaignEmails(EmailCampaign campaign) {
@@ -243,7 +229,6 @@ public class EmailMarketingService {
         int bounceCount = 0;
 
         for (EmailCampaignRecipient recipient : recipients) {
-            // Skip unsubscribed emails
             if (unsubscribeRepository.existsByEmail(recipient.getEmail())) {
                 continue;
             }
@@ -263,7 +248,6 @@ public class EmailMarketingService {
             recipientRepository.save(recipient);
         }
 
-        // Update campaign stats
         campaign.setSentCount(campaign.getSentCount() + sentCount);
         campaign.setBounceCount(campaign.getBounceCount() + bounceCount);
         campaign.setStatus(EmailCampaignStatus.SENT);
@@ -281,7 +265,6 @@ public class EmailMarketingService {
         helper.setTo(recipient.getEmail());
         helper.setSubject(campaign.getSubject());
 
-        // Add tracking pixel and unsubscribe link
         String html = addTrackingToHtml(campaign.getHtmlContent(), recipient.getId(), campaign.getId());
         helper.setText(campaign.getPlainTextContent() != null ? campaign.getPlainTextContent() : "", html);
 
@@ -289,18 +272,15 @@ public class EmailMarketingService {
     }
 
     private String addTrackingToHtml(String html, UUID recipientId, UUID campaignId) {
-        // Add tracking pixel for open tracking
         String trackingPixel = String.format(
                 "<img src=\"%s/api/email/track/open/%s\" width=\"1\" height=\"1\" style=\"display:none\" />",
                 baseUrl, recipientId);
 
-        // Add unsubscribe link
         String unsubscribeLink = String.format(
                 "<p style=\"margin-top:20px;font-size:12px;color:#888;\">If you no longer wish to receive these emails, " +
                 "<a href=\"%s/api/email/unsubscribe/%s\">unsubscribe here</a>.</p>",
                 baseUrl, recipientId);
 
-        // Insert before closing body tag
         if (html.contains("</body>")) {
             html = html.replace("</body>", trackingPixel + unsubscribeLink + "</body>");
         } else {
@@ -310,8 +290,6 @@ public class EmailMarketingService {
         return html;
     }
 
-    // ==================== Tracking ====================
-
     @Transactional
     public void trackOpen(UUID recipientId) {
         recipientRepository.findById(recipientId).ifPresent(recipient -> {
@@ -320,7 +298,6 @@ public class EmailMarketingService {
                 recipient.setOpenedAt(LocalDateTime.now());
                 recipientRepository.save(recipient);
 
-                // Update campaign stats
                 EmailCampaign campaign = recipient.getCampaign();
                 campaign.setOpenCount(campaign.getOpenCount() + 1);
                 campaignRepository.save(campaign);
@@ -336,7 +313,6 @@ public class EmailMarketingService {
                 recipient.setClickedAt(LocalDateTime.now());
                 recipientRepository.save(recipient);
 
-                // Update campaign stats
                 EmailCampaign campaign = recipient.getCampaign();
                 campaign.setClickCount(campaign.getClickCount() + 1);
                 campaignRepository.save(campaign);
@@ -350,12 +326,10 @@ public class EmailMarketingService {
             recipient.setUnsubscribed(true);
             recipientRepository.save(recipient);
 
-            // Update campaign stats
             EmailCampaign campaign = recipient.getCampaign();
             campaign.setUnsubscribeCount(campaign.getUnsubscribeCount() + 1);
             campaignRepository.save(campaign);
 
-            // Add to global unsubscribe list
             if (!unsubscribeRepository.existsByEmail(recipient.getEmail())) {
                 EmailUnsubscribe unsubscribe = EmailUnsubscribe.builder()
                         .email(recipient.getEmail())
@@ -367,8 +341,6 @@ public class EmailMarketingService {
             }
         });
     }
-
-    // ==================== Statistics ====================
 
     public EmailMarketingStatsResponse getMarketingStats() {
         long totalSent = campaignRepository.getTotalEmailsSent();
@@ -392,18 +364,14 @@ public class EmailMarketingService {
                 .build();
     }
 
-    // ==================== Helper Methods ====================
-
     private void buildRecipientList(EmailCampaign campaign, EmailCampaignRequest.AudienceFilter filter) {
         List<User> targetUsers;
 
         if (filter == null) {
-            // All users with email notifications enabled
             targetUsers = userRepository.findAll().stream()
                     .filter(User::isEmailNotificationsEnabled)
                     .collect(Collectors.toList());
         } else {
-            // Apply filters
             targetUsers = userRepository.findAll().stream()
                     .filter(User::isEmailNotificationsEnabled)
                     .filter(user -> {
@@ -415,7 +383,6 @@ public class EmailMarketingService {
                     .collect(Collectors.toList());
         }
 
-        // Filter out unsubscribed emails
         Set<String> unsubscribedEmails = unsubscribeRepository.findAll().stream()
                 .map(EmailUnsubscribe::getEmail)
                 .collect(Collectors.toSet());

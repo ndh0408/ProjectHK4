@@ -153,9 +153,6 @@ public class AIService {
                langHint;
     }
 
-    /**
-     * Generate event description using AI
-     */
     public String generateEventDescription(String title, String category, String venue,
                                            String address, String startTime, String endTime) {
         String systemPrompt = """
@@ -193,9 +190,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 800);
     }
 
-    /**
-     * Improve existing event description using AI
-     */
     public String improveEventDescription(String title, String currentDescription) {
         String systemPrompt = """
             You are an expert editor and event marketing specialist. Your task is to improve event descriptions.
@@ -218,9 +212,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt, 800);
     }
 
-    /**
-     * Generate speaker bio using AI
-     */
     public String generateSpeakerBio(String name, String title, String eventTitle) {
         String systemPrompt = """
             You are a professional bio writer. Your task is to write a brief, professional speaker bio.
@@ -245,9 +236,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 200);
     }
 
-    /**
-     * Generate notification message using AI
-     */
     public String generateNotificationMessage(String eventTitle, String notificationType, String additionalContext) {
         String systemPrompt = """
             You are an event communication specialist. Your task is to write notification messages for event attendees.
@@ -271,9 +259,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 300);
     }
 
-    /**
-     * Suggest registration questions for an event using AI
-     */
     public String suggestRegistrationQuestions(String eventTitle, String eventCategory, String eventDescription, int numberOfQuestions) {
         String systemPrompt = """
             You are an event registration specialist. Your task is to suggest registration questions for event organizers.
@@ -312,9 +297,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
-    /**
-     * Generate AI insights and recommendations for organiser dashboard
-     */
     public String generateDashboardInsights(
             long totalEvents, long publishedEvents, long draftEvents,
             long totalRegistrations, long approvedRegistrations, long pendingRegistrations,
@@ -374,9 +356,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
-    /**
-     * Analyze event for admin moderation - check quality and suggest approve/reject
-     */
     public String analyzeEventForModeration(String title, String description, String organiserName,
                                              String category, String venue, String startTime,
                                              Integer capacity, Double ticketPrice) {
@@ -432,9 +411,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 800);
     }
 
-    /**
-     * Generate rejection reason for admin
-     */
     public String generateRejectionReason(String title, String description, String concerns) {
         String systemPrompt = """
             You are a professional event platform moderator. Your task is to write a polite, helpful rejection message for an event submission.
@@ -464,9 +440,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 300);
     }
 
-    /**
-     * Generate broadcast notification message for admin
-     */
     public String generateBroadcastMessage(String purpose, String targetAudience, String additionalContext) {
         String systemPrompt = """
             You are a platform communication specialist. Your task is to write broadcast notification messages for platform administrators.
@@ -492,9 +465,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 300);
     }
 
-    /**
-     * Generate admin dashboard insights based on platform statistics
-     */
     public String generateAdminInsights(long totalUsers, long totalOrganisers, long totalEvents,
                                          long totalRegistrations, long newUsersThisMonth,
                                          long newEventsThisMonth, long pendingEvents,
@@ -563,9 +533,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 1200);
     }
 
-    /**
-     * Generate organiser bio using AI
-     */
     public String generateOrganiserBio(String organizationName, String eventTypes, String targetAudience, String additionalInfo) {
         String systemPrompt = """
             You are an expert copywriter specializing in professional bios for event organizers.
@@ -604,10 +571,6 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 400);
     }
 
-    /**
-     * Moderate review content using AI - detect spam, toxic, inappropriate content
-     * Returns JSON with: isAppropriate, toxicityScore, categories, reason
-     */
     public String moderateReviewContent(String reviewText, int rating, String eventTitle) {
         String systemPrompt = """
             You are a content moderation AI for an event management platform. Your task is to analyze user reviews and detect inappropriate content.
@@ -660,9 +623,66 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 300);
     }
 
-    /**
-     * Common method to call Groq API
-     */
+    public String generateFullEvent(String eventIdea, String eventType, String targetAudience,
+                                     String preferredDate, String preferredTime, String cityName, String language) {
+        String systemPrompt = """
+            You are an expert event planner and marketing specialist. Your task is to generate a complete event proposal based on a simple idea.
+
+            IMPORTANT RULES:
+            1. Return ONLY valid JSON - no extra text before or after
+            2. Language: Write in %s (Vietnamese if "vi", English if "en")
+            3. Be creative but realistic
+            4. Generate 3 different title options
+            5. Description should be in Markdown format (150-250 words)
+            6. Suggest realistic venue based on event type and city
+            7. Capacity should match event type (workshop: 20-50, seminar: 50-200, conference: 100-500, meetup: 30-100, party: 50-300)
+            8. Price: suggest FREE for community/networking events, paid for professional/premium events
+
+            JSON format required:
+            {
+              "titleSuggestions": ["Title 1", "Title 2", "Title 3"],
+              "description": "Markdown description here...",
+              "suggestedCategory": "Technology/Business/Arts/Music/Sports/Education/Health/Food/Community/Other",
+              "suggestedVenue": "Venue name suggestion",
+              "suggestedAddress": "Full address suggestion",
+              "suggestedCapacity": 100,
+              "suggestedPrice": 0,
+              "isFree": true,
+              "suggestedSpeakers": [
+                {"name": "Speaker Name", "title": "Job Title", "bio": "Short bio 1-2 sentences"}
+              ]
+            }
+
+            For suggestedSpeakers:
+            - Workshop/Conference/Seminar: suggest 1-3 speakers with relevant expertise
+            - Meetup/Networking/Party: leave empty array []
+            """.formatted(language.equals("vi") ? "Vietnamese" : "English");
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("Generate a complete event based on this idea:\n\n");
+        userPrompt.append("Event Idea: ").append(eventIdea).append("\n");
+
+        if (eventType != null && !eventType.isEmpty()) {
+            userPrompt.append("Event Type: ").append(eventType).append("\n");
+        }
+        if (targetAudience != null && !targetAudience.isEmpty()) {
+            userPrompt.append("Target Audience: ").append(targetAudience).append("\n");
+        }
+        if (preferredDate != null && !preferredDate.isEmpty()) {
+            userPrompt.append("Preferred Date: ").append(preferredDate).append("\n");
+        }
+        if (preferredTime != null && !preferredTime.isEmpty()) {
+            userPrompt.append("Preferred Time: ").append(preferredTime).append("\n");
+        }
+        if (cityName != null && !cityName.isEmpty()) {
+            userPrompt.append("City: ").append(cityName).append("\n");
+        }
+
+        userPrompt.append("\nGenerate a complete, professional event proposal. Return ONLY valid JSON.");
+
+        return callGroqApi(systemPrompt, userPrompt.toString(), 1500);
+    }
+
     private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             log.info("Calling Groq API with model: {}", model);

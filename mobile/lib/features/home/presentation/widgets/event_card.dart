@@ -38,7 +38,6 @@ class EventCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Event Image with Status Label & Gradient Overlay
             Stack(
               children: [
                 AspectRatio(
@@ -101,7 +100,6 @@ class EventCard extends StatelessWidget {
                           ),
                         ),
                 ),
-                // Gradient overlay for better text readability
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -116,7 +114,6 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Recurring badge
                 if (event.isRecurring)
                   Positioned(
                     top: 10,
@@ -159,7 +156,6 @@ class EventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Status Label with improved design
                 if (showStatusLabel && (event.isFull || isNearlyFull))
                   Positioned(
                     top: event.isRecurring ? 45 : 10,
@@ -202,7 +198,6 @@ class EventCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Price badge (FREE or price)
                 Positioned(
                   top: 10,
                   left: 10,
@@ -244,7 +239,6 @@ class EventCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Boost badge for featured events
                 if (event.isBoosted)
                   Positioned(
                     bottom: 10,
@@ -257,14 +251,12 @@ class EventCard extends StatelessWidget {
               ],
             ),
 
-            // Event Details with improved spacing
             Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                    // Category Badge with icon
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -301,7 +293,6 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
 
-                    // Title with better typography
                     Text(
                       event.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -315,21 +306,18 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Date & Time with improved styling
                     _InfoChip(
                       icon: Icons.calendar_today_rounded,
                       text: dateFormat.format(event.startDate),
                     ),
                     const SizedBox(height: 2),
 
-                    // Location
                     _InfoChip(
                       icon: Icons.location_on_rounded,
                       text: event.location,
                     ),
                     const SizedBox(height: 4),
 
-                    // Price & Capacity with progress indicator
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

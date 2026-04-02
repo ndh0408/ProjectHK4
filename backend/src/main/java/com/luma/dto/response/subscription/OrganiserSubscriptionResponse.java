@@ -21,19 +21,11 @@ public class OrganiserSubscriptionResponse {
     private boolean isActive;
     private boolean autoRenew;
 
-    // Usage info
     private int eventsCreatedThisMonth;
-    private int aiUsageThisMonth;
     private String remainingEvents;
-    private String remainingAIUsage;
     private LocalDateTime billingCycleStart;
 
-    // Plan limits
     private String maxEventsPerMonth;
-    private String maxAttendeesPerEvent;
-    private String aiUsagePerMonth;
-    private boolean canGenerateCertificates;
-    private boolean canExportExcel;
     private int boostDiscountPercent;
 
     public static OrganiserSubscriptionResponse fromEntity(OrganiserSubscription subscription) {
@@ -50,15 +42,9 @@ public class OrganiserSubscriptionResponse {
                 .isActive(subscription.isActive())
                 .autoRenew(subscription.isAutoRenew())
                 .eventsCreatedThisMonth(subscription.getEventsCreatedThisMonth())
-                .aiUsageThisMonth(subscription.getAiUsageThisMonth())
                 .remainingEvents(formatRemaining(subscription.getRemainingEvents()))
-                .remainingAIUsage(formatRemaining(subscription.getRemainingAIUsage()))
                 .billingCycleStart(subscription.getBillingCycleStart())
                 .maxEventsPerMonth(plan.isUnlimitedEvents() ? "Unlimited" : String.valueOf(plan.getMaxEventsPerMonth()))
-                .maxAttendeesPerEvent(plan.isUnlimitedAttendees() ? "Unlimited" : String.valueOf(plan.getMaxAttendeesPerEvent()))
-                .aiUsagePerMonth(plan.isUnlimitedAI() ? "Unlimited" : String.valueOf(plan.getAiUsagePerMonth()))
-                .canGenerateCertificates(plan.isCanGenerateCertificates())
-                .canExportExcel(plan.isCanExportExcel())
                 .boostDiscountPercent(plan.getBoostDiscountPercent())
                 .build();
     }

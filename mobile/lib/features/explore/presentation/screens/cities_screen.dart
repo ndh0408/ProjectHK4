@@ -7,13 +7,11 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/city.dart';
 
-// Provider for cities grouped by continent (only cities with events)
 final citiesByContinentProvider = FutureProvider<Map<String, List<City>>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   return api.getCitiesByContinent();
 });
 
-// Region display order
 const _regionOrder = [
   'Asia',
   'Europe',
@@ -23,11 +21,9 @@ const _regionOrder = [
   'Oceania',
 ];
 
-// City icon and color mapping based on city name
 _CityStyle _getCityStyle(String cityName) {
   final lower = cityName.toLowerCase();
 
-  // Asia
   if (lower.contains('bangkok')) {
     return _CityStyle(Icons.temple_buddhist, const Color(0xFFFF9800));
   }
@@ -62,7 +58,6 @@ _CityStyle _getCityStyle(String cityName) {
     return _CityStyle(Icons.location_city, const Color(0xFF8BC34A));
   }
 
-  // Australia/Oceania
   if (lower.contains('sydney') || lower.contains('melbourne') || lower.contains('brisbane')) {
     return _CityStyle(Icons.beach_access, const Color(0xFF00BCD4));
   }
@@ -70,7 +65,6 @@ _CityStyle _getCityStyle(String cityName) {
     return _CityStyle(Icons.beach_access, const Color(0xFF4CAF50));
   }
 
-  // Europe
   if (lower.contains('london')) {
     return _CityStyle(Icons.account_balance, const Color(0xFF2196F3));
   }
@@ -90,7 +84,6 @@ _CityStyle _getCityStyle(String cityName) {
     return _CityStyle(Icons.account_balance, const Color(0xFF4CAF50));
   }
 
-  // Americas
   if (lower.contains('new york')) {
     return _CityStyle(Icons.location_city, const Color(0xFF2196F3));
   }
@@ -110,7 +103,6 @@ _CityStyle _getCityStyle(String cityName) {
     return _CityStyle(Icons.account_balance, const Color(0xFF009688));
   }
 
-  // Default
   return _CityStyle(Icons.location_city, AppColors.primary);
 }
 
@@ -170,7 +162,6 @@ class CitiesScreen extends ConsumerWidget {
             );
           }
 
-          // Sort continents by predefined order
           final sortedRegions = data.keys.toList()
             ..sort((a, b) {
               final indexA = _regionOrder.indexOf(a);
@@ -188,7 +179,6 @@ class CitiesScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                // Subtitle description
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                   child: Text(
@@ -201,10 +191,8 @@ class CitiesScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Regions with cities
                 ...sortedRegions.map((region) {
                   final cities = data[region]!;
-                  // Sort cities by event count descending
                   cities.sort((a, b) => b.eventCount.compareTo(a.eventCount));
 
                   return _RegionSection(
@@ -263,7 +251,6 @@ class _RegionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Region Header
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text(
@@ -277,7 +264,6 @@ class _RegionSection extends StatelessWidget {
           ),
         ),
 
-        // Cities List
         ...cities.map((city) => _CityListItem(
           city: city,
           onTap: () => onCityTap(city),
@@ -314,7 +300,6 @@ class _CityListItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // City Icon
             Container(
               width: 44,
               height: 44,
@@ -330,7 +315,6 @@ class _CityListItem extends StatelessWidget {
             ),
             const SizedBox(width: 14),
 
-            // City Name
             Expanded(
               child: Text(
                 city.name,
@@ -342,7 +326,6 @@ class _CityListItem extends StatelessWidget {
               ),
             ),
 
-            // Event Count
             Text(
               '${city.eventCount} ${city.eventCount == 1 ? 'Event' : 'Events'}',
               style: TextStyle(
@@ -352,7 +335,6 @@ class _CityListItem extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // Chevron
             Icon(
               Icons.chevron_right,
               color: Colors.grey[400],

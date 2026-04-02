@@ -85,7 +85,6 @@ public class EventService {
     public PageResponse<EventResponse> getUpcomingEvents(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
-        // Prioritize boosted events in upcoming list
         Page<Event> events = eventRepository.findUpcomingEventsWithBoostPriority(now, endDate, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
@@ -99,7 +98,6 @@ public class EventService {
         City city = cityService.getEntityById(cityId);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
-        // Prioritize boosted events in city list
         Page<Event> events = eventRepository.findEventsByCityWithBoostPriority(city, now, endDate, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
@@ -114,14 +112,12 @@ public class EventService {
     public PageResponse<EventResponse> getEventsByCategory(Long categoryId, Pageable pageable) {
         Category category = categoryService.getEntityById(categoryId);
         LocalDateTime now = LocalDateTime.now();
-        // Prioritize boosted events in category list
         Page<Event> events = eventRepository.findEventsByCategoryWithBoostPriority(category, now, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
     public PageResponse<EventResponse> searchEvents(String query, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
-        // Prioritize boosted events in search results
         Page<Event> events = eventRepository.searchEventsWithBoostPriority(query, now, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
@@ -129,12 +125,10 @@ public class EventService {
     private EventResponse enrichEventResponseWithBoostInfo(Event event) {
         EventResponse response = EventResponse.fromEntity(event);
 
-        // Get active boost info - take the most recent one if multiple exist
         List<com.luma.entity.EventBoost> activeBoosts = eventBoostRepository.findByEventIdAndStatus(
                 event.getId(), com.luma.entity.enums.BoostStatus.ACTIVE);
 
         if (!activeBoosts.isEmpty()) {
-            // Get the most recent active boost
             com.luma.entity.EventBoost boost = activeBoosts.stream()
                     .filter(com.luma.entity.EventBoost::isActive)
                     .findFirst()
@@ -182,11 +176,7 @@ public class EventService {
 
     @Transactional
     public EventResponse createEvent(User organiser, EventCreateRequest request) {
-        // Validate subscription limits
         subscriptionService.validateEventCreation(organiser.getId());
-        if (request.getCapacity() != null) {
-            subscriptionService.validateAttendeeCapacity(organiser.getId(), request.getCapacity());
-        }
 
         LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(5);
         if (request.getStartTime().isBefore(cutoffTime)) {
@@ -256,8 +246,86 @@ public class EventService {
             createRecurringEventInstances(savedEvent, request);
         }
 
-        // Increment event count for subscription tracking
         subscriptionService.incrementEventCount(organiser.getId());
+
+        try {
+            notificationService.notifyAdminsEventCreated(savedEvent);
+        } catch (Exception e) {
+            log.error("Failed to notify admins about new event: {}", e.getMessage());
+        }
+
+        return EventResponse.fromEntity(savedEvent);
+    }
+
+    @Transactional
+    public EventResponse createEventForUser(User user, EventCreateRequest request) {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(5);
+        if (request.getStartTime().isBefore(cutoffTime)) {
+            throw new BadRequestException("Start time must be in the future");
+        }
+        if (request.getEndTime().isBefore(request.getStartTime())) {
+            throw new BadRequestException("End time must be after start time");
+        }
+
+        ensureOrganiserProfile(user);
+
+        String recurrenceDaysStr = null;
+        if (request.getRecurrenceDaysOfWeek() != null && !request.getRecurrenceDaysOfWeek().isEmpty()) {
+            recurrenceDaysStr = String.join(",", request.getRecurrenceDaysOfWeek());
+        }
+
+        Event event = Event.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .imageUrl(request.getImageUrl())
+                .startTime(request.getStartTime())
+                .endTime(request.getEndTime())
+                .registrationDeadline(request.getRegistrationDeadline())
+                .venue(request.getVenue())
+                .address(request.getAddress())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .ticketPrice(request.getTicketPrice() != null ? request.getTicketPrice() : BigDecimal.ZERO)
+                .isFree(request.isFree())
+                .capacity(request.getCapacity())
+                .visibility(request.getVisibility())
+                .requiresApproval(request.isRequiresApproval())
+                .status(EventStatus.DRAFT)
+                .organiser(user)
+                .recurrenceType(request.getRecurrenceType() != null ? request.getRecurrenceType() : RecurrenceType.NONE)
+                .recurrenceInterval(request.getRecurrenceInterval())
+                .recurrenceDaysOfWeek(recurrenceDaysStr)
+                .recurrenceEndDate(request.getRecurrenceEndDate())
+                .recurrenceCount(request.getRecurrenceCount())
+                .occurrenceIndex(1)
+                .build();
+
+        if (request.getCityId() != null) {
+            event.setCity(cityService.getEntityById(request.getCityId()));
+        }
+        if (request.getCategoryId() != null) {
+            event.setCategory(categoryService.getEntityById(request.getCategoryId()));
+        }
+
+        Event savedEvent = eventRepository.save(event);
+
+        if (request.getSpeakers() != null && !request.getSpeakers().isEmpty()) {
+            for (SpeakerRequest speakerRequest : request.getSpeakers()) {
+                Speaker speaker = Speaker.builder()
+                        .name(speakerRequest.getName())
+                        .title(speakerRequest.getTitle())
+                        .bio(speakerRequest.getBio())
+                        .imageUrl(speakerRequest.getImageUrl())
+                        .event(savedEvent)
+                        .build();
+                savedEvent.getSpeakers().add(speaker);
+            }
+            savedEvent = eventRepository.save(savedEvent);
+        }
+
+        if (request.getRecurrenceType() != null && request.getRecurrenceType() != RecurrenceType.NONE) {
+            createRecurringEventInstances(savedEvent, request);
+        }
 
         try {
             notificationService.notifyAdminsEventCreated(savedEvent);

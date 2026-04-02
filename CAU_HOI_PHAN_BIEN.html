@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câu Hỏi Phản Biện - Dự Án LUMA Event Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-600: #475569;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+            color: var(--gray-800);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        /* Cover */
+        .cover {
+            background: linear-gradient(135deg, #dc2626, #ea580c);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            border-radius: 16px;
+        }
+
+        .cover h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .cover p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .cover .subtitle {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Sections */
+        .section {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .section h3 {
+            font-size: 18px;
+            color: var(--gray-800);
+            margin: 25px 0 12px;
+        }
+
+        /* Question Card */
+        .question-card {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .question-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 600;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .question-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .question-text {
+            font-size: 16px;
+            color: var(--gray-800);
+            font-weight: 500;
+            margin-bottom: 15px;
+            padding-left: 44px;
+        }
+
+        /* Hint Box */
+        .hint-box {
+            background: #dbeafe;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            margin-left: 44px;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .hint-box strong {
+            color: #1e40af;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .hint-box ul {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .hint-box li {
+            margin-bottom: 5px;
+        }
+
+        /* Answer Box */
+        .answer-box {
+            background: #d1fae5;
+            border-radius: 8px;
+            padding: 18px 22px;
+            margin: 15px 0;
+            margin-left: 44px;
+            border-left: 3px solid var(--success);
+        }
+
+        .answer-box strong {
+            color: #065f46;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .answer-box p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--gray-800);
+            text-align: justify;
+        }
+
+        .answer-box ul {
+            margin: 8px 0;
+            padding-left: 18px;
+            font-size: 14px;
+        }
+
+        .answer-box li {
+            margin-bottom: 6px;
+        }
+
+        /* Challenge Box */
+        .challenge-box {
+            background: #fef3c7;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            margin-left: 44px;
+            border-left: 3px solid var(--warning);
+        }
+
+        .challenge-box strong {
+            color: #92400e;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .challenge-box p {
+            font-size: 14px;
+            color: var(--gray-600);
+            font-style: italic;
+        }
+
+        /* Difficulty Badge */
+        .difficulty {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .difficulty.easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .difficulty.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .difficulty.hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Category Badge */
+        .category {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+            background: var(--gray-200);
+            color: var(--gray-600);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .toc h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .toc li:last-child {
+            border-bottom: none;
+        }
+
+        .toc a {
+            color: var(--gray-800);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .toc a:hover {
+            color: var(--primary);
+        }
+
+        @media print {
+            .container { max-width: 100%; }
+            .section { page-break-inside: avoid; }
+            .question-card { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Cover -->
+    <div class="cover">
+        <h1>BỘ CÂU HỎI PHẢN BIỆN</h1>
+        <p>Dự Án: LUMA - Sàn Thương Mại Sự Kiện</p>
+        <div class="subtitle">
+            Dành cho Hội đồng Bảo vệ Đồ án<br>
+            Bao gồm gợi ý trả lời và câu hỏi chất vấn nâng cao
+        </div>
+    </div>
+
+    <!-- Mục lục -->
+    <div class="toc">
+        <h2>Mục Lục</h2>
+        <ul>
+            <li><a href="#kien-truc">I. Câu hỏi về Kiến trúc Hệ thống (5 câu)</a></li>
+            <li><a href="#backend">II. Câu hỏi về Backend & API (5 câu)</a></li>
+            <li><a href="#frontend">III. Câu hỏi về Frontend & Mobile (4 câu)</a></li>
+            <li><a href="#thanh-toan">IV. Câu hỏi về Thanh toán & Tài chính (4 câu)</a></li>
+            <li><a href="#bao-mat">V. Câu hỏi về Bảo mật (4 câu)</a></li>
+            <li><a href="#ai">VI. Câu hỏi về Tích hợp AI (3 câu)</a></li>
+            <li><a href="#hieu-nang">VII. Câu hỏi về Hiệu năng & Mở rộng (4 câu)</a></li>
+            <li><a href="#thuc-te">VIII. Câu hỏi Tình huống Thực tế (4 câu)</a></li>
+            <li><a href="#phan-cong">IX. Câu hỏi về Phân công & Quy trình (3 câu)</a></li>
+        </ul>
+    </div>
+
+    <!-- PHẦN I: KIẾN TRÚC HỆ THỐNG -->
+    <div class="section" id="kien-truc">
+        <h2>I. Câu Hỏi Về Kiến Trúc Hệ Thống</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">1</span>
+                Kiến trúc tổng quan hệ thống
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hãy mô tả kiến trúc tổng quan của hệ thống LUMA. Tại sao nhóm chọn kiến trúc này thay vì các kiến trúc khác như Microservices?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Nêu rõ các thành phần: Backend (Spring Boot), Mobile (React Native), Admin/Organiser Portal (React.js)</li>
+                    <li>Giải thích vì sao chọn Monolithic cho backend (quy mô nhóm nhỏ, thời gian phát triển ngắn)</li>
+                    <li>Đề cập đến việc giao tiếp qua RESTful API và WebSocket</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p>Hệ thống LUMA được xây dựng theo kiến trúc <b>Monolithic layered architecture</b> với 3 thành phần chính:</p>
+                <ul>
+                    <li><b>Backend:</b> Spring Boot với cấu trúc 3 tầng (Controller - Service - Repository), sử dụng PostgreSQL làm database chính</li>
+                    <li><b>Mobile App:</b> React Native cho cross-platform (iOS & Android)</li>
+                    <li><b>Web Portals:</b> React.js cho Admin Portal và Organiser Portal</li>
+                </ul>
+                <p>Lý do chọn Monolithic thay vì Microservices:</p>
+                <ul>
+                    <li>Nhóm có 5 thành viên, quy mô nhỏ phù hợp với Monolithic</li>
+                    <li>Thời gian phát triển ngắn (1 học kỳ), Microservices tốn nhiều thời gian setup infrastructure</li>
+                    <li>Dễ debug, deploy và maintain hơn trong giai đoạn đầu</li>
+                    <li>Có thể migrate sang Microservices sau khi scale nếu cần</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu sau này hệ thống có 1 triệu người dùng, nhóm sẽ tách module nào ra thành microservice đầu tiên và tại sao?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">2</span>
+                Thiết kế Database
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">DUY</span>
+            </div>
+            <div class="question-text">
+                Hãy mô tả thiết kế database của hệ thống. Các bảng chính là gì? Mối quan hệ giữa chúng như thế nào? Tại sao chọn PostgreSQL?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Liệt kê các bảng chính: Users, Events, Registrations, Tickets, Payments, Categories, Cities...</li>
+                    <li>Giải thích các mối quan hệ 1-N, N-N</li>
+                    <li>Nêu ưu điểm của PostgreSQL: JSONB support, full-text search, performance</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Các bảng chính trong database:</b></p>
+                <ul>
+                    <li><b>users:</b> Lưu thông tin người dùng, vai trò (USER, ORGANISER, ADMIN)</li>
+                    <li><b>events:</b> Thông tin sự kiện, liên kết với organiser (FK user_id)</li>
+                    <li><b>ticket_types:</b> Các loại vé của mỗi sự kiện (1 event - N ticket_types)</li>
+                    <li><b>registrations:</b> Đăng ký tham dự (N-N giữa users và events)</li>
+                    <li><b>payments:</b> Giao dịch thanh toán, liên kết với registration</li>
+                    <li><b>certificates:</b> Chứng chỉ cấp cho người tham dự</li>
+                    <li><b>reviews:</b> Đánh giá sự kiện từ người dùng</li>
+                </ul>
+                <p><b>Tại sao chọn PostgreSQL:</b></p>
+                <ul>
+                    <li>Hỗ trợ JSONB để lưu form fields động của sự kiện</li>
+                    <li>Full-text search tốt cho tìm kiếm sự kiện</li>
+                    <li>ACID compliance đảm bảo tính toàn vẹn cho giao dịch thanh toán</li>
+                    <li>Miễn phí và có cộng đồng hỗ trợ lớn</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Khi có 10,000 sự kiện và mỗi sự kiện có 1,000 người đăng ký, bảng registrations sẽ có 10 triệu bản ghi. Nhóm đã optimize query như thế nào để tránh slow query?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">3</span>
+                Real-time Communication
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA/HUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có tính năng Chat real-time giữa người dùng và người tổ chức. Nhóm đã implement như thế nào? Tại sao chọn công nghệ đó?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Giải thích WebSocket và cách hoạt động</li>
+                    <li>So sánh WebSocket vs HTTP Polling vs Server-Sent Events</li>
+                    <li>Mô tả cách tích hợp với Spring Boot (STOMP) và React Native</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p>Chúng em sử dụng <b>WebSocket với STOMP protocol</b> cho tính năng chat real-time:</p>
+                <ul>
+                    <li><b>Backend:</b> Spring Boot WebSocket với STOMP (Simple Text Oriented Messaging Protocol)</li>
+                    <li><b>Mobile:</b> Thư viện socket.io-client hoặc native WebSocket trong React Native</li>
+                </ul>
+                <p><b>Tại sao chọn WebSocket thay vì HTTP Polling:</b></p>
+                <ul>
+                    <li>WebSocket duy trì kết nối liên tục, giảm latency</li>
+                    <li>Tiết kiệm bandwidth so với polling liên tục</li>
+                    <li>Bi-directional communication phù hợp cho chat</li>
+                </ul>
+                <p><b>Flow hoạt động:</b> User gửi message → WebSocket server → Lưu DB → Broadcast đến recipient qua subscription channel</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu người dùng đang offline khi có tin nhắn mới, làm sao để họ nhận được tin nhắn khi online lại? Nhóm xử lý message persistence như thế nào?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">4</span>
+                File Storage & CDN
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">DUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống cho phép upload hình ảnh cho sự kiện. Nhóm đã xử lý việc lưu trữ file như thế nào? Tại sao chọn Cloudinary?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Giải thích tại sao không lưu file trực tiếp vào server/database</li>
+                    <li>Nêu ưu điểm của Cloudinary: CDN, image transformation, optimization</li>
+                    <li>Mô tả flow upload: Client → Backend → Cloudinary → Return URL</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p>Chúng em sử dụng <b>Cloudinary</b> làm dịch vụ lưu trữ và phân phối hình ảnh:</p>
+                <p><b>Tại sao không lưu file vào server:</b></p>
+                <ul>
+                    <li>Server storage có giới hạn và không scale tốt</li>
+                    <li>Không có CDN nên tốc độ load ảnh chậm với user ở xa</li>
+                    <li>Phải tự implement image optimization</li>
+                </ul>
+                <p><b>Ưu điểm của Cloudinary:</b></p>
+                <ul>
+                    <li>CDN toàn cầu giúp load ảnh nhanh ở mọi vị trí</li>
+                    <li>Tự động optimize kích thước và format ảnh</li>
+                    <li>Hỗ trợ transformation (resize, crop, watermark) qua URL</li>
+                    <li>Free tier đủ dùng cho giai đoạn phát triển</li>
+                </ul>
+                <p><b>Flow:</b> Mobile upload file → Backend validate → Upload lên Cloudinary → Lưu URL vào database</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu user upload file quá lớn (50MB) hoặc file không phải ảnh, hệ thống xử lý như thế nào? Có validation ở đâu?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">5</span>
+                API Design
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA/DUY</span>
+            </div>
+            <div class="question-text">
+                Nhóm thiết kế API theo chuẩn nào? Hãy cho ví dụ về một số endpoint chính và giải thích cách xử lý các HTTP methods khác nhau.
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Giải thích RESTful API conventions</li>
+                    <li>Nêu ví dụ endpoints: GET /events, POST /events, PUT /events/{id}</li>
+                    <li>Đề cập đến versioning, pagination, error handling</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p>Chúng em thiết kế API theo chuẩn <b>RESTful</b>:</p>
+                <p><b>Ví dụ các endpoints cho Events:</b></p>
+                <ul>
+                    <li><code>GET /api/v1/events</code> - Lấy danh sách sự kiện (có pagination, filter)</li>
+                    <li><code>GET /api/v1/events/{id}</code> - Lấy chi tiết một sự kiện</li>
+                    <li><code>POST /api/v1/events</code> - Tạo sự kiện mới (Organiser)</li>
+                    <li><code>PUT /api/v1/events/{id}</code> - Cập nhật sự kiện</li>
+                    <li><code>DELETE /api/v1/events/{id}</code> - Xóa sự kiện</li>
+                    <li><code>POST /api/v1/events/{id}/register</code> - Đăng ký tham dự</li>
+                </ul>
+                <p><b>Các quy tắc áp dụng:</b></p>
+                <ul>
+                    <li>Sử dụng noun thay vì verb trong URL</li>
+                    <li>HTTP status code chuẩn: 200, 201, 400, 401, 403, 404, 500</li>
+                    <li>Pagination với query params: ?page=1&size=20</li>
+                    <li>API versioning: /api/v1/...</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Khi client gửi request sai format hoặc thiếu required field, API trả về response như thế nào? Nhóm có dùng chuẩn error response nào không?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN II: BACKEND & API -->
+    <div class="section" id="backend">
+        <h2>II. Câu Hỏi Về Backend & API</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">6</span>
+                Authentication & Authorization
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có 3 loại user: User, Organiser, Admin với các quyền khác nhau. Hãy giải thích cách nhóm implement Authentication (xác thực) và Authorization (phân quyền).
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Giải thích JWT token flow: Login → Generate token → Verify token</li>
+                    <li>Phân biệt Authentication vs Authorization</li>
+                    <li>Mô tả OAuth2 Google login flow</li>
+                    <li>Role-based access control với Spring Security</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Authentication (Xác thực):</b></p>
+                <ul>
+                    <li>Sử dụng <b>JWT (JSON Web Token)</b> cho stateless authentication</li>
+                    <li>Khi login thành công, server trả về access_token (15 phút) và refresh_token (7 ngày)</li>
+                    <li>Token chứa user_id, role, expiration time</li>
+                    <li>Hỗ trợ <b>OAuth2 Google Login</b>: User đăng nhập Google → Nhận authorization code → Exchange lấy user info → Tạo/link account trong DB → Trả JWT</li>
+                </ul>
+                <p><b>Authorization (Phân quyền):</b></p>
+                <ul>
+                    <li>Sử dụng <b>Spring Security</b> với annotation @PreAuthorize</li>
+                    <li>3 roles: ROLE_USER, ROLE_ORGANISER, ROLE_ADMIN</li>
+                    <li>Ví dụ: <code>@PreAuthorize("hasRole('ORGANISER')")</code> trên endpoint tạo sự kiện</li>
+                    <li>Resource-level authorization: Organiser chỉ được sửa/xóa event của chính mình</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"JWT được lưu ở đâu trên client? Nếu hacker lấy được JWT token, họ có thể làm gì và nhóm đã có biện pháp gì để giảm thiểu rủi ro?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">7</span>
+                QR Code Check-in System
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">DUY</span>
+            </div>
+            <div class="question-text">
+                Tính năng check-in bằng QR code hoạt động như thế nào? Làm sao đảm bảo mỗi vé chỉ được check-in một lần?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Giải thích nội dung trong QR code (ticket_id, hash)</li>
+                    <li>Flow quét QR: Scan → Gửi API → Verify → Update status</li>
+                    <li>Xử lý concurrent check-in (2 người quét cùng lúc)</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Cấu trúc QR Code:</b></p>
+                <ul>
+                    <li>QR code chứa một chuỗi unique: <code>{ticket_id}_{hash}</code></li>
+                    <li>Hash được tạo từ ticket_id + secret key, dùng để verify tính hợp lệ</li>
+                </ul>
+                <p><b>Flow check-in:</b></p>
+                <ol>
+                    <li>Organiser dùng camera quét QR code</li>
+                    <li>Gửi request đến API: <code>POST /api/v1/checkin</code> với QR content</li>
+                    <li>Server verify hash, kiểm tra ticket tồn tại và thuộc đúng event</li>
+                    <li>Kiểm tra status: nếu đã CHECK_IN → báo lỗi "Vé đã được sử dụng"</li>
+                    <li>Nếu hợp lệ → Update status thành CHECKED_IN + timestamp</li>
+                    <li>Trả về thông tin người tham dự để Organiser confirm</li>
+                </ol>
+                <p><b>Xử lý concurrent:</b> Sử dụng database transaction với optimistic locking để tránh race condition khi 2 người quét cùng lúc</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu người dùng chụp ảnh QR code và share cho người khác, làm sao hệ thống phát hiện và ngăn chặn gian lận?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">8</span>
+                Email Service
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">DUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống gửi nhiều loại email: xác nhận đăng ký, thông báo duyệt, nhắc nhở sự kiện. Nhóm đã implement email service như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Sử dụng SMTP với Gmail hoặc dịch vụ email như SendGrid, Mailgun</li>
+                    <li>Email templates với Thymeleaf</li>
+                    <li>Async email sending để không block request</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Công nghệ sử dụng:</b></p>
+                <ul>
+                    <li><b>Spring Mail</b> với SMTP Gmail server</li>
+                    <li><b>Thymeleaf</b> để tạo email templates HTML đẹp</li>
+                    <li><b>@Async</b> annotation để gửi email bất đồng bộ</li>
+                </ul>
+                <p><b>Các loại email trong hệ thống:</b></p>
+                <ul>
+                    <li>Welcome email khi đăng ký tài khoản</li>
+                    <li>Email xác nhận đăng ký sự kiện (kèm vé PDF)</li>
+                    <li>Email thông báo duyệt/từ chối đăng ký</li>
+                    <li>Email nhắc nhở trước sự kiện 24h</li>
+                    <li>Email gửi chứng chỉ sau sự kiện</li>
+                </ul>
+                <p><b>Flow:</b> Event xảy ra → Service tạo email context → Render template → Async send → Log kết quả</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu có 10,000 người đăng ký một sự kiện và cần gửi email nhắc nhở, hệ thống có gửi được 10,000 email cùng lúc không? Có bị Gmail block không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">9</span>
+                Certificate Generation
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">DUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống tự động tạo chứng chỉ cho người tham dự. Hãy mô tả quy trình tạo và verify chứng chỉ.
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Công nghệ tạo PDF (iText, Apache PDFBox, hoặc HTML to PDF)</li>
+                    <li>Template chứng chỉ và cách điền thông tin động</li>
+                    <li>Mã xác thực chứng chỉ và cách verify</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Quy trình tạo chứng chỉ:</b></p>
+                <ol>
+                    <li>Sự kiện kết thúc, hệ thống lấy danh sách người đã check-in</li>
+                    <li>Với mỗi người, tạo certificate record trong DB với unique code</li>
+                    <li>Render HTML template với thông tin: tên người nhận, tên sự kiện, ngày, mã chứng chỉ</li>
+                    <li>Convert HTML to PDF sử dụng thư viện <b>Flying Saucer</b> (hoặc iText)</li>
+                    <li>Upload PDF lên Cloudinary và lưu URL</li>
+                    <li>Gửi email với PDF đính kèm</li>
+                </ol>
+                <p><b>Verify chứng chỉ:</b></p>
+                <ul>
+                    <li>Mỗi chứng chỉ có mã unique và QR code</li>
+                    <li>QR code link đến trang verify: <code>/certificates/verify/{code}</code></li>
+                    <li>Trang verify hiển thị thông tin chứng chỉ nếu hợp lệ</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu người dùng chỉnh sửa file PDF chứng chỉ (đổi tên), làm sao hệ thống phát hiện chứng chỉ đã bị giả mạo?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">10</span>
+                Scheduled Tasks
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA/DUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có các tác vụ định kỳ như gửi email nhắc nhở, tạo chứng chỉ, xử lý thanh toán. Nhóm implement scheduled tasks như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Spring @Scheduled annotation</li>
+                    <li>Cron expression cho các task khác nhau</li>
+                    <li>Xử lý khi task fail hoặc chạy quá lâu</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Công nghệ:</b> Spring Boot <code>@Scheduled</code> annotation với cron expression</p>
+                <p><b>Các scheduled tasks trong hệ thống:</b></p>
+                <ul>
+                    <li><b>Event reminder:</b> Chạy mỗi giờ, tìm sự kiện diễn ra trong 24h tới, gửi email nhắc nhở</li>
+                    <li><b>Certificate generation:</b> Chạy mỗi 6h, tìm sự kiện đã kết thúc chưa có certificate, tạo và gửi</li>
+                    <li><b>Boost expiration:</b> Chạy hàng ngày, kiểm tra và hết hạn các boost đã hết thời gian</li>
+                    <li><b>Cleanup:</b> Xóa các draft event quá 30 ngày</li>
+                </ul>
+                <p><b>Ví dụ code:</b></p>
+                <code>@Scheduled(cron = "0 0 * * * *") // Mỗi giờ<br>
+                public void sendEventReminders() { ... }</code>
+                <p><b>Xử lý lỗi:</b> Wrap trong try-catch, log error, có thể retry hoặc alert admin</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu chạy 2 instance của backend (load balancing), scheduled task có chạy 2 lần không? Làm sao tránh duplicate?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN III: FRONTEND & MOBILE -->
+    <div class="section" id="frontend">
+        <h2>III. Câu Hỏi Về Frontend & Mobile</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">11</span>
+                React Native Architecture
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">HUY</span>
+            </div>
+            <div class="question-text">
+                Tại sao nhóm chọn React Native thay vì Native (Swift/Kotlin) hoặc Flutter? Cấu trúc thư mục và state management của app như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>So sánh React Native vs Native vs Flutter</li>
+                    <li>Cấu trúc thư mục: screens, components, services, hooks, utils</li>
+                    <li>State management: Context API, Redux, Zustand, hoặc React Query</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Tại sao chọn React Native:</b></p>
+                <ul>
+                    <li>Cross-platform: một codebase cho cả iOS và Android</li>
+                    <li>Team đã có kinh nghiệm với React.js nên học nhanh</li>
+                    <li>Hot reload giúp develop nhanh hơn</li>
+                    <li>Cộng đồng lớn, nhiều thư viện hỗ trợ</li>
+                </ul>
+                <p><b>Cấu trúc thư mục:</b></p>
+                <ul>
+                    <li><code>/screens</code> - Các màn hình chính</li>
+                    <li><code>/components</code> - UI components tái sử dụng</li>
+                    <li><code>/services</code> - API calls</li>
+                    <li><code>/hooks</code> - Custom hooks</li>
+                    <li><code>/context</code> - Global state với Context API</li>
+                    <li><code>/navigation</code> - React Navigation config</li>
+                </ul>
+                <p><b>State management:</b> Kết hợp Context API cho global state (auth, user) và React Query cho server state (events, registrations)</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"React Native có hạn chế gì về performance so với Native? Có tính năng nào trong app phải viết native code không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">12</span>
+                Offline Support
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">HUY</span>
+            </div>
+            <div class="question-text">
+                Báo cáo có đề cập vé điện tử có thể truy cập khi không có internet. Nhóm đã implement offline support như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>AsyncStorage hoặc SQLite cho local storage</li>
+                    <li>Cache strategy: cache vé khi online</li>
+                    <li>Sync mechanism khi có lại kết nối</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Công nghệ:</b> AsyncStorage của React Native để lưu dữ liệu locally</p>
+                <p><b>Cách hoạt động:</b></p>
+                <ol>
+                    <li>Khi user xem vé (có internet), app cache thông tin vé và QR code image vào AsyncStorage</li>
+                    <li>Lưu dưới dạng: <code>tickets_{user_id}: [array of ticket objects]</code></li>
+                    <li>Khi offline, app hiển thị vé từ cache</li>
+                    <li>QR code được lưu dưới dạng base64 string để render offline</li>
+                </ol>
+                <p><b>Sync khi online:</b></p>
+                <ul>
+                    <li>Khi có internet lại, app tự động fetch data mới từ server</li>
+                    <li>So sánh và update cache nếu có thay đổi</li>
+                    <li>Hiển thị indicator nếu data cũ hơn 24h</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu vé đã bị hủy (refund) nhưng user đang offline và không biết, họ vẫn có thể show QR code. Làm sao xử lý tình huống này?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">13</span>
+                Admin Dashboard Charts
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">TRINH/KHÁNH</span>
+            </div>
+            <div class="question-text">
+                Admin Portal có nhiều biểu đồ thống kê. Nhóm sử dụng thư viện nào để vẽ chart? Dữ liệu được aggregate như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Thư viện chart: Recharts, Chart.js, hoặc D3.js</li>
+                    <li>Data aggregation ở backend hay frontend</li>
+                    <li>Các loại chart: Line, Bar, Pie, Area</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Thư viện:</b> <b>Recharts</b> - thư viện chart cho React, dễ sử dụng và responsive</p>
+                <p><b>Các loại biểu đồ trong hệ thống:</b></p>
+                <ul>
+                    <li><b>Line Chart:</b> Trend người dùng mới, doanh thu theo thời gian</li>
+                    <li><b>Bar Chart:</b> So sánh số đăng ký theo tháng</li>
+                    <li><b>Pie Chart:</b> Phân bố sự kiện theo category, thành phố</li>
+                    <li><b>Area Chart:</b> Tổng doanh thu tích lũy</li>
+                </ul>
+                <p><b>Data aggregation:</b></p>
+                <ul>
+                    <li>Backend có các endpoint analytics: <code>/api/v1/analytics/revenue</code>, <code>/api/v1/analytics/users</code></li>
+                    <li>Backend aggregate data với SQL GROUP BY theo ngày/tuần/tháng</li>
+                    <li>Frontend chỉ việc render data đã được xử lý</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu admin muốn xem thống kê của 2 năm trước với data hàng ngày (730 điểm dữ liệu), chart có bị lag không? Làm sao optimize?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">14</span>
+                Form Handling & Validation
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHÁNH/TRINH</span>
+            </div>
+            <div class="question-text">
+                Organiser Portal có form tạo sự kiện phức tạp với nhiều fields. Nhóm xử lý form validation như thế nào ở cả frontend và backend?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Frontend validation: React Hook Form, Formik, hoặc Yup</li>
+                    <li>Backend validation: Spring Validation (@Valid, @NotNull, @Size...)</li>
+                    <li>Error message handling và hiển thị</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Frontend (React):</b></p>
+                <ul>
+                    <li>Sử dụng <b>React Hook Form</b> để quản lý form state</li>
+                    <li><b>Yup</b> schema cho validation rules</li>
+                    <li>Real-time validation khi user nhập</li>
+                    <li>Hiển thị error message ngay dưới field bị lỗi</li>
+                </ul>
+                <p><b>Backend (Spring Boot):</b></p>
+                <ul>
+                    <li>DTO class với validation annotations: <code>@NotBlank</code>, <code>@Size</code>, <code>@Email</code>, <code>@Future</code> (cho ngày sự kiện)</li>
+                    <li>Custom validator cho logic phức tạp (end_date > start_date)</li>
+                    <li>Global exception handler trả về structured error response</li>
+                </ul>
+                <p><b>Ví dụ validation rules:</b></p>
+                <ul>
+                    <li>Event name: required, 5-100 ký tự</li>
+                    <li>Start date: required, phải trong tương lai</li>
+                    <li>Ticket price: số >= 0</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu user disable JavaScript trên browser, frontend validation sẽ không chạy. Backend có đủ validation để chống injection và data corruption không?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN IV: THANH TOÁN -->
+    <div class="section" id="thanh-toan">
+        <h2>IV. Câu Hỏi Về Thanh Toán & Tài Chính</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">15</span>
+                Stripe Integration
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống tích hợp Stripe cho thanh toán. Hãy mô tả chi tiết flow thanh toán từ khi user nhấn "Pay" đến khi nhận được vé.
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Stripe Payment Intent flow</li>
+                    <li>Client-side vs Server-side payment processing</li>
+                    <li>Webhook để xác nhận payment success</li>
+                    <li>Xử lý các trường hợp: thành công, thất bại, pending</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Flow thanh toán với Stripe:</b></p>
+                <ol>
+                    <li><b>User chọn vé và nhấn Pay:</b> Mobile gửi request tạo registration</li>
+                    <li><b>Backend tạo Payment Intent:</b> Gọi Stripe API tạo payment_intent với amount, currency</li>
+                    <li><b>Trả client_secret về Mobile:</b> Mobile dùng Stripe SDK hiển thị payment form</li>
+                    <li><b>User nhập thẻ và confirm:</b> Stripe SDK gửi payment info trực tiếp đến Stripe (không qua server chúng ta - PCI compliance)</li>
+                    <li><b>Stripe xử lý:</b> Charge thẻ, trả kết quả</li>
+                    <li><b>Webhook notification:</b> Stripe gọi webhook endpoint của chúng ta với event "payment_intent.succeeded"</li>
+                    <li><b>Backend xử lý webhook:</b> Update registration status = PAID, tạo ticket, gửi email xác nhận</li>
+                </ol>
+                <p><b>Xử lý các trường hợp:</b></p>
+                <ul>
+                    <li><b>Success:</b> Tạo ticket, gửi email</li>
+                    <li><b>Failed:</b> Thông báo lỗi, user có thể retry</li>
+                    <li><b>Pending (3D Secure):</b> Đợi user xác thực thêm</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu Stripe webhook bị fail (server down lúc đó), payment đã thành công nhưng hệ thống chưa cập nhật. Làm sao xử lý để user không mất tiền mà không có vé?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">16</span>
+                Refund Process
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Khi user muốn hủy vé và hoàn tiền, quy trình xử lý như thế nào? Có những trường hợp nào không được refund?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Refund policy (trước sự kiện bao lâu)</li>
+                    <li>Stripe Refund API</li>
+                    <li>Partial refund vs Full refund</li>
+                    <li>Cập nhật trạng thái vé và registration</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Refund Policy:</b></p>
+                <ul>
+                    <li>Hủy trước sự kiện >7 ngày: hoàn 100%</li>
+                    <li>Hủy trước 3-7 ngày: hoàn 50%</li>
+                    <li>Hủy trước <3 ngày: không hoàn tiền</li>
+                    <li>Sự kiện bị hủy bởi Organiser: hoàn 100% tự động</li>
+                </ul>
+                <p><b>Flow refund:</b></p>
+                <ol>
+                    <li>User request cancel trong app</li>
+                    <li>Backend kiểm tra policy, tính refund amount</li>
+                    <li>Gọi Stripe Refund API với payment_intent_id và amount</li>
+                    <li>Stripe xử lý refund (3-5 ngày về thẻ user)</li>
+                    <li>Update registration status = REFUNDED</li>
+                    <li>Vô hiệu hóa ticket (QR code không còn valid)</li>
+                    <li>Gửi email xác nhận refund</li>
+                </ol>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu Organiser đã nhận payout rồi mới có refund request, tiền refund lấy từ đâu? LUMA có chịu rủi ro tài chính không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">17</span>
+                Stripe Connect Payout
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống tự động chuyển tiền cho Organiser sau sự kiện. Hãy giải thích Stripe Connect hoạt động như thế nào và flow payout.
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Stripe Connect account types</li>
+                    <li>Onboarding flow cho Organiser</li>
+                    <li>Transfer vs Payout</li>
+                    <li>Platform fee và cách tính</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Stripe Connect Setup:</b></p>
+                <ul>
+                    <li>LUMA là <b>Platform account</b></li>
+                    <li>Mỗi Organiser tạo <b>Connected Standard account</b></li>
+                    <li>Organiser trải qua Stripe onboarding để xác minh danh tính và thêm bank account</li>
+                </ul>
+                <p><b>Flow khi user mua vé:</b></p>
+                <ol>
+                    <li>Payment đến LUMA platform account</li>
+                    <li>Giữ tiền trong LUMA account đến khi sự kiện kết thúc + 48h</li>
+                    <li>Tính toán: Tổng tiền - 5% platform fee - Stripe fee</li>
+                    <li>Tạo Transfer đến connected account của Organiser</li>
+                    <li>Stripe tự động payout từ connected account vào bank của Organiser</li>
+                </ol>
+                <p><b>Ví dụ:</b> Vé $100 → LUMA giữ $5 (platform fee) → Organiser nhận ~$92 (sau Stripe fee)</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu Organiser ở Việt Nam, Stripe Connect có hỗ trợ không? Nếu không, nhóm có giải pháp thay thế nào?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">18</span>
+                Subscription & Recurring Payment
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Organiser có thể mua gói subscription hàng tháng. Hệ thống xử lý recurring payment như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Stripe Subscriptions API</li>
+                    <li>Billing cycle và proration</li>
+                    <li>Handling failed recurring payments</li>
+                    <li>Upgrade/Downgrade subscription</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Stripe Subscriptions:</b></p>
+                <ul>
+                    <li>Tạo <b>Products</b> trong Stripe cho mỗi gói (Free, Standard, Premium, VIP)</li>
+                    <li>Mỗi Product có <b>Price</b> với billing interval = monthly</li>
+                    <li>Khi Organiser subscribe, tạo Stripe Subscription</li>
+                </ul>
+                <p><b>Flow:</b></p>
+                <ol>
+                    <li>Organiser chọn gói và nhập payment method</li>
+                    <li>Tạo Stripe Customer (nếu chưa có)</li>
+                    <li>Tạo Subscription với customer_id và price_id</li>
+                    <li>Stripe tự động charge hàng tháng</li>
+                    <li>Webhook "invoice.paid" → update subscription status</li>
+                    <li>Webhook "invoice.payment_failed" → thông báo user, retry 3 lần, sau đó cancel subscription</li>
+                </ol>
+                <p><b>Upgrade/Downgrade:</b> Stripe tự động tính proration (trả thêm hoặc credit cho cycle tiếp theo)</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu Organiser đang ở gói Premium, đã tạo 25 sự kiện trong tháng, rồi downgrade xuống Standard (chỉ cho 10 sự kiện), xử lý 15 sự kiện dư như thế nào?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN V: BẢO MẬT -->
+    <div class="section" id="bao-mat">
+        <h2>V. Câu Hỏi Về Bảo Mật</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">19</span>
+                SQL Injection Prevention
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA/DUY</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có nhiều chức năng tìm kiếm, filter. Nhóm đã làm gì để ngăn chặn SQL Injection?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>JPA/Hibernate và parameterized queries</li>
+                    <li>Input validation và sanitization</li>
+                    <li>Không bao giờ concatenate user input vào SQL</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Các biện pháp phòng chống SQL Injection:</b></p>
+                <ul>
+                    <li><b>Spring Data JPA:</b> Sử dụng Repository interface với method naming convention hoặc @Query với named parameters</li>
+                    <li>Ví dụ: <code>@Query("SELECT e FROM Event e WHERE e.name LIKE :keyword")</code> thay vì concatenate string</li>
+                    <li><b>Hibernate:</b> Tự động escape và parameterize queries</li>
+                    <li><b>Input validation:</b> Validate và sanitize tất cả user input trước khi xử lý</li>
+                    <li><b>Không dùng native query với string concatenation:</b> Tuyệt đối tránh <code>"SELECT * FROM users WHERE name = '" + userInput + "'"</code></li>
+                </ul>
+                <p><b>Ví dụ tìm kiếm an toàn:</b></p>
+                <code>repository.findByNameContainingIgnoreCase(keyword)</code>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Cho một ví dụ payload SQL Injection và chứng minh code của nhóm không bị ảnh hưởng."</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">20</span>
+                XSS Prevention
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">HUY/KHÁNH/TRINH</span>
+            </div>
+            <div class="question-text">
+                User có thể nhập mô tả sự kiện, viết review. Làm sao ngăn chặn Cross-Site Scripting (XSS)?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Output encoding khi render HTML</li>
+                    <li>React đã tự động escape by default</li>
+                    <li>Xử lý đặc biệt với dangerouslySetInnerHTML</li>
+                    <li>Content Security Policy headers</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>React tự động bảo vệ:</b></p>
+                <ul>
+                    <li>React mặc định escape tất cả values trước khi render</li>
+                    <li><code>{userInput}</code> sẽ tự động được escape, script không chạy được</li>
+                </ul>
+                <p><b>Xử lý rich text (mô tả sự kiện):</b></p>
+                <ul>
+                    <li>Mô tả sự kiện dùng Markdown, chuyển sang HTML trước khi hiển thị</li>
+                    <li>Sử dụng thư viện <b>DOMPurify</b> để sanitize HTML trước khi dùng dangerouslySetInnerHTML</li>
+                    <li>Whitelist chỉ cho phép các tags an toàn: p, h1-h6, ul, ol, li, a, strong, em</li>
+                </ul>
+                <p><b>Backend:</b></p>
+                <ul>
+                    <li>Không lưu raw HTML từ user</li>
+                    <li>Validate input, reject nếu có script tags</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu hacker submit review với nội dung '<script>alert('XSS')</script>', hệ thống sẽ lưu và hiển thị như thế nào?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">21</span>
+                Rate Limiting
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Làm sao ngăn chặn brute force attack vào login hoặc abuse API? Nhóm có implement rate limiting không?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Rate limiting strategies: fixed window, sliding window, token bucket</li>
+                    <li>Implementation: Spring Cloud Gateway, Bucket4j, hoặc custom filter</li>
+                    <li>Different limits cho different endpoints</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Rate Limiting Implementation:</b></p>
+                <ul>
+                    <li>Sử dụng <b>Bucket4j</b> library tích hợp với Spring Boot</li>
+                    <li>Áp dụng sliding window algorithm</li>
+                </ul>
+                <p><b>Các mức rate limit:</b></p>
+                <ul>
+                    <li><b>Login endpoint:</b> 5 requests/phút/IP - chống brute force</li>
+                    <li><b>Register:</b> 3 requests/giờ/IP - chống spam account</li>
+                    <li><b>API chung:</b> 100 requests/phút/user - chống abuse</li>
+                    <li><b>Search:</b> 30 requests/phút - tránh overload</li>
+                </ul>
+                <p><b>Response khi exceed limit:</b> HTTP 429 Too Many Requests với header Retry-After</p>
+                <p><b>Additional protection:</b> CAPTCHA sau 3 lần login failed</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu hacker dùng botnet với 1000 IP khác nhau để tấn công, rate limiting theo IP có còn hiệu quả không? Có giải pháp nào khác?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">22</span>
+                Sensitive Data Protection
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống lưu trữ thông tin nhạy cảm như password, payment info. Nhóm bảo vệ những dữ liệu này như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Password hashing với BCrypt</li>
+                    <li>Không lưu payment card info (Stripe handles it)</li>
+                    <li>Encryption at rest và in transit</li>
+                    <li>Environment variables cho secrets</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Password:</b></p>
+                <ul>
+                    <li>Hash với <b>BCrypt</b> (work factor 12)</li>
+                    <li>Không bao giờ lưu plain text password</li>
+                    <li>Không log password trong bất kỳ đâu</li>
+                </ul>
+                <p><b>Payment Information:</b></p>
+                <ul>
+                    <li>KHÔNG lưu card number, CVV trên server</li>
+                    <li>Stripe Tokenization: card info chỉ gửi trực tiếp đến Stripe</li>
+                    <li>Server chỉ lưu Stripe customer_id và payment_method_id</li>
+                </ul>
+                <p><b>Data in Transit:</b></p>
+                <ul>
+                    <li>HTTPS everywhere (TLS 1.2+)</li>
+                    <li>HSTS header để force HTTPS</li>
+                </ul>
+                <p><b>Secrets Management:</b></p>
+                <ul>
+                    <li>API keys, DB password lưu trong environment variables</li>
+                    <li>Không commit secrets vào Git (.env trong .gitignore)</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu database bị leak (hacker có được database dump), họ có thể làm gì với dữ liệu đó? Có thể decrypt password không?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN VI: AI INTEGRATION -->
+    <div class="section" id="ai">
+        <h2>VI. Câu Hỏi Về Tích Hợp AI</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">23</span>
+                AI Content Generation
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có tính năng AI tạo mô tả sự kiện. Nhóm tích hợp AI như thế nào? Sử dụng model gì?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>LLM API được sử dụng (Groq với Llama, OpenAI, etc.)</li>
+                    <li>Prompt engineering cho content generation</li>
+                    <li>Rate limiting và cost control</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>AI Service:</b> Sử dụng <b>Groq API</b> với model <b>Llama 3</b></p>
+                <p><b>Tại sao chọn Groq:</b></p>
+                <ul>
+                    <li>Response time cực nhanh (~500ms)</li>
+                    <li>Free tier generous, phù hợp cho MVP</li>
+                    <li>Llama 3 chất lượng tốt cho text generation</li>
+                </ul>
+                <p><b>Use cases:</b></p>
+                <ul>
+                    <li><b>Generate event description:</b> Input: tên, category, date → Output: mô tả chi tiết</li>
+                    <li><b>Generate rejection reason:</b> Input: event content, violation type → Output: lý do từ chối lịch sự</li>
+                    <li><b>AI Insights:</b> Phân tích trend đăng ký, gợi ý cải thiện</li>
+                </ul>
+                <p><b>Prompt template ví dụ:</b></p>
+                <code>"Viết mô tả hấp dẫn cho sự kiện {name} thuộc category {category}, diễn ra ngày {date} tại {location}. Mô tả nên có 150-200 từ, nêu bật điểm hấp dẫn và kêu gọi đăng ký."</code>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"AI có thể generate nội dung không phù hợp hoặc sai sự thật. Nhóm có review/filter output của AI trước khi hiển thị không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">24</span>
+                AI Content Moderation
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA/TRINH</span>
+            </div>
+            <div class="question-text">
+                Hệ thống dùng AI để kiểm duyệt nội dung sự kiện và review. Làm sao AI phân loại nội dung Safe/Warning/Unsafe?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Content moderation prompt design</li>
+                    <li>Classification criteria</li>
+                    <li>Handling edge cases và false positives</li>
+                    <li>Human review workflow</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>AI Moderation Flow:</b></p>
+                <ol>
+                    <li>Event/Review được submit</li>
+                    <li>Backend gửi content đến AI với prompt yêu cầu phân loại</li>
+                    <li>AI trả về: classification (SAFE/WARNING/UNSAFE) + reasoning</li>
+                    <li>Nếu SAFE: tự động approve cho review, đưa vào queue cho event</li>
+                    <li>Nếu WARNING/UNSAFE: flag cho Admin review</li>
+                </ol>
+                <p><b>Classification criteria:</b></p>
+                <ul>
+                    <li><b>UNSAFE:</b> Hate speech, violence, illegal activity, scam</li>
+                    <li><b>WARNING:</b> Potentially misleading, excessive promotion, unverified claims</li>
+                    <li><b>SAFE:</b> Normal content không vi phạm</li>
+                </ul>
+                <p><b>Prompt:</b> "Analyze the following event description. Classify as SAFE, WARNING, or UNSAFE based on: hate speech, violence, illegal content, scam indicators, misleading claims. Return JSON: {classification, reasons, confidence}"</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu AI classify sai (false positive - block event hợp lệ), Organiser có cách nào appeal không? Quy trình như thế nào?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">25</span>
+                Personalized Recommendations
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Trang chủ có mục "Picked for You" với các sự kiện gợi ý. Algorithm recommendation hoạt động như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Collaborative filtering vs Content-based filtering</li>
+                    <li>Dữ liệu nào được sử dụng: history, preferences, location</li>
+                    <li>Cold start problem với user mới</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Recommendation Algorithm:</b> Kết hợp <b>Content-based</b> và <b>Rule-based</b></p>
+                <p><b>Factors được xem xét:</b></p>
+                <ul>
+                    <li><b>User preferences:</b> Categories đã đăng ký, đã like</li>
+                    <li><b>Location:</b> Ưu tiên events ở thành phố gần user</li>
+                    <li><b>Past behavior:</b> Events tương tự những gì đã tham gia</li>
+                    <li><b>Trending:</b> Events có nhiều đăng ký gần đây</li>
+                    <li><b>Organiser following:</b> Events từ organiser đang follow</li>
+                </ul>
+                <p><b>Scoring:</b> Mỗi event được tính điểm dựa trên các factors, sort theo score giảm dần</p>
+                <p><b>Cold start (user mới):</b></p>
+                <ul>
+                    <li>Hỏi preferences khi onboarding (chọn categories yêu thích)</li>
+                    <li>Dùng location để gợi ý events gần đó</li>
+                    <li>Hiển thị trending events</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Recommendation có bị bias không? Ví dụ luôn gợi ý events của top Organisers, events mới khó được recommend?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN VII: HIỆU NĂNG -->
+    <div class="section" id="hieu-nang">
+        <h2>VII. Câu Hỏi Về Hiệu Năng & Mở Rộng</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">26</span>
+                Database Optimization
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">DUY/KHOA</span>
+            </div>
+            <div class="question-text">
+                Với lượng data lớn (nhiều events, registrations), nhóm đã optimize database queries như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Indexing strategy</li>
+                    <li>Query optimization (explain analyze)</li>
+                    <li>Eager vs Lazy loading với JPA</li>
+                    <li>Pagination</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Indexing:</b></p>
+                <ul>
+                    <li>Primary key indexes (tự động)</li>
+                    <li>Index trên foreign keys: <code>event_id</code> trong registrations</li>
+                    <li>Composite index cho search: <code>(city_id, category_id, start_date)</code></li>
+                    <li>Full-text index trên event name, description cho search</li>
+                </ul>
+                <p><b>JPA Optimization:</b></p>
+                <ul>
+                    <li>Default <b>Lazy loading</b> cho @OneToMany, @ManyToMany</li>
+                    <li>Dùng <b>@EntityGraph</b> hoặc <b>JOIN FETCH</b> khi cần eager load để tránh N+1 problem</li>
+                    <li>DTO projection thay vì load full entity khi chỉ cần vài fields</li>
+                </ul>
+                <p><b>Pagination:</b></p>
+                <ul>
+                    <li>Tất cả list endpoints đều có pagination</li>
+                    <li>Sử dụng Spring Data Pageable</li>
+                    <li>Limit page size max 100 để tránh overload</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Cho query: 'Lấy tất cả events trong tháng này ở TP.HCM, category Music, sắp xếp theo số registrations'. Nhóm viết query này như thế nào và có index phù hợp chưa?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">27</span>
+                Caching Strategy
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Hệ thống có sử dụng caching không? Nếu có, cache những gì và dùng công nghệ gì?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>In-memory cache vs Distributed cache (Redis)</li>
+                    <li>What to cache: static data, frequently accessed data</li>
+                    <li>Cache invalidation strategy</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Caching được sử dụng:</b></p>
+                <ul>
+                    <li><b>Spring Cache</b> với <b>Caffeine</b> (in-memory cache)</li>
+                    <li>Có thể upgrade lên Redis khi scale</li>
+                </ul>
+                <p><b>Những gì được cache:</b></p>
+                <ul>
+                    <li><b>Categories list:</b> Ít thay đổi, cache 1 giờ</li>
+                    <li><b>Cities list:</b> Ít thay đổi, cache 1 giờ</li>
+                    <li><b>Event detail:</b> Cache 5 phút, invalidate khi update</li>
+                    <li><b>User profile:</b> Cache 10 phút</li>
+                    <li><b>Dashboard statistics:</b> Cache 15 phút (expensive queries)</li>
+                </ul>
+                <p><b>Cache invalidation:</b></p>
+                <ul>
+                    <li>TTL-based expiration</li>
+                    <li>Manual evict khi data được update: <code>@CacheEvict</code></li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Event có số registrations hiển thị trên card. Nếu cache event detail, số registrations có thể outdated. Làm sao cân bằng giữa performance và data freshness?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">28</span>
+                Scalability Plan
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Nếu LUMA có 1 triệu users và 10,000 concurrent requests, hệ thống hiện tại có handle được không? Cần thay đổi gì?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Horizontal scaling với load balancer</li>
+                    <li>Database scaling: read replicas, sharding</li>
+                    <li>Message queue cho async processing</li>
+                    <li>Microservices migration</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Hiện tại:</b> Single server có thể handle ~500-1000 concurrent users</p>
+                <p><b>Scaling plan:</b></p>
+                <ul>
+                    <li><b>Phase 1 - Vertical scaling:</b> Tăng server resources (CPU, RAM)</li>
+                    <li><b>Phase 2 - Horizontal scaling:</b>
+                        <ul>
+                            <li>Deploy multiple backend instances</li>
+                            <li>Load balancer (Nginx/AWS ALB) phân phối requests</li>
+                            <li>Stateless backend (JWT-based auth)</li>
+                        </ul>
+                    </li>
+                    <li><b>Phase 3 - Database scaling:</b>
+                        <ul>
+                            <li>Read replicas cho heavy read operations</li>
+                            <li>Connection pooling (HikariCP)</li>
+                        </ul>
+                    </li>
+                    <li><b>Phase 4 - Distributed caching:</b> Redis cluster</li>
+                    <li><b>Phase 5 - Message Queue:</b> RabbitMQ/Kafka cho email, notifications, async tasks</li>
+                    <li><b>Phase 6 - Microservices:</b> Tách Payment Service, Notification Service, AI Service</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Khi có flash sale event (Taylor Swift concert), 100,000 người cùng đăng ký trong 1 phút. Làm sao tránh overselling vé và system crash?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">29</span>
+                Error Handling & Logging
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">KHOA/DUY</span>
+            </div>
+            <div class="question-text">
+                Khi hệ thống production gặp lỗi, làm sao nhóm phát hiện và debug? Có logging/monitoring không?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Logging framework và log levels</li>
+                    <li>Centralized logging (ELK stack, CloudWatch)</li>
+                    <li>Error tracking (Sentry)</li>
+                    <li>Health check endpoints</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Logging:</b></p>
+                <ul>
+                    <li>Sử dụng <b>SLF4J + Logback</b> (Spring Boot default)</li>
+                    <li>Log levels: ERROR cho exceptions, WARN cho issues, INFO cho important events, DEBUG cho development</li>
+                    <li>Structured logging với JSON format cho dễ parse</li>
+                    <li>Log request/response với correlation ID để trace</li>
+                </ul>
+                <p><b>Error Handling:</b></p>
+                <ul>
+                    <li>Global exception handler với @ControllerAdvice</li>
+                    <li>Custom exceptions cho business errors</li>
+                    <li>Không expose stack trace cho client (chỉ show error message friendly)</li>
+                </ul>
+                <p><b>Monitoring (production-ready):</b></p>
+                <ul>
+                    <li>Spring Actuator cho health checks, metrics</li>
+                    <li>Có thể integrate với Prometheus + Grafana</li>
+                    <li>Sentry cho error tracking và alerting</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu payment API của Stripe đột ngột chậm (timeout 30 giây thay vì 3 giây), user experience sẽ như thế nào? Có circuit breaker không?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN VIII: TÌNH HUỐNG THỰC TẾ -->
+    <div class="section" id="thuc-te">
+        <h2>VIII. Câu Hỏi Tình Huống Thực Tế</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">30</span>
+                Sự kiện bị hủy đột ngột
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">Cả nhóm</span>
+            </div>
+            <div class="question-text">
+                Một sự kiện có 500 người đăng ký bỗng nhiên phải hủy do thiên tai. Hệ thống xử lý như thế nào để đảm bảo tất cả được hoàn tiền và thông báo?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Event cancellation flow</li>
+                    <li>Batch refund processing</li>
+                    <li>Mass notification</li>
+                    <li>Handling partial failures</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Event Cancellation Flow:</b></p>
+                <ol>
+                    <li>Organiser/Admin cancel event với lý do</li>
+                    <li>Event status → CANCELLED</li>
+                    <li>Tất cả registrations được đánh dấu PENDING_REFUND</li>
+                    <li>Background job xử lý refund từng registration:
+                        <ul>
+                            <li>Gọi Stripe Refund API</li>
+                            <li>Update registration status → REFUNDED</li>
+                            <li>Gửi email thông báo hủy + refund</li>
+                        </ul>
+                    </li>
+                    <li>Dashboard hiển thị progress: 450/500 refunded</li>
+                    <li>Retry mechanism cho failed refunds</li>
+                    <li>Alert admin nếu có refund fail sau 3 retries</li>
+                </ol>
+                <p><b>Partial failure handling:</b> Log failed refunds, admin có thể manual trigger retry hoặc xử lý manual qua Stripe dashboard</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu Organiser cố tình hủy event sau khi đã nhận payout để giữ tiền, hệ thống có cơ chế nào bảo vệ user không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">31</span>
+                Gian lận thanh toán
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Có người dùng thẻ tín dụng đánh cắp để mua vé. Khi chủ thẻ thật phát hiện và dispute (chargeback), hệ thống xử lý như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Stripe chargeback/dispute flow</li>
+                    <li>Evidence submission</li>
+                    <li>User account handling</li>
+                    <li>Prevention measures</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Khi có chargeback:</b></p>
+                <ol>
+                    <li>Stripe gửi webhook "charge.dispute.created"</li>
+                    <li>Hệ thống tự động:
+                        <ul>
+                            <li>Đánh dấu payment là DISPUTED</li>
+                            <li>Vô hiệu hóa ticket liên quan</li>
+                            <li>Flag user account</li>
+                            <li>Notify admin</li>
+                        </ul>
+                    </li>
+                    <li>Admin review và có thể submit evidence:
+                        <ul>
+                            <li>IP address của transaction</li>
+                            <li>Check-in records nếu đã tham dự</li>
+                            <li>Communication logs</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p><b>Prevention:</b></p>
+                <ul>
+                    <li>Stripe Radar cho fraud detection</li>
+                    <li>3D Secure cho high-value transactions</li>
+                    <li>Velocity checks (nhiều purchases trong thời gian ngắn)</li>
+                    <li>Address verification (AVS)</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Ai chịu thiệt hại tài chính khi có chargeback? LUMA, Organiser, hay Stripe? Có thể cấu hình để Organiser chịu trách nhiệm được không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">32</span>
+                Data Privacy & GDPR
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">Cả nhóm</span>
+            </div>
+            <div class="question-text">
+                Nếu user yêu cầu xóa toàn bộ dữ liệu cá nhân của họ (Right to be Forgotten theo GDPR), hệ thống xử lý như thế nào?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Data deletion vs anonymization</li>
+                    <li>Related data handling (registrations, reviews, payments)</li>
+                    <li>Backup considerations</li>
+                    <li>Legal requirements retention</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Account Deletion Flow:</b></p>
+                <ol>
+                    <li>User request deletion trong Settings</li>
+                    <li>Confirm với password/email verification</li>
+                    <li>Grace period 7 ngày để cancel (tránh accidental deletion)</li>
+                    <li>Sau 7 ngày, background job xử lý:
+                        <ul>
+                            <li><b>Delete:</b> Personal info (name, email, phone)</li>
+                            <li><b>Anonymize:</b> Reviews → "Deleted User", giữ content nếu valuable</li>
+                            <li><b>Retain:</b> Payment records (legal requirement 7 năm), nhưng anonymize PII</li>
+                            <li><b>Invalidate:</b> Tất cả tickets</li>
+                        </ul>
+                    </li>
+                </ol>
+                <p><b>Data được giữ lại (anonymized):</b></p>
+                <ul>
+                    <li>Registration records cho Organiser statistics</li>
+                    <li>Payment records cho tax/audit</li>
+                    <li>Aggregate analytics data</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"User đã là Organiser với 50 events và 10,000 registrations. Nếu họ yêu cầu xóa, có ảnh hưởng gì đến những người đã đăng ký events của họ không?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">33</span>
+                System Outage Recovery
+                <span class="difficulty hard">Nâng cao</span>
+                <span class="category">KHOA</span>
+            </div>
+            <div class="question-text">
+                Server bị down 2 tiếng đúng lúc có sự kiện lớn đang check-in. Khi khôi phục, làm sao đảm bảo không mất data và check-in hoạt động bình thường?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Offline check-in capability</li>
+                    <li>Data sync sau khi online</li>
+                    <li>Database backup và recovery</li>
+                    <li>Incident response procedure</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Prevention:</b></p>
+                <ul>
+                    <li>Database automated daily backups</li>
+                    <li>Point-in-time recovery enabled</li>
+                    <li>Health monitoring và alerting</li>
+                </ul>
+                <p><b>During outage - Offline check-in:</b></p>
+                <ul>
+                    <li>Organiser app có thể cache danh sách registrations</li>
+                    <li>Check-in offline mode: validate QR locally, store locally</li>
+                    <li>Sync với server khi online lại</li>
+                </ul>
+                <p><b>Recovery procedure:</b></p>
+                <ol>
+                    <li>Identify root cause (server crash, DB issue, network)</li>
+                    <li>Restore from latest backup nếu cần</li>
+                    <li>Verify data integrity</li>
+                    <li>Sync offline check-ins từ Organiser devices</li>
+                    <li>Resolve conflicts (duplicate check-ins)</li>
+                    <li>Notify affected users về outage và resolution</li>
+                </ol>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu 2 Organiser devices check-in cùng một vé khi offline, khi sync sẽ có 2 records. Làm sao resolve conflict này?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHẦN IX: PHÂN CÔNG & QUY TRÌNH -->
+    <div class="section" id="phan-cong">
+        <h2>IX. Câu Hỏi Về Phân Công & Quy Trình Làm Việc</h2>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">34</span>
+                Git Workflow
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">Cả nhóm</span>
+            </div>
+            <div class="question-text">
+                5 người cùng làm việc trên cùng codebase. Nhóm sử dụng Git workflow như thế nào để tránh conflict và đảm bảo code quality?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Branching strategy (Git Flow, GitHub Flow)</li>
+                    <li>Pull Request và Code Review process</li>
+                    <li>Merge conflict resolution</li>
+                    <li>CI/CD integration</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Branching Strategy:</b> GitHub Flow (đơn giản hóa)</p>
+                <ul>
+                    <li><code>main</code>: Production-ready code</li>
+                    <li><code>develop</code>: Integration branch</li>
+                    <li><code>feature/xxx</code>: Feature branches</li>
+                    <li><code>bugfix/xxx</code>: Bug fix branches</li>
+                </ul>
+                <p><b>Workflow:</b></p>
+                <ol>
+                    <li>Tạo feature branch từ develop</li>
+                    <li>Commit thường xuyên với meaningful messages</li>
+                    <li>Tạo Pull Request khi feature hoàn thành</li>
+                    <li>Ít nhất 1 người review và approve</li>
+                    <li>Merge vào develop</li>
+                    <li>Cuối sprint, merge develop → main</li>
+                </ol>
+                <p><b>Code Review checklist:</b> Logic đúng, không có security issues, coding standards, có tests</p>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Có trường hợp nào 2 người cùng sửa 1 file và gây conflict nghiêm trọng không? Nhóm giải quyết như thế nào?"</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">35</span>
+                Testing Strategy
+                <span class="difficulty medium">Trung bình</span>
+                <span class="category">Cả nhóm</span>
+            </div>
+            <div class="question-text">
+                Nhóm có viết tests không? Unit tests, Integration tests hay Manual testing? Tỷ lệ code coverage là bao nhiêu?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Types of tests implemented</li>
+                    <li>Testing frameworks used</li>
+                    <li>What is tested and what is not</li>
+                    <li>Test automation</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Testing approach:</b></p>
+                <ul>
+                    <li><b>Unit Tests:</b> JUnit 5 + Mockito cho backend services</li>
+                    <li><b>Integration Tests:</b> @SpringBootTest cho API endpoints</li>
+                    <li><b>Manual Testing:</b> QA cho UI/UX, edge cases</li>
+                </ul>
+                <p><b>Focus areas:</b></p>
+                <ul>
+                    <li>Payment flow (critical - nhiều tests nhất)</li>
+                    <li>Authentication/Authorization</li>
+                    <li>Registration và Check-in logic</li>
+                </ul>
+                <p><b>Coverage:</b> ~60% cho backend services (focus on business logic)</p>
+                <p><b>Limitations:</b></p>
+                <ul>
+                    <li>Mobile app chủ yếu manual test do thời gian hạn chế</li>
+                    <li>Không có end-to-end automated tests</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Cho em thấy một test case cụ thể mà nhóm đã viết. Giải thích test này kiểm tra gì và tại sao quan trọng."</p>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-title">
+                <span class="question-number">36</span>
+                Challenges & Lessons Learned
+                <span class="difficulty easy">Cơ bản</span>
+                <span class="category">Cả nhóm</span>
+            </div>
+            <div class="question-text">
+                Trong quá trình phát triển, nhóm gặp khó khăn gì lớn nhất? Đã giải quyết như thế nào và học được bài học gì?
+            </div>
+            <div class="hint-box">
+                <strong>Gợi ý trả lời:</strong>
+                <ul>
+                    <li>Technical challenges</li>
+                    <li>Team coordination challenges</li>
+                    <li>Learning curve với new technologies</li>
+                    <li>Thành thật về những gì chưa hoàn thiện</li>
+                </ul>
+            </div>
+            <div class="answer-box">
+                <strong>Câu trả lời mẫu:</strong>
+                <p><b>Khó khăn kỹ thuật:</b></p>
+                <ul>
+                    <li><b>Stripe Integration:</b> Đọc documentation nhiều, test mode vs live mode khác nhau</li>
+                    <li><b>Real-time Chat:</b> WebSocket connection management, reconnection handling</li>
+                    <li><b>React Native:</b> Platform-specific bugs, build issues</li>
+                </ul>
+                <p><b>Khó khăn teamwork:</b></p>
+                <ul>
+                    <li>Merge conflicts khi nhiều người sửa cùng module</li>
+                    <li>Communication về API contracts giữa frontend và backend</li>
+                </ul>
+                <p><b>Bài học:</b></p>
+                <ul>
+                    <li>Define API contracts sớm bằng Swagger/OpenAPI</li>
+                    <li>Frequent sync meetings để tránh divergence</li>
+                    <li>Đọc kỹ documentation trước khi implement</li>
+                    <li>Viết tests cho critical paths</li>
+                </ul>
+            </div>
+            <div class="challenge-box">
+                <strong>Câu hỏi chất vấn thêm:</strong>
+                <p>"Nếu được làm lại từ đầu, nhóm sẽ thay đổi điều gì? Có technology choice nào nhóm hối hận không?"</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p><strong>Bộ Câu Hỏi Phản Biện - Dự Án LUMA</strong></p>
+        <p>Tổng cộng: 36 câu hỏi | 9 chủ đề</p>
+        <p>Mỗi câu hỏi đều có: Gợi ý trả lời + Câu trả lời mẫu + Câu hỏi chất vấn nâng cao</p>
+        <p style="margin-top: 15px; font-style: italic;">Chúc các bạn bảo vệ đồ án thành công!</p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,8 +1,6 @@
-/// Smart greeting utilities based on time of day
 class SmartGreeting {
   SmartGreeting._();
 
-  /// Get greeting based on current time
   static String getGreeting() {
     final hour = DateTime.now().hour;
 
@@ -17,7 +15,6 @@ class SmartGreeting {
     }
   }
 
-  /// Get greeting with name
   static String getGreetingWithName(String? name) {
     final greeting = getGreeting();
     if (name != null && name.isNotEmpty) {
@@ -26,7 +23,6 @@ class SmartGreeting {
     return greeting;
   }
 
-  /// Get greeting emoji
   static String getGreetingEmoji() {
     final hour = DateTime.now().hour;
 
@@ -41,12 +37,10 @@ class SmartGreeting {
     }
   }
 
-  /// Get motivational message based on time
   static String getMotivationalMessage() {
     final hour = DateTime.now().hour;
     final dayOfWeek = DateTime.now().weekday;
 
-    // Weekend messages
     if (dayOfWeek == DateTime.saturday || dayOfWeek == DateTime.sunday) {
       if (hour >= 5 && hour < 12) {
         return 'Perfect weekend morning for events!';
@@ -57,7 +51,6 @@ class SmartGreeting {
       }
     }
 
-    // Weekday messages
     if (hour >= 5 && hour < 12) {
       return 'Start your day with something exciting!';
     } else if (hour >= 12 && hour < 17) {
@@ -69,7 +62,6 @@ class SmartGreeting {
     }
   }
 
-  /// Get subtitle for home screen
   static String getHomeSubtitle() {
     final dayOfWeek = DateTime.now().weekday;
     final isWeekend =

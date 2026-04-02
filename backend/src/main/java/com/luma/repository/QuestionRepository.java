@@ -48,23 +48,19 @@ public interface QuestionRepository extends JpaRepository<Question, UUID> {
     @Query("SELECT COUNT(q) FROM Question q WHERE q.event.organiser = :organiser AND q.isAnswered = true")
     long countAnsweredByOrganiser(@Param("organiser") User organiser);
 
-    // Find similar answered questions for AI context (FAQ-like)
     @Query(value = "SELECT q FROM Question q JOIN FETCH q.event e " +
            "WHERE q.isAnswered = true AND e.category = :category " +
            "ORDER BY q.answeredAt DESC")
     Page<Question> findAnsweredByCategory(@Param("category") com.luma.entity.Category category, Pageable pageable);
 
-    // Find answered questions for same event
     @Query("SELECT q FROM Question q WHERE q.event = :event AND q.isAnswered = true ORDER BY q.answeredAt DESC")
     java.util.List<Question> findAnsweredByEvent(@Param("event") Event event);
 
-    // Find answered questions by organiser (for learning patterns)
     @Query(value = "SELECT q FROM Question q JOIN FETCH q.event e " +
            "WHERE e.organiser = :organiser AND q.isAnswered = true " +
            "ORDER BY q.answeredAt DESC")
     Page<Question> findAnsweredHistoryByOrganiser(@Param("organiser") User organiser, Pageable pageable);
 
-    // Search similar questions by keywords
     @Query(value = "SELECT q FROM Question q WHERE q.isAnswered = true " +
            "AND (LOWER(q.question) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     java.util.List<Question> findSimilarAnsweredQuestions(@Param("keyword") String keyword, Pageable pageable);

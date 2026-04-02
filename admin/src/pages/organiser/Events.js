@@ -132,6 +132,19 @@ const OrganiserEvents = () => {
     const [aiGenerating, setAiGenerating] = useState(false);
     const [aiImproving, setAiImproving] = useState(false);
     const [geocoding, setGeocoding] = useState(false);
+    const [aiEventDialog, setAiEventDialog] = useState(false);
+    const [aiEventLoading, setAiEventLoading] = useState(false);
+    const [aiEventForm, setAiEventForm] = useState({
+        eventIdea: '',
+        eventType: '',
+        targetAudience: '',
+        preferredDate: '',
+        preferredTime: '',
+        cityId: '',
+        language: 'vi',
+    });
+    const [aiGeneratedEvent, setAiGeneratedEvent] = useState(null);
+    const [selectedTitleIndex, setSelectedTitleIndex] = useState(0);
 
     const handleGeocodeAddress = async () => {
         if (!formData.address.trim()) {
@@ -220,7 +233,6 @@ const OrganiserEvents = () => {
     };
 
     const handleOpenDialog = async (event = null) => {
-        // Check subscription quota before creating new event
         if (!event && subscription) {
             const remaining = subscription.remainingEvents;
             if (remaining === 0) {
@@ -501,23 +513,6 @@ const OrganiserEvents = () => {
             return;
         }
 
-        // Check AI quota before using
-        if (subscription) {
-            const remaining = subscription.remainingAIUsage;
-            if (remaining === 0) {
-                setUpgradeDialog({
-                    open: true,
-                    message: `You have reached your monthly AI usage limit (${subscription.maxAIUsagePerMonth} generations). Upgrade your plan to use more AI features.`,
-                    feature: 'AI Generation',
-                });
-                return;
-            }
-            // Warning if near quota (3 or less remaining)
-            if (remaining !== -1 && remaining <= 3) {
-                toast.warning(`You have ${remaining} AI generation${remaining > 1 ? 's' : ''} remaining this month.`);
-            }
-        }
-
         setAiGenerating(true);
         try {
             const selectedCategory = categories.find(c => c.id === formData.categoryId);
@@ -531,7 +526,6 @@ const OrganiserEvents = () => {
             });
             setFormData({ ...formData, description: response.data.data.description });
             toast.success('Description generated!');
-            // Refresh subscription to update remaining AI usage
             loadMasterData();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to generate description');
@@ -546,23 +540,6 @@ const OrganiserEvents = () => {
             return;
         }
 
-        // Check AI quota before using
-        if (subscription) {
-            const remaining = subscription.remainingAIUsage;
-            if (remaining === 0) {
-                setUpgradeDialog({
-                    open: true,
-                    message: `You have reached your monthly AI usage limit (${subscription.maxAIUsagePerMonth} generations). Upgrade your plan to use more AI features.`,
-                    feature: 'AI Generation',
-                });
-                return;
-            }
-            // Warning if near quota (3 or less remaining)
-            if (remaining !== -1 && remaining <= 3) {
-                toast.warning(`You have ${remaining} AI generation${remaining > 1 ? 's' : ''} remaining this month.`);
-            }
-        }
-
         setAiImproving(true);
         try {
             const response = await organiserApi.improveEventDescription({
@@ -571,7 +548,6 @@ const OrganiserEvents = () => {
             });
             setFormData({ ...formData, description: response.data.data.description });
             toast.success('Description improved!');
-            // Refresh subscription to update remaining AI usage
             loadMasterData();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to improve description');
@@ -654,7 +630,6 @@ const OrganiserEvents = () => {
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box>
-                {/* Near Quota Warning */}
                 {subscription && subscription.remainingEvents !== -1 && subscription.remainingEvents <= 2 && subscription.remainingEvents > 0 && (
                     <Alert severity="warning" sx={{ mb: 2 }}>
                         <Typography variant="body2">
@@ -683,6 +658,14 @@ const OrganiserEvents = () => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button startIcon={<RefreshIcon />} onClick={loadEvents}>
                             Refresh
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<AIIcon />}
+                            onClick={() => setAiEventDialog(true)}
+                            color="secondary"
+                        >
+                            AI Generate
                         </Button>
                         <Button
                             variant="contained"
@@ -1288,6 +1271,317 @@ const OrganiserEvents = () => {
                     message={upgradeDialog.message}
                     feature={upgradeDialog.feature}
                 />
+
+                <Dialog open={aiEventDialog} onClose={() => !aiEventLoading && setAiEventDialog(false)} maxWidth="md" fullWidth>
+                    <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AIIcon color="secondary" />
+                        AI Event Generator
+                    </DialogTitle>
+                    <DialogContent>
+                        {!aiGeneratedEvent ? (
+                            <Box sx={{ mt: 2 }}>
+                                <Alert severity="info" sx={{ mb: 3 }}>
+                                    Describe your event idea and AI will generate a complete event for you including title, description, venue suggestions, and more!
+                                </Alert>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            fullWidth
+                                            label="Event Idea *"
+                                            placeholder="e.g., Workshop về ReactJS cho người mới bắt đầu"
+                                            value={aiEventForm.eventIdea}
+                                            onChange={(e) => setAiEventForm({ ...aiEventForm, eventIdea: e.target.value })}
+                                            multiline
+                                            rows={2}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Event Type</InputLabel>
+                                            <Select
+                                                value={aiEventForm.eventType}
+                                                label="Event Type"
+                                                onChange={(e) => setAiEventForm({ ...aiEventForm, eventType: e.target.value })}
+                                            >
+                                                <MenuItem value="">Not specified</MenuItem>
+                                                <MenuItem value="WORKSHOP">Workshop</MenuItem>
+                                                <MenuItem value="CONFERENCE">Conference</MenuItem>
+                                                <MenuItem value="SEMINAR">Seminar</MenuItem>
+                                                <MenuItem value="MEETUP">Meetup</MenuItem>
+                                                <MenuItem value="NETWORKING">Networking</MenuItem>
+                                                <MenuItem value="PARTY">Party</MenuItem>
+                                                <MenuItem value="CONCERT">Concert</MenuItem>
+                                                <MenuItem value="EXHIBITION">Exhibition</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Target Audience"
+                                            placeholder="e.g., Developers, Students, Professionals"
+                                            value={aiEventForm.targetAudience}
+                                            onChange={(e) => setAiEventForm({ ...aiEventForm, targetAudience: e.target.value })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Preferred Date"
+                                            placeholder="e.g., Next Saturday, December 25"
+                                            value={aiEventForm.preferredDate}
+                                            onChange={(e) => setAiEventForm({ ...aiEventForm, preferredDate: e.target.value })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Preferred Time"
+                                            placeholder="e.g., Morning, 9:00 AM, Evening"
+                                            value={aiEventForm.preferredTime}
+                                            onChange={(e) => setAiEventForm({ ...aiEventForm, preferredTime: e.target.value })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>City</InputLabel>
+                                            <Select
+                                                value={aiEventForm.cityId}
+                                                label="City"
+                                                onChange={(e) => setAiEventForm({ ...aiEventForm, cityId: e.target.value })}
+                                            >
+                                                <MenuItem value="">Not specified</MenuItem>
+                                                {cities.map((city) => (
+                                                    <MenuItem key={city.id} value={city.id}>
+                                                        {city.name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Language</InputLabel>
+                                            <Select
+                                                value={aiEventForm.language}
+                                                label="Language"
+                                                onChange={(e) => setAiEventForm({ ...aiEventForm, language: e.target.value })}
+                                            >
+                                                <MenuItem value="vi">Vietnamese</MenuItem>
+                                                <MenuItem value="en">English</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        ) : (
+                            <Box sx={{ mt: 2 }}>
+                                <Alert severity="success" sx={{ mb: 3 }}>
+                                    AI has generated your event! Review and customize below, then click "Use This Event" to create.
+                                </Alert>
+
+                                <Typography variant="subtitle2" gutterBottom>Select a Title:</Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+                                    {aiGeneratedEvent.titleSuggestions?.map((title, index) => (
+                                        <Paper
+                                            key={index}
+                                            onClick={() => setSelectedTitleIndex(index)}
+                                            sx={{
+                                                p: 2,
+                                                cursor: 'pointer',
+                                                border: selectedTitleIndex === index ? '2px solid' : '1px solid',
+                                                borderColor: selectedTitleIndex === index ? 'primary.main' : 'divider',
+                                                bgcolor: selectedTitleIndex === index ? 'primary.50' : 'background.paper',
+                                                '&:hover': { borderColor: 'primary.main' },
+                                            }}
+                                        >
+                                            <Typography variant="body1">{title}</Typography>
+                                        </Paper>
+                                    ))}
+                                </Box>
+
+                                <Typography variant="subtitle2" gutterBottom>Description Preview:</Typography>
+                                <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
+                                    <MDEditor.Markdown source={aiGeneratedEvent.description} />
+                                </Paper>
+
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="text.secondary">Category</Typography>
+                                        <Typography variant="body1">{aiGeneratedEvent.suggestedCategory}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="text.secondary">Capacity</Typography>
+                                        <Typography variant="body1">{aiGeneratedEvent.suggestedCapacity} people</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="text.secondary">Venue</Typography>
+                                        <Typography variant="body1">{aiGeneratedEvent.suggestedVenue}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <Typography variant="caption" color="text.secondary">Price</Typography>
+                                        <Typography variant="body1">
+                                            {aiGeneratedEvent.isFree ? 'Free' : `${aiGeneratedEvent.suggestedPrice?.toLocaleString()} VND`}
+                                        </Typography>
+                                    </Grid>
+                                    {aiGeneratedEvent.suggestedAddress && (
+                                        <Grid item xs={12}>
+                                            <Typography variant="caption" color="text.secondary">Address</Typography>
+                                            <Typography variant="body1">{aiGeneratedEvent.suggestedAddress}</Typography>
+                                        </Grid>
+                                    )}
+                                </Grid>
+
+                                {aiGeneratedEvent.suggestedSpeakers?.length > 0 && (
+                                    <Box sx={{ mt: 3 }}>
+                                        <Typography variant="subtitle2" gutterBottom>Suggested Speakers:</Typography>
+                                        <Grid container spacing={2}>
+                                            {aiGeneratedEvent.suggestedSpeakers.map((speaker, index) => (
+                                                <Grid item xs={12} sm={6} key={index}>
+                                                    <Paper sx={{ p: 2 }}>
+                                                        <Typography variant="subtitle2">{speaker.name}</Typography>
+                                                        <Typography variant="body2" color="text.secondary">{speaker.title}</Typography>
+                                                        <Typography variant="body2" sx={{ mt: 1 }}>{speaker.bio}</Typography>
+                                                    </Paper>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </Box>
+                                )}
+                            </Box>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        {!aiGeneratedEvent ? (
+                            <>
+                                <Button onClick={() => setAiEventDialog(false)} disabled={aiEventLoading}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    onClick={async () => {
+                                        if (!aiEventForm.eventIdea.trim()) {
+                                            toast.error('Please enter an event idea');
+                                            return;
+                                        }
+                                        setAiEventLoading(true);
+                                        try {
+                                            const response = await organiserApi.generateFullEvent(aiEventForm);
+                                            setAiGeneratedEvent(response.data.data);
+                                            setSelectedTitleIndex(0);
+                                            toast.success('Event generated successfully!');
+                                        } catch (error) {
+                                            toast.error(error.response?.data?.message || 'Failed to generate event');
+                                        } finally {
+                                            setAiEventLoading(false);
+                                        }
+                                    }}
+                                    disabled={aiEventLoading || !aiEventForm.eventIdea.trim()}
+                                    startIcon={aiEventLoading ? null : <AIIcon />}
+                                >
+                                    {aiEventLoading ? 'Generating...' : 'Generate Event'}
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button onClick={() => {
+                                    setAiGeneratedEvent(null);
+                                    setAiEventForm({
+                                        eventIdea: '',
+                                        eventType: '',
+                                        targetAudience: '',
+                                        preferredDate: '',
+                                        preferredTime: '',
+                                        cityId: '',
+                                        language: 'vi',
+                                    });
+                                }}>
+                                    Generate Another
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    onClick={async () => {
+                                        const matchedCategory = categories.find(
+                                            c => c.name.toLowerCase().includes(aiGeneratedEvent.suggestedCategory?.toLowerCase()) ||
+                                                 aiGeneratedEvent.suggestedCategory?.toLowerCase().includes(c.name.toLowerCase())
+                                        );
+
+                                        const defaultStartTime = new Date();
+                                        defaultStartTime.setDate(defaultStartTime.getDate() + 7);
+                                        defaultStartTime.setHours(9, 0, 0, 0);
+
+                                        const defaultEndTime = new Date(defaultStartTime);
+                                        defaultEndTime.setHours(12, 0, 0, 0);
+
+                                        let latitude = '';
+                                        let longitude = '';
+
+                                        if (aiGeneratedEvent.suggestedAddress) {
+                                            try {
+                                                const encodedAddress = encodeURIComponent(aiGeneratedEvent.suggestedAddress);
+                                                const geoResponse = await fetch(
+                                                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`,
+                                                    { headers: { 'Accept-Language': 'en' } }
+                                                );
+                                                const geoData = await geoResponse.json();
+                                                if (geoData && geoData.length > 0) {
+                                                    latitude = parseFloat(geoData[0].lat);
+                                                    longitude = parseFloat(geoData[0].lon);
+                                                }
+                                            } catch (error) {
+                                                console.error('Geocoding error:', error);
+                                            }
+                                        }
+
+                                        setFormData({
+                                            ...formData,
+                                            title: aiGeneratedEvent.titleSuggestions?.[selectedTitleIndex] || '',
+                                            description: aiGeneratedEvent.description || '',
+                                            venue: aiGeneratedEvent.suggestedVenue || '',
+                                            address: aiGeneratedEvent.suggestedAddress || '',
+                                            latitude,
+                                            longitude,
+                                            capacity: aiGeneratedEvent.suggestedCapacity || 100,
+                                            ticketPrice: aiGeneratedEvent.suggestedPrice || 0,
+                                            isFree: aiGeneratedEvent.isFree ?? true,
+                                            categoryId: matchedCategory?.id || '',
+                                            cityId: aiEventForm.cityId || '',
+                                            startTime: defaultStartTime,
+                                            endTime: defaultEndTime,
+                                            registrationDeadline: getDefaultDeadline(defaultStartTime),
+                                            speakers: aiGeneratedEvent.suggestedSpeakers?.map(s => ({
+                                                name: s.name,
+                                                title: s.title,
+                                                bio: s.bio,
+                                                imageUrl: '',
+                                            })) || [],
+                                        });
+
+                                        setAiEventDialog(false);
+                                        setAiGeneratedEvent(null);
+                                        setAiEventForm({
+                                            eventIdea: '',
+                                            eventType: '',
+                                            targetAudience: '',
+                                            preferredDate: '',
+                                            preferredTime: '',
+                                            cityId: '',
+                                            language: 'vi',
+                                        });
+                                        setDialogOpen(true);
+                                        if (latitude && longitude) {
+                                            toast.success('Event data loaded with coordinates! Please review and complete the form.');
+                                        } else {
+                                            toast.success('Event data loaded! Please review and complete the form.');
+                                        }
+                                    }}
+                                >
+                                    Use This Event
+                                </Button>
+                            </>
+                        )}
+                    </DialogActions>
+                </Dialog>
             </Box>
         </LocalizationProvider>
     );

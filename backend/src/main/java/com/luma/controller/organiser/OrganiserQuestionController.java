@@ -143,7 +143,6 @@ public class OrganiserQuestionController {
                 .contextUsed((Boolean) result.getOrDefault("contextUsed", false))
                 .build();
 
-        // Add similar questions if available
         if (result.containsKey("similarQuestions")) {
             java.util.List<java.util.Map<String, String>> similar =
                     (java.util.List<java.util.Map<String, String>>) result.get("similarQuestions");

@@ -65,7 +65,6 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final RegistrationRepository registrationRepository;
     private final Cloudinary cloudinary;
-    private final OrganiserSubscriptionService subscriptionService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -74,19 +73,10 @@ public class CertificateService {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
 
-    /**
-     * Generate certificate for a registration
-     * Prerequisites: Registration must be APPROVED, checked-in, and event has ended
-     * Also validates that the organiser's subscription allows certificate generation
-     */
     @Transactional
     public CertificateResponse generateCertificate(UUID registrationId) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
-
-        // Check if organiser's subscription allows certificate generation
-        UUID organiserId = registration.getEvent().getOrganiser().getId();
-        subscriptionService.validateCertificateGeneration(organiserId);
 
         validateCertificateEligibility(registration);
 
@@ -115,9 +105,6 @@ public class CertificateService {
         return CertificateResponse.fromEntity(certificate);
     }
 
-    /**
-     * Get certificate by registration ID for the authenticated user
-     */
     public CertificateResponse getCertificateByRegistration(UUID registrationId, User user) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
@@ -130,7 +117,6 @@ public class CertificateService {
 
         Certificate certificate = certificateRepository.findByRegistration(registration)
                 .orElseGet(() -> {
-                    // Auto-generate if eligible but not yet created
                     CertificateResponse response = generateCertificate(registrationId);
                     return certificateRepository.findById(response.getId()).orElseThrow();
                 });
@@ -138,9 +124,6 @@ public class CertificateService {
         return CertificateResponse.fromEntity(certificate);
     }
 
-    /**
-     * Get all certificates for a user
-     */
     public PageResponse<CertificateResponse> getUserCertificates(User user, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByUser(user, pageable);
 
@@ -154,9 +137,6 @@ public class CertificateService {
                 .build();
     }
 
-    /**
-     * Get all certificates for events organized by a user
-     */
     public PageResponse<CertificateResponse> getOrganiserCertificates(User organiser, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByOrganiser(organiser, pageable);
 
@@ -170,9 +150,6 @@ public class CertificateService {
                 .build();
     }
 
-    /**
-     * Get all certificates for a specific event
-     */
     public PageResponse<CertificateResponse> getEventCertificates(UUID eventId, User organiser, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByEventId(eventId, pageable);
 
@@ -193,9 +170,6 @@ public class CertificateService {
                 .build();
     }
 
-    /**
-     * Verify certificate by code (public endpoint)
-     */
     public CertificateResponse verifyCertificate(String code) {
         Certificate certificate = certificateRepository.findByCertificateCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found or invalid"));
@@ -203,14 +177,10 @@ public class CertificateService {
         return CertificateResponse.fromEntity(certificate);
     }
 
-    /**
-     * Get certificate PDF bytes for download
-     */
     public byte[] downloadCertificate(UUID certificateId, User user) {
         Certificate certificate = certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found"));
 
-        // Verify ownership
         if (!certificate.getRegistration().getUser().getId().equals(user.getId())) {
             throw new BadRequestException("You can only download your own certificates");
         }
@@ -218,9 +188,6 @@ public class CertificateService {
         return generateCertificatePdf(certificate.getRegistration(), certificate.getCertificateCode());
     }
 
-    /**
-     * Get certificate PDF by code (public - for viewing/downloading)
-     */
     public byte[] getCertificatePdfByCode(String code) {
         Certificate certificate = certificateRepository.findByCertificateCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found"));
@@ -228,9 +195,6 @@ public class CertificateService {
         return generateCertificatePdf(certificate.getRegistration(), certificate.getCertificateCode());
     }
 
-    /**
-     * Check if a registration is eligible for certificate
-     */
     public boolean isEligibleForCertificate(Registration registration) {
         try {
             validateCertificateEligibility(registration);
@@ -271,7 +235,7 @@ public class CertificateService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf, PageSize.A4.rotate()); // Landscape
+            Document document = new Document(pdf, PageSize.A4.rotate());
 
             DeviceRgb blueColor = new DeviceRgb(41, 171, 226);
             DeviceRgb darkColor = new DeviceRgb(45, 45, 45);
@@ -341,7 +305,6 @@ public class CertificateService {
             canvas.showText(title1);
             canvas.endText();
 
-            // "Of Attendance" (italic)
             canvas.beginText();
             canvas.setFontAndSize(italicFont, 48);
             canvas.setFillColor(blueColor);
@@ -351,7 +314,6 @@ public class CertificateService {
             canvas.showText(title2);
             canvas.endText();
 
-            // "This is to certify that"
             canvas.beginText();
             canvas.setFontAndSize(regularFont, 14);
             canvas.setFillColor(grayColor);
@@ -361,7 +323,6 @@ public class CertificateService {
             canvas.showText(certifyText);
             canvas.endText();
 
-            // User name (large, italic, blue)
             canvas.beginText();
             canvas.setFontAndSize(italicFont, 42);
             canvas.setFillColor(blueColor);
@@ -371,7 +332,6 @@ public class CertificateService {
             canvas.showText(userName);
             canvas.endText();
 
-            // Event description
             String eventDate = event.getStartTime().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
             String eventDesc = "attended the \"" + event.getTitle() + "\"";
 
@@ -383,7 +343,6 @@ public class CertificateService {
             canvas.showText(eventDesc);
             canvas.endText();
 
-            // "conducted on [date]."
             String conductedText = "conducted on " + eventDate + ".";
             canvas.beginText();
             canvas.setFontAndSize(regularFont, 13);
@@ -393,7 +352,6 @@ public class CertificateService {
             canvas.showText(conductedText);
             canvas.endText();
 
-            // "Presented on [date]."
             String presentedDate = event.getEndTime().format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
             String presentedText = "Presented on " + presentedDate + ".";
             canvas.beginText();
@@ -404,7 +362,6 @@ public class CertificateService {
             canvas.showText(presentedText);
             canvas.endText();
 
-            // Dashed line for signature area
             float lineY = pageHeight - 430;
             float lineStartX = contentStartX + (contentWidth / 2) - 80;
             float lineEndX = contentStartX + (contentWidth / 2) + 80;
@@ -416,7 +373,6 @@ public class CertificateService {
             canvas.lineTo(lineEndX, lineY);
             canvas.stroke();
 
-            // "Event Co-ordinator"
             canvas.beginText();
             canvas.setFontAndSize(regularFont, 12);
             canvas.setFillColor(blueColor);
@@ -469,9 +425,6 @@ public class CertificateService {
         }
     }
 
-    /**
-     * Download image from URL and return as byte array
-     */
     private byte[] downloadImage(String imageUrl) {
         try {
             URL url = new URL(imageUrl);

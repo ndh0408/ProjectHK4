@@ -46,7 +46,6 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
       await api.confirmPayment(widget.registrationId!);
 
       if (mounted) {
-        // Invalidate registration providers to refresh the data
         ref.invalidate(myFutureRegistrationsProvider);
         ref.invalidate(myPastRegistrationsProvider);
 

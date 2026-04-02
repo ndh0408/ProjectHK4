@@ -53,7 +53,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     );
 
     if (pickedFile != null) {
-      // Read bytes from XFile (works on all platforms)
       final bytes = await pickedFile.readAsBytes();
       final filename = pickedFile.name;
 
@@ -64,11 +63,9 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
       });
 
       try {
-        // Upload image to Cloudinary using bytes
         final apiService = ref.read(apiServiceProvider);
         final imageUrl = await apiService.uploadImageBytes(bytes, filename, folder: 'events');
 
-        // Update state with uploaded image URL
         ref.read(createEventProvider.notifier).updateImageUrl(imageUrl);
 
         if (mounted) {
@@ -148,7 +145,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
   Future<void> _createEvent() async {
     final notifier = ref.read(createEventProvider.notifier);
 
-    // Update from controllers
     notifier.updateTitle(_titleController.text);
     notifier.updateDescription(_descriptionController.text);
     notifier.updateVenue(_venueController.text);
@@ -182,7 +178,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     final categoriesAsync = ref.watch(categoriesProvider);
     final citiesAsync = ref.watch(citiesProvider);
 
-    // Show error snackbar
     ref.listen<CreateEventState>(createEventProvider, (prev, next) {
       if (next.error != null && prev?.error != next.error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,7 +224,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Progress bar
                 Container(
                   height: 3,
                   color: Colors.grey[200],
@@ -240,12 +234,10 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                   ),
                 ),
 
-                // Cover Image
                 _buildCoverImage(context),
 
                 const SizedBox(height: 16),
 
-                // Event Name
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
@@ -272,7 +264,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
                 const Divider(height: 32),
 
-                // Start Date/Time
                 _buildDateTimeRow(
                   context: context,
                   icon: Icons.circle_outlined,
@@ -284,7 +275,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
                 const SizedBox(height: 12),
 
-                // End Date/Time
                 _buildDateTimeRow(
                   context: context,
                   icon: Icons.circle_outlined,
@@ -296,43 +286,34 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
                 const SizedBox(height: 16),
 
-                // Location
                 _buildLocationRow(context),
 
                 const SizedBox(height: 12),
 
-                // Description
                 _buildDescriptionRow(context),
 
                 const Divider(height: 32),
 
-                // Category Selection
                 _buildCategorySelector(context, categoriesAsync),
 
                 const SizedBox(height: 12),
 
-                // City Selection
                 _buildCitySelector(context, citiesAsync),
 
                 const Divider(height: 32),
 
-                // Ticketing Section
                 _buildSectionHeader(l10n.ticketing),
 
-                // Price
                 _buildPriceRow(context),
 
                 const Divider(height: 32),
 
-                // Options Section
                 _buildSectionHeader(l10n.options),
 
-                // Visibility
                 _buildVisibilityRow(context),
 
                 const SizedBox(height: 8),
 
-                // Capacity
                 _buildCapacityRow(context),
 
                 const SizedBox(height: 24),
@@ -340,7 +321,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
             ),
           ),
 
-          // Create Button
           Positioned(
             left: 16,
             right: 16,
@@ -434,7 +414,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                 )
               : Stack(
                   children: [
-                    // Upload indicator overlay
                     if (_isUploadingImage)
                       Container(
                         decoration: BoxDecoration(
@@ -460,7 +439,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                           ),
                         ),
                       ),
-                    // Edit button
                     if (!_isUploadingImage)
                       Align(
                         alignment: Alignment.bottomRight,
@@ -477,7 +455,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                           ),
                         ),
                       ),
-                    // Upload success indicator
                     if (!_isUploadingImage && ref.read(createEventProvider).imageUrl != null)
                       Positioned(
                         top: 12,
@@ -565,7 +542,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: () {
-        // TODO: Navigate to location picker
         _showLocationDialog();
       },
       child: Padding(
@@ -592,7 +568,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
   void _showLocationDialog() {
     final l10n = AppLocalizations.of(context)!;
-    // Default to Ho Chi Minh City center
     LatLng selectedLocation = const LatLng(10.8231, 106.6297);
     final state = ref.read(createEventProvider);
     if (state.latitude != null && state.longitude != null) {
@@ -622,7 +597,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
           expand: false,
           builder: (context, scrollController) => Column(
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -644,7 +618,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                 ),
               ),
 
-              // Venue name input
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: TextField(
@@ -659,7 +632,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
               const SizedBox(height: 12),
 
-              // Latitude & Longitude inputs
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -710,7 +682,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Apply coordinates button
                     IconButton(
                       onPressed: () {
                         final lat = double.tryParse(latController.text);
@@ -733,7 +704,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
 
               const SizedBox(height: 12),
 
-              // Map
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -775,7 +745,6 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                             ),
                           ],
                         ),
-                        // Coordinates display
                         Positioned(
                           bottom: 8,
                           left: 8,
@@ -804,14 +773,12 @@ class _CreateEventScreenState extends ConsumerState<CreateEventScreen> {
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
 
-              // Save button
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Get values from text fields in case user typed but didn't submit
                       final lat = double.tryParse(latController.text) ?? selectedLocation.latitude;
                       final lng = double.tryParse(lngController.text) ?? selectedLocation.longitude;
 

@@ -118,7 +118,6 @@ class Event {
     this.occurrenceIndex,
     this.totalOccurrences = 1,
     this.isRecurring = false,
-    // Boost fields
     this.isBoosted = false,
     this.boostPackage,
   });
@@ -194,7 +193,6 @@ class Event {
       occurrenceIndex: (json['occurrenceIndex'] as num?)?.toInt(),
       totalOccurrences: (json['totalOccurrences'] as num?)?.toInt() ?? 1,
       isRecurring: json['isRecurring'] as bool? ?? json['recurring'] as bool? ?? false,
-      // Boost fields
       isBoosted: json['isBoosted'] as bool? ?? json['boosted'] as bool? ?? false,
       boostPackage: json['boostPackage'] as String?,
     );
@@ -264,7 +262,6 @@ class Event {
   @JsonKey(defaultValue: false)
   final bool isRecurring;
 
-  // Boost fields
   @JsonKey(defaultValue: false)
   final bool isBoosted;
   final String? boostPackage;

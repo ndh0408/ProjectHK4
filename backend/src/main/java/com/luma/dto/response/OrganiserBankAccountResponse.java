@@ -27,7 +27,6 @@ public class OrganiserBankAccountResponse {
     private LocalDateTime verifiedAt;
     private LocalDateTime createdAt;
 
-    // For onboarding
     private String onboardingUrl;
 
     public static OrganiserBankAccountResponse fromEntity(OrganiserBankAccount account) {

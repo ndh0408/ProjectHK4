@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EventCreateResponse {
     private EventResponse event;
-    private String newToken;  // New JWT token if user role was changed
+    private String newToken;
     private boolean roleChanged;
 }

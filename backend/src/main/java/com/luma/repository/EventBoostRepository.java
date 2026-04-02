@@ -22,10 +22,8 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
 
     Page<EventBoost> findByOrganiserIdAndStatus(UUID organiserId, BoostStatus status, Pageable pageable);
 
-    // Get all boosts by event and status (can have multiple)
     List<EventBoost> findByEventIdAndStatus(UUID eventId, BoostStatus status);
 
-    // Get the most recent active boost for an event
     @Query("SELECT b FROM EventBoost b WHERE b.event.id = :eventId AND b.status = :status ORDER BY b.createdAt DESC")
     List<EventBoost> findByEventIdAndStatusOrderByCreatedAtDesc(@Param("eventId") UUID eventId, @Param("status") BoostStatus status);
 
@@ -56,11 +54,9 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
     @Query("SELECT SUM(b.amount) FROM EventBoost b WHERE b.status IN ('ACTIVE', 'EXPIRED') AND b.paidAt >= :startDate")
     java.math.BigDecimal getTotalRevenue(@Param("startDate") LocalDateTime startDate);
 
-    // Check if event has active boost
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM EventBoost b WHERE b.event.id = :eventId AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now")
     boolean hasActiveBoost(@Param("eventId") UUID eventId, @Param("now") LocalDateTime now);
 
-    // Get active boosts for multiple events (for batch processing)
     @Query("SELECT b FROM EventBoost b WHERE b.event.id IN :eventIds AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now")
     List<EventBoost> findActiveBoostsByEventIds(@Param("eventIds") List<UUID> eventIds, @Param("now") LocalDateTime now);
 

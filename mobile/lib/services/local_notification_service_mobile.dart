@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'local_notification_service.dart';
 
-/// Mobile implementation using flutter_local_notifications
 LocalNotificationService createLocalNotificationService() => _MobileNotificationService();
 
 class _MobileNotificationService implements LocalNotificationService {
@@ -31,7 +30,6 @@ class _MobileNotificationService implements LocalNotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
-    // Request permissions on Android 13+
     if (Platform.isAndroid) {
       await _plugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -46,7 +44,6 @@ class _MobileNotificationService implements LocalNotificationService {
     final payload = response.payload;
     if (payload != null) {
       debugPrint('Notification tapped: $payload');
-      // Handle navigation based on notification type
     }
   }
 

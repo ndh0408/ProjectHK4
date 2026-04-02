@@ -16,14 +16,12 @@ import '../../../../shared/models/organiser_profile.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../home/providers/events_provider.dart';
 
-// Provider for organiser profile
 final organiserProfileProvider = FutureProvider.autoDispose
     .family<OrganiserProfile, String>((ref, id) async {
   final api = ref.watch(apiServiceProvider);
   return api.getOrganiserProfile(id);
 });
 
-// Provider for organiser's events
 final organiserEventsProvider = FutureProvider.autoDispose
     .family<List<Event>, String>((ref, organiserId) async {
   final api = ref.watch(apiServiceProvider);
@@ -31,7 +29,6 @@ final organiserEventsProvider = FutureProvider.autoDispose
   return response.content;
 });
 
-// State for follow status
 class FollowState {
   const FollowState(
       {this.isFollowing = false,
@@ -96,7 +93,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
     final followState = ref.watch(followProvider(organiserId));
     final currentUser = ref.watch(currentUserProvider);
 
-    // Check if viewing own profile
     final isOwnProfile = currentUser?.id == organiserId;
 
     return Scaffold(
@@ -104,7 +100,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
       body: profile.when(
         data: (organiser) => NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            // Custom App Bar with Cover Image only
             SliverAppBar(
               expandedHeight: 180,
               pinned: true,
@@ -151,7 +146,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Cover Image
                     if (organiser.logoUrl != null || organiser.avatarUrl != null)
                       Stack(
                         fit: StackFit.expand,
@@ -161,7 +155,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) => _buildGradientBackground(),
                           ),
-                          // Gradient overlay
                           Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -178,7 +171,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
                       )
                     else
                       _buildGradientBackground(),
-                    // Dark overlay for better text visibility
                     Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -200,19 +192,16 @@ class OrganiserProfileScreen extends ConsumerWidget {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // Profile info section
                 Container(
                   color: Colors.white,
                   child: Column(
                     children: [
                       const SizedBox(height: 16),
-                      // Name & Subscribe Row
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Name & Verified Badge
                             Expanded(
                               child: Row(
                                 children: [
@@ -244,14 +233,12 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            // Subscribe Button
                             if (!isOwnProfile)
                               _buildSubscribeButton(ref, context, followState),
                           ],
                         ),
                       ),
 
-                      // Bio/Tagline (Markdown supported)
                         if (organiser.bio != null &&
                             organiser.bio!.isNotEmpty) ...[
                           const SizedBox(height: 8),
@@ -313,19 +300,16 @@ class OrganiserProfileScreen extends ConsumerWidget {
 
                         const SizedBox(height: 16),
 
-                        // Stats Row (Followers, Events)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
                             children: [
-                              // Followers
                               _StatItem(
                                 icon: Icons.people_outline,
                                 value: _formatCount(organiser.followersCount),
                                 label: 'Followers',
                               ),
                               const SizedBox(width: 24),
-                              // Events
                               _StatItem(
                                 icon: Icons.event_outlined,
                                 value: _formatCount(organiser.eventsCount),
@@ -337,7 +321,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
 
                         const SizedBox(height: 16),
 
-                        // Action Buttons Row (Calendar, Website, Contact)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
@@ -380,7 +363,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Events Section
                 events.when(
                   data: (eventList) =>
                       _buildEventsSection(context, ref, eventList),
@@ -495,7 +477,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
       );
     }
 
-    // Group events by date
     final groupedEvents = _groupEventsByDate(events);
 
     return Column(
@@ -504,7 +485,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date Header
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
@@ -530,7 +510,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            // Events for this date
             ...entry.value.map((event) => _OrganiserEventCard(
                   event: event,
                   onTap: () {
@@ -673,7 +652,6 @@ class OrganiserProfileScreen extends ConsumerWidget {
   }
 }
 
-// Stat Item Widget (for followers, events count)
 class _StatItem extends StatelessWidget {
   const _StatItem({
     required this.icon,
@@ -712,7 +690,6 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-// Action Button Widget
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
@@ -741,7 +718,6 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-// Event Card for Organiser Profile (Lu.ma style)
 class _OrganiserEventCard extends StatelessWidget {
   const _OrganiserEventCard({
     required this.event,
@@ -762,7 +738,6 @@ class _OrganiserEventCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Event Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Container(
@@ -788,12 +763,10 @@ class _OrganiserEventCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
 
-            // Event Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Organiser Row
                   Row(
                     children: [
                       Container(
@@ -837,7 +810,6 @@ class _OrganiserEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Title
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -851,7 +823,6 @@ class _OrganiserEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Time with price badge
                   Row(
                     children: [
                       Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
@@ -864,7 +835,6 @@ class _OrganiserEventCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      // Price Badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
@@ -891,7 +861,6 @@ class _OrganiserEventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Location
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined,

@@ -85,7 +85,6 @@ public class OrganiserDashboardController {
                     .build());
         }
 
-        // Get recent events
         List<Event> recentEventsList = eventRepository.findByOrganiserOrderByCreatedAtDesc(
                 organiser, PageRequest.of(0, 5)).getContent();
         List<DashboardStatsResponse.RecentEventData> recentEvents = new ArrayList<>();
@@ -134,7 +133,6 @@ public class OrganiserDashboardController {
 
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        // Gather statistics
         long totalEvents = eventRepository.countByOrganiser(organiser);
         long publishedEvents = eventRepository.countByOrganiserAndStatus(organiser, EventStatus.PUBLISHED);
         long draftEvents = eventRepository.countByOrganiserAndStatus(organiser, EventStatus.DRAFT);
@@ -149,7 +147,6 @@ public class OrganiserDashboardController {
         double revenue = totalRevenue != null ? totalRevenue.doubleValue() : 0;
 
         try {
-            // Get recent events info
             StringBuilder recentEventsInfo = new StringBuilder();
             List<Event> recentEvents = eventRepository.findByOrganiserOrderByCreatedAtDesc(
                     organiser, PageRequest.of(0, 5)).getContent();
@@ -161,7 +158,6 @@ public class OrganiserDashboardController {
                         .append("\n");
             }
 
-            // Get registration trend
             LocalDateTime startDate = LocalDateTime.now().minusDays(30);
             List<Object[]> growthData = registrationRepository.getRegistrationGrowthByOrganiser(organiser.getId(), startDate);
             StringBuilder registrationTrend = new StringBuilder();
@@ -169,7 +165,6 @@ public class OrganiserDashboardController {
                 registrationTrend.append(row[0].toString()).append(": ").append(row[1]).append(" registrations\n");
             }
 
-            // Call AI service
             log.info("Calling AI service for dashboard insights...");
             String aiResponse = aiService.generateDashboardInsights(
                     totalEvents, publishedEvents, draftEvents,
@@ -179,7 +174,6 @@ public class OrganiserDashboardController {
             );
             log.info("AI Response received: {}", aiResponse);
 
-            // Parse AI response
             String cleanJson = aiResponse.trim();
             if (cleanJson.startsWith("```json")) {
                 cleanJson = cleanJson.substring(7);
@@ -198,28 +192,27 @@ public class OrganiserDashboardController {
             return ResponseEntity.ok(ApiResponse.success("AI insights generated", response));
 
         } catch (Exception e) {
-            // Fallback response if AI call or parsing fails
             log.error("AI Insights error: ", e);
             AIInsightsResponse fallback = AIInsightsResponse.builder()
-                    .summary("Phân tích dữ liệu cơ bản của bạn.")
+                    .summary("Phan tich du lieu co ban cua ban.")
                     .insights(List.of(
                             AIInsightsResponse.Insight.builder()
                                     .type("info")
-                                    .title("Tổng quan sự kiện")
-                                    .description("Bạn có " + totalEvents + " sự kiện với " + totalRegistrations + " đăng ký.")
+                                    .title("Tong quan su kien")
+                                    .description("Ban co " + totalEvents + " su kien voi " + totalRegistrations + " dang ky.")
                                     .build(),
                             AIInsightsResponse.Insight.builder()
                                     .type(pendingRegistrations > 0 ? "warning" : "success")
-                                    .title("Đăng ký chờ duyệt")
+                                    .title("Dang ky cho duyet")
                                     .description(pendingRegistrations > 0
-                                            ? "Bạn có " + pendingRegistrations + " đăng ký đang chờ duyệt."
-                                            : "Tất cả đăng ký đã được xử lý.")
+                                            ? "Ban co " + pendingRegistrations + " dang ky dang cho duyet."
+                                            : "Tat ca dang ky da duoc xu ly.")
                                     .actionText(pendingRegistrations > 0 ? "Xem ngay" : null)
                                     .build(),
                             AIInsightsResponse.Insight.builder()
                                     .type("info")
-                                    .title("Người theo dõi")
-                                    .description("Bạn có " + totalFollowers + " người theo dõi.")
+                                    .title("Nguoi theo doi")
+                                    .description("Ban co " + totalFollowers + " nguoi theo doi.")
                                     .build()
                     ))
                     .build();

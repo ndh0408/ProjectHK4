@@ -26,10 +26,6 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final EventRepository eventRepository;
 
-    /**
-     * Toggle bookmark for an event
-     * Returns true if bookmarked, false if unbookmarked
-     */
     @Transactional
     public boolean toggleBookmark(UUID eventId, User user) {
         Event event = eventRepository.findById(eventId)
@@ -50,9 +46,6 @@ public class BookmarkService {
         }
     }
 
-    /**
-     * Add bookmark
-     */
     @Transactional
     public void addBookmark(UUID eventId, User user) {
         Event event = eventRepository.findById(eventId)
@@ -68,9 +61,6 @@ public class BookmarkService {
         }
     }
 
-    /**
-     * Remove bookmark
-     */
     @Transactional
     public void removeBookmark(UUID eventId, User user) {
         Event event = eventRepository.findById(eventId)
@@ -80,18 +70,12 @@ public class BookmarkService {
         log.info("User {} unbookmarked event {}", user.getId(), eventId);
     }
 
-    /**
-     * Check if event is bookmarked by user
-     */
     public boolean isBookmarked(UUID eventId, User user) {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event == null) return false;
         return bookmarkRepository.existsByUserAndEvent(user, event);
     }
 
-    /**
-     * Get all bookmarked events for user
-     */
     public PageResponse<EventResponse> getBookmarkedEvents(User user, Pageable pageable) {
         Page<Bookmark> bookmarks = bookmarkRepository.findByUser(user, pageable);
 
@@ -105,16 +89,10 @@ public class BookmarkService {
                 .build();
     }
 
-    /**
-     * Get list of bookmarked event IDs for user
-     */
     public List<UUID> getBookmarkedEventIds(User user) {
         return bookmarkRepository.findEventIdsByUser(user);
     }
 
-    /**
-     * Count bookmarks for user
-     */
     public long countUserBookmarks(User user) {
         return bookmarkRepository.countByUser(user);
     }

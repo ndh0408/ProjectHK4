@@ -18,7 +18,7 @@ public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
     private static final String[] ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"};
 
     public String uploadImage(MultipartFile file, String folder) {

@@ -33,7 +33,6 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     void deleteByRegistrationId(UUID registrationId);
 
-    // Analytics queries
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'SUCCEEDED'")
     BigDecimal calculateTotalRevenue();
 

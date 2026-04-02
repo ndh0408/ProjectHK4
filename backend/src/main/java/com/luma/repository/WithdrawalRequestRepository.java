@@ -17,8 +17,6 @@ import java.util.UUID;
 @Repository
 public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalRequest, UUID> {
 
-    // ==================== Find by Organiser ====================
-
     Page<WithdrawalRequest> findByOrganiserIdOrderByCreatedAtDesc(UUID organiserId, Pageable pageable);
 
     Page<WithdrawalRequest> findByOrganiserIdAndStatusOrderByCreatedAtDesc(
@@ -26,15 +24,11 @@ public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalReq
 
     List<WithdrawalRequest> findByOrganiserIdAndStatusIn(UUID organiserId, List<WithdrawalStatus> statuses);
 
-    // ==================== Find by Status ====================
-
     Page<WithdrawalRequest> findByStatusOrderByCreatedAtDesc(WithdrawalStatus status, Pageable pageable);
 
     Page<WithdrawalRequest> findByStatusInOrderByCreatedAtDesc(List<WithdrawalStatus> statuses, Pageable pageable);
 
     Page<WithdrawalRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
-
-    // ==================== Count ====================
 
     long countByStatus(WithdrawalStatus status);
 
@@ -42,41 +36,24 @@ public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalReq
 
     long countByOrganiserIdAndStatus(UUID organiserId, WithdrawalStatus status);
 
-    // ==================== Aggregations ====================
-
-    /**
-     * Total pending withdrawal amount for an organiser
-     */
     @Query("SELECT COALESCE(SUM(w.amount), 0) FROM WithdrawalRequest w " +
            "WHERE w.organiser.id = :organiserId " +
            "AND w.status IN ('PENDING', 'APPROVED', 'PROCESSING')")
     BigDecimal getTotalPendingWithdrawalsByOrganiser(@Param("organiserId") UUID organiserId);
 
-    /**
-     * Total completed withdrawal amount for an organiser
-     */
     @Query("SELECT COALESCE(SUM(w.amount), 0) FROM WithdrawalRequest w " +
            "WHERE w.organiser.id = :organiserId " +
            "AND w.status = 'COMPLETED'")
     BigDecimal getTotalCompletedWithdrawalsByOrganiser(@Param("organiserId") UUID organiserId);
 
-    /**
-     * Total pending withdrawal amount (platform-wide)
-     */
     @Query("SELECT COALESCE(SUM(w.amount), 0) FROM WithdrawalRequest w " +
            "WHERE w.status IN ('PENDING', 'APPROVED', 'PROCESSING')")
     BigDecimal getTotalPendingWithdrawals();
 
-    /**
-     * Total completed withdrawal amount (platform-wide)
-     */
     @Query("SELECT COALESCE(SUM(w.amount), 0) FROM WithdrawalRequest w " +
            "WHERE w.status = 'COMPLETED'")
     BigDecimal getTotalCompletedWithdrawals();
 
-    /**
-     * Total withdrawals in date range
-     */
     @Query("SELECT COALESCE(SUM(w.amount), 0) FROM WithdrawalRequest w " +
            "WHERE w.status = 'COMPLETED' " +
            "AND w.completedAt BETWEEN :startDate AND :endDate")
@@ -84,10 +61,5 @@ public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalReq
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
-    // ==================== Check existence ====================
-
-    /**
-     * Check if organiser has any pending withdrawal
-     */
     boolean existsByOrganiserIdAndStatusIn(UUID organiserId, List<WithdrawalStatus> statuses);
 }

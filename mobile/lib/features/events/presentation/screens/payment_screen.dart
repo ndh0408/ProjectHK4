@@ -53,7 +53,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       final api = ref.read(apiServiceProvider);
 
       if (kIsWeb) {
-        // For web, request a checkout session URL
         debugPrint('Calling API createCheckoutSession for web...');
         final result = await api.createCheckoutSession(widget.registrationId);
         debugPrint('API Response: $result');
@@ -65,7 +64,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           _isPaymentReady = _checkoutUrl != null;
         });
       } else {
-        // For mobile, use Payment Intent
         debugPrint('Calling API initiatePayment for mobile...');
         final result = await api.initiatePayment(widget.registrationId);
         debugPrint('API Response: $result');
@@ -117,14 +115,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Open Stripe Checkout in a new tab
       final uri = Uri.parse(_checkoutUrl!);
       debugPrint('Opening Stripe Checkout: $_checkoutUrl');
 
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
 
-        // Show instructions to user
         if (mounted) {
           setState(() => _isLoading = false);
 
@@ -419,7 +415,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Event info card
                   material.Card(
                     elevation: 2,
                     child: Padding(
@@ -460,7 +455,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Payment status
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -515,7 +509,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   const SizedBox(height: 32),
 
-                  // Platform-specific info
                   if (kIsWeb) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -539,7 +532,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Secure payment info
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -554,7 +546,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Pay button
                   ElevatedButton(
                     onPressed: _isPaymentReady ? _processPayment : null,
                     style: ElevatedButton.styleFrom(
@@ -582,7 +573,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ),
 
-                  // Check payment status button (web only)
                   if (kIsWeb && _isPaymentReady) ...[
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
@@ -594,7 +584,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Cancel button
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
                     child: Text(AppLocalizations.of(context)!.cancel),
@@ -602,7 +591,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Test card info (for sandbox)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
