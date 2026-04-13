@@ -21,9 +21,11 @@ import com.luma.dto.response.PageResponse;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import com.luma.entity.Category;
 import com.luma.entity.City;
 import com.luma.entity.User;
 import com.luma.entity.enums.EventStatus;
+import com.luma.repository.CategoryRepository;
 import com.luma.repository.CityRepository;
 import com.luma.service.AIService;
 import com.luma.service.EventService;
@@ -55,6 +57,7 @@ public class OrganiserEventController {
     private final UserService userService;
     private final ExcelExportService excelExportService;
     private final AIService aiService;
+    private final CategoryRepository categoryRepository;
     private final CityRepository cityRepository;
 
     @GetMapping
@@ -155,7 +158,6 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateDescriptionRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        
 
         String description = aiService.generateEventDescription(
                 request.getTitle(),
@@ -166,7 +168,6 @@ public class OrganiserEventController {
                 request.getEndTime()
         );
 
-        
         AIDescriptionResponse response = AIDescriptionResponse.builder()
                 .description(description)
                 .build();
@@ -179,14 +180,12 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIImproveDescriptionRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        
 
         String description = aiService.improveEventDescription(
                 request.getTitle(),
                 request.getDescription()
         );
 
-        
         AIDescriptionResponse response = AIDescriptionResponse.builder()
                 .description(description)
                 .build();
@@ -199,7 +198,6 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateSpeakerBioRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        
 
         String bio = aiService.generateSpeakerBio(
                 request.getName(),
@@ -207,7 +205,6 @@ public class OrganiserEventController {
                 request.getEventTitle()
         );
 
-        
         AISpeakerBioResponse response = AISpeakerBioResponse.builder()
                 .bio(bio)
                 .build();
@@ -220,7 +217,6 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateNotificationRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        
 
         String message = aiService.generateNotificationMessage(
                 request.getEventTitle(),
@@ -228,7 +224,6 @@ public class OrganiserEventController {
                 request.getAdditionalContext()
         );
 
-        
         AINotificationResponse response = AINotificationResponse.builder()
                 .message(message)
                 .build();
@@ -241,7 +236,6 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateQuestionsRequest request) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        
 
         String jsonResponse = aiService.suggestRegistrationQuestions(
                 request.getEventTitle(),
@@ -249,8 +243,6 @@ public class OrganiserEventController {
                 request.getEventDescription(),
                 request.getNumberOfQuestions()
         );
-
-        
 
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -286,12 +278,10 @@ public class OrganiserEventController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AIGenerateEventRequest request) {
 
-        String cityName = null;
-        if (request.getCityId() != null) {
-            cityName = cityRepository.findById(request.getCityId())
-                    .map(City::getName)
-                    .orElse(null);
-        }
+        List<String> existingCategories = categoryRepository.findByActiveTrue().stream()
+                .map(Category::getName).toList();
+        List<String> existingCities = cityRepository.findByActiveTrue().stream()
+                .map(City::getName).toList();
 
         String jsonResponse = aiService.generateFullEvent(
                 request.getEventIdea(),
@@ -299,8 +289,10 @@ public class OrganiserEventController {
                 request.getTargetAudience(),
                 request.getPreferredDate(),
                 request.getPreferredTime(),
-                cityName,
-                request.getLanguage()
+                request.getPreferredCity(),
+                request.getLanguage(),
+                existingCategories,
+                existingCities
         );
 
         try {
@@ -337,12 +329,44 @@ public class OrganiserEventController {
                 }
             }
 
+            String suggestedCategoryName = jsonNode.has("suggestedCategory") ? jsonNode.get("suggestedCategory").asText() : "";
+            String suggestedCityName = jsonNode.has("suggestedCity") ? jsonNode.get("suggestedCity").asText() : "";
+
+            Long matchedCategoryId = null;
+            if (!suggestedCategoryName.isEmpty()) {
+                Category matchedCategory = categoryRepository.findByActiveTrue().stream()
+                        .filter(c -> c.getName().equalsIgnoreCase(suggestedCategoryName)
+                                || c.getName().toLowerCase().contains(suggestedCategoryName.toLowerCase())
+                                || suggestedCategoryName.toLowerCase().contains(c.getName().toLowerCase()))
+                        .findFirst()
+                        .orElseGet(() -> categoryRepository.save(
+                                Category.builder().name(suggestedCategoryName).active(true).build()));
+                matchedCategoryId = matchedCategory.getId();
+            }
+
+            Long matchedCityId = null;
+            if (!suggestedCityName.isEmpty()) {
+                City matchedCity = cityRepository.findByActiveTrue().stream()
+                        .filter(c -> c.getName().equalsIgnoreCase(suggestedCityName)
+                                || c.getName().toLowerCase().contains(suggestedCityName.toLowerCase())
+                                || suggestedCityName.toLowerCase().contains(c.getName().toLowerCase()))
+                        .findFirst()
+                        .orElseGet(() -> cityRepository.save(
+                                City.builder().name(suggestedCityName).active(true).build()));
+                matchedCityId = matchedCity.getId();
+            }
+
             AIGeneratedEventResponse response = AIGeneratedEventResponse.builder()
                     .titleSuggestions(titleSuggestions)
                     .description(jsonNode.has("description") ? jsonNode.get("description").asText() : "")
-                    .suggestedCategory(jsonNode.has("suggestedCategory") ? jsonNode.get("suggestedCategory").asText() : "")
+                    .suggestedCategory(suggestedCategoryName)
+                    .categoryId(matchedCategoryId)
                     .suggestedVenue(jsonNode.has("suggestedVenue") ? jsonNode.get("suggestedVenue").asText() : "")
                     .suggestedAddress(jsonNode.has("suggestedAddress") ? jsonNode.get("suggestedAddress").asText() : "")
+                    .suggestedCity(suggestedCityName)
+                    .cityId(matchedCityId)
+                    .suggestedStartTime(jsonNode.has("suggestedStartTime") ? jsonNode.get("suggestedStartTime").asText() : null)
+                    .suggestedEndTime(jsonNode.has("suggestedEndTime") ? jsonNode.get("suggestedEndTime").asText() : null)
                     .suggestedCapacity(jsonNode.has("suggestedCapacity") ? jsonNode.get("suggestedCapacity").asInt() : 100)
                     .suggestedPrice(jsonNode.has("suggestedPrice") ? BigDecimal.valueOf(jsonNode.get("suggestedPrice").asDouble()) : BigDecimal.ZERO)
                     .isFree(jsonNode.has("isFree") ? jsonNode.get("isFree").asBoolean() : true)

@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
@@ -226,11 +225,8 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
     final isCityView = widget.cityId != null && cityName != null;
     final resolvedCityName = cityName;
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.surfaceVariant,
       body: isCityView && resolvedCityName != null
           ? _buildCityView(context, resolvedCityName, state, params)
           : _buildCategoryView(context, title, state, params, categoryName),
@@ -245,25 +241,22 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
   ) {
     final imageUrl = _getCityImageUrl(cityName);
     final description = _getCityDescription(cityName);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final theme = Theme.of(context);
-    final hPadding = Responsive.horizontalPadding(context);
 
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
         SliverAppBar(
-          expandedHeight: screenHeight * 0.35,
+          expandedHeight: 280,
           pinned: true,
           backgroundColor: AppColors.primary,
           leading: IconButton(
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: AppColors.textPrimary.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              child: const Icon(Icons.arrow_back, color: AppColors.textOnPrimary, size: 20),
             ),
             onPressed: () => context.pop(),
           ),
@@ -272,10 +265,10 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: AppColors.textPrimary.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search, color: Colors.white, size: 20),
+                child: const Icon(Icons.search, color: AppColors.textOnPrimary, size: 20),
               ),
               onPressed: () => context.push('/search'),
             ),
@@ -283,10 +276,10 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: AppColors.textPrimary.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.share, color: Colors.white, size: 20),
+                child: const Icon(Icons.share, color: AppColors.textOnPrimary, size: 20),
               ),
               onPressed: () {
               },
@@ -310,30 +303,32 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.7),
+                        AppColors.textPrimary.withValues(alpha: 0.7),
                       ],
                       stops: const [0.3, 1.0],
                     ),
                   ),
                 ),
                 Positioned(
-                  left: hPadding,
-                  right: hPadding,
-                  bottom: hPadding,
+                  left: 20,
+                  right: 20,
+                  bottom: 20,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "What's Happening in",
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
+                        style: TextStyle(
+                          color: AppColors.textOnPrimary.withValues(alpha: 0.8),
+                          fontSize: 14,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         cityName,
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          color: Colors.white,
+                        style: const TextStyle(
+                          color: AppColors.textOnPrimary,
+                          fontSize: 32,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -347,14 +342,16 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
 
         SliverToBoxAdapter(
           child: Container(
-            color: theme.colorScheme.surface,
-            padding: EdgeInsets.all(hPadding),
+            color: AppColors.textOnPrimary,
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   description,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
                     height: 1.5,
                   ),
                 ),
@@ -371,8 +368,8 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9500),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.warning,
+                      foregroundColor: AppColors.textOnPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -411,14 +408,14 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
           pinned: true,
           title: Text(title),
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.textOnPrimary,
         ),
 
         if (widget.categoryId != null || widget.cityId != null)
           SliverToBoxAdapter(
             child: Container(
-              color: Theme.of(context).colorScheme.surface,
-              padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context), vertical: Responsive.spacing(context, base: 12)),
+              color: AppColors.textOnPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   if (widget.categoryId != null)
@@ -547,18 +544,18 @@ class _DateSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final hPadding = Responsive.horizontalPadding(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          color: theme.scaffoldBackgroundColor,
-          padding: EdgeInsets.fromLTRB(hPadding, Responsive.spacing(context, base: 20), hPadding, Responsive.spacing(context)),
+          color: AppColors.surfaceVariant,
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
           child: Text(
             dateKey,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.textTheme.bodyMedium?.color,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
           ),
         ),
@@ -586,23 +583,19 @@ class _EventListItem extends StatelessWidget {
     final timeFormat = DateFormat('h:mm a');
     final startTime = timeFormat.format(event.startDate);
     final endTime = timeFormat.format(event.endDate);
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final imageSize = screenWidth * 0.21;
-    final hPadding = Responsive.horizontalPadding(context);
 
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: Responsive.spacing(context, base: 10)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                width: imageSize,
-                height: imageSize,
+                width: 80,
+                height: 80,
                 color: AppColors.primary.withValues(alpha: 0.1),
                 child: event.imageUrl != null
                     ? CachedNetworkImage(
@@ -630,8 +623,8 @@ class _EventListItem extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        width: Responsive.iconSize(context, base: 20),
-                        height: Responsive.iconSize(context, base: 20),
+                        width: 20,
+                        height: 20,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.primary.withValues(alpha: 0.1),
@@ -650,7 +643,10 @@ class _EventListItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           event.organiserName,
-                          style: theme.textTheme.bodySmall,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -661,8 +657,10 @@ class _EventListItem extends StatelessWidget {
 
                   Text(
                     event.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    style: const TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                       height: 1.2,
                     ),
                     maxLines: 2,
@@ -674,19 +672,22 @@ class _EventListItem extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.schedule,
-                        size: Responsive.iconSize(context, base: 14),
-                        color: theme.textTheme.bodySmall?.color,
+                        size: 14,
+                        color: AppColors.textLight,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$startTime - $endTime',
-                        style: theme.textTheme.bodySmall,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: event.isFree ? Colors.green[50] : Colors.orange[50],
+                          color: event.isFree ? AppColors.success.withOpacity(0.1) : AppColors.warning.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -694,7 +695,7 @@ class _EventListItem extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: event.isFree ? Colors.green[700] : Colors.orange[700],
+                            color: event.isFree ? AppColors.success : AppColors.warning,
                           ),
                         ),
                       ),
@@ -706,14 +707,17 @@ class _EventListItem extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.location_on_outlined,
-                        size: Responsive.iconSize(context, base: 14),
-                        color: theme.textTheme.bodySmall?.color,
+                        size: 14,
+                        color: AppColors.textLight,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: theme.textTheme.bodySmall,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -750,21 +754,22 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.event_busy,
-            size: Responsive.iconSize(context, base: 64),
-            color: theme.disabledColor,
+            size: 64,
+            color: AppColors.divider,
           ),
           const SizedBox(height: 16),
           Text(
             hasFilter ? 'No events match your filter' : 'No events available',
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: TextStyle(
+              fontSize: 16,
               fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -772,7 +777,10 @@ class _EmptyView extends StatelessWidget {
             hasFilter
                 ? 'Try removing some filters'
                 : 'Check back later for new events',
-            style: theme.textTheme.bodyMedium,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textLight,
+            ),
           ),
           if (hasFilter) ...[
             const SizedBox(height: 24),
@@ -796,30 +804,33 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Center(
       child: Padding(
-        padding: Responsive.padding(context),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: Responsive.iconSize(context, base: 64),
-              color: colorScheme.error,
+              size: 64,
+              color: AppColors.error.withOpacity(0.7),
             ),
             const SizedBox(height: 16),
             Text(
               'Something went wrong',
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               error,
-              style: theme.textTheme.bodyMedium,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textLight,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

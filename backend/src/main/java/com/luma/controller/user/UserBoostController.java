@@ -1,17 +1,14 @@
 package com.luma.controller.user;
 
 import com.luma.dto.request.userboost.CreateUserBoostRequest;
-import com.luma.dto.request.userboost.PurchaseExtraEventRequest;
 import com.luma.dto.response.ApiResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.dto.response.userboost.UserBoostPackageInfo;
 import com.luma.dto.response.userboost.UserBoostResponse;
-import com.luma.dto.response.userboost.UserEventLimitResponse;
 import com.luma.entity.User;
 import com.luma.entity.enums.BoostStatus;
 import com.luma.service.PaymentService;
 import com.luma.service.UserBoostService;
-import com.luma.service.UserEventLimitService;
 import com.luma.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,11 +29,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/user/boost")
 @RequiredArgsConstructor
-@Tag(name = "User Boost", description = "APIs for user event boost and event limits")
+@Tag(name = "User Boost", description = "APIs for user event boost")
 public class UserBoostController {
 
     private final UserBoostService boostService;
-    private final UserEventLimitService eventLimitService;
     private final UserService userService;
     private final PaymentService paymentService;
 
@@ -44,14 +40,6 @@ public class UserBoostController {
     @Operation(summary = "Get available mini boost packages")
     public ResponseEntity<ApiResponse<List<UserBoostPackageInfo>>> getAvailablePackages() {
         return ResponseEntity.ok(ApiResponse.success(boostService.getAvailablePackages()));
-    }
-
-    @GetMapping("/event-limit")
-    @Operation(summary = "Get user's event creation limit and usage")
-    public ResponseEntity<ApiResponse<UserEventLimitResponse>> getEventLimit(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(eventLimitService.getUserEventLimit(user.getId())));
     }
 
     @PostMapping("/checkout")
@@ -122,57 +110,4 @@ public class UserBoostController {
         return ResponseEntity.ok(ApiResponse.success(boostService.isEventBoosted(eventId)));
     }
 
-    @PostMapping("/purchase-extra-event")
-    @Operation(summary = "Purchase extra event slots")
-    public ResponseEntity<ApiResponse<Map<String, String>>> purchaseExtraEvent(
-            @Valid @RequestBody PurchaseExtraEventRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-
-        String checkoutUrl = paymentService.createExtraEventCheckoutSession(
-                user.getId(),
-                request.getQuantity(),
-                eventLimitService.getExtraEventPrice()
-        );
-
-        return ResponseEntity.ok(ApiResponse.success(
-                Map.of(
-                        "checkoutUrl", checkoutUrl,
-                        "quantity", String.valueOf(request.getQuantity()),
-                        "pricePerEvent", eventLimitService.getExtraEventPrice().toString(),
-                        "totalPrice", eventLimitService.getExtraEventPrice()
-                                .multiply(java.math.BigDecimal.valueOf(request.getQuantity())).toString()
-                )));
-    }
-
-    @PostMapping("/confirm-extra-event-purchase")
-    @Operation(summary = "Confirm extra event purchase (called after successful payment)")
-    public ResponseEntity<ApiResponse<UserEventLimitResponse>> confirmExtraEventPurchase(
-            @RequestParam int quantity,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        UserEventLimitResponse response = eventLimitService.purchaseExtraEventAfterPayment(
-                user.getId(), quantity, "payment_confirmed");
-        return ResponseEntity.ok(ApiResponse.success("Extra event(s) purchased successfully", response));
-    }
-
-    @GetMapping("/can-create-event")
-    @Operation(summary = "Check if user can create event")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> canCreateEvent(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-
-        boolean canCreate = eventLimitService.canCreateEvent(user.getId());
-        boolean canCreateFree = eventLimitService.canCreateFreeEvent(user.getId());
-        boolean needsPurchase = eventLimitService.needsToPurchaseEvent(user.getId());
-
-        return ResponseEntity.ok(ApiResponse.success(
-                Map.of(
-                        "canCreate", canCreate,
-                        "canCreateFree", canCreateFree,
-                        "needsPurchase", needsPurchase,
-                        "extraEventPrice", eventLimitService.getExtraEventPrice().toString(),
-                        "maxAttendeesPerEvent", eventLimitService.getMaxAttendeesPerEvent()
-                )));
-    }
 }

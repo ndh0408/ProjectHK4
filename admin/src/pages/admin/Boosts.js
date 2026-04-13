@@ -80,7 +80,7 @@ const AdminBoosts = () => {
             setTotalElements(boostsRes.data?.data?.totalElements || 0);
             setStats(statsRes.data?.data || { totalActive: 0, totalFeatured: 0, totalHomeBanner: 0 });
         } catch (error) {
-            toast.error('Không thể tải dữ liệu');
+            toast.error('Failed to load data');
         } finally {
             setLoading(false);
         }
@@ -88,10 +88,10 @@ const AdminBoosts = () => {
 
     const getStatusChip = (status) => {
         const config = {
-            PENDING: { label: 'Chờ thanh toán', color: 'warning' },
-            ACTIVE: { label: 'Đang hoạt động', color: 'success' },
-            EXPIRED: { label: 'Đã hết hạn', color: 'default' },
-            CANCELLED: { label: 'Đã hủy', color: 'error' },
+            PENDING: { label: 'Pending Payment', color: 'warning' },
+            ACTIVE: { label: 'Active', color: 'success' },
+            EXPIRED: { label: 'Expired', color: 'default' },
+            CANCELLED: { label: 'Cancelled', color: 'error' },
         };
         const c = config[status] || { label: status, color: 'default' };
         return <Chip label={c.label} color={c.color} size="small" />;
@@ -109,23 +109,23 @@ const AdminBoosts = () => {
     };
 
     const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
     };
 
     if (loading && boosts.length === 0) {
-        return <LoadingSpinner message="Đang tải..." />;
+        return <LoadingSpinner message="Loading..." />;
     }
 
     return (
         <Box className="dashboard">
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight="bold">Quản lý Boost</Typography>
+                    <Typography variant="h4" fontWeight="bold">Boost Management</Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Theo dõi các sự kiện được đẩy tin
+                        Monitor boosted events
                     </Typography>
                 </Box>
-                <Tooltip title="Làm mới">
+                <Tooltip title="Refresh">
                     <IconButton onClick={loadData} color="primary">
                         <RefreshIcon />
                     </IconButton>
@@ -135,10 +135,10 @@ const AdminBoosts = () => {
             <Grid container spacing={3} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={4}>
                     <StatCard
-                        title="Đang hoạt động"
+                        title="Active"
                         value={stats.totalActive}
                         icon={<RocketIcon />}
-                        color="success.main"
+                        color="#10b981"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -146,7 +146,7 @@ const AdminBoosts = () => {
                         title="Featured Events"
                         value={stats.totalFeatured}
                         icon={<StarIcon />}
-                        color="warning.main"
+                        color="#f59e0b"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
@@ -154,18 +154,18 @@ const AdminBoosts = () => {
                         title="Home Banner"
                         value={stats.totalHomeBanner}
                         icon={<HomeIcon />}
-                        color="primary.main"
+                        color="#6366f1"
                     />
                 </Grid>
             </Grid>
 
             <Paper sx={{ mb: 2 }}>
                 <Tabs value={tabValue} onChange={(e, v) => { setTabValue(v); setPage(0); }}>
-                    <Tab label="Tất cả" />
-                    <Tab label="Chờ thanh toán" />
-                    <Tab label="Đang hoạt động" />
-                    <Tab label="Đã hết hạn" />
-                    <Tab label="Đã hủy" />
+                    <Tab label="All" />
+                    <Tab label="Pending Payment" />
+                    <Tab label="Active" />
+                    <Tab label="Expired" />
+                    <Tab label="Cancelled" />
                 </Tabs>
             </Paper>
 
@@ -174,13 +174,13 @@ const AdminBoosts = () => {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Sự kiện</TableCell>
-                                <TableCell>Gói</TableCell>
-                                <TableCell>Số tiền</TableCell>
-                                <TableCell>Trạng thái</TableCell>
-                                <TableCell>Thời gian</TableCell>
-                                <TableCell>Còn lại</TableCell>
-                                <TableCell>Hiệu quả</TableCell>
+                                <TableCell>Event</TableCell>
+                                <TableCell>Package</TableCell>
+                                <TableCell>Amount</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Duration</TableCell>
+                                <TableCell>Remaining</TableCell>
+                                <TableCell>Performance</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -203,14 +203,14 @@ const AdminBoosts = () => {
                                     <TableCell>{getStatusChip(boost.status)}</TableCell>
                                     <TableCell>
                                         <Typography variant="caption" color="text.secondary">
-                                            {boost.startTime ? new Date(boost.startTime).toLocaleDateString('vi-VN') : '-'}
+                                            {boost.startTime ? new Date(boost.startTime).toLocaleDateString('en-US') : '-'}
                                             {' → '}
-                                            {boost.endTime ? new Date(boost.endTime).toLocaleDateString('vi-VN') : '-'}
+                                            {boost.endTime ? new Date(boost.endTime).toLocaleDateString('en-US') : '-'}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
                                         {boost.isActive ? (
-                                            <Chip label={`${boost.daysRemaining} ngày`} size="small" color="success" />
+                                            <Chip label={`${boost.daysRemaining} days`} size="small" color="success" />
                                         ) : '-'}
                                     </TableCell>
                                     <TableCell>
@@ -231,7 +231,7 @@ const AdminBoosts = () => {
                             {boosts.length === 0 && (
                                 <TableRow>
                                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                        <Typography color="text.secondary">Không có dữ liệu</Typography>
+                                        <Typography color="text.secondary">No data available</Typography>
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -246,7 +246,7 @@ const AdminBoosts = () => {
                     rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(0); }}
                     rowsPerPageOptions={[5, 10, 25]}
-                    labelRowsPerPage="Số dòng:"
+                    labelRowsPerPage="Rows per page:"
                 />
             </Paper>
         </Box>

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../chat/presentation/screens/conversations_screen.dart';
@@ -126,18 +125,11 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       body: widget.child,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/create-event'),
-        backgroundColor: AppColors.primary,
-        elevation: 4,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: AppColors.textPrimary.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -149,15 +141,17 @@ class _MainShellState extends ConsumerState<MainShell> {
             currentIndex: _currentIndex,
             onTap: _onItemTapped,
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.surface,
             selectedItemColor: AppColors.primary,
             unselectedItemColor: AppColors.textLight,
-            selectedLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+            selectedLabelStyle: const TextStyle(
               fontWeight: FontWeight.w600,
-            ) ?? const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-            unselectedLabelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+            ),
+            unselectedLabelStyle: const TextStyle(
               fontWeight: FontWeight.normal,
-            ) ?? const TextStyle(fontWeight: FontWeight.normal, fontSize: 12),
+              fontSize: 12,
+            ),
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home_outlined),
@@ -195,12 +189,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                           ),
                           child: Text(
                             totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
-                              fontSize: 10 * Responsive.fontScale(context),
-                              fontWeight: FontWeight.bold,
-                            ) ?? const TextStyle(
-                              color: Colors.white,
+                            style: const TextStyle(
+                              color: AppColors.textOnPrimary,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -230,12 +220,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                           ),
                           child: Text(
                             totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
-                              fontSize: 10 * Responsive.fontScale(context),
-                              fontWeight: FontWeight.bold,
-                            ) ?? const TextStyle(
-                              color: Colors.white,
+                            style: const TextStyle(
+                              color: AppColors.textOnPrimary,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),

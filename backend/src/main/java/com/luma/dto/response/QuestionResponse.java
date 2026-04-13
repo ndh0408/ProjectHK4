@@ -14,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionResponse {
-    
+
     private UUID id;
     private UUID eventId;
     private String eventTitle;
@@ -26,7 +26,7 @@ public class QuestionResponse {
     private boolean isAnswered;
     private LocalDateTime createdAt;
     private LocalDateTime answeredAt;
-    
+
     public static QuestionResponse fromEntity(Question question) {
         return QuestionResponse.builder()
                 .id(question.getId())

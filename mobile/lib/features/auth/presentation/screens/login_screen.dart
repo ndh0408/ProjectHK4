@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../home/presentation/screens/home_screen.dart';
@@ -93,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.message),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
         ref.read(authProvider.notifier).clearError();
@@ -102,18 +101,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final isLoading = authState is AuthLoading;
 
-    final screenHeight = MediaQuery.of(context).size.height;
-    final hPadding = Responsive.horizontalPadding(context);
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               SizedBox(
-                height: screenHeight * 0.35,
+                height: 280,
                 child: featuredEvents.when(
                   data: (events) => _EventCarousel(events: events),
                   loading: () => const _EventCarouselPlaceholder(),
@@ -121,10 +116,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              SizedBox(height: Responsive.spacing(context, base: 32)),
+              const SizedBox(height: 32),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Builder(
                   builder: (context) {
                     final l10n = AppLocalizations.of(context)!;
@@ -132,7 +127,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         Text(
                           'luma',
-                          style: textTheme.titleLarge?.copyWith(
+                          style: TextStyle(
+                            fontSize: 18,
                             color: AppColors.textLight,
                             fontWeight: FontWeight.w400,
                             letterSpacing: 2,
@@ -141,20 +137,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 8),
                         Text(
                           l10n.delightfulEvents,
-                          style: textTheme.headlineLarge?.copyWith(
+                          style: const TextStyle(
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
                             height: 1.2,
                           ),
                         ),
                         ShaderMask(
                           shaderCallback: (bounds) => const LinearGradient(
-                            colors: [AppColors.primary, AppColors.secondary],
+                            colors: [Color(0xFFFF6B35), Color(0xFFFF1744)],
                           ).createShader(bounds),
                           child: Text(
                             l10n.startHere,
-                            style: textTheme.headlineLarge?.copyWith(
+                            style: const TextStyle(
+                              fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                               height: 1.2,
                             ),
                           ),
@@ -163,7 +162,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           l10n.loginDescription,
                           textAlign: TextAlign.center,
-                          style: textTheme.bodyMedium?.copyWith(
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
                             height: 1.5,
                           ),
                         ),
@@ -173,28 +174,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              SizedBox(height: Responsive.spacing(context, base: 32)),
+              const SizedBox(height: 32),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _showEmailForm
                     ? _buildEmailForm(isLoading)
                     : _buildAuthButtons(isLoading),
               ),
 
-              SizedBox(height: Responsive.spacing(context, base: 24)),
+              const SizedBox(height: 24),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text.rich(
                   TextSpan(
                     text: "By continuing, you agree to Luma's ",
-                    style: textTheme.bodySmall,
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     children: const [
                       TextSpan(
                         text: 'Terms of Use',
                         style: TextStyle(
-                          color: AppColors.primary,
+                          color: Color(0xFFFF6B35),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -204,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              SizedBox(height: Responsive.spacing(context, base: 24)),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -214,14 +215,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Widget _buildAuthButtons(bool isLoading) {
     final l10n = AppLocalizations.of(context)!;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final buttonHeight = screenHeight < 700 ? 48.0 : 52.0;
-    final textTheme = Theme.of(context).textTheme;
     return Column(
       children: [
         SizedBox(
           width: double.infinity,
-          height: buttonHeight,
+          height: 52,
           child: ElevatedButton(
             onPressed: isLoading
                 ? null
@@ -233,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.textPrimary,
-              foregroundColor: AppColors.surface,
+              foregroundColor: AppColors.textOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -241,9 +239,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             child: Text(
               l10n.continueWithEmail,
-              style: textTheme.titleMedium?.copyWith(
+              style: const TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.surface,
               ),
             ),
           ),
@@ -253,7 +251,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         SizedBox(
           width: double.infinity,
-          height: buttonHeight,
+          height: 52,
           child: OutlinedButton(
             onPressed: isLoading
                 ? null
@@ -272,7 +270,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             child: Text(
               l10n.createAccount,
-              style: textTheme.titleMedium?.copyWith(
+              style: const TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -283,7 +282,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         SizedBox(
           width: double.infinity,
-          height: buttonHeight,
+          height: 52,
           child: OutlinedButton(
             onPressed: isLoading
                 ? null
@@ -292,7 +291,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   },
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.divider, width: 1),
+              side: BorderSide(color: AppColors.divider, width: 1),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -304,17 +303,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   'https://www.google.com/favicon.ico',
                   width: 20,
                   height: 20,
-                  errorBuilder: (_, __, ___) => Text(
+                  errorBuilder: (_, __, ___) => const Text(
                     'G',
-                    style: textTheme.titleLarge?.copyWith(
+                    style: TextStyle(
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
+                const Text(
                   'Continue with Google',
-                  style: textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -351,7 +352,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           Text(
             _isLoginMode ? l10n.signIn : l10n.createAccount,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: const TextStyle(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -367,14 +369,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: InputDecoration(
                 labelText: l10n.fullName,
                 filled: true,
-                fillColor: AppColors.background,
+                fillColor: AppColors.surfaceVariant,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                  borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
                 ),
               ),
               validator: (value) {
@@ -395,14 +397,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: InputDecoration(
               labelText: l10n.email,
               filled: true,
-              fillColor: AppColors.background,
+              fillColor: AppColors.surfaceVariant,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
               ),
             ),
             validator: (value) {
@@ -426,14 +428,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: InputDecoration(
               labelText: l10n.password,
               filled: true,
-              fillColor: AppColors.background,
+              fillColor: AppColors.surfaceVariant,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(color: AppColors.textPrimary, width: 1.5),
               ),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -451,22 +453,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (value == null || value.isEmpty) {
                 return l10n.pleaseEnterPassword;
               }
-              if (!_isLoginMode) {
-                if (value.length < 8) {
-                  return 'Password must be at least 8 characters';
-                }
-                if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                  return 'Must contain at least one uppercase letter';
-                }
-                if (!RegExp(r'[a-z]').hasMatch(value)) {
-                  return 'Must contain at least one lowercase letter';
-                }
-                if (!RegExp(r'[0-9]').hasMatch(value)) {
-                  return 'Must contain at least one digit';
-                }
-                if (!RegExp(r'[!@#$%^&*()_+\-=\[\]{};:"|\\,.<>/?]').hasMatch(value)) {
-                  return 'Must contain at least one special character (!@#\$%...)';
-                }
+              if (!_isLoginMode && value.length < 6) {
+                return l10n.passwordTooShort;
               }
               return null;
             },
@@ -476,12 +464,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 24),
 
           SizedBox(
-            height: MediaQuery.of(context).size.height < 700 ? 48.0 : 52.0,
+            height: 52,
             child: ElevatedButton(
               onPressed: isLoading ? null : _handleEmailAuth,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.textPrimary,
-                foregroundColor: AppColors.surface,
+                foregroundColor: AppColors.textOnPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -493,14 +481,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: AppColors.textOnPrimary,
                       ),
                     )
                   : Text(
                       _isLoginMode ? l10n.signIn : l10n.signUp,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.surface,
                       ),
                     ),
             ),
@@ -515,7 +503,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 _isLoginMode
                     ? l10n.dontHaveAccount
                     : l10n.alreadyHaveAccount,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(width: 4),
               GestureDetector(
@@ -527,7 +515,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text(
                   _isLoginMode ? l10n.signUp : l10n.signIn,
                   style: const TextStyle(
-                    color: AppColors.primary,
+                    color: Color(0xFFFF6B35),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -560,11 +548,6 @@ class _EventCarousel extends StatelessWidget {
       displayEvents.addAll(events.take(3));
     }
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final cardWidth = screenWidth * 0.42;
-    final cardHeight = screenHeight * 0.25;
-
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -574,20 +557,20 @@ class _EventCarousel extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.divider,
-                Theme.of(context).colorScheme.surface,
+                AppColors.surfaceVariant,
+                AppColors.surface,
               ],
             ),
           ),
         ),
         SizedBox(
-          height: cardHeight * 1.25,
+          height: 250,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              _buildEventCard(displayEvents[0], 0, cardWidth, cardHeight, screenWidth),
-              _buildEventCard(displayEvents[2], 2, cardWidth, cardHeight, screenWidth),
-              _buildEventCard(displayEvents[1], 1, cardWidth, cardHeight, screenWidth),
+              _buildEventCard(displayEvents[0], 0),
+              _buildEventCard(displayEvents[2], 2),
+              _buildEventCard(displayEvents[1], 1),
             ],
           ),
         ),
@@ -595,8 +578,8 @@ class _EventCarousel extends StatelessWidget {
     );
   }
 
-  Widget _buildEventCard(Event event, int position, double cardWidth, double cardHeight, double screenWidth) {
-    final double offsetX = (position - 1) * (screenWidth * 0.24);
+  Widget _buildEventCard(Event event, int position) {
+    final double offsetX = (position - 1) * 90.0;
     final double offsetY = position == 1 ? 0 : 25.0;
     final double rotation = (position - 1) * 0.12;
     final double scale = position == 1 ? 1.0 : 0.85;
@@ -609,13 +592,13 @@ class _EventCarousel extends StatelessWidget {
         ..translate(offsetX, offsetY)
         ..scale(scale),
       child: Container(
-        width: cardWidth,
-        height: cardHeight,
+        width: 160,
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: AppColors.textPrimary.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -626,34 +609,34 @@ class _EventCarousel extends StatelessWidget {
           child: event.imageUrl != null && event.imageUrl!.isNotEmpty
               ? Image.network(
                   event.imageUrl!,
-                  width: cardWidth,
-                  height: cardHeight,
+                  width: 160,
+                  height: 200,
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
-                    return _buildPlaceholderCard(event, position, cardWidth, cardHeight);
+                    return _buildPlaceholderCard(event, position);
                   },
                   errorBuilder: (context, error, stackTrace) {
                     debugPrint('Image load error: $error');
-                    return _buildPlaceholderCard(event, position, cardWidth, cardHeight);
+                    return _buildPlaceholderCard(event, position);
                   },
                 )
-              : _buildPlaceholderCard(event, position, cardWidth, cardHeight),
+              : _buildPlaceholderCard(event, position),
         ),
       ),
     );
   }
 
-  Widget _buildPlaceholderCard(Event event, int index, double cardWidth, double cardHeight) {
+  Widget _buildPlaceholderCard(Event event, int index) {
     final colors = [
-      [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-      [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
-      [const Color(0xFF6366F1), const Color(0xFF3B82F6)],
+      [AppColors.primary, AppColors.secondary],
+      [AppColors.primary, AppColors.primaryDark],
+      [AppColors.secondary, AppColors.accent],
     ];
 
     return Container(
-      width: cardWidth,
-      height: cardHeight,
+      width: 160,
+      height: 200,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -672,7 +655,7 @@ class _EventCarousel extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.surface,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -683,7 +666,7 @@ class _EventCarousel extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: AppColors.textOnPrimary70,
                 fontSize: 12,
               ),
             ),
@@ -699,11 +682,6 @@ class _EventCarouselPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final cardWidth = screenWidth * 0.42;
-    final cardHeight = screenHeight * 0.25;
-
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -713,18 +691,18 @@ class _EventCarouselPlaceholder extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.divider,
-                Theme.of(context).colorScheme.surface,
+                AppColors.surfaceVariant,
+                AppColors.surface,
               ],
             ),
           ),
         ),
         SizedBox(
-          height: cardHeight * 1.25,
+          height: 250,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              for (int i = 0; i < 3; i++) _buildPlaceholderCard(i, cardWidth, cardHeight, screenWidth),
+              for (int i = 0; i < 3; i++) _buildPlaceholderCard(i),
             ],
           ),
         ),
@@ -732,16 +710,16 @@ class _EventCarouselPlaceholder extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderCard(int index, double cardWidth, double cardHeight, double screenWidth) {
-    final double offsetX = (index - 1) * (screenWidth * 0.26);
+  Widget _buildPlaceholderCard(int index) {
+    final double offsetX = (index - 1) * 100.0;
     final double offsetY = index == 1 ? 0 : 30.0;
     final double rotation = (index - 1) * 0.15;
     final double scale = index == 1 ? 1.0 : 0.85;
 
     final colors = [
-      [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-      [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
-      [const Color(0xFF6366F1), const Color(0xFF3B82F6)],
+      [AppColors.primary, AppColors.secondary],
+      [AppColors.primary, AppColors.primaryDark],
+      [AppColors.secondary, AppColors.accent],
     ];
 
     return Transform(
@@ -752,8 +730,8 @@ class _EventCarouselPlaceholder extends StatelessWidget {
         ..translate(offsetX, offsetY)
         ..scale(scale),
       child: Container(
-        width: cardWidth,
-        height: cardHeight,
+        width: 160,
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
@@ -763,7 +741,7 @@ class _EventCarouselPlaceholder extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: AppColors.textPrimary.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),

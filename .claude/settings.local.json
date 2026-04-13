@@ -79,7 +79,22 @@
       "Bash(./mvnw:*)",
       "Bash(tail:*)",
       "Bash(stripe --version:*)",
-      "Bash(type:*)"
+      "Bash(type:*)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(py -m pip show:*)",
+      "Bash(py -m pip install:*)",
+      "Bash(py \"d:/ProjectHK4/create_review3.py\")",
+      "Bash(py -c \" from docx import Document doc = Document\\(''d:/ProjectHK4/review3.docx''\\) for para in doc.paragraphs: if para.text.strip\\(\\): print\\(para.text\\) for table in doc.tables: print\\(''\\\\n[TABLE]''\\) for row in table.rows[:5]: # First 5 rows print\\('' | ''.join\\([cell.text for cell in row.cells]\\)\\) if len\\(table.rows\\) > 5: print\\(f''... \\({len\\(table.rows\\)} rows total\\)''\\) print\\(\\) \")",
+      "Bash(py -c:*)",
+      "Bash(cmd.exe /c \"cd /d d:\\\\ProjectHK4\\\\mobile && flutter pub run build_runner build --delete-conflicting-outputs\")",
+      "Bash(cmd.exe /c \"cd /d d:\\\\ProjectHK4\\\\mobile && flutter analyze lib/services/api_service.dart 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d d:\\\\ProjectHK4\\\\mobile && dart analyze lib/services/api_service.dart\")",
+      "Bash(cmd.exe /c \"cd /d d:\\\\ProjectHK4\\\\mobile && flutter build web --debug 2>&1 | head -100\")",
+      "Read(//tmp/**)",
+      "Bash(python3 -c ':*)",
+      "Bash(py --version)",
+      "Bash(py strip_comments.py)"
     ],
     "additionalDirectories": [
       "d:\\ProjectHK4\\admin\\src\\pages\\organiser"

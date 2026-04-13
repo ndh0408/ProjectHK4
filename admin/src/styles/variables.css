@@ -107,8 +107,8 @@
     --transition-normal: 200ms ease;
     --transition-slow: 300ms ease;
 
-    --sidebar-width: 17.5rem;
-    --header-height: 4.375rem;
+    --sidebar-width: 280px;
+    --header-height: 70px;
 }
 
 * {

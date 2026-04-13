@@ -27,6 +27,7 @@ public class TicketTypeService {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventRepository eventRepository;
 
+    @Transactional(readOnly = true)
     public List<TicketTypeResponse> getTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(eventId);
         return ticketTypes.stream()
@@ -34,6 +35,7 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<TicketTypeResponse> getVisibleTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdAndIsVisibleTrueOrderByDisplayOrderAsc(eventId);
         return ticketTypes.stream()
@@ -41,6 +43,7 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<TicketTypeResponse> getAvailableTicketTypesByEventId(UUID eventId) {
         List<TicketType> ticketTypes = ticketTypeRepository.findAvailableByEventId(eventId);
         return ticketTypes.stream()
@@ -48,12 +51,14 @@ public class TicketTypeService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public TicketTypeResponse getTicketTypeById(UUID ticketTypeId) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
         return TicketTypeResponse.fromEntity(ticketType);
     }
 
+    @Transactional(readOnly = true)
     public TicketType getEntityById(UUID ticketTypeId) {
         return ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
@@ -199,6 +204,7 @@ public class TicketTypeService {
         return true;
     }
 
+    @Transactional(readOnly = true)
     public boolean canPurchase(UUID ticketTypeId, int quantity) {
         TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket type not found"));
@@ -238,6 +244,7 @@ public class TicketTypeService {
         eventRepository.save(event);
     }
 
+    @Transactional(readOnly = true)
     public TicketTypeStats getTicketTypeStats(UUID eventId) {
         int totalAvailable = ticketTypeRepository.getTotalAvailableByEventId(eventId);
         int totalSold = ticketTypeRepository.getTotalSoldByEventId(eventId);

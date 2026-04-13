@@ -3,21 +3,45 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   static const Color primary = Color(0xFF667EEA);
   static const Color primaryDark = Color(0xFF5A67D8);
+  static const Color primaryLight = Color(0xFF8B9DF0);
+  static const Color primarySoft = Color(0xFFE8ECFC);
   static const Color secondary = Color(0xFF764BA2);
   static const Color accent = Color(0xFFED64A6);
 
   static const Color background = Color(0xFFF7FAFC);
   static const Color surface = Color(0xFFFFFFFF);
+  static const Color surfaceVariant = Color(0xFFF8FAFF);
   static const Color error = Color(0xFFE53E3E);
+  static const Color errorLight = Color(0xFFFED7D7);
   static const Color success = Color(0xFF38A169);
+  static const Color successLight = Color(0xFFC6F6D5);
   static const Color warning = Color(0xFFD69E2E);
+  static const Color warningLight = Color(0xFFFEFCBF);
 
   static const Color textPrimary = Color(0xFF1A202C);
   static const Color textSecondary = Color(0xFF718096);
   static const Color textLight = Color(0xFFA0AEC0);
+  static const Color textOnPrimary = Color(0xFFFFFFFF);
+  static const Color textOnPrimary70 = Color(0xB3FFFFFF);
+
+  static const Color info = Color(0xFF3182CE);
+  static const Color infoLight = Color(0xFFBEE3F8);
 
   static const Color divider = Color(0xFFE2E8F0);
   static const Color border = Color(0xFFCBD5E0);
+  static const Color borderLight = Color(0xFFEDF2F7);
+
+  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color cardBorder = Color(0xFFE2E8F0);
+
+  static const Color iconDefault = Color(0xFF667EEA);
+  static const Color iconSecondary = Color(0xFF718096);
+
+  static const Color shimmerBase = Color(0xFFE2E8F0);
+  static const Color shimmerHighlight = Color(0xFFF7FAFC);
+
+  static const Color online = Color(0xFF38A169);
+  static const Color offline = Color(0xFFA0AEC0);
 }
 
 abstract final class AppColorsDark {

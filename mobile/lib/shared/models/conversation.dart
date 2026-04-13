@@ -7,6 +7,8 @@ enum ConversationType {
   eventGroup,
   @JsonValue('DIRECT')
   direct,
+  @JsonValue('GROUP')
+  group,
 }
 
 @JsonSerializable()
@@ -22,6 +24,8 @@ class Conversation {
     this.lastMessageAt,
     this.unreadCount = 0,
     this.muted = false,
+    this.pinned = false,
+    this.archived = false,
     this.participants,
     this.participantCount,
     this.createdAt,
@@ -40,6 +44,8 @@ class Conversation {
   final DateTime? lastMessageAt;
   final int unreadCount;
   final bool muted;
+  final bool pinned;
+  final bool archived;
   final List<ChatParticipant>? participants;
   final int? participantCount;
   final DateTime? createdAt;
@@ -47,24 +53,26 @@ class Conversation {
   Map<String, dynamic> toJson() => _$ConversationToJson(this);
 
   String get displayName {
-    if (type == ConversationType.eventGroup) {
-      return name ?? eventTitle ?? 'Event Chat';
+    if (name != null && name!.isNotEmpty) {
+      return name!;
     }
-    if (participants != null && participants!.isNotEmpty) {
-      return participants!.first.fullName;
+    if (type == ConversationType.eventGroup || type == ConversationType.group) {
+      if (eventTitle != null && eventTitle!.isNotEmpty) {
+        return eventTitle!;
+      }
+      return 'Group Chat';
     }
     return 'Chat';
   }
 
   String? get displayImage {
-    if (type == ConversationType.eventGroup) {
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
       return imageUrl;
-    }
-    if (participants != null && participants!.isNotEmpty) {
-      return participants!.first.avatarUrl;
     }
     return null;
   }
+
+  bool get isGroup => type == ConversationType.eventGroup || type == ConversationType.group;
 }
 
 @JsonSerializable()

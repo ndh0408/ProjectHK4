@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1.5rem;
+    padding: 0 24px;
     position: fixed;
     top: 0;
     right: 0;
@@ -28,13 +28,13 @@
 .header-search {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
     background: var(--neutral-100);
     border-radius: var(--radius-lg);
-    padding: 0.625rem 1rem;
-    max-width: 25rem;
+    padding: 10px 16px;
+    max-width: 400px;
     flex: 1;
-    margin-right: 1.5rem;
+    margin-right: 24px;
 }
 
 .header-search input {
@@ -52,7 +52,7 @@
 
 .header-search svg {
     color: var(--neutral-400);
-    font-size: 1.25rem;
+    font-size: 20px;
 }
 
 /* Actions */
@@ -63,8 +63,8 @@
 }
 
 .header-icon-btn {
-    width: 2.625rem;
-    height: 2.625rem;
+    width: 42px;
+    height: 42px;
     border-radius: var(--radius-md);
     border: none;
     background: var(--neutral-100);
@@ -110,8 +110,8 @@
 }
 
 .header-user-avatar {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-md);
     background: var(--gradient-purple-pink);
     display: flex;
@@ -207,32 +207,7 @@
 }
 
 .header-dropdown-item svg {
-    font-size: 1.125rem;
-}
-
-@media (max-width: 900px) {
-    .header {
-        padding: 0 1rem;
-    }
-
-    .header-search {
-        max-width: 15rem;
-        margin-right: 0.75rem;
-    }
-
-    .header-icon-btn {
-        width: 2.25rem;
-        height: 2.25rem;
-    }
-
-    .header-user-avatar {
-        width: 2.25rem;
-        height: 2.25rem;
-    }
-
-    .header-user-info {
-        display: none;
-    }
+    font-size: 18px;
 }
 
 .header-dropdown-divider {

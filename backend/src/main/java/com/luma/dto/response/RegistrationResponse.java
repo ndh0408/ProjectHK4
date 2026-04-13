@@ -29,6 +29,8 @@ public class RegistrationResponse {
     private RegistrationStatus status;
     private String ticketCode;
     private Integer waitingListPosition;
+    private Integer priorityScore;
+    private String couponCode;
     private LocalDateTime createdAt;
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
@@ -84,6 +86,8 @@ public class RegistrationResponse {
                 .status(registration.getStatus())
                 .ticketCode(registration.getTicketCode())
                 .waitingListPosition(registration.getWaitingListPosition())
+                .priorityScore(registration.getPriorityScore())
+                .couponCode(registration.getCouponCode())
                 .createdAt(registration.getCreatedAt())
                 .approvedAt(registration.getApprovedAt())
                 .rejectedAt(registration.getRejectedAt())

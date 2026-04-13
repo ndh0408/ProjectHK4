@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
-    
+
     private UUID id;
     private String email;
     private String phone;
@@ -29,6 +29,9 @@ public class UserResponse {
     private boolean emailVerified;
     private boolean emailNotificationsEnabled;
     private boolean emailEventReminders;
+    private String bio;
+    private String interests;
+    private boolean networkingVisible;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
 
@@ -46,6 +49,9 @@ public class UserResponse {
                 .emailVerified(user.isEmailVerified())
                 .emailNotificationsEnabled(user.isEmailNotificationsEnabled())
                 .emailEventReminders(user.isEmailEventReminders())
+                .bio(user.getBio())
+                .interests(user.getInterests())
+                .networkingVisible(user.isNetworkingVisible())
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
                 .build();

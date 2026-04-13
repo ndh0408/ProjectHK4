@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/theme.dart';
-import '../../core/utils/responsive.dart';
 import '../models/boost.dart';
 
 class BoostBadge extends StatelessWidget {
@@ -19,18 +18,11 @@ class BoostBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = _getConfig();
-    final scale = Responsive.fontScale(context);
-    final smallHPad = Responsive.spacing(context, base: 6);
-    final mediumHPad = Responsive.spacing(context, base: 10);
-    final smallVPad = Responsive.spacing(context, base: 3);
-    final mediumVPad = Responsive.spacing(context, base: 5);
-    final smallIconSize = Responsive.iconSize(context, base: 10);
-    final mediumIconSize = Responsive.iconSize(context, base: 14);
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size == BoostBadgeSize.small ? smallHPad : mediumHPad,
-        vertical: size == BoostBadgeSize.small ? smallVPad : mediumVPad,
+        horizontal: size == BoostBadgeSize.small ? 6 : 10,
+        vertical: size == BoostBadgeSize.small ? 3 : 5,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -52,17 +44,17 @@ class BoostBadge extends StatelessWidget {
         children: [
           Icon(
             config.icon,
-            size: size == BoostBadgeSize.small ? smallIconSize : mediumIconSize,
-            color: Colors.white,
+            size: size == BoostBadgeSize.small ? 10 : 14,
+            color: AppColors.textOnPrimary,
           ),
           if (showLabel) ...[
             SizedBox(width: size == BoostBadgeSize.small ? 3 : 4),
             Text(
               config.label,
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.textOnPrimary,
                 fontWeight: FontWeight.w700,
-                fontSize: size == BoostBadgeSize.small ? (10.0 * scale) : (12.0 * scale),
+                fontSize: size == BoostBadgeSize.small ? 9 : 11,
                 letterSpacing: 0.3,
               ),
             ),
@@ -79,8 +71,8 @@ class BoostBadge extends StatelessWidget {
           label: 'VIP',
           icon: Icons.diamond_rounded,
           gradientColors: [
-            const Color(0xFFFFD700),
-            const Color(0xFFFFA500),
+            AppColors.primary,
+            AppColors.secondary,
           ],
           multiplier: '5x',
         );
@@ -89,8 +81,8 @@ class BoostBadge extends StatelessWidget {
           label: 'PREMIUM',
           icon: Icons.workspace_premium_rounded,
           gradientColors: [
-            const Color(0xFF9333EA),
-            const Color(0xFFDB2777),
+            AppColors.secondary,
+            AppColors.accent,
           ],
           multiplier: '3x',
         );
@@ -110,8 +102,8 @@ class BoostBadge extends StatelessWidget {
           label: 'BOOSTED',
           icon: Icons.rocket_launch_rounded,
           gradientColors: [
-            const Color(0xFF3B82F6),
-            const Color(0xFF60A5FA),
+            AppColors.primaryDark,
+            AppColors.primaryLight,
           ],
           multiplier: '1.5x',
         );
@@ -148,18 +140,10 @@ class FeaturedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scale = Responsive.fontScale(context);
-    final smallHPad = Responsive.spacing(context, base: 6);
-    final mediumHPad = Responsive.spacing(context, base: 10);
-    final smallVPad = Responsive.spacing(context, base: 3);
-    final mediumVPad = Responsive.spacing(context, base: 5);
-    final smallIconSize = Responsive.iconSize(context, base: 10);
-    final mediumIconSize = Responsive.iconSize(context, base: 14);
-
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: size == BoostBadgeSize.small ? smallHPad : mediumHPad,
-        vertical: size == BoostBadgeSize.small ? smallVPad : mediumVPad,
+        horizontal: size == BoostBadgeSize.small ? 6 : 10,
+        vertical: size == BoostBadgeSize.small ? 3 : 5,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -184,16 +168,16 @@ class FeaturedBadge extends StatelessWidget {
         children: [
           Icon(
             Icons.star_rounded,
-            size: size == BoostBadgeSize.small ? smallIconSize : mediumIconSize,
-            color: Colors.white,
+            size: size == BoostBadgeSize.small ? 10 : 14,
+            color: AppColors.textOnPrimary,
           ),
           SizedBox(width: size == BoostBadgeSize.small ? 3 : 4),
           Text(
             'FEATURED',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.textOnPrimary,
               fontWeight: FontWeight.w700,
-              fontSize: size == BoostBadgeSize.small ? (10.0 * scale) : (12.0 * scale),
+              fontSize: size == BoostBadgeSize.small ? 9 : 11,
               letterSpacing: 0.3,
             ),
           ),
@@ -215,12 +199,9 @@ class BoostBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = _getConfig();
 
-    final scale = Responsive.fontScale(context);
-    final bannerIconSize = Responsive.iconSize(context, base: 14);
-
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 6)),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: config.gradientColors,
@@ -233,35 +214,32 @@ class BoostBanner extends StatelessWidget {
         children: [
           Icon(
             config.icon,
-            size: bannerIconSize,
-            color: Colors.white,
+            size: 14,
+            color: AppColors.textOnPrimary,
           ),
-          SizedBox(width: Responsive.spacing(context, base: 6)),
+          const SizedBox(width: 6),
           Text(
             config.label,
-            style: TextStyle(
-              color: Colors.white,
+            style: const TextStyle(
+              color: AppColors.textOnPrimary,
               fontWeight: FontWeight.w700,
-              fontSize: 11.0 * scale,
+              fontSize: 11,
               letterSpacing: 0.5,
             ),
           ),
-          SizedBox(width: Responsive.spacing(context)),
+          const SizedBox(width: 8),
           Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: Responsive.spacing(context, base: 6),
-              vertical: 2,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.25),
+              color: AppColors.textOnPrimary.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               config.multiplier,
-              style: TextStyle(
-                color: Colors.white,
+              style: const TextStyle(
+                color: AppColors.textOnPrimary,
                 fontWeight: FontWeight.w800,
-                fontSize: 10.0 * scale,
+                fontSize: 9,
               ),
             ),
           ),
@@ -276,14 +254,14 @@ class BoostBanner extends StatelessWidget {
         return _BoostBannerConfig(
           label: 'VIP EVENT',
           icon: Icons.diamond_rounded,
-          gradientColors: [const Color(0xFFFFD700), const Color(0xFFFFA500)],
+          gradientColors: [AppColors.primary, AppColors.secondary],
           multiplier: '5x BOOST',
         );
       case BoostPackage.premium:
         return _BoostBannerConfig(
           label: 'PREMIUM EVENT',
           icon: Icons.workspace_premium_rounded,
-          gradientColors: [const Color(0xFF9333EA), const Color(0xFFDB2777)],
+          gradientColors: [AppColors.secondary, AppColors.accent],
           multiplier: '3x BOOST',
         );
       case BoostPackage.standard:
@@ -298,7 +276,7 @@ class BoostBanner extends StatelessWidget {
         return _BoostBannerConfig(
           label: 'BOOSTED EVENT',
           icon: Icons.rocket_launch_rounded,
-          gradientColors: [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
+          gradientColors: [AppColors.primaryDark, AppColors.primaryLight],
           multiplier: '1.5x BOOST',
         );
     }

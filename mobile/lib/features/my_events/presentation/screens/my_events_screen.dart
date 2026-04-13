@@ -6,7 +6,6 @@ import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -39,6 +38,23 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final user = ref.watch(currentUserProvider);
+
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.myEvents),
+        ),
+        body: EmptyState(
+          icon: Icons.login,
+          title: 'Login Required',
+          subtitle: 'Please login to view your events',
+          actionLabel: 'Login',
+          onAction: () => context.push('/login'),
+        ),
+      );
+    }
+
     final registrations = _subTabIndex == 0
         ? ref.watch(myFutureRegistrationsProvider)
         : ref.watch(myPastRegistrationsProvider);
@@ -50,7 +66,7 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(Responsive.horizontalPadding(context)),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 _SubTabButton(
@@ -98,7 +114,7 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
                     }
                   },
                   child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: Responsive.horizontalPadding(context)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final reg = filtered[index];
@@ -186,6 +202,31 @@ class _RegistrationCard extends ConsumerWidget {
     ),);
   }
 
+  Future<void> _sendCertificateToEmail(BuildContext context, WidgetRef ref) async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.sendCertificateByEmail(registration.id);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Certificate sent to your email!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to send certificate: ${ErrorUtils.extractMessage(e)}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _cancelRegistration(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -249,18 +290,10 @@ class _RegistrationCard extends ConsumerWidget {
         registration.status == RegistrationStatusEnum.approved && isUpcoming;
     final canCancel = isUpcoming &&
         registration.status != RegistrationStatusEnum.cancelled;
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final cardMargin = Responsive.spacing(context, base: 12);
-    final cardPad = Responsive.spacing(context, base: 12);
-    final badgePadH = Responsive.spacing(context, base: 8);
-    final badgePadV = Responsive.spacing(context, base: 4);
-    final smallIconSize = Responsive.iconSize(context, base: 14);
-    final buttonIconSize = Responsive.iconSize(context, base: 18);
+    final canGetCertificate = !isUpcoming && registration.eligibleForCertificate;
 
     return Card(
-      margin: EdgeInsets.only(bottom: cardMargin),
+      margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
           ref.read(selectedEventProvider.notifier).state = event;
@@ -268,16 +301,16 @@ class _RegistrationCard extends ConsumerWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: EdgeInsets.all(cardPad),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: badgePadH,
-                      vertical: badgePadV,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(registration.status)
@@ -286,7 +319,8 @@ class _RegistrationCard extends ConsumerWidget {
                     ),
                     child: Text(
                       _getStatusText(registration.status),
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: _getStatusColor(registration.status),
                       ),
@@ -296,54 +330,56 @@ class _RegistrationCard extends ConsumerWidget {
                   if (canViewTicket)
                     TextButton.icon(
                       onPressed: () => _viewTicket(context, ref),
-                      icon: Icon(Icons.qr_code, size: buttonIconSize),
-                      label: Text('View Ticket', style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.primary,
-                      )),
+                      icon: const Icon(Icons.qr_code, size: 18),
+                      label: const Text('View Ticket'),
                       style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: badgePadH),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
                 ],
               ),
-              SizedBox(height: Responsive.spacing(context)),
+              const SizedBox(height: 8),
               Text(
                 event.title,
-                style: theme.textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: Responsive.spacing(context)),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.calendar_today,
-                    size: smallIconSize,
-                    color: theme.textTheme.bodySmall?.color,
+                    size: 14,
+                    color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '${dateFormat.format(event.startDate)} • ${timeFormat.format(event.startDate)}',
-                    style: theme.textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.location_on_outlined,
-                    size: smallIconSize,
-                    color: theme.textTheme.bodySmall?.color,
+                    size: 14,
+                    color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       event.location,
-                      style: theme.textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -351,16 +387,31 @@ class _RegistrationCard extends ConsumerWidget {
                 ],
               ),
               if (canCancel) ...[
-                SizedBox(height: Responsive.spacing(context, base: 12)),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => _cancelRegistration(context, ref),
-                    icon: Icon(Icons.cancel_outlined, size: buttonIconSize),
+                    icon: const Icon(Icons.cancel_outlined, size: 18),
                     label: const Text('Cancel Registration'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: colorScheme.error,
-                      side: BorderSide(color: colorScheme.error),
+                      foregroundColor: AppColors.error,
+                      side: const BorderSide(color: AppColors.error),
+                    ),
+                  ),
+                ),
+              ],
+              if (canGetCertificate) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _sendCertificateToEmail(context, ref),
+                    icon: const Icon(Icons.email_outlined, size: 18),
+                    label: const Text('Send Certificate to Email'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textOnPrimary,
                     ),
                   ),
                 ),
@@ -386,27 +437,21 @@ class _SubTabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: Responsive.spacing(context, base: 16),
-          vertical: Responsive.spacing(context, base: 8),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primary : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? colorScheme.primary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.border,
           ),
         ),
         child: Text(
           label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: isSelected ? Colors.white : theme.textTheme.bodySmall?.color,
+          style: TextStyle(
+            color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

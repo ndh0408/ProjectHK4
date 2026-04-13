@@ -8,11 +8,6 @@ import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/bookmarks/presentation/screens/saved_events_screen.dart';
 import '../../features/questions/presentation/screens/my_questions_screen.dart';
-import '../../features/create_event/presentation/screens/create_event_screen.dart';
-import '../../features/create_event/presentation/screens/description_editor_screen.dart';
-import '../../features/create_event/presentation/screens/edit_event_screen.dart';
-import '../../features/create_event/presentation/screens/event_registrations_screen.dart';
-import '../../features/create_event/presentation/screens/my_created_events_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/payment_cancelled_screen.dart';
 import '../../features/events/presentation/screens/payment_success_screen.dart';
@@ -33,7 +28,15 @@ import '../../features/my_events/presentation/screens/my_events_screen.dart';
 import '../../features/notifications/presentation/screens/alerts_screen.dart';
 import '../../features/notifications/presentation/screens/luma_notifications_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/chat/presentation/screens/event_buddies_screen.dart';
+import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/chat/presentation/screens/discover_networking_screen.dart';
+import '../../features/events/presentation/screens/event_polls_screen.dart';
+import '../../features/events/presentation/screens/event_schedule_screen.dart';
+import '../../features/explore/presentation/screens/event_comparison_screen.dart';
+import '../../features/gallery/presentation/screens/gallery_screen.dart';
+import '../../features/notifications/presentation/screens/waitlist_offers_screen.dart';
 import '../../shared/models/conversation.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -129,6 +132,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
+            path: '/event-buddies',
+            name: 'event-buddies',
+            builder: (context, state) => const EventBuddiesScreen(),
+          ),
+          GoRoute(
+            path: '/networking',
+            name: 'networking',
+            builder: (context, state) => const DiscoverNetworkingScreen(),
+          ),
+          GoRoute(
+            path: '/create-group',
+            name: 'create-group',
+            builder: (context, state) => const CreateGroupScreen(),
+          ),
+          GoRoute(
             path: '/profile',
             name: 'profile',
             builder: (context, state) {
@@ -159,6 +177,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/organisers',
             name: 'organisers',
             builder: (context, state) => const OrganisersScreen(),
+          ),
+          GoRoute(
+            path: '/gallery',
+            name: 'gallery',
+            builder: (context, state) => const GalleryScreen(),
           ),
           GoRoute(
             path: '/event/:id',
@@ -217,45 +240,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
-            path: '/create-event',
-            name: 'create-event',
-            builder: (context, state) => const CreateEventScreen(),
-          ),
-          GoRoute(
-            path: '/my-created-events',
-            name: 'my-created-events',
-            builder: (context, state) => const MyCreatedEventsScreen(),
-          ),
-          GoRoute(
-            path: '/description-editor',
-            name: 'description-editor',
-            builder: (context, state) {
-              final initialValue = state.extra as String?;
-              return DescriptionEditorScreen(initialValue: initialValue);
-            },
-          ),
-          GoRoute(
-            path: '/event-registrations/:id',
-            name: 'event-registrations',
-            builder: (context, state) {
-              final eventId = state.pathParameters['id'] ?? '';
-              final extra = state.extra as Map<String, dynamic>? ?? {};
-              final eventTitle = extra['eventTitle'] as String? ?? 'Event';
-              return EventRegistrationsScreen(
-                eventId: eventId,
-                eventTitle: eventTitle,
-              );
-            },
-          ),
-          GoRoute(
-            path: '/edit-event/:id',
-            name: 'edit-event',
-            builder: (context, state) {
-              final eventId = state.pathParameters['id'] ?? '';
-              return EditEventScreen(eventId: eventId);
-            },
-          ),
-          GoRoute(
             path: '/payment-success',
             name: 'payment-success',
             builder: (context, state) {
@@ -308,6 +292,39 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/my-questions',
             name: 'my-questions',
             builder: (context, state) => const MyQuestionsScreen(),
+          ),
+          GoRoute(
+            path: '/waitlist-offers',
+            name: 'waitlist-offers',
+            builder: (context, state) => const WaitlistOffersScreen(),
+          ),
+          GoRoute(
+            path: '/event/:id/schedule',
+            name: 'event-schedule',
+            builder: (context, state) {
+              final eventId = state.pathParameters['id'] ?? '';
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return EventScheduleScreen(eventId: eventId, eventTitle: extra['eventTitle'] as String? ?? 'Event');
+            },
+          ),
+          GoRoute(
+            path: '/compare-events',
+            name: 'compare-events',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              final ids = (extra['eventIds'] as List<dynamic>?)?.cast<String>() ?? [];
+              return EventComparisonScreen(eventIds: ids);
+            },
+          ),
+          GoRoute(
+            path: '/event/:id/polls',
+            name: 'event-polls',
+            builder: (context, state) {
+              final eventId = state.pathParameters['id'] ?? '';
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              final eventTitle = extra['eventTitle'] as String? ?? 'Event';
+              return EventPollsScreen(eventId: eventId, eventTitle: eventTitle);
+            },
           ),
         ],
       ),

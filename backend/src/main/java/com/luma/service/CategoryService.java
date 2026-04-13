@@ -18,23 +18,27 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
+    @Transactional(readOnly = true)
     public Category getEntityById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findByActiveTrue().stream()
                 .map(CategoryResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategoriesForAdmin() {
         return categoryRepository.findAll().stream()
                 .map(CategoryResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(Long id) {
         return CategoryResponse.fromEntity(getEntityById(id));
     }

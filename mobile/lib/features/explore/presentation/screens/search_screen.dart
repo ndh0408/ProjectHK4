@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -138,13 +137,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           autofocus: widget.query.isEmpty,
           decoration: InputDecoration(
             hintText: 'Search events...',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+            hintStyle: TextStyle(color: AppColors.textOnPrimary.withValues(alpha: 0.7)),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
           ),
-          style: const TextStyle(color: Colors.white),
-          cursorColor: Colors.white,
+          style: const TextStyle(color: AppColors.textOnPrimary),
+          cursorColor: AppColors.textOnPrimary,
           onChanged: (value) {
             ref.read(searchProvider.notifier).updateQuery(value);
           },
@@ -183,18 +182,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       );
     }
 
-    final theme = Theme.of(context);
-    final hPadding = Responsive.horizontalPadding(context);
-
     if (!state.hasSearched) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.search,
-              size: Responsive.iconSize(context, base: 64),
-              color: theme.textTheme.bodySmall?.color,
+              size: 64,
+              color: AppColors.textLight,
             ),
             const SizedBox(height: 16),
             Text(
@@ -216,10 +212,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.search_off,
-              size: Responsive.iconSize(context, base: 64),
-              color: theme.textTheme.bodySmall?.color,
+              size: 64,
+              color: AppColors.textLight,
             ),
             const SizedBox(height: 16),
             Text(
@@ -240,20 +236,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.all(hPadding),
+          padding: const EdgeInsets.all(16),
           child: Text(
             '${state.results.length} result${state.results.length != 1 ? 's' : ''} for "${state.query}"',
-            style: theme.textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: hPadding),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: state.results.length,
             itemBuilder: (context, index) {
               final event = state.results[index];
               return Padding(
-                padding: EdgeInsets.only(bottom: hPadding),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: EventCard(
                   event: event,
                   showStatusLabel: true,

@@ -216,6 +216,33 @@ public class EmailService {
         );
     }
 
+    @Async
+    public void sendCertificateEmail(String userEmail, String userName, String eventTitle,
+                                      LocalDateTime eventDate, String organiserName, String eventLocation,
+                                      String certificateCode, String certificateUrl) {
+        if (userEmail == null || userEmail.isEmpty()) {
+            log.warn("Cannot send certificate email: user email is null or empty");
+            return;
+        }
+
+        Context context = new Context();
+        context.setVariable("userName", userName != null ? userName : "there");
+        context.setVariable("eventTitle", eventTitle);
+        context.setVariable("eventDate", eventDate.format(DATE_FORMATTER));
+        context.setVariable("organiserName", organiserName);
+        context.setVariable("eventLocation", eventLocation != null ? eventLocation : "N/A");
+        context.setVariable("certificateCode", certificateCode);
+        context.setVariable("downloadUrl", certificateUrl);
+        context.setVariable("verifyUrl", baseUrl + "/verify-certificate?code=" + certificateCode);
+
+        sendHtmlEmail(
+                userEmail,
+                "🏆 Your Certificate of Attendance - " + eventTitle,
+                "email/certificate",
+                context
+        );
+    }
+
     private boolean canSendEmail(String email, boolean emailVerified, boolean emailNotificationsEnabled) {
         if (email == null || email.isEmpty()) {
             return false;

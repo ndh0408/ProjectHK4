@@ -48,14 +48,14 @@ const StatCard = ({ title, value, subtitle, icon, variant, change, isLoading }) 
             sx={{
                 height: '100%',
                 background: variant === 'primary'
-                    ? 'var(--gradient-purple-pink)'
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                     : variant === 'success'
-                    ? 'var(--gradient-success)'
+                    ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
                     : variant === 'warning'
-                    ? 'var(--gradient-warning)'
+                    ? 'linear-gradient(135deg, #F2994A 0%, #F2C94C 100%)'
                     : variant === 'info'
-                    ? 'var(--gradient-blue-cyan)'
-                    : 'var(--gradient-purple-pink)',
+                    ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
             }}
         >
@@ -256,8 +256,8 @@ const Revenue = () => {
                                 ]}
                                 height={320}
                                 sx={{
-                                    '& .MuiChartsAxis-line': { stroke: 'var(--neutral-200)' },
-                                    '& .MuiChartsAxis-tick': { stroke: 'var(--neutral-200)' },
+                                    '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
+                                    '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
                                 }}
                             />
                         ) : (

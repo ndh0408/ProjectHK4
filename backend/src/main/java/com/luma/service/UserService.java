@@ -28,20 +28,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional(readOnly = true)
     public User getEntityById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+    @Transactional(readOnly = true)
     public User getEntityByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserById(UUID id) {
         return UserResponse.fromEntity(getEntityById(id));
     }
 
+    @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
         return UserResponse.fromEntity(getEntityByEmail(email));
     }
@@ -75,7 +79,7 @@ public class UserService {
             user.setFullName(request.getFullName());
         }
         if (request.getPhone() != null) {
-            if (userRepository.existsByPhone(request.getPhone()) && 
+            if (userRepository.existsByPhone(request.getPhone()) &&
                 !request.getPhone().equals(user.getPhone())) {
                 throw new BadRequestException("Phone number is already in use");
             }
@@ -92,6 +96,15 @@ public class UserService {
         }
         if (request.getEmailEventReminders() != null) {
             user.setEmailEventReminders(request.getEmailEventReminders());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+        if (request.getInterests() != null) {
+            user.setInterests(request.getInterests());
+        }
+        if (request.getNetworkingVisible() != null) {
+            user.setNetworkingVisible(request.getNetworkingVisible());
         }
 
         return UserResponse.fromEntity(userRepository.save(user));
@@ -116,11 +129,13 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
         return PageResponse.from(users, UserResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<UserResponse> searchUsers(String query, UserRole role, UserStatus status, Pageable pageable) {
         Page<User> users;
         if (query != null && !query.isEmpty()) {
@@ -180,10 +195,12 @@ public class UserService {
         userRepository.delete(user);
     }
 
+    @Transactional(readOnly = true)
     public long countByRole(UserRole role) {
         return userRepository.countByRole(role);
     }
 
+    @Transactional(readOnly = true)
     public long countNewUsersInMonth(int month, int year) {
         return userRepository.countNewUsersInMonth(month, year);
     }

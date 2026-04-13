@@ -10,6 +10,8 @@ import com.luma.repository.CategoryRepository;
 import com.luma.repository.CityRepository;
 import com.luma.repository.OrganiserProfileRepository;
 import com.luma.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -28,14 +30,31 @@ public class DataSeeder implements CommandLineRunner {
     private final CityRepository cityRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
     @Transactional
     public void run(String... args) {
+        migrateNullColumns();
         seedAdminUser();
         seedOrganiserUser();
         seedCategories();
         seedCities();
         log.info("=== Data seeding completed ===");
+    }
+
+    private void migrateNullColumns() {
+        try {
+            int updated = entityManager.createNativeQuery(
+                    "UPDATE users SET networking_visible = 1 WHERE networking_visible IS NULL"
+            ).executeUpdate();
+            if (updated > 0) {
+                log.info("Migrated {} users: set networking_visible = true (default)", updated);
+            }
+        } catch (Exception e) {
+            log.warn("Could not run networking_visible migration: {}", e.getMessage());
+        }
     }
 
     private void seedAdminUser() {

@@ -70,12 +70,14 @@ public class BookmarkService {
         log.info("User {} unbookmarked event {}", user.getId(), eventId);
     }
 
+    @Transactional(readOnly = true)
     public boolean isBookmarked(UUID eventId, User user) {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event == null) return false;
         return bookmarkRepository.existsByUserAndEvent(user, event);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getBookmarkedEvents(User user, Pageable pageable) {
         Page<Bookmark> bookmarks = bookmarkRepository.findByUser(user, pageable);
 
@@ -89,10 +91,12 @@ public class BookmarkService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public List<UUID> getBookmarkedEventIds(User user) {
         return bookmarkRepository.findEventIdsByUser(user);
     }
 
+    @Transactional(readOnly = true)
     public long countUserBookmarks(User user) {
         return bookmarkRepository.countByUser(user);
     }

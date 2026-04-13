@@ -35,6 +35,9 @@ class User {
     this.emailVerified = false,
     this.emailNotificationsEnabled = true,
     this.emailEventReminders = true,
+    this.bio,
+    this.interests,
+    this.networkingVisible = true,
     this.createdAt,
     this.updatedAt,
     this.lastLoginAt,
@@ -58,6 +61,10 @@ class User {
   final bool emailNotificationsEnabled;
   @JsonKey(defaultValue: true)
   final bool emailEventReminders;
+  final String? bio;
+  final String? interests;
+  @JsonKey(defaultValue: true)
+  final bool networkingVisible;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? lastLoginAt;
@@ -77,6 +84,9 @@ class User {
     bool? emailVerified,
     bool? emailNotificationsEnabled,
     bool? emailEventReminders,
+    String? bio,
+    String? interests,
+    bool? networkingVisible,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastLoginAt,
@@ -94,6 +104,9 @@ class User {
       emailVerified: emailVerified ?? this.emailVerified,
       emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
       emailEventReminders: emailEventReminders ?? this.emailEventReminders,
+      bio: bio ?? this.bio,
+      interests: interests ?? this.interests,
+      networkingVisible: networkingVisible ?? this.networkingVisible,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../services/api_service.dart';
 
-class TicketScreen extends StatelessWidget {
+class TicketScreen extends ConsumerWidget {
   const TicketScreen({
     super.key,
     required this.eventName,
@@ -26,13 +28,74 @@ class TicketScreen extends StatelessWidget {
 
   bool get isCheckedIn => checkedInAt != null;
 
+  Future<void> _showTransferDialog(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Transfer Ticket'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Enter the recipient\'s email:'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'recipient@example.com',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: const Text('Transfer'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || result.isEmpty || registrationId == null) return;
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.transferTicket(registrationId!, result);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transfer initiated!'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final qrData = registrationId ?? ticketId;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.ticket)),
+      appBar: AppBar(
+        title: Text(l10n.ticket),
+        actions: [
+          if (registrationId != null && !isCheckedIn)
+            IconButton(
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Transfer ticket',
+              onPressed: () => _showTransferDialog(context, ref),
+            ),
+        ],
+      ),
       backgroundColor: AppColors.background,
       body: Center(
         child: SingleChildScrollView(
@@ -42,11 +105,11 @@ class TicketScreen extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: AppColors.textPrimary.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -62,19 +125,19 @@ class TicketScreen extends StatelessWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green[50],
+                          color: AppColors.successLight,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.green),
+                          border: Border.all(color: AppColors.success),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle, color: Colors.green[700], size: 20),
+                            Icon(Icons.check_circle, color: AppColors.success, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               l10n.checkedIn,
                               style: TextStyle(
-                                color: Colors.green[700],
+                                color: AppColors.success,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -85,7 +148,7 @@ class TicketScreen extends StatelessWidget {
                       Text(
                         '${l10n.checkedInAt} ${DateFormat('MMM d, yyyy h:mm a').format(checkedInAt!)}',
                         style: TextStyle(
-                          color: Colors.green[700],
+                          color: AppColors.success,
                           fontSize: 12,
                         ),
                       ),
@@ -95,7 +158,7 @@ class TicketScreen extends StatelessWidget {
                       eventName,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: AppColors.textPrimary,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -117,12 +180,12 @@ class TicketScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.green,
+                              color: AppColors.success,
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                               size: 48,
                             ),
                           ),
@@ -154,7 +217,7 @@ class TicketScreen extends StatelessWidget {
               Text(
                 isCheckedIn ? l10n.youHaveCheckedIn : l10n.showQrAtEntrance,
                 style: TextStyle(
-                  color: isCheckedIn ? Colors.green : AppColors.textLight,
+                  color: isCheckedIn ? AppColors.success : AppColors.textLight,
                   fontWeight: isCheckedIn ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),

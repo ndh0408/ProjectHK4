@@ -336,8 +336,8 @@ const AdminDashboard = () => {
                                 noDataOverlay: { message: 'No data available' },
                             }}
                             sx={{
-                                '& .MuiChartsAxis-line': { stroke: 'var(--neutral-200)' },
-                                '& .MuiChartsAxis-tick': { stroke: 'var(--neutral-200)' },
+                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
+                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
                             }}
                         />
                     ) : (
@@ -372,8 +372,8 @@ const AdminDashboard = () => {
                                 noDataOverlay: { message: 'No data available' },
                             }}
                             sx={{
-                                '& .MuiChartsAxis-line': { stroke: 'var(--neutral-200)' },
-                                '& .MuiChartsAxis-tick': { stroke: 'var(--neutral-200)' },
+                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
+                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
                             }}
                         />
                     ) : (
@@ -410,8 +410,8 @@ const AdminDashboard = () => {
                                 noDataOverlay: { message: 'No data available' },
                             }}
                             sx={{
-                                '& .MuiChartsAxis-line': { stroke: 'var(--neutral-200)' },
-                                '& .MuiChartsAxis-tick': { stroke: 'var(--neutral-200)' },
+                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
+                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
                             }}
                         />
                     ) : (

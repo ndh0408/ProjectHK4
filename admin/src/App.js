@@ -33,6 +33,10 @@ import {
     OrganiserCertificates,
     OrganiserBoost,
     OrganiserSubscription,
+    OrganiserPolls,
+    OrganiserFunnelAnalytics,
+    OrganiserCoupons,
+    OrganiserSchedule,
 } from "./pages/organiser";
 
 const theme = createTheme({
@@ -193,6 +197,10 @@ function App() {
                                 <Route path="/organiser/events" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserEvents /></ProtectedRoute>} />
                                 <Route path="/organiser/registrations" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserRegistrations /></ProtectedRoute>} />
                                 <Route path="/organiser/questions" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserQuestions /></ProtectedRoute>} />
+                                <Route path="/organiser/polls" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserPolls /></ProtectedRoute>} />
+                                <Route path="/organiser/funnel" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserFunnelAnalytics /></ProtectedRoute>} />
+                                <Route path="/organiser/coupons" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserCoupons /></ProtectedRoute>} />
+                                <Route path="/organiser/schedule" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserSchedule /></ProtectedRoute>} />
                                 <Route path="/organiser/registration-questions" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserRegistrationQuestions /></ProtectedRoute>} />
                                 <Route path="/organiser/profile" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserProfile /></ProtectedRoute>} />
                                 <Route path="/organiser/certificates" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserCertificates /></ProtectedRoute>} />

@@ -1604,77 +1604,11 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
-  /// No description provided for @certificate.
-  ///
-  /// In en, this message translates to:
-  /// **'Certificate'**
-  String get certificate;
-
-  /// No description provided for @certificateOfAttendance.
-  ///
-  /// In en, this message translates to:
-  /// **'Certificate of Attendance'**
-  String get certificateOfAttendance;
-
-  /// No description provided for @thisCertifiesThat.
-  ///
-  /// In en, this message translates to:
-  /// **'This is to certify that'**
-  String get thisCertifiesThat;
-
-  /// No description provided for @hasSuccessfullyAttended.
-  ///
-  /// In en, this message translates to:
-  /// **'has successfully attended'**
-  String get hasSuccessfullyAttended;
-
-  /// No description provided for @hasAttended.
-  ///
-  /// In en, this message translates to:
-  /// **'has attended'**
-  String get hasAttended;
-
-  /// No description provided for @scanToVerify.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan to verify'**
-  String get scanToVerify;
-
-  /// No description provided for @issuedOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Issued on'**
-  String get issuedOn;
-
-  /// No description provided for @certificateCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Certificate Code'**
-  String get certificateCode;
-
-  /// No description provided for @verifyAt.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify at'**
-  String get verifyAt;
-
   /// No description provided for @download.
   ///
   /// In en, this message translates to:
   /// **'Download'**
   String get download;
-
-  /// No description provided for @certificateNotAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Certificate Not Available'**
-  String get certificateNotAvailable;
-
-  /// No description provided for @certificateRequirements.
-  ///
-  /// In en, this message translates to:
-  /// **'You must check in to the event and the event must have ended to receive your certificate.'**
-  String get certificateRequirements;
 
   /// No description provided for @reviews.
   ///

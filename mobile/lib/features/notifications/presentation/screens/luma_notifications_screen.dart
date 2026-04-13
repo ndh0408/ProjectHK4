@@ -55,7 +55,7 @@ class _LumaNotificationsScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to open chat: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -124,12 +124,12 @@ class _LumaNotificationsScreenState
     switch (type) {
       case 'EVENT_APPROVED':
       case 'REGISTRATION_APPROVED':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'EVENT_REJECTED':
       case 'REGISTRATION_REJECTED':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'EVENT_REMINDER':
-        return const Color(0xFFF97316);
+        return AppColors.warning;
       case 'NEW_FOLLOWER':
         return const Color(0xFF8B5CF6);
       case 'QUESTION_ANSWERED':
@@ -151,7 +151,7 @@ class _LumaNotificationsScreenState
     final hasUnread = state.notifications.any((n) => !n.isRead);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8E8E8),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -168,8 +168,8 @@ class _LumaNotificationsScreenState
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white,
-                    Colors.white.withValues(alpha: 0.9),
+                    AppColors.surface,
+                    AppColors.surface.withValues(alpha: 0.9),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -192,14 +192,14 @@ class _LumaNotificationsScreenState
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -214,7 +214,7 @@ class _LumaNotificationsScreenState
                     'System Notifications',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -235,7 +235,7 @@ class _LumaNotificationsScreenState
               },
               child: const Text(
                 'Read all',
-                style: TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: AppColors.textOnPrimary, fontSize: 13),
               ),
             ),
         ],
@@ -361,14 +361,14 @@ class _LumaNotificationsScreenState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: AppColors.textLight?.withValues(alpha: 0.4),
+            color: AppColors.textLight.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -419,7 +419,7 @@ class _NotificationBubble extends StatelessWidget {
             ),
             child: const Icon(
               Icons.notifications_active,
-              color: Colors.white,
+              color: AppColors.textOnPrimary,
               size: 18,
             ),
           ),
@@ -438,7 +438,7 @@ class _NotificationBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isUnread
                           ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.white,
+                          : AppColors.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
                         topRight: Radius.circular(18),
@@ -447,7 +447,7 @@ class _NotificationBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -492,7 +492,7 @@ class _NotificationBubble extends StatelessWidget {
                           notification.body,
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textSecondary,
                             height: 1.3,
                           ),
                         ),
@@ -511,13 +511,13 @@ class _NotificationBubble extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.reply,
-                                      size: 14, color: Colors.white),
+                                      size: 14, color: AppColors.textOnPrimary),
                                   SizedBox(width: 4),
                                   Text(
                                     'Reply',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.white,
+                                      color: AppColors.textOnPrimary,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),

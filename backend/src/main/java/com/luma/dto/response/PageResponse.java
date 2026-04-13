@@ -14,7 +14,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageResponse<T> {
-    
+
     private List<T> content;
     private int page;
     private int size;
@@ -22,7 +22,7 @@ public class PageResponse<T> {
     private int totalPages;
     private boolean first;
     private boolean last;
-    
+
     public static <T, E> PageResponse<T> from(Page<E> page, Function<E, T> mapper) {
         return PageResponse.<T>builder()
                 .content(page.getContent().stream().map(mapper).toList())

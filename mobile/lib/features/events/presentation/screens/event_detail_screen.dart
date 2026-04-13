@@ -14,7 +14,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../../../core/utils/error_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -27,6 +26,7 @@ import 'payment_screen.dart';
 import 'registration_form_screen.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/models/review.dart';
+import '../../../home/presentation/widgets/similar_events_section.dart';
 
 final eventDetailProvider =
     FutureProvider.family.autoDispose<Event, String>((ref, eventId) async {
@@ -64,6 +64,14 @@ class EventDetailScreen extends ConsumerStatefulWidget {
 
 class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   bool _isRegistering = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(apiServiceProvider).trackEventView(widget.eventId);
+    });
+  }
 
   Future<void> _register(Event event) async {
     if (event.hasRegistrationQuestions) {
@@ -258,17 +266,12 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final dateFormat = DateFormat('EEEE, MMMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
     final isNearlyFull = event.isAlmostFull;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final hPadding = Responsive.horizontalPadding(context);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: screenHeight * 0.35,
+            expandedHeight: 280,
             pinned: true,
             actions: [
               _BookmarkButton(eventId: event.id),
@@ -333,7 +336,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                   ? Icons.hourglass_top
                                   : Icons.local_fire_department,
                               size: 16,
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                             ),
                             const SizedBox(width: 4),
                             Builder(
@@ -342,7 +345,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                 return Text(
                                   event.isFull ? l10n.waitlist.toUpperCase() : l10n.almostFull.toUpperCase(),
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.textOnPrimary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -360,7 +363,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(hPadding),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -369,7 +372,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         context.push('/organiser/${event.organiserId}'),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
@@ -396,8 +399,9 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                               children: [
                                 Text(
                                   event.organiserName,
-                                  style: theme.textTheme.titleMedium?.copyWith(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
                                 ),
                                 Builder(
@@ -405,7 +409,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                     final l10n = AppLocalizations.of(context)!;
                                     return Text(
                                       '${l10n.eventOrganiser} • ${l10n.tapToViewProfile}',
-                                      style: theme.textTheme.bodySmall,
+                                      style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
                                     );
                                   },
                                 ),
@@ -578,17 +585,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                               statusIcon = Icons.payment;
                               statusTitle = l10n.paymentRequired;
                             } else if (regStatus.isOnWaitingList) {
-                              statusColor = Colors.blue;
+                              statusColor = AppColors.primary;
                               statusIcon = Icons.access_time;
                               statusTitle = regStatus.waitingListPosition != null
                                   ? '${l10n.waitlist} #${regStatus.waitingListPosition}'
                                   : l10n.onWaitingList;
                             } else if (regStatus.status == RegistrationStatusEnum.pending) {
-                              statusColor = Colors.orange;
+                              statusColor = AppColors.warning;
                               statusIcon = Icons.hourglass_empty;
                               statusTitle = l10n.pendingApproval;
                             } else if (regStatus.status == RegistrationStatusEnum.rejected) {
-                              statusColor = Colors.red;
+                              statusColor = AppColors.error;
                               statusIcon = Icons.cancel;
                               statusTitle = l10n.registrationRejected;
                             } else {
@@ -707,10 +714,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: AppColors.divider.withValues(alpha: 0.3),
+                                    color: AppColors.textSecondary.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: AppColors.divider,
+                                      color: AppColors.textSecondary.withValues(alpha: 0.3),
                                     ),
                                   ),
                                   child: Row(
@@ -889,7 +896,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       child: Column(
                         children: [
                           Container(
-                            height: screenHeight * 0.18,
+                            height: 150,
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.1),
@@ -954,11 +961,11 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: AppColors.surface,
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black
+                                          color: AppColors.textPrimary
                                               .withValues(alpha: 0.1),
                                           blurRadius: 4,
                                         ),
@@ -1095,10 +1102,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                           },
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            margin: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
-                            padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                              color: AppColors.surfaceVariant,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -1160,6 +1167,41 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                         )),
                   ],
 
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.push(
+                            '/event/${event.id}/polls',
+                            extra: {'eventTitle': event.title},
+                          ),
+                          icon: const Icon(Icons.poll, size: 18),
+                          label: const Text('Live Polls'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.push(
+                            '/event/${event.id}/schedule',
+                            extra: {'eventTitle': event.title},
+                          ),
+                          icon: const Icon(Icons.calendar_month, size: 18),
+                          label: const Text('Schedule'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 24),
                   _ReviewsSection(
                     event: event,
@@ -1174,6 +1216,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       }
                     },
                   ),
+
+                  const SizedBox(height: 32),
+
+                  SimilarEventsSection(eventId: event.id),
 
                   const SizedBox(height: 32),
                 ],
@@ -1259,7 +1305,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
               child: _ActionButton(
                 icon: Icons.share,
                 label: AppLocalizations.of(context)!.share,
-                color: Colors.teal,
+                color: AppColors.success,
                 onTap: () => _share(event),
               ),
             ),
@@ -1348,7 +1394,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                 child: Text(
                   '${event.occurrenceIndex ?? 1}/${event.totalOccurrences}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textOnPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -1484,31 +1530,33 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(Responsive.spacing(context, base: 10)),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: colorScheme.primary.withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: colorScheme.primary, size: Responsive.iconSize(context, base: 20)),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
-        SizedBox(width: Responsive.spacing(context, base: 12)),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: theme.textTheme.bodySmall,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
               Text(
                 subtitle,
-                style: theme.textTheme.titleSmall?.copyWith(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
               ),
             ],
@@ -1536,12 +1584,11 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 12)),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
@@ -1551,21 +1598,22 @@ class _ActionButton extends StatelessWidget {
           children: [
             if (isLoading)
               SizedBox(
-                height: Responsive.iconSize(context),
-                width: Responsive.iconSize(context),
+                height: 24,
+                width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: color,
                 ),
               )
             else
-              Icon(icon, color: color, size: Responsive.iconSize(context)),
+              Icon(icon, color: color),
             const SizedBox(height: 4),
             Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
             ),
           ],
@@ -1605,7 +1653,7 @@ class _ReviewsSection extends ConsumerWidget {
             if (event.averageRating != null && event.reviewCount > 0)
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const Icon(Icons.star, color: AppColors.warning, size: 20),
                   const SizedBox(width: 4),
                   Text(
                     event.averageRating!.toStringAsFixed(1),
@@ -1657,30 +1705,33 @@ class _ReviewsSection extends ConsumerWidget {
           data: (reviews) {
             if (reviews.isEmpty) {
               return Container(
-                padding: EdgeInsets.all(Responsive.spacing(context, base: 24)),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.rate_review_outlined,
-                        size: Responsive.iconSize(context, base: 48),
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        size: 48,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         l10n.noReviews,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         l10n.noReviewsSubtitle,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -1720,13 +1771,11 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Container(
-      margin: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
-      padding: EdgeInsets.all(Responsive.spacing(context, base: 12)),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1735,16 +1784,16 @@ class _ReviewCard extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: Responsive.iconSize(context, base: 18),
-                backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+                radius: 18,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 backgroundImage: review.userAvatarUrl != null
                     ? CachedNetworkImageProvider(review.userAvatarUrl!)
                     : null,
                 child: review.userAvatarUrl == null
                     ? Text(
                         (review.userName ?? 'U')[0].toUpperCase(),
-                        style: TextStyle(
-                          color: colorScheme.primary,
+                        style: const TextStyle(
+                          color: AppColors.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       )
@@ -1757,7 +1806,7 @@ class _ReviewCard extends StatelessWidget {
                   children: [
                     Text(
                       review.userName ?? 'Anonymous',
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1768,15 +1817,18 @@ class _ReviewCard extends StatelessWidget {
                             index < review.rating
                                 ? Icons.star
                                 : Icons.star_border,
-                            size: Responsive.iconSize(context, base: 14),
-                            color: Colors.amber,
+                            size: 14,
+                            color: AppColors.warning,
                           );
                         }),
                         const SizedBox(width: 8),
                         if (review.createdAt != null)
                           Text(
                             _formatDate(review.createdAt!),
-                            style: theme.textTheme.bodySmall,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                       ],
                     ),
@@ -1829,10 +1881,10 @@ class _BookmarkButton extends ConsumerWidget {
     return IconButton(
       icon: Icon(
         isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-        color: isBookmarked ? AppColors.primary : Colors.white,
+        color: isBookmarked ? AppColors.primary : AppColors.textOnPrimary,
       ),
       style: IconButton.styleFrom(
-        backgroundColor: Colors.black.withValues(alpha: 0.3),
+        backgroundColor: AppColors.textPrimary.withValues(alpha: 0.3),
       ),
       onPressed: () async {
         final result = await ref.read(bookmarkNotifierProvider.notifier).toggle(eventId);
@@ -1845,7 +1897,7 @@ class _BookmarkButton extends ConsumerWidget {
               action: result
                   ? SnackBarAction(
                       label: l10n.viewAll,
-                      textColor: Colors.white,
+                      textColor: AppColors.textOnPrimary,
                       onPressed: () => context.push('/saved-events'),
                     )
                   : null,

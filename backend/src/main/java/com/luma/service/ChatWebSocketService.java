@@ -88,4 +88,17 @@ public class ChatWebSocketService {
                 event
         );
     }
+
+    public void broadcastOnlineStatus(UUID userId, String userName, boolean isOnline) {
+        ChatMessageEvent event = ChatMessageEvent.builder()
+                .type(isOnline ? ChatMessageEvent.EventType.ONLINE : ChatMessageEvent.EventType.OFFLINE)
+                .userId(userId)
+                .userName(userName)
+                .isOnline(isOnline)
+                .lastSeen(isOnline ? null : java.time.Instant.now())
+                .build();
+
+        messagingTemplate.convertAndSend("/topic/presence", event);
+        log.debug("Broadcasted {} status for user: {}", isOnline ? "online" : "offline", userId);
+    }
 }

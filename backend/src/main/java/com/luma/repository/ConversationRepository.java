@@ -21,9 +21,15 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
 
     @Query("SELECT c FROM Conversation c " +
            "JOIN c.participants p " +
-           "WHERE p.user = :user " +
-           "ORDER BY c.lastMessageAt DESC NULLS LAST")
+           "WHERE p.user = :user AND p.archived = false " +
+           "ORDER BY p.pinned DESC, c.lastMessageAt DESC NULLS LAST")
     Page<Conversation> findByUser(@Param("user") User user, Pageable pageable);
+
+    @Query("SELECT c FROM Conversation c " +
+           "JOIN c.participants p " +
+           "WHERE p.user = :user AND p.archived = true " +
+           "ORDER BY c.lastMessageAt DESC NULLS LAST")
+    Page<Conversation> findArchivedByUser(@Param("user") User user, Pageable pageable);
 
     @Query("SELECT c FROM Conversation c " +
            "WHERE c.type = 'DIRECT' " +
@@ -35,4 +41,10 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
            "JOIN c.participants p " +
            "WHERE p.user = :user AND p.unreadCount > 0")
     long countUnreadConversations(@Param("user") User user);
+
+    @Query("SELECT c FROM Conversation c " +
+           "JOIN c.participants p " +
+           "WHERE p.user = :user AND c.type = :type " +
+           "ORDER BY c.lastMessageAt DESC NULLS LAST")
+    Page<Conversation> findByUserAndType(@Param("user") User user, @Param("type") ConversationType type, Pageable pageable);
 }

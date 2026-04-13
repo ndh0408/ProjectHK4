@@ -38,6 +38,12 @@ public class ConversationParticipant {
     @Builder.Default
     private boolean muted = false;
 
+    @Builder.Default
+    private boolean pinned = false;
+
+    @Builder.Default
+    private boolean archived = false;
+
     @CreationTimestamp
     private LocalDateTime joinedAt;
 }

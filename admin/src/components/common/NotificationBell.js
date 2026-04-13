@@ -183,8 +183,7 @@ const NotificationBell = () => {
                 PaperProps={{
                     sx: {
                         mt: 1,
-                        width: { xs: '100vw', sm: 380 },
-                        maxWidth: '100%',
+                        width: 380,
                         maxHeight: 500,
                         boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
                         borderRadius: 3,

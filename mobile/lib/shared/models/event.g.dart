@@ -90,6 +90,8 @@ Event _$EventFromJson(Map<String, dynamic> json) => Event(
       occurrenceIndex: (json['occurrenceIndex'] as num?)?.toInt(),
       totalOccurrences: (json['totalOccurrences'] as num?)?.toInt() ?? 1,
       isRecurring: json['isRecurring'] as bool? ?? false,
+      isBoosted: json['isBoosted'] as bool? ?? false,
+      boostPackage: json['boostPackage'] as String?,
     );
 
 Map<String, dynamic> _$EventToJson(Event instance) => <String, dynamic>{
@@ -129,6 +131,8 @@ Map<String, dynamic> _$EventToJson(Event instance) => <String, dynamic>{
       'occurrenceIndex': instance.occurrenceIndex,
       'totalOccurrences': instance.totalOccurrences,
       'isRecurring': instance.isRecurring,
+      'isBoosted': instance.isBoosted,
+      'boostPackage': instance.boostPackage,
     };
 
 const _$EventStatusEnumMap = {

@@ -122,6 +122,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query("SELECT r FROM Registration r WHERE r.event = :event AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
     List<Registration> findCheckedInByEvent(@Param("event") Event event);
 
+    List<Registration> findByEventAndStatusAndCheckedInAtIsNotNull(Event event, RegistrationStatus status);
+
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status IN :statuses")
     long countByEventAndStatusIn(@Param("event") Event event, @Param("statuses") List<RegistrationStatus> statuses);
 
@@ -156,4 +158,31 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.createdAt BETWEEN :start AND :end")
     long countByEventOrganiserIdAndCreatedAtBetween(@Param("organiserId") UUID organiserId, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    List<Registration> findByUserAndStatus(User user, RegistrationStatus status);
+
+    List<Registration> findByUserAndStatusIn(User user, List<RegistrationStatus> statuses);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.user = :user AND r.status = 'APPROVED'")
+    long countApprovedByUser(@Param("user") User user);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.user = :user AND r.status = :status")
+    long countByUserAndStatus(@Param("user") User user, @Param("status") RegistrationStatus status);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.status = :status")
+    long countByStatusGlobal(@Param("status") RegistrationStatus status);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    long countCheckedInGlobal();
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.status = 'APPROVED'")
+    long countApprovedByOrganiserId(@Param("organiserId") UUID organiserId);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    long countCheckedInByOrganiserId(@Param("organiserId") UUID organiserId);
+
+    @Query("SELECT r FROM Registration r JOIN FETCH r.user JOIN FETCH r.event " +
+           "WHERE r.event IN :events AND r.status IN :statuses")
+    List<Registration> findByEventInAndStatusIn(@Param("events") List<Event> events,
+                                                 @Param("statuses") List<RegistrationStatus> statuses);
 }

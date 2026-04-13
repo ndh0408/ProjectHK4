@@ -124,7 +124,7 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
             child: const Text('Disconnect'),
           ),
@@ -180,7 +180,7 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                                     ? Icons.check_circle
                                     : Icons.error_outline,
                                 color: calendarState.isConnected
-                                    ? Colors.green
+                                    ? AppColors.success
                                     : AppColors.textLight,
                                 size: 28,
                               ),
@@ -229,10 +229,10 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                                 Expanded(
                                   child: OutlinedButton.icon(
                                     onPressed: _disconnectGoogleCalendar,
-                                    icon: const Icon(Icons.link_off, color: Colors.red),
+                                    icon: const Icon(Icons.link_off, color: AppColors.error),
                                     label: const Text(
                                       'Disconnect',
-                                      style: TextStyle(color: Colors.red),
+                                      style: TextStyle(color: AppColors.error),
                                     ),
                                   ),
                                 ),
@@ -294,7 +294,7 @@ class _CalendarSettingsScreenState extends ConsumerState<CalendarSettingsScreen>
                               _formatDateTime(syncedEvent.eventStartTime),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.error),
                               onPressed: () => _unsyncEvent(syncedEvent.registrationId),
                             ),
                           ),

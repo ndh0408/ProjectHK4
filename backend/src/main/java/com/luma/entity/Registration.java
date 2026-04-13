@@ -58,6 +58,11 @@ public class Registration {
 
     private Integer waitingListPosition;
 
+    private Integer priorityScore;
+
+    @Column(length = 50)
+    private String couponCode;
+
     private LocalDateTime checkedInAt;
 
     @Column(columnDefinition = "BIT DEFAULT 0")

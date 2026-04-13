@@ -8,6 +8,7 @@ import com.luma.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,6 +30,7 @@ public class AnalyticsService {
     private final CategoryRepository categoryRepository;
     private final CityRepository cityRepository;
 
+    @Transactional(readOnly = true)
     public DashboardAnalyticsResponse getDashboardAnalytics() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
@@ -82,6 +84,7 @@ public class AnalyticsService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public List<TimeSeriesData> getUserGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -101,6 +104,7 @@ public class AnalyticsService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public List<TimeSeriesData> getEventGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -120,6 +124,7 @@ public class AnalyticsService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public List<TimeSeriesData> getRegistrationGrowthChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -139,6 +144,7 @@ public class AnalyticsService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public List<TimeSeriesData> getRevenueChart(int months) {
         List<TimeSeriesData> data = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -158,6 +164,7 @@ public class AnalyticsService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryDistribution> getEventsByCategory() {
         List<Object[]> results = eventRepository.countEventsByCategory();
         long totalEvents = eventRepository.count();
@@ -173,6 +180,7 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<CityDistribution> getEventsByCity(int limit) {
         List<Object[]> results = eventRepository.countEventsByCity();
         long totalEvents = eventRepository.count();
@@ -190,6 +198,7 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<StatusDistribution> getEventsByStatus() {
         List<StatusDistribution> data = new ArrayList<>();
         long totalEvents = eventRepository.count();
@@ -206,6 +215,7 @@ public class AnalyticsService {
         return data;
     }
 
+    @Transactional(readOnly = true)
     public List<TopOrganiser> getTopOrganisers(int limit) {
         List<Object[]> results = eventRepository.findTopOrganisersByRegistrations(limit);
 
@@ -222,6 +232,7 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<TopEvent> getTopEvents(int limit) {
         List<Object[]> results = eventRepository.findTopEventsByRegistrations(limit);
 
@@ -245,6 +256,7 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public OrganiserAnalyticsResponse getOrganiserAnalytics(UUID organiserId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);

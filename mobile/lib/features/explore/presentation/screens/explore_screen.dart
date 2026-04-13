@@ -7,12 +7,12 @@ import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/category.dart';
 import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/organiser_profile.dart';
+import '../../../../shared/models/event_image.dart';
 import '../../../home/providers/events_provider.dart';
 
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
@@ -23,6 +23,12 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 final citiesProvider = FutureProvider<List<City>>((ref) async {
   final api = ref.watch(apiServiceProvider);
   return api.getCities();
+});
+
+final galleryPreviewProvider = FutureProvider<List<EventImage>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.getGalleryImages(page: 0, size: 6);
+  return response.content;
 });
 
 final featuredOrganisersProvider =
@@ -93,16 +99,19 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final cities = ref.watch(citiesProvider);
     final organisers = ref.watch(featuredOrganisersProvider);
     final hcmEvents = ref.watch(hcmEventsProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final hPadding = Responsive.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
         title: Text(l10n.explore),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.compare_arrows),
+            tooltip: 'Compare Events',
+            onPressed: () => context.push('/compare-events', extra: {'eventIds': <String>[]}),
+          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => context.push('/search'),
@@ -110,6 +119,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
         ],
       ),
       body: RefreshIndicator(
+        color: AppColors.primary,
         onRefresh: () async {
           ref.invalidate(categoriesProvider);
           ref.invalidate(citiesProvider);
@@ -121,37 +131,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
-                child: GestureDetector(
-                  onTap: () => context.push('/search'),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: hPadding, vertical: Responsive.spacing(context, base: 12)),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search,
-                            color: theme.textTheme.bodySmall?.color, size: Responsive.iconSize(context, base: 22)),
-                        SizedBox(width: Responsive.spacing(context, base: 12)),
-                        Text(
-                          l10n.searchEvents,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.textTheme.bodySmall?.color,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               _SectionHeader(
                 title: 'Ho Chi Minh City',
@@ -163,16 +143,19 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 data: (events) => events.isEmpty
                     ? Padding(
                         padding:
-                            EdgeInsets.symmetric(horizontal: hPadding, vertical: Responsive.spacing(context, base: 12)),
+                            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Text(
                           l10n.noUpcomingEventsShort,
-                          style: theme.textTheme.bodyMedium,
+                          style: const TextStyle(
+                            color: AppColors.textLight,
+                            fontSize: 14,
+                          ),
                         ),
                       )
                     : ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.symmetric(horizontal: hPadding),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: events.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 2),
                         itemBuilder: (context, index) {
@@ -201,21 +184,21 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               const SizedBox(height: 28),
 
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   l10n.browseByCategory,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
               ),
               const SizedBox(height: 14),
               SizedBox(
-                height: screenWidth * 0.112,
+                height: 42,
                 child: categories.when(
                   data: (data) => ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: hPadding),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: data.length,
                     itemBuilder: (context, index) {
                       final category = data[index];
@@ -243,11 +226,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                height: screenWidth * 0.37,
+                height: 140,
                 child: cities.when(
                   data: (data) => ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: hPadding),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: data.length,
                     itemBuilder: (context, index) {
                       final city = data[index];
@@ -267,11 +250,21 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
               const SizedBox(height: 28),
 
+              _SectionHeader(
+                title: 'Gallery',
+                subtitle: 'Photos from events',
+                onViewAll: () => context.push('/gallery'),
+              ),
+              const SizedBox(height: 12),
+              _GalleryPreview(),
+
+              const SizedBox(height: 28),
+
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: hPadding),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   l10n.featuredCalendars,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
@@ -328,11 +321,8 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final hPadding = Responsive.horizontalPadding(context);
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -342,14 +332,17 @@ class _SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: theme.textTheme.bodyMedium,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
               ],
             ),
@@ -364,15 +357,17 @@ class _SectionHeader extends StatelessWidget {
                   children: [
                     Text(
                       l10n.viewAll,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: colorScheme.primary,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(width: 2),
-                    Icon(
+                    const Icon(
                       Icons.chevron_right,
-                      color: colorScheme.primary,
-                      size: Responsive.iconSize(context, base: 20),
+                      color: AppColors.primary,
+                      size: 20,
                     ),
                   ],
                 ),
@@ -394,16 +389,12 @@ class _PopularEventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final dateFormat = DateFormat('EEE h:mm a');
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final imageSize = screenWidth * 0.23;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 10)),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -412,8 +403,8 @@ class _PopularEventCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    width: imageSize,
-                    height: imageSize,
+                    width: 88,
+                    height: 88,
                     color: AppColors.primary.withValues(alpha: 0.08),
                     child: event.imageUrl != null
                         ? CachedNetworkImage(
@@ -440,13 +431,13 @@ class _PopularEventCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: AppColors.error,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         l10n.soldOut,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onError,
+                        style: const TextStyle(
+                          color: AppColors.textOnPrimary,
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                         ),
@@ -494,7 +485,10 @@ class _PopularEventCard extends StatelessWidget {
                           event.organiserName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       if (event.isFull)
@@ -502,21 +496,21 @@ class _PopularEventCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3E0),
+                            color: AppColors.warningLight,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.bookmark,
-                                  size: 12, color: Color(0xFFE65100)),
+                                  size: 12, color: AppColors.warning),
                               const SizedBox(width: 2),
                               Text(
                                 l10n.soldOut,
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFFE65100),
+                                  color: AppColors.warning,
                                 ),
                               ),
                             ],
@@ -530,8 +524,10 @@ class _PopularEventCard extends StatelessWidget {
                     event.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    style: const TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                       height: 1.3,
                     ),
                   ),
@@ -539,19 +535,22 @@ class _PopularEventCard extends StatelessWidget {
 
                   Row(
                     children: [
-                      Icon(Icons.schedule,
-                          size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
+                      const Icon(Icons.schedule,
+                          size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           dateFormat.format(event.startDate),
-                          style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: event.isFree ? Colors.green[50] : Colors.orange[50],
+                          color: event.isFree ? AppColors.successLight : AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -559,7 +558,7 @@ class _PopularEventCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: event.isFree ? Colors.green[700] : Colors.orange[700],
+                            color: event.isFree ? AppColors.success : AppColors.primary,
                           ),
                         ),
                       ),
@@ -583,37 +582,33 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     return Padding(
-      padding: EdgeInsets.only(right: Responsive.spacing(context, base: 10)),
+      padding: const EdgeInsets.only(right: 10),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: Responsive.spacing(context, base: 16),
-            vertical: Responsive.spacing(context, base: 8),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
+            color: AppColors.surfaceVariant,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: theme.dividerColor),
+            border: Border.all(color: AppColors.borderLight),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 _getCategoryIcon(category.name),
-                size: Responsive.iconSize(context, base: 18),
-                color: colorScheme.primary,
+                size: 18,
+                color: AppColors.primary,
               ),
-              SizedBox(width: Responsive.spacing(context)),
+              const SizedBox(width: 8),
               Text(
                 category.name,
-                style: theme.textTheme.bodySmall?.copyWith(
+                style: const TextStyle(
+                  fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: theme.textTheme.bodyLarge?.color,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -636,14 +631,12 @@ class _CityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = _getCityImageUrl(city.name);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: screenWidth * 0.4,
-        margin: EdgeInsets.only(right: Responsive.spacing(context, base: 12)),
+        width: 150,
+        margin: const EdgeInsets.only(right: 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Stack(
@@ -673,9 +666,9 @@ class _CityCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.location_city,
-                        color: Colors.white54,
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.7),
                         size: 40,
                       ),
                     ),
@@ -687,28 +680,29 @@ class _CityCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.6),
+                      AppColors.textPrimary.withValues(alpha: 0.6),
                     ],
                   ),
                 ),
               ),
 
               Positioned(
-                left: Responsive.spacing(context, base: 12),
-                bottom: Responsive.spacing(context, base: 12),
-                right: Responsive.spacing(context, base: 12),
+                left: 12,
+                bottom: 12,
+                right: 12,
                 child: Text(
                   city.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
+                  style: const TextStyle(
+                    color: AppColors.textOnPrimary,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
                     shadows: [
                       Shadow(
-                        offset: const Offset(0, 1),
+                        offset: Offset(0, 1),
                         blurRadius: 4,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -776,7 +770,6 @@ String? _getCityImageUrl(String name) {
   return null;
 }
 
-
 class _FeaturedCalendarCard extends StatelessWidget {
   const _FeaturedCalendarCard({
     required this.organiser,
@@ -788,20 +781,15 @@ class _FeaturedCalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final hPadding = Responsive.horizontalPadding(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final avatarSize = screenWidth * 0.117;
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: Responsive.spacing(context, base: 10)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           children: [
             Container(
-              width: avatarSize,
-              height: avatarSize,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primary.withValues(alpha: 0.1),
@@ -848,8 +836,10 @@ class _FeaturedCalendarCard extends StatelessWidget {
                           organiser.displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
+                          style: const TextStyle(
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -866,7 +856,10 @@ class _FeaturedCalendarCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${organiser.eventsCount} events • ${organiser.followersCount} followers',
-                    style: theme.textTheme.bodySmall,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   if (organiser.bio != null && organiser.bio!.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -874,21 +867,87 @@ class _FeaturedCalendarCard extends StatelessWidget {
                       _stripMarkdown(organiser.bio!),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ],
               ),
             ),
 
-            Icon(
+            const Icon(
               Icons.chevron_right,
-              color: theme.textTheme.bodySmall?.color,
-              size: Responsive.iconSize(context, base: 20),
+              color: AppColors.textLight,
+              size: 20,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _GalleryPreview extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final galleryAsync = ref.watch(galleryPreviewProvider);
+
+    return galleryAsync.when(
+      data: (images) {
+        if (images.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              final image = images[index];
+              return GestureDetector(
+                onTap: () => context.push('/gallery'),
+                child: Container(
+                  width: 100,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: image.imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(
+                        color: AppColors.primarySoft,
+                      ),
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.primarySoft,
+                        child: const Icon(Icons.broken_image, size: 24, color: AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        height: 100,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

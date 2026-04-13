@@ -624,27 +624,45 @@ public class AIService {
     }
 
     public String generateFullEvent(String eventIdea, String eventType, String targetAudience,
-                                     String preferredDate, String preferredTime, String cityName, String language) {
+                                     String preferredDate, String preferredTime, String cityName, String language,
+                                     List<String> existingCategories, List<String> existingCities) {
         String systemPrompt = """
             You are an expert event planner and marketing specialist. Your task is to generate a complete event proposal based on a simple idea.
+            You MUST understand user input in both English and Vietnamese (with or without diacritics).
+
+            TODAY'S DATE: %s
 
             IMPORTANT RULES:
             1. Return ONLY valid JSON - no extra text before or after
-            2. Language: Write in %s (Vietnamese if "vi", English if "en")
+            2. Language: Write content in %s (Vietnamese if "vi", English if "en")
             3. Be creative but realistic
             4. Generate 3 different title options
             5. Description should be in Markdown format (150-250 words)
-            6. Suggest realistic venue based on event type and city
+            6. Suggest realistic venue based on event type and city/region
             7. Capacity should match event type (workshop: 20-50, seminar: 50-200, conference: 100-500, meetup: 30-100, party: 50-300)
-            8. Price: suggest FREE for community/networking events, paid for professional/premium events
+            8. Price in USD: suggest 0 (FREE) for community/networking events, $10-$200 for professional/premium events
+            9. Date/Time: CRITICAL - Parse user's preferred date/time carefully and return ISO format
+               - "next X months" or "sau X thang" = add X months from today
+               - "next week" = add 7 days from today
+               - Vietnamese examples: "15 thang 6" = June 15, "buoi chieu" = 14:00, "buoi toi" = 18:00, "sang" = 09:00
+               - "morning to evening" = start at 09:00, end at 18:00
+               - If date is in past or not specified, use a date 2-4 weeks from now
+               - Duration based on event type: workshop 3h, conference 8h, seminar 2h, meetup 2h, party 4h
+            10. City/Region: If user specifies a region (e.g., "Middle East", "Southeast Asia", "Europe"), pick a major city in that region
+               - Middle East → Dubai, Abu Dhabi, Riyadh, or Doha
+               - Southeast Asia → Singapore, Bangkok, Kuala Lumpur, or Ho Chi Minh City
+               - Europe → London, Paris, Berlin, or Amsterdam
 
             JSON format required:
             {
               "titleSuggestions": ["Title 1", "Title 2", "Title 3"],
               "description": "Markdown description here...",
-              "suggestedCategory": "Technology/Business/Arts/Music/Sports/Education/Health/Food/Community/Other",
+              "suggestedCategory": "Pick from existing categories if possible: %s. Only create a new category name if none fits.",
               "suggestedVenue": "Venue name suggestion",
-              "suggestedAddress": "Full address suggestion",
+              "suggestedAddress": "Full address suggestion with city and country",
+              "suggestedCity": "Pick from existing cities if possible: %s. Only suggest a new city name if none fits.",
+              "suggestedStartTime": "2024-06-15T14:00:00",
+              "suggestedEndTime": "2024-06-15T17:00:00",
               "suggestedCapacity": 100,
               "suggestedPrice": 0,
               "isFree": true,
@@ -656,7 +674,12 @@ public class AIService {
             For suggestedSpeakers:
             - Workshop/Conference/Seminar: suggest 1-3 speakers with relevant expertise
             - Meetup/Networking/Party: leave empty array []
-            """.formatted(language.equals("vi") ? "Vietnamese" : "English");
+            """.formatted(
+                java.time.LocalDate.now().toString(),
+                language.equals("vi") ? "Vietnamese" : "English",
+                String.join(", ", existingCategories),
+                String.join(", ", existingCities)
+            );
 
         StringBuilder userPrompt = new StringBuilder();
         userPrompt.append("Generate a complete event based on this idea:\n\n");
@@ -681,6 +704,106 @@ public class AIService {
         userPrompt.append("\nGenerate a complete, professional event proposal. Return ONLY valid JSON.");
 
         return callGroqApi(systemPrompt, userPrompt.toString(), 1500);
+    }
+
+    public String generateEventRecommendations(List<Event> userViewedEvents, List<Event> availableEvents, int limit) {
+        if (availableEvents.isEmpty()) {
+            return "[]";
+        }
+
+        StringBuilder systemPrompt = new StringBuilder();
+        systemPrompt.append("""
+            You are an AI event recommendation engine. Based on the user's viewing history,
+            recommend the most relevant events from the available list.
+
+            Consider these factors for recommendations:
+            1. Category similarity (same or related categories)
+            2. Location proximity (same city or nearby)
+            3. Price range similarity
+            4. Event type similarity (workshop, conference, meetup, etc.)
+            5. Time preferences (similar time slots)
+
+            Return ONLY a JSON array of event IDs in order of relevance, like:
+            ["uuid1", "uuid2", "uuid3"]
+
+            Return maximum %d event IDs. Return ONLY the JSON array, no explanation.
+            """.formatted(limit));
+
+        StringBuilder userPrompt = new StringBuilder();
+
+        if (userViewedEvents != null && !userViewedEvents.isEmpty()) {
+            userPrompt.append("USER'S RECENTLY VIEWED EVENTS:\n");
+            for (Event event : userViewedEvents) {
+                userPrompt.append(String.format("- %s | Category: %s | City: %s | Price: $%.2f\n",
+                        event.getTitle(),
+                        event.getCategory() != null ? event.getCategory().getName() : "N/A",
+                        event.getCity() != null ? event.getCity().getName() : "N/A",
+                        event.getTicketPrice() != null ? event.getTicketPrice().doubleValue() : 0));
+            }
+            userPrompt.append("\n");
+        } else {
+            userPrompt.append("USER HAS NO VIEWING HISTORY - Recommend popular/trending events.\n\n");
+        }
+
+        userPrompt.append("AVAILABLE EVENTS TO RECOMMEND FROM:\n");
+        for (Event event : availableEvents) {
+            userPrompt.append(String.format("ID: %s | Title: %s | Category: %s | City: %s | Price: $%.2f | Capacity: %d\n",
+                    event.getId().toString(),
+                    event.getTitle(),
+                    event.getCategory() != null ? event.getCategory().getName() : "N/A",
+                    event.getCity() != null ? event.getCity().getName() : "N/A",
+                    event.getTicketPrice() != null ? event.getTicketPrice().doubleValue() : 0,
+                    event.getCapacity() != null ? event.getCapacity() : 0));
+        }
+
+        userPrompt.append("\nReturn the top ").append(limit).append(" most relevant event IDs as JSON array.");
+
+        return callGroqApi(systemPrompt.toString(), userPrompt.toString(), 500);
+    }
+
+    public String findSimilarEvents(Event sourceEvent, List<Event> candidateEvents, int limit) {
+        if (candidateEvents.isEmpty()) {
+            return "[]";
+        }
+
+        String systemPrompt = """
+            You are an AI event similarity engine. Find events most similar to the source event.
+
+            Consider these similarity factors:
+            1. Category match (highest priority)
+            2. Similar topic/theme in title and description
+            3. Same city or region
+            4. Similar price range
+            5. Similar event type
+
+            Return ONLY a JSON array of event IDs in order of similarity, like:
+            ["uuid1", "uuid2", "uuid3"]
+
+            Return maximum %d event IDs. Return ONLY the JSON array, no explanation.
+            """.formatted(limit);
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("SOURCE EVENT (find similar to this):\n");
+        userPrompt.append(String.format("Title: %s\n", sourceEvent.getTitle()));
+        userPrompt.append(String.format("Description: %s\n",
+                sourceEvent.getDescription() != null ? sourceEvent.getDescription().substring(0, Math.min(200, sourceEvent.getDescription().length())) : "N/A"));
+        userPrompt.append(String.format("Category: %s\n", sourceEvent.getCategory() != null ? sourceEvent.getCategory().getName() : "N/A"));
+        userPrompt.append(String.format("City: %s\n", sourceEvent.getCity() != null ? sourceEvent.getCity().getName() : "N/A"));
+        userPrompt.append(String.format("Price: $%.2f\n\n", sourceEvent.getTicketPrice() != null ? sourceEvent.getTicketPrice().doubleValue() : 0));
+
+        userPrompt.append("CANDIDATE EVENTS:\n");
+        for (Event event : candidateEvents) {
+            userPrompt.append(String.format("ID: %s | Title: %s | Category: %s | City: %s | Price: $%.2f\n",
+                    event.getId().toString(),
+                    event.getTitle(),
+                    event.getCategory() != null ? event.getCategory().getName() : "N/A",
+                    event.getCity() != null ? event.getCity().getName() : "N/A",
+                    event.getTicketPrice() != null ? event.getTicketPrice().doubleValue() : 0));
+        }
+
+        userPrompt.append("\nReturn the top ").append(limit).append(" most similar event IDs as JSON array.");
+
+        return callGroqApi(systemPrompt, userPrompt.toString(), 500);
     }
 
     private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {

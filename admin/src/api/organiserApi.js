@@ -46,6 +46,10 @@ const organiserApi = {
         responseType: 'blob',
     }),
 
+    getWaitlistOffers: (eventId) => api.get(`/organiser/events/${eventId}/waitlist-offers`),
+    getFunnelAnalytics: () => api.get('/organiser/analytics/funnel'),
+    getEventFunnel: (eventId) => api.get(`/organiser/analytics/funnel/event/${eventId}`),
+
     getEventQuestions: (eventId, params) => api.get(`/organiser/questions/event/${eventId}`, { params }),
     getAllQuestions: (params) => api.get('/organiser/questions', { params }),
     getUnansweredQuestions: (params) => api.get('/organiser/questions/unanswered', { params }),
@@ -54,6 +58,21 @@ const organiserApi = {
     answerQuestion: (id, answer) => api.post(`/organiser/questions/${id}/answer`, { answer }),
     getAISuggestion: (questionId) => api.get(`/organiser/questions/${questionId}/ai-suggest`),
     deleteQuestion: (questionId) => api.delete(`/organiser/questions/${questionId}`),
+
+    getEventPolls: (eventId) => api.get(`/organiser/polls/event/${eventId}`),
+    createPoll: (eventId, data) => api.post(`/organiser/polls/event/${eventId}`, data),
+    closePoll: (pollId) => api.post(`/organiser/polls/${pollId}/close`),
+
+    getCoupons: (params) => api.get('/organiser/coupons', { params }),
+    createCoupon: (data) => api.post('/organiser/coupons', data),
+    disableCoupon: (id) => api.post(`/organiser/coupons/${id}/disable`),
+
+    createSeatMap: (eventId, zones) => api.post(`/organiser/seat-map/event/${eventId}`, zones),
+    getSeatMap: (eventId) => api.get(`/organiser/seat-map/event/${eventId}`),
+
+    getSchedule: (eventId) => api.get(`/organiser/schedule/event/${eventId}`),
+    createSession: (eventId, data) => api.post(`/organiser/schedule/event/${eventId}/sessions`, data),
+    deleteSession: (sessionId) => api.delete(`/organiser/schedule/sessions/${sessionId}`),
 
     generateEventDescription: (data) => api.post('/organiser/events/ai/generate-description', data),
     improveEventDescription: (data) => api.post('/organiser/events/ai/improve-description', data),

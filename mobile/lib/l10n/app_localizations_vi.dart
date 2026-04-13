@@ -783,41 +783,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get share => 'Chia sẻ';
 
   @override
-  String get certificate => 'Chứng chỉ';
-
-  @override
-  String get certificateOfAttendance => 'Chứng chỉ tham dự';
-
-  @override
-  String get thisCertifiesThat => 'Chứng nhận rằng';
-
-  @override
-  String get hasSuccessfullyAttended => 'đã tham dự thành công';
-
-  @override
-  String get hasAttended => 'đã tham dự';
-
-  @override
-  String get scanToVerify => 'Quét để xác thực';
-
-  @override
-  String get issuedOn => 'Cấp ngày';
-
-  @override
-  String get certificateCode => 'Mã chứng chỉ';
-
-  @override
-  String get verifyAt => 'Xác thực tại';
-
-  @override
   String get download => 'Tải xuống';
-
-  @override
-  String get certificateNotAvailable => 'Chứng chỉ chưa có';
-
-  @override
-  String get certificateRequirements =>
-      'Bạn cần check-in tại sự kiện và sự kiện đã kết thúc để nhận chứng chỉ.';
 
   @override
   String get reviews => 'Đánh giá';

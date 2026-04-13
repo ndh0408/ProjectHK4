@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class VerifyCodeRequest {
-    
+
     @NotBlank(message = "Phone number is required")
     private String phone;
 

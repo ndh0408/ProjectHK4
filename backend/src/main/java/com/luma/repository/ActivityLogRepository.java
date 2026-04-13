@@ -25,8 +25,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, UUID> 
     Page<ActivityLog> findByUserId(@Param("userId") UUID userId, Pageable pageable);
 
     @Query("SELECT a FROM ActivityLog a WHERE a.createdAt BETWEEN :startDate AND :endDate ORDER BY a.createdAt DESC")
-    Page<ActivityLog> findByDateRange(@Param("startDate") LocalDateTime startDate, 
-                                       @Param("endDate") LocalDateTime endDate, 
+    Page<ActivityLog> findByDateRange(@Param("startDate") LocalDateTime startDate,
+                                       @Param("endDate") LocalDateTime endDate,
                                        Pageable pageable);
 
     long countByActivityTypeAndCreatedAtBetween(ActivityType activityType, LocalDateTime startDate, LocalDateTime endDate);

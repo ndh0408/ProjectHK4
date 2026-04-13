@@ -121,18 +121,18 @@ class CitiesScreen extends ConsumerWidget {
     final citiesByContinent = ref.watch(citiesByContinentProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Cities',
           style: TextStyle(
-            color: Colors.black,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -218,7 +218,7 @@ class CitiesScreen extends ConsumerWidget {
                 'Failed to load cities',
                 style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),

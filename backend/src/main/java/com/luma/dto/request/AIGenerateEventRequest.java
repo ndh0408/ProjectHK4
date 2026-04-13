@@ -17,7 +17,7 @@ public class AIGenerateEventRequest {
 
     private String preferredTime;
 
-    private Long cityId;
+    private String preferredCity;
 
     private String language = "vi";
 }

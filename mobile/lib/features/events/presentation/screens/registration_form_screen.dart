@@ -328,7 +328,7 @@ class _RegistrationFormScreenState
                 child: Text(
                   '$number',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textOnPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -446,10 +446,10 @@ class _RegistrationFormScreenState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: AppColors.textPrimary.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -462,7 +462,7 @@ class _RegistrationFormScreenState
             onPressed: _isSubmitting ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -473,7 +473,7 @@ class _RegistrationFormScreenState
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppColors.textOnPrimary,
                     ),
                   )
                 : Text(
