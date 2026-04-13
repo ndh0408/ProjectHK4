@@ -20,6 +20,9 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       emailNotificationsEnabled:
           json['emailNotificationsEnabled'] as bool? ?? true,
       emailEventReminders: json['emailEventReminders'] as bool? ?? true,
+      bio: json['bio'] as String?,
+      interests: json['interests'] as String?,
+      networkingVisible: json['networkingVisible'] as bool? ?? true,
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
@@ -44,6 +47,9 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'emailVerified': instance.emailVerified,
       'emailNotificationsEnabled': instance.emailNotificationsEnabled,
       'emailEventReminders': instance.emailEventReminders,
+      'bio': instance.bio,
+      'interests': instance.interests,
+      'networkingVisible': instance.networkingVisible,
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
       'lastLoginAt': instance.lastLoginAt?.toIso8601String(),

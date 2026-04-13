@@ -20,35 +20,41 @@ public class CityService {
 
     private final CityRepository cityRepository;
 
+    @Transactional(readOnly = true)
     public City getEntityById(Long id) {
         return cityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("City not found"));
     }
 
+    @Transactional(readOnly = true)
     public List<CityResponse> getAllCities() {
         return cityRepository.findByActiveTrue().stream()
                 .map(CityResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<CityResponse> getAllCitiesForAdmin() {
         return cityRepository.findAll().stream()
                 .map(CityResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<CityResponse> getCitiesWithEvents() {
         return cityRepository.findCitiesWithEvents().stream()
                 .map(CityResponse::fromEntity)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Map<String, List<CityResponse>> getCitiesByContinent() {
         return cityRepository.findCitiesWithEvents().stream()
                 .map(CityResponse::fromEntity)
                 .collect(Collectors.groupingBy(CityResponse::getContinent));
     }
 
+    @Transactional(readOnly = true)
     public CityResponse getCityById(Long id) {
         return CityResponse.fromEntity(getEntityById(id));
     }

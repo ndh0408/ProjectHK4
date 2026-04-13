@@ -75,6 +75,9 @@ public class EventResponse {
     private String boostPackage;
     private String boostBadge;
 
+    private boolean hasSeatMap;
+    private boolean hasSchedule;
+
     public static EventResponse fromEntity(Event event) {
         EventResponse response = EventResponse.builder()
                 .id(event.getId())

@@ -19,6 +19,8 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) => Conversation(
           : DateTime.parse(json['lastMessageAt'] as String),
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
       muted: json['muted'] as bool? ?? false,
+      pinned: json['pinned'] as bool? ?? false,
+      archived: json['archived'] as bool? ?? false,
       participants: (json['participants'] as List<dynamic>?)
           ?.map((e) => ChatParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -40,6 +42,8 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'lastMessageAt': instance.lastMessageAt?.toIso8601String(),
       'unreadCount': instance.unreadCount,
       'muted': instance.muted,
+      'pinned': instance.pinned,
+      'archived': instance.archived,
       'participants': instance.participants,
       'participantCount': instance.participantCount,
       'createdAt': instance.createdAt?.toIso8601String(),
@@ -48,6 +52,7 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
 const _$ConversationTypeEnumMap = {
   ConversationType.eventGroup: 'EVENT_GROUP',
   ConversationType.direct: 'DIRECT',
+  ConversationType.group: 'GROUP',
 };
 
 ChatParticipant _$ChatParticipantFromJson(Map<String, dynamic> json) =>

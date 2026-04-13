@@ -61,4 +61,28 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
     List<EventBoost> findActiveBoostsByEventIds(@Param("eventIds") List<UUID> eventIds, @Param("now") LocalDateTime now);
 
     Page<EventBoost> findByStatus(BoostStatus status, Pageable pageable);
+
+    @Query("SELECT b FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL")
+    List<EventBoost> findAllPaidBoosts();
+
+    @Query("SELECT COALESCE(SUM(b.amount), 0) FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL")
+    java.math.BigDecimal sumAllPaidBoostRevenue();
+
+    @Query("SELECT COALESCE(SUM(b.amount), 0) FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL AND b.paidAt >= :start")
+    java.math.BigDecimal sumPaidBoostRevenueAfter(@Param("start") LocalDateTime start);
+
+    @Query("SELECT COALESCE(SUM(b.amount), 0) FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL AND b.paidAt >= :start AND b.paidAt < :end")
+    java.math.BigDecimal sumPaidBoostRevenueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(b) FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL")
+    int countAllPaidBoosts();
+
+    @Query("SELECT COUNT(b) FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now")
+    int countActiveBoostsNow(@Param("now") LocalDateTime now);
+
+    @Query("SELECT b.boostPackage, COUNT(b), COALESCE(SUM(b.amount), 0) FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL GROUP BY b.boostPackage")
+    List<Object[]> sumRevenueGroupedByPackage();
+
+    @Query("SELECT b FROM EventBoost b WHERE b.paidAt IS NOT NULL AND b.amount IS NOT NULL AND b.paidAt >= :start AND b.paidAt < :end")
+    List<EventBoost> findPaidBoostsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

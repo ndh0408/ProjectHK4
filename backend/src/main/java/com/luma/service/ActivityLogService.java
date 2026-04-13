@@ -22,7 +22,7 @@ public class ActivityLogService {
     private final ActivityLogRepository activityLogRepository;
 
     @Transactional
-    public void logActivity(User user, ActivityType activityType, String description, 
+    public void logActivity(User user, ActivityType activityType, String description,
                            String ipAddress, String userAgent, String entityType, String entityId) {
         ActivityLog log = ActivityLog.builder()
                 .user(user)
@@ -46,8 +46,8 @@ public class ActivityLogService {
         return PageResponse.from(logs, ActivityLogResponse::fromEntity);
     }
 
-    public PageResponse<ActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startDate, 
-                                                                         LocalDateTime endDate, 
+    public PageResponse<ActivityLogResponse> getActivityLogsByDateRange(LocalDateTime startDate,
+                                                                         LocalDateTime endDate,
                                                                          Pageable pageable) {
         Page<ActivityLog> logs = activityLogRepository.findByDateRange(startDate, endDate, pageable);
         return PageResponse.from(logs, ActivityLogResponse::fromEntity);

@@ -27,11 +27,13 @@ public class QuestionService {
     private final EventService eventService;
     private final NotificationService notificationService;
 
+    @Transactional(readOnly = true)
     public Question getEntityById(UUID id) {
         return questionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
     }
 
+    @Transactional(readOnly = true)
     public Question getEntityByIdWithEventAndUser(UUID id) {
         return questionRepository.findByIdWithEventAndUser(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
@@ -73,6 +75,7 @@ public class QuestionService {
         return QuestionResponse.fromEntity(savedQuestion);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<QuestionResponse> getQuestionsByEvent(UUID eventId, Pageable pageable) {
         Event event = eventService.getEntityById(eventId);
         Page<Question> questions = questionRepository.findByEvent(event, pageable);
@@ -97,18 +100,22 @@ public class QuestionService {
         return PageResponse.from(questions, QuestionResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
     public long countQuestionsByOrganiser(User organiser) {
         return questionRepository.countByOrganiser(organiser);
     }
 
+    @Transactional(readOnly = true)
     public long countUnansweredByOrganiser(User organiser) {
         return questionRepository.countUnansweredByOrganiser(organiser);
     }
 
+    @Transactional(readOnly = true)
     public long countAnsweredByOrganiser(User organiser) {
         return questionRepository.countAnsweredByOrganiser(organiser);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<QuestionResponse> getUserQuestions(User user, Pageable pageable) {
         Page<Question> questions = questionRepository.findByUser(user, pageable);
         return PageResponse.from(questions, QuestionResponse::fromEntity);

@@ -107,6 +107,7 @@ public class ReviewService {
         }
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getEventReviews(UUID eventId, Pageable pageable) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -123,6 +124,7 @@ public class ReviewService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getUserReviews(User user, Pageable pageable) {
         Page<Review> reviews = reviewRepository.findByUserOrderByCreatedAtDesc(user, pageable);
 
@@ -136,6 +138,7 @@ public class ReviewService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public boolean canReview(User user, UUID eventId) {
         Event event = eventRepository.findById(eventId).orElse(null);
         if (event == null) return false;
@@ -148,10 +151,12 @@ public class ReviewService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Double getAverageRating(UUID eventId) {
         return reviewRepository.getAverageRatingByEventId(eventId);
     }
 
+    @Transactional(readOnly = true)
     public long getReviewCount(UUID eventId) {
         return reviewRepository.countByEventId(eventId);
     }

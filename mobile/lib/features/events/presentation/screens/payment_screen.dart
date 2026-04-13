@@ -31,11 +31,53 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   String? _clientSecret;
   String? _checkoutUrl;
   String? _errorMessage;
+  final TextEditingController _couponController = TextEditingController();
+  Map<String, dynamic>? _appliedCoupon;
+  bool _validatingCoupon = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initiatePayment());
+  }
+
+  Future<void> _applyCoupon() async {
+    final code = _couponController.text.trim().toUpperCase();
+    if (code.isEmpty) return;
+    setState(() => _validatingCoupon = true);
+    try {
+      final api = ref.read(apiServiceProvider);
+      final result = await api.validateCoupon(code, widget.amount, widget.registrationId);
+      if (result['valid'] == true) {
+        setState(() {
+          _appliedCoupon = result;
+          _validatingCoupon = false;
+        });
+        await _initiatePayment();
+      } else {
+        setState(() => _validatingCoupon = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Invalid coupon'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _validatingCoupon = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to validate: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _removeCoupon() {
+    setState(() {
+      _appliedCoupon = null;
+      _couponController.clear();
+    });
+    _initiatePayment();
   }
 
   Future<void> _initiatePayment() async {
@@ -54,7 +96,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
       if (kIsWeb) {
         debugPrint('Calling API createCheckoutSession for web...');
-        final result = await api.createCheckoutSession(widget.registrationId);
+        final couponCode = _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
+        final result = await api.createCheckoutSession(widget.registrationId, couponCode: couponCode);
         debugPrint('API Response: $result');
 
         setState(() {
@@ -65,7 +108,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         });
       } else {
         debugPrint('Calling API initiatePayment for mobile...');
-        final result = await api.initiatePayment(widget.registrationId);
+        final couponCode = _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
+        final result = await api.initiatePayment(widget.registrationId, couponCode: couponCode);
         debugPrint('API Response: $result');
 
         setState(() {
@@ -440,11 +484,86 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               ),
                               Text(
                                 '\$${widget.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  decoration: _appliedCoupon != null
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: _appliedCoupon != null ? Colors.grey : AppColors.primary,
                                 ),
+                              ),
+                            ],
+                          ),
+                          if (_appliedCoupon != null) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Discount (${_appliedCoupon!['code']})',
+                                  style: const TextStyle(fontSize: 14, color: Colors.green),
+                                ),
+                                Text(
+                                  '-\$${(_appliedCoupon!['discountAmount'] as num? ?? 0).toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 14, color: Colors.green),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                Text(
+                                  '\$${(_appliedCoupon!['finalAmount'] as num? ?? 0).toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  material.Card(
+                    elevation: 1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Have a coupon code?', style: TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _couponController,
+                                  decoration: const InputDecoration(
+                                    hintText: 'Enter code',
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  textCapitalization: TextCapitalization.characters,
+                                  enabled: _appliedCoupon == null,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: _validatingCoupon
+                                    ? null
+                                    : (_appliedCoupon == null ? _applyCoupon : _removeCoupon),
+                                child: _validatingCoupon
+                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                    : Text(_appliedCoupon == null ? 'Apply' : 'Remove'),
                               ),
                             ],
                           ),
@@ -513,17 +632,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: AppColors.warning.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.open_in_new, size: 18, color: Colors.orange),
+                          const Icon(Icons.open_in_new, size: 18, color: AppColors.warning),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               AppLocalizations.of(context)!.paymentWillOpenInNewWindow,
-                              style: const TextStyle(fontSize: 13, color: Colors.orange),
+                              style: const TextStyle(fontSize: 13, color: AppColors.warning),
                             ),
                           ),
                         ],
@@ -594,7 +713,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -602,13 +721,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.info_outline, size: 18, color: Colors.blue),
+                            const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
                             const SizedBox(width: 8),
                             Text(
                               AppLocalizations.of(context)!.testMode,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blue,
+                                color: AppColors.primary,
                               ),
                             ),
                           ],

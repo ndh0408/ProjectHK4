@@ -11,11 +11,13 @@ import com.luma.entity.RegistrationAnswer;
 import com.luma.entity.User;
 import com.luma.entity.enums.RegistrationStatus;
 import com.luma.repository.RegistrationAnswerRepository;
+import com.luma.dto.response.WaitlistOfferResponse;
 import com.luma.service.EventService;
 import com.luma.service.ExcelExportService;
 import com.luma.service.PaymentService;
 import com.luma.service.RegistrationService;
 import com.luma.service.UserService;
+import com.luma.service.WaitlistService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,6 +46,7 @@ public class OrganiserRegistrationController {
     private final ExcelExportService excelExportService;
     private final PaymentService paymentService;
     private final RegistrationAnswerRepository registrationAnswerRepository;
+    private final WaitlistService waitlistService;
 
     @GetMapping("/registrations/event/{eventId}")
     @Operation(summary = "Get all registrations for an event")
@@ -133,6 +136,15 @@ public class OrganiserRegistrationController {
                 .map(RegistrationAnswerResponse::fromEntity)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/events/{eventId}/waitlist-offers")
+    @Operation(summary = "Get waitlist offers for an event")
+    public ResponseEntity<ApiResponse<java.util.List<WaitlistOfferResponse>>> getWaitlistOffers(
+            @PathVariable UUID eventId) {
+        Event event = eventService.getEntityById(eventId);
+        java.util.List<WaitlistOfferResponse> offers = waitlistService.getOffersByEvent(event);
+        return ResponseEntity.ok(ApiResponse.success(offers));
     }
 
     @PostMapping("/registrations/{registrationId}/refund")

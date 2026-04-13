@@ -152,6 +152,18 @@ public class Event {
     @Builder.Default
     private List<TicketType> ticketTypes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Poll> polls = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<SeatZone> seatZones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<EventSession> sessions = new ArrayList<>();
+
     public boolean hasRegistrationQuestions() {
         return registrationQuestions != null && !registrationQuestions.isEmpty();
     }

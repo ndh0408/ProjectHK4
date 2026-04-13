@@ -25,14 +25,14 @@ IconData _getCategoryIcon(String name) {
 
 Color _getCategoryColor(int index) {
   final colors = [
-    const Color(0xFF667EEA), // Purple-blue
-    const Color(0xFFED64A6), // Pink
-    const Color(0xFF38A169), // Green
-    const Color(0xFFED8936), // Orange
-    const Color(0xFF9F7AEA), // Purple
-    const Color(0xFF4299E1), // Blue
-    const Color(0xFFE53E3E), // Red
-    const Color(0xFF38B2AC), // Teal
+    const Color(0xFF667EEA),
+    const Color(0xFFED64A6),
+    const Color(0xFF38A169),
+    const Color(0xFFED8936),
+    const Color(0xFF9F7AEA),
+    const Color(0xFF4299E1),
+    const Color(0xFFE53E3E),
+    const Color(0xFF38B2AC),
   ];
   return colors[index % colors.length];
 }
@@ -149,7 +149,7 @@ class _CategoryCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: category.iconUrl != null
@@ -161,14 +161,14 @@ class _CategoryCard extends StatelessWidget {
                             errorWidget: (_, __, ___) => Icon(
                               _getCategoryIcon(category.name),
                               size: 28,
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                             ),
                           ),
                         )
                       : Icon(
                           _getCategoryIcon(category.name),
                           size: 28,
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                         ),
                 ),
                 const SizedBox(height: 12),
@@ -177,7 +177,7 @@ class _CategoryCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textOnPrimary,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -188,7 +188,7 @@ class _CategoryCard extends StatelessWidget {
                   '${category.eventsCount} events',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                   ),
                   textAlign: TextAlign.center,
                 ),

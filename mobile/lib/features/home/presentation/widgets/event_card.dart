@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../shared/models/boost.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/boost_badge.dart';
@@ -25,10 +24,6 @@ class EventCard extends StatelessWidget {
     final dateFormat = DateFormat('EEE, MMM d • h:mm a');
     final spotsRemaining = event.remainingSpots;
     final isNearlyFull = event.isAlmostFull;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final textTheme = Theme.of(context).textTheme;
-    final cardPadding = Responsive.value(context, mobile: 10.0, tablet: 14.0);
-    final progressBarWidth = screenWidth * 0.11;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -145,13 +140,13 @@ class EventCard extends StatelessWidget {
                           const Icon(
                             Icons.repeat_rounded,
                             size: 12,
-                            color: Colors.white,
+                            color: AppColors.textOnPrimary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _getRecurrenceLabel(event.recurrenceType),
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 10,
                               letterSpacing: 0.3,
@@ -163,7 +158,7 @@ class EventCard extends StatelessWidget {
                   ),
                 if (showStatusLabel && (event.isFull || isNearlyFull))
                   Positioned(
-                    top: event.isRecurring ? (screenWidth * 0.12).clamp(35.0, 50.0) : 10,
+                    top: event.isRecurring ? 45 : 10,
                     right: 10,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -187,13 +182,13 @@ class EventCard extends StatelessWidget {
                           Icon(
                             event.isFull ? Icons.hourglass_top_rounded : Icons.local_fire_department_rounded,
                             size: 12,
-                            color: Colors.white,
+                            color: AppColors.textOnPrimary,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             event.isFull ? 'DANH SÁCH CHỜ' : 'SẮP HẾT CHỖ',
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 10,
                               letterSpacing: 0.3,
@@ -212,11 +207,11 @@ class EventCard extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: event.isFree ? AppColors.success : Colors.orange,
+                      color: event.isFree ? AppColors.success : AppColors.primary,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: (event.isFree ? AppColors.success : Colors.orange).withValues(alpha: 0.4),
+                          color: (event.isFree ? AppColors.success : AppColors.primary).withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -228,13 +223,13 @@ class EventCard extends StatelessWidget {
                         Icon(
                           event.isFree ? Icons.celebration_rounded : Icons.attach_money,
                           size: 12,
-                          color: Colors.white,
+                          color: AppColors.textOnPrimary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           event.isFree ? 'FREE' : '\$${event.price.toStringAsFixed(0)}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textOnPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                             letterSpacing: 0.5,
@@ -257,7 +252,7 @@ class EventCard extends StatelessWidget {
             ),
 
             Padding(
-              padding: EdgeInsets.all(cardPadding),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -287,7 +282,8 @@ class EventCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             event.category?.name ?? 'Event',
-                            style: textTheme.bodySmall?.copyWith(
+                            style: const TextStyle(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,
                             ),
@@ -299,8 +295,9 @@ class EventCard extends StatelessWidget {
 
                     Text(
                       event.title,
-                      style: textTheme.titleSmall?.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: 13,
                             height: 1.2,
                             color: AppColors.textPrimary,
                           ),
@@ -324,7 +321,6 @@ class EventCard extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Price
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -335,17 +331,17 @@ class EventCard extends StatelessWidget {
                           ),
                           child: Text(
                             event.isFree ? 'Free' : '\$${event.price.toStringAsFixed(0)}',
-                            style: textTheme.titleSmall?.copyWith(
+                            style: TextStyle(
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: event.isFree ? AppColors.success : AppColors.primary,
                             ),
                           ),
                         ),
-                        // Capacity with mini progress
                         Row(
                           children: [
                             SizedBox(
-                              width: progressBarWidth,
+                              width: 40,
                               height: 4,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(2),
@@ -365,7 +361,8 @@ class EventCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               '${event.registeredCount}/${event.capacity}',
-                              style: textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.textSecondary,
                                   ),
@@ -466,6 +463,7 @@ class _InfoChip extends StatelessWidget {
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
                   color: AppColors.textSecondary,
                 ),
             maxLines: 1,

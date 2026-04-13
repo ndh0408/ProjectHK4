@@ -57,6 +57,9 @@ const adminApi = {
 
     getRevenueStats: () => api.get('/admin/revenue/stats'),
 
+    getFunnelAnalytics: () => api.get('/admin/analytics/funnel'),
+    getEventFunnel: (eventId) => api.get(`/admin/analytics/funnel/event/${eventId}`),
+
 };
 
 export default adminApi;

@@ -10,6 +10,8 @@ import com.luma.entity.enums.PaymentStatus;
 import com.luma.entity.enums.RegistrationStatus;
 import com.luma.exception.BadRequestException;
 import com.luma.exception.ResourceNotFoundException;
+import com.luma.repository.CouponRepository;
+import com.luma.repository.CouponUsageRepository;
 import com.luma.repository.PaymentRepository;
 import com.luma.repository.RegistrationAnswerRepository;
 import com.luma.repository.RegistrationQuestionRepository;
@@ -41,6 +43,9 @@ public class RegistrationService {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventService eventService;
     private final NotificationService notificationService;
+    private final WaitlistService waitlistService;
+    private final CouponRepository couponRepository;
+    private final CouponUsageRepository couponUsageRepository;
 
     public Registration getEntityById(UUID id) {
         return registrationRepository.findById(id)
@@ -152,6 +157,7 @@ public class RegistrationService {
         if (event.isFull()) {
             registration.setStatus(RegistrationStatus.WAITING_LIST);
             registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
+            registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
         } else {
             registration.setStatus(RegistrationStatus.PENDING);
             if (ticketType != null) {
@@ -237,6 +243,7 @@ public class RegistrationService {
         if (event.isFull()) {
             registration.setStatus(RegistrationStatus.WAITING_LIST);
             registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
+            registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
         } else {
             registration.setStatus(RegistrationStatus.PENDING);
             if (ticketType != null) {
@@ -405,6 +412,18 @@ public class RegistrationService {
             }
         }
 
+        if (registration.getCouponCode() != null) {
+            couponRepository.findByCode(registration.getCouponCode()).ifPresent(coupon -> {
+                if (coupon.getUsedCount() > 0) {
+                    coupon.setUsedCount(coupon.getUsedCount() - 1);
+                    couponRepository.save(coupon);
+                }
+            });
+            couponUsageRepository.findByRegistrationId(registration.getId())
+                    .ifPresent(couponUsageRepository::delete);
+            registration.setCouponCode(null);
+        }
+
         registration.setStatus(RegistrationStatus.CANCELLED);
         registration.setWaitingListPosition(null);
         Registration savedRegistration = registrationRepository.save(registration);
@@ -454,29 +473,7 @@ public class RegistrationService {
 
     @Transactional
     public void promoteFromWaitingList(Event event) {
-        registrationRepository.findFirstByEventAndStatusOrderByWaitingListPositionAsc(event, RegistrationStatus.WAITING_LIST)
-                .ifPresent(registration -> {
-                    if (registration.getTicketType() != null) {
-                        try {
-                            validateTicketTypePurchase(registration.getTicketType(), registration.getQuantity());
-                            ticketTypeRepository.incrementSoldCount(
-                                    registration.getTicketType().getId(),
-                                    registration.getQuantity()
-                            );
-                        } catch (BadRequestException e) {
-                            log.warn("Cannot promote registration {} from waiting list: {}",
-                                    registration.getId(), e.getMessage());
-                            return;
-                        }
-                    }
-
-                    registration.setStatus(RegistrationStatus.APPROVED);
-                    registration.setApprovedAt(LocalDateTime.now());
-                    registration.setWaitingListPosition(null);
-                    eventService.incrementApprovedCount(event);
-                    registrationRepository.save(registration);
-                    notificationService.sendPromotedFromWaitingListNotification(registration);
-                });
+        waitlistService.createOfferForNextInLine(event);
     }
 
     public PageResponse<RegistrationResponse> getRegistrationsByEvent(Event event, Pageable pageable) {
@@ -528,95 +525,6 @@ public class RegistrationService {
 
     public long countApprovedByOrganiser(User organiser) {
         return registrationRepository.countApprovedByOrganiser(organiser);
-    }
-
-    public PageResponse<RegistrationResponse> getRegistrationsByEventForOwner(User owner, UUID eventId, Pageable pageable) {
-        Event event = eventService.getEntityById(eventId);
-        validateEventOwnership(event, owner);
-        Page<Registration> registrations = registrationRepository.findByEvent(event, pageable);
-        return PageResponse.from(registrations, RegistrationResponse::fromEntity);
-    }
-
-    @Transactional
-    public RegistrationResponse approveRegistrationByOwner(UUID registrationId, User owner) {
-        Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
-
-        Event event = registration.getEvent();
-        validateEventOwnership(event, owner);
-
-        if (registration.getStatus() != RegistrationStatus.PENDING) {
-            throw new BadRequestException("Can only approve pending registrations");
-        }
-
-        registration.setStatus(RegistrationStatus.APPROVED);
-        registration.setApprovedAt(LocalDateTime.now());
-        registration.setTicketCode(generateTicketCode());
-        eventService.incrementApprovedCount(event);
-
-        Registration saved = registrationRepository.save(registration);
-        notificationService.sendRegistrationApprovedNotification(saved);
-        return RegistrationResponse.fromEntity(saved);
-    }
-
-    @Transactional
-    public RegistrationResponse rejectRegistrationByOwner(UUID registrationId, User owner, String reason) {
-        Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
-
-        Event event = registration.getEvent();
-        validateEventOwnership(event, owner);
-
-        RegistrationStatus previousStatus = registration.getStatus();
-        Integer waitingPosition = registration.getWaitingListPosition();
-
-        if (previousStatus != RegistrationStatus.PENDING && previousStatus != RegistrationStatus.WAITING_LIST) {
-            throw new BadRequestException("Can only reject pending or waiting list registrations");
-        }
-
-        returnTicketsToPool(registration);
-
-        registration.setStatus(RegistrationStatus.REJECTED);
-        registration.setRejectedAt(LocalDateTime.now());
-        registration.setRejectionReason(reason);
-        registration.setWaitingListPosition(null);
-
-        Registration saved = registrationRepository.save(registration);
-        notificationService.sendRegistrationRejectedNotification(saved);
-
-        if (previousStatus == RegistrationStatus.WAITING_LIST && waitingPosition != null) {
-            registrationRepository.decrementWaitingListPositionsAfter(event, waitingPosition);
-        }
-
-        return RegistrationResponse.fromEntity(saved);
-    }
-
-    @Transactional
-    public RegistrationResponse checkInRegistrationByOwner(UUID registrationId, User owner) {
-        Registration registration = registrationRepository.findById(registrationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
-
-        Event event = registration.getEvent();
-        validateEventOwnership(event, owner);
-
-        if (registration.getStatus() != RegistrationStatus.APPROVED) {
-            throw new BadRequestException("Can only check in approved registrations");
-        }
-
-        if (registration.getCheckedInAt() != null) {
-            throw new BadRequestException("This registration has already been checked in");
-        }
-
-        validateCheckInTime(event);
-
-        registration.setCheckedInAt(LocalDateTime.now());
-        return RegistrationResponse.fromEntity(registrationRepository.save(registration));
-    }
-
-    private void validateEventOwnership(Event event, User owner) {
-        if (!event.getOrganiser().getId().equals(owner.getId())) {
-            throw new BadRequestException("You do not have permission to manage registrations for this event");
-        }
     }
 
     private void validateOrganiserAccess(Event event, User organiser) {

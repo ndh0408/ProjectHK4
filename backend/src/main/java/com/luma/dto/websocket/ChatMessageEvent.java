@@ -18,7 +18,9 @@ public class ChatMessageEvent {
         NEW_MESSAGE,
         MESSAGE_DELETED,
         TYPING,
-        READ
+        READ,
+        ONLINE,
+        OFFLINE
     }
 
     private EventType type;
@@ -26,4 +28,6 @@ public class ChatMessageEvent {
     private MessageResponse message;
     private UUID userId;
     private String userName;
+    private Boolean isOnline;
+    private java.time.Instant lastSeen;
 }

@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/notification_service.dart' show notificationStreamProvider;
 import '../../../../shared/models/notification.dart';
+import '../../../../shared/models/event_buddy.dart';
+import '../../../../shared/models/conversation.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
 
@@ -33,6 +34,151 @@ final notificationsProvider = StateNotifierProvider.autoDispose<
 
   return notifier;
 });
+
+final eventBuddiesProvider = StateNotifierProvider.autoDispose<
+    EventBuddiesNotifier, EventBuddiesState>((ref) {
+  final user = ref.watch(currentUserProvider);
+  final api = ref.watch(apiServiceProvider);
+  return EventBuddiesNotifier(api, isLoggedIn: user != null);
+});
+
+class EventBuddiesState {
+  const EventBuddiesState({
+    this.buddies = const [],
+    this.isLoading = false,
+    this.error,
+    this.selectedBuddies = const [],
+    this.searchQuery = '',
+    this.filterEventId,
+  });
+
+  final List<EventBuddy> buddies;
+  final bool isLoading;
+  final String? error;
+  final List<EventBuddy> selectedBuddies;
+  final String searchQuery;
+  final String? filterEventId;
+
+  List<EventBuddy> get filteredBuddies {
+    var result = buddies;
+
+    if (searchQuery.isNotEmpty) {
+      final query = searchQuery.toLowerCase();
+      result = result.where((buddy) =>
+        buddy.fullName.toLowerCase().contains(query)
+      ).toList();
+    }
+
+    if (filterEventId != null) {
+      result = result.where((buddy) =>
+        buddy.sharedEvents?.any((e) => e.eventId == filterEventId) ?? false
+      ).toList();
+    }
+
+    return result;
+  }
+
+  List<SharedEventInfo> get uniqueEvents {
+    final eventsMap = <String, SharedEventInfo>{};
+    for (final buddy in buddies) {
+      if (buddy.sharedEvents != null) {
+        for (final event in buddy.sharedEvents!) {
+          eventsMap[event.eventId] = event;
+        }
+      }
+    }
+    return eventsMap.values.toList()
+      ..sort((a, b) => (b.eventDate ?? DateTime.now()).compareTo(a.eventDate ?? DateTime.now()));
+  }
+
+  EventBuddiesState copyWith({
+    List<EventBuddy>? buddies,
+    bool? isLoading,
+    String? error,
+    List<EventBuddy>? selectedBuddies,
+    String? searchQuery,
+    String? filterEventId,
+    bool clearFilter = false,
+  }) {
+    return EventBuddiesState(
+      buddies: buddies ?? this.buddies,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      selectedBuddies: selectedBuddies ?? this.selectedBuddies,
+      searchQuery: searchQuery ?? this.searchQuery,
+      filterEventId: clearFilter ? null : (filterEventId ?? this.filterEventId),
+    );
+  }
+}
+
+class EventBuddiesNotifier extends StateNotifier<EventBuddiesState> {
+  EventBuddiesNotifier(this._api, {this.isLoggedIn = false})
+      : super(const EventBuddiesState());
+
+  final ApiService _api;
+  final bool isLoggedIn;
+
+  Future<void> loadBuddies() async {
+    if (!isLoggedIn) return;
+    if (state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final buddies = await _api.getEventBuddies();
+      if (mounted) {
+        state = state.copyWith(
+          buddies: buddies,
+          isLoading: false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to load event buddies',
+        );
+      }
+    }
+  }
+
+  void toggleBuddySelection(EventBuddy buddy) {
+    final isSelected = state.selectedBuddies.any((b) => b.userId == buddy.userId);
+    if (isSelected) {
+      state = state.copyWith(
+        selectedBuddies: state.selectedBuddies.where((b) => b.userId != buddy.userId).toList(),
+      );
+    } else {
+      state = state.copyWith(
+        selectedBuddies: [...state.selectedBuddies, buddy],
+      );
+    }
+  }
+
+  void clearSelection() {
+    state = state.copyWith(selectedBuddies: []);
+  }
+
+  void setSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+  }
+
+  void setEventFilter(String? eventId) {
+    if (eventId == null) {
+      state = state.copyWith(clearFilter: true);
+    } else {
+      state = state.copyWith(filterEventId: eventId);
+    }
+  }
+
+  void clearFilters() {
+    state = state.copyWith(searchQuery: '', clearFilter: true);
+  }
+
+  Future<void> refresh() async {
+    await loadBuddies();
+  }
+}
 
 class NotificationsState {
   const NotificationsState({
@@ -187,18 +333,22 @@ class NotificationsScreen extends ConsumerStatefulWidget {
       _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
+    with SingleTickerProviderStateMixin {
   final _scrollController = ScrollController();
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _scrollController.addListener(_onScroll);
     _unawaited(
       Future.microtask(() async {
         await ref
             .read(notificationsProvider.notifier)
             .loadNotifications(refresh: true);
+        await ref.read(eventBuddiesProvider.notifier).loadBuddies();
       }),
     );
   }
@@ -206,6 +356,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -265,12 +416,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     switch (type) {
       case 'EVENT_APPROVED':
       case 'REGISTRATION_APPROVED':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'EVENT_REJECTED':
       case 'REGISTRATION_REJECTED':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'EVENT_REMINDER':
-        return const Color(0xFFF97316);
+        return AppColors.warning;
       case 'NEW_FOLLOWER':
         return const Color(0xFF8B5CF6);
       case 'QUESTION_ANSWERED':
@@ -291,56 +442,247 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         current.year != previous.year;
   }
 
+  Future<void> _startDirectChat(EventBuddy buddy) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final api = ref.read(apiServiceProvider);
+      final conversation = await api.getDirectChat(buddy.userId);
+
+      if (mounted) {
+        Navigator.pop(context);
+        context.push('/chat/${conversation.id}', extra: conversation);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showCreateGroupDialog() async {
+    final selectedBuddies = ref.read(eventBuddiesProvider).selectedBuddies;
+    if (selectedBuddies.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least 2 buddies to create a group'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    final groupNameController = TextEditingController();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.group_add, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text('Create Group Chat'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: groupNameController,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                hintText: 'Enter group name...',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Members (${selectedBuddies.length})',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 60,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: selectedBuddies.length,
+                itemBuilder: (context, index) {
+                  final buddy = selectedBuddies[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          backgroundImage: buddy.avatarUrl != null
+                              ? NetworkImage(buddy.avatarUrl!)
+                              : null,
+                          child: buddy.avatarUrl == null
+                              ? Text(
+                                  buddy.fullName.isNotEmpty
+                                      ? buddy.fullName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          width: 50,
+                          child: Text(
+                            buddy.fullName.split(' ').first,
+                            style: const TextStyle(fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (groupNameController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a group name'),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context, groupNameController.text.trim());
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await _createGroupChat(result, selectedBuddies);
+    }
+  }
+
+  Future<void> _createGroupChat(String groupName, List<EventBuddy> members) async {
+    try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final api = ref.read(apiServiceProvider);
+      final conversation = await api.createGroupChat(
+        name: groupName,
+        participantIds: members.map((b) => b.userId).toList(),
+      );
+
+      ref.read(eventBuddiesProvider.notifier).clearSelection();
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Group "$groupName" created successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.push('/chat/${conversation.id}', extra: conversation);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create group: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(notificationsProvider);
+    final notificationState = ref.watch(notificationsProvider);
+    final buddiesState = ref.watch(eventBuddiesProvider);
     final unreadCountAsync = ref.watch(unreadNotificationCountProvider);
-    final hasUnread = state.notifications.any((n) => !n.isRead) ||
+    final hasUnread = notificationState.notifications.any((n) => !n.isRead) ||
         unreadCountAsync.maybeWhen(
             data: (count) => count > 0, orElse: () => false);
 
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final appBarIconSize = Responsive.iconSize(context, base: 22);
-    final avatarSize = Responsive.value<double>(context, mobile: 40, tablet: 46);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: colorScheme.primary,
+        backgroundColor: AppColors.primary,
         leadingWidth: 40,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, size: appBarIconSize),
+          icon: const Icon(Icons.arrow_back, size: 22),
           onPressed: () => context.pop(),
         ),
         title: Row(
           children: [
             Container(
-              width: avatarSize,
-              height: avatarSize,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3), width: 2),
+                    color: AppColors.surface.withValues(alpha: 0.3), width: 2),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.notifications_active,
-                color: colorScheme.primary,
-                size: appBarIconSize,
+                color: AppColors.primary,
+                size: 22,
               ),
             ),
-            SizedBox(width: Responsive.spacing(context, base: 12)),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'LUMA Notifications',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                  const Text(
+                    'LUMA',
+                    style: TextStyle(
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppColors.textOnPrimary,
                     ),
                   ),
                   Row(
@@ -348,7 +690,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppColors.success,
                           shape: BoxShape.circle,
                         ),
@@ -356,8 +698,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       const SizedBox(width: 4),
                       Text(
                         'Online',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                         ),
                       ),
                     ],
@@ -368,7 +711,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ],
         ),
         actions: [
-          if (hasUnread)
+          if (hasUnread && _tabController.index == 0)
             IconButton(
               onPressed: () async {
                 final success = await ref
@@ -383,38 +726,228 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   });
                 }
               },
-              icon: Icon(Icons.done_all, size: appBarIconSize),
+              icon: const Icon(Icons.done_all, size: 22),
               tooltip: 'Mark all as read',
+            ),
+          if (buddiesState.selectedBuddies.isNotEmpty && _tabController.index == 1)
+            IconButton(
+              onPressed: _showCreateGroupDialog,
+              icon: Badge(
+                label: Text('${buddiesState.selectedBuddies.length}'),
+                child: const Icon(Icons.group_add, size: 22),
+              ),
+              tooltip: 'Create Group Chat',
             ),
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.more_vert, size: appBarIconSize),
+            icon: const Icon(Icons.more_vert, size: 22),
           ),
         ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(notificationsProvider.notifier).refresh(),
-              child: state.notifications.isEmpty && !state.isLoading
-                  ? _buildEmptyState()
-                  : _buildChatMessages(state),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppColors.textOnPrimary,
+          labelColor: AppColors.textOnPrimary,
+          unselectedLabelColor: AppColors.textOnPrimary.withValues(alpha: 0.6),
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.notifications, size: 18),
+                  const SizedBox(width: 6),
+                  const Text('Notifications'),
+                  if (hasUnread) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.people, size: 18),
+                  const SizedBox(width: 6),
+                  const Text('Event Buddies'),
+                  if (buddiesState.buddies.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${buddiesState.buddies.length}',
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(notificationsProvider.notifier).refresh(),
+                  child: notificationState.notifications.isEmpty && !notificationState.isLoading
+                      ? _buildEmptyState()
+                      : _buildChatMessages(notificationState),
+                ),
+              ),
+              _buildBottomBar(),
+            ],
           ),
-
-          _buildBottomBar(),
+          _buildEventBuddiesTab(buddiesState),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    final theme = Theme.of(context);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final emptyIconSize = (screenWidth * 0.2).clamp(60.0, 80.0);
+  Widget _buildEventBuddiesTab(EventBuddiesState state) {
+    if (state.isLoading && state.buddies.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
+    if (state.error != null && state.buddies.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text(state.error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => ref.read(eventBuddiesProvider.notifier).refresh(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.buddies.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.people_outline,
+                  size: 50,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'No Event Buddies Yet',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Register for events to connect with other attendees who share your interests!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => context.go('/explore'),
+                icon: const Icon(Icons.explore),
+                label: const Text('Explore Events'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (state.selectedBuddies.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            color: AppColors.primary.withValues(alpha: 0.1),
+            child: Row(
+              children: [
+                Text(
+                  '${state.selectedBuddies.length} selected',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => ref.read(eventBuddiesProvider.notifier).clearSelection(),
+                  child: const Text('Clear'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: state.selectedBuddies.length >= 2 ? _showCreateGroupDialog : null,
+                  icon: const Icon(Icons.group_add, size: 18),
+                  label: const Text('Create Group'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(eventBuddiesProvider.notifier).refresh(),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: state.buddies.length,
+              itemBuilder: (context, index) {
+                final buddy = state.buddies[index];
+                final isSelected = state.selectedBuddies.any((b) => b.userId == buddy.userId);
+                return _BuddyTile(
+                  buddy: buddy,
+                  isSelected: isSelected,
+                  onTap: () => _startDirectChat(buddy),
+                  onLongPress: () => ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy),
+                  onSelect: () => ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
     return ListView(
       children: [
         SizedBox(
@@ -424,35 +957,40 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: emptyIconSize,
-                  height: emptyIconSize,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
+                    color: AppColors.surface,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: AppColors.textPrimary.withValues(alpha: 0.1),
                         blurRadius: 10,
                       ),
                     ],
                   ),
                   child: Icon(
                     Icons.chat_bubble_outline,
-                    size: emptyIconSize * 0.5,
-                    color: theme.textTheme.bodySmall?.color,
+                    size: 40,
+                    color: AppColors.textLight,
                   ),
                 ),
-                SizedBox(height: Responsive.spacing(context, base: 20)),
+                const SizedBox(height: 20),
                 Text(
                   'No notifications yet',
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(height: Responsive.spacing(context)),
+                const SizedBox(height: 8),
                 Text(
                   'Your notifications will appear here',
-                  style: theme.textTheme.bodyMedium,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textLight,
+                  ),
                 ),
               ],
             ),
@@ -466,10 +1004,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(
-        horizontal: Responsive.spacing(context, base: 12),
-        vertical: Responsive.spacing(context),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: state.notifications.length + (state.isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == state.notifications.length) {
@@ -526,22 +1061,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildDateHeader(DateTime dateTime) {
-    final theme = Theme.of(context);
     return Container(
-      margin: EdgeInsets.symmetric(vertical: Responsive.spacing(context, base: 16)),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: Responsive.spacing(context, base: 14),
-            vertical: Responsive.spacing(context, base: 5),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: AppColors.textLight?.withValues(alpha: 0.4),
+            color: AppColors.textLight.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
-            style: theme.textTheme.bodySmall?.copyWith(
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -551,19 +1084,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildBottomBar() {
-    final theme = Theme.of(context);
-    final bottomIconSize = Responsive.iconSize(context, base: 26);
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: Responsive.spacing(context, base: 12),
-        vertical: Responsive.spacing(context, base: 10),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: AppColors.surface,
         border: Border(
           top: BorderSide(
-            color: theme.dividerColor,
+            color: AppColors.divider,
             width: 1,
           ),
         ),
@@ -572,29 +1099,204 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         child: Row(
           children: [
             Icon(Icons.emoji_emotions_outlined,
-                color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
-            SizedBox(width: Responsive.spacing(context, base: 16)),
-            Icon(Icons.image_outlined, color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
-            SizedBox(width: Responsive.spacing(context, base: 12)),
+                color: AppColors.textLight, size: 26),
+            const SizedBox(width: 16),
+            Icon(Icons.image_outlined, color: AppColors.textLight, size: 26),
+            const SizedBox(width: 12),
 
             Expanded(
               child: Container(
-                height: Responsive.value(context, mobile: 38.0, tablet: 44.0),
-                padding: EdgeInsets.symmetric(horizontal: Responsive.spacing(context, base: 16)),
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: theme.scaffoldBackgroundColor,
+                  color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(19),
                 ),
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Notifications are read-only',
-                  style: theme.textTheme.bodyMedium,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textLight,
+                  ),
                 ),
               ),
             ),
 
-            SizedBox(width: Responsive.spacing(context, base: 12)),
-            Icon(Icons.more_horiz, color: theme.textTheme.bodySmall?.color, size: bottomIconSize),
+            const SizedBox(width: 12),
+            Icon(Icons.more_horiz, color: AppColors.textLight, size: 26),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BuddyTile extends StatelessWidget {
+  const _BuddyTile({
+    required this.buddy,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+    required this.onSelect,
+  });
+
+  final EventBuddy buddy;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final VoidCallback onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
+          border: Border(
+            bottom: BorderSide(
+              color: AppColors.divider,
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: onSelect,
+              child: Container(
+                width: 24,
+                height: 24,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : AppColors.textLight,
+                    width: 2,
+                  ),
+                  color: isSelected ? AppColors.primary : Colors.transparent,
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check,
+                        size: 14,
+                        color: AppColors.textOnPrimary,
+                      )
+                    : null,
+              ),
+            ),
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  backgroundImage: buddy.avatarUrl != null
+                      ? NetworkImage(buddy.avatarUrl!)
+                      : null,
+                  child: buddy.avatarUrl == null
+                      ? Text(
+                          buddy.fullName.isNotEmpty
+                              ? buddy.fullName[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : null,
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.surface, width: 2),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${buddy.sharedEventsCount}',
+                        style: const TextStyle(
+                          color: AppColors.textOnPrimary,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    buddy.fullName,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${buddy.sharedEventsCount} shared event${buddy.sharedEventsCount > 1 ? 's' : ''}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (buddy.sharedEvents != null && buddy.sharedEvents!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        buddy.sharedEvents!.map((e) => e.eventTitle).take(2).join(', '),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textLight,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.chat_bubble_outline,
+                size: 20,
+                color: AppColors.primary,
+              ),
+            ),
           ],
         ),
       ),
@@ -620,21 +1322,16 @@ class _ChatMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final avatarSize = Responsive.value<double>(context, mobile: 40, tablet: 46);
-    final bubblePad = Responsive.spacing(context, base: 12);
-    final smallIconSize = Responsive.iconSize(context, base: 14);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: Responsive.spacing(context, base: 12)),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: avatarSize,
-            height: avatarSize,
-            margin: EdgeInsets.only(right: Responsive.spacing(context, base: 10)),
+            width: 40,
+            height: 40,
+            margin: const EdgeInsets.only(right: 10),
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
@@ -646,7 +1343,7 @@ class _ChatMessageBubble extends StatelessWidget {
             child: Icon(
               icon,
               color: iconColor,
-              size: Responsive.iconSize(context, base: 20),
+              size: 20,
             ),
           ),
 
@@ -657,9 +1354,9 @@ class _ChatMessageBubble extends StatelessWidget {
                 GestureDetector(
                   onTap: onTap,
                   child: Container(
-                    padding: EdgeInsets.all(bubblePad),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.surface,
+                      color: AppColors.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
                         topRight: Radius.circular(18),
@@ -668,7 +1365,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -685,18 +1382,20 @@ class _ChatMessageBubble extends StatelessWidget {
                                 width: 8,
                                 height: 8,
                                 margin: const EdgeInsets.only(right: 6),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
                                   shape: BoxShape.circle,
                                 ),
                               ),
                             Flexible(
                               child: Text(
                                 notification.title,
-                                style: theme.textTheme.titleSmall?.copyWith(
+                                style: TextStyle(
+                                  fontSize: 14,
                                   fontWeight: isUnread
                                       ? FontWeight.w700
                                       : FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -704,28 +1403,28 @@ class _ChatMessageBubble extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
 
-                        ..._buildMessageContent(context, notification.body),
+                        ..._buildMessageContent(notification.body),
 
                         if (notification.relatedEventId != null) ...[
-                          SizedBox(height: Responsive.spacing(context, base: 10)),
+                          const SizedBox(height: 10),
                           Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: Responsive.spacing(context, base: 12),
-                                vertical: Responsive.spacing(context, base: 6)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.open_in_new,
-                                    size: smallIconSize, color: colorScheme.primary),
+                                    size: 14, color: AppColors.primary),
                                 const SizedBox(width: 5),
                                 Text(
                                   'View Event',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.primary,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -745,13 +1444,16 @@ class _ChatMessageBubble extends StatelessWidget {
                     children: [
                       Text(
                         timeText,
-                        style: theme.textTheme.bodySmall,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textLight,
+                        ),
                       ),
                       if (notification.isRead) ...[
                         const SizedBox(width: 5),
                         Icon(
                           Icons.done_all,
-                          size: Responsive.iconSize(context, base: 15),
+                          size: 15,
                           color: const Color(0xFF0EA5E9),
                         ),
                       ],
@@ -762,17 +1464,13 @@ class _ChatMessageBubble extends StatelessWidget {
             ),
           ),
 
-          SizedBox(width: Responsive.spacing(context, base: 50)),
+          const SizedBox(width: 50),
         ],
       ),
     );
   }
 
-  List<Widget> _buildMessageContent(BuildContext context, String body) {
-    final theme = Theme.of(context);
-    final contentPad = Responsive.spacing(context, base: 10);
-    final smallIcon = Responsive.iconSize(context, base: 14);
-
+  List<Widget> _buildMessageContent(String body) {
     if (body.contains('Q:') && body.contains('A:')) {
       final parts = body.split('\n\n');
       final widgets = <Widget>[];
@@ -782,9 +1480,9 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Container(
               margin: const EdgeInsets.only(top: 4),
-              padding: EdgeInsets.all(contentPad),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -793,12 +1491,14 @@ class _ChatMessageBubble extends StatelessWidget {
                   Row(
                     children: [
                       Icon(Icons.help_outline,
-                          size: smallIcon, color: AppColors.textSecondary),
+                          size: 14, color: AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         'Your Question',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: TextStyle(
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -806,7 +1506,7 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: theme.textTheme.bodyMedium,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -816,7 +1516,7 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Container(
               margin: const EdgeInsets.only(top: 8),
-              padding: EdgeInsets.all(contentPad),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: const Color(0xFF0EA5E9).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -826,14 +1526,15 @@ class _ChatMessageBubble extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.chat_bubble_outline,
-                          size: smallIcon, color: const Color(0xFF0EA5E9)),
+                      const Icon(Icons.chat_bubble_outline,
+                          size: 14, color: Color(0xFF0EA5E9)),
                       const SizedBox(width: 4),
-                      Text(
+                      const Text(
                         'Answer',
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: TextStyle(
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0EA5E9),
+                          color: Color(0xFF0EA5E9),
                         ),
                       ),
                     ],
@@ -841,7 +1542,7 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: theme.textTheme.bodyMedium,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -851,7 +1552,9 @@ class _ChatMessageBubble extends StatelessWidget {
           widgets.add(
             Text(
               part,
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
                 height: 1.4,
               ),
             ),
@@ -865,7 +1568,9 @@ class _ChatMessageBubble extends StatelessWidget {
     return [
       Text(
         body,
-        style: theme.textTheme.bodyMedium?.copyWith(
+        style: TextStyle(
+          fontSize: 13,
+          color: AppColors.textSecondary,
           height: 1.4,
         ),
       ),

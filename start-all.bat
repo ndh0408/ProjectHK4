@@ -14,14 +14,6 @@ set "PROJECT_DIR=%PROJECT_DIR:~0,-1%"
 echo Project Directory: %PROJECT_DIR%
 echo.
 
-:: Set CocCoc as Chrome executable for Flutter web (if Chrome not found)
-if not defined CHROME_EXECUTABLE (
-    if exist "C:\Program Files\CocCoc\Browser\Application\browser.exe" (
-        set "CHROME_EXECUTABLE=C:\Program Files\CocCoc\Browser\Application\browser.exe"
-        echo [OK] Using CocCoc as Chrome browser for Flutter web.
-    )
-)
-
 :: Find Flutter path
 set "FLUTTER_PATH="
 call :FindFlutter

@@ -37,22 +37,22 @@ class SpeakerEventsScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(speakerEventsProvider(speakerName));
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share_outlined, color: Colors.black),
+            icon: const Icon(Icons.share_outlined, color: AppColors.textPrimary),
             onPressed: () {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: Colors.black),
+            icon: const Icon(Icons.more_horiz, color: AppColors.textPrimary),
             onPressed: () {
             },
           ),
@@ -109,7 +109,7 @@ class SpeakerEventsScreen extends ConsumerWidget {
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                 ),
 
@@ -221,7 +221,7 @@ class SpeakerEventsScreen extends ConsumerWidget {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(width: 4),
@@ -263,7 +263,7 @@ class SpeakerEventsScreen extends ConsumerWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: AppColors.textPrimary,
             ),
           ),
           if (count > 3)
@@ -332,7 +332,7 @@ class _EventListItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isPast ? AppColors.textSecondary : Colors.black,
+                      color: isPast ? AppColors.textSecondary : AppColors.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,

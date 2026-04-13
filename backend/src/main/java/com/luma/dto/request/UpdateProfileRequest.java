@@ -16,4 +16,10 @@ public class UpdateProfileRequest {
     private Boolean emailNotificationsEnabled;
 
     private Boolean emailEventReminders;
+
+    private String bio;
+
+    private String interests;
+
+    private Boolean networkingVisible;
 }

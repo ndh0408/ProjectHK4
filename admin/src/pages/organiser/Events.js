@@ -140,8 +140,8 @@ const OrganiserEvents = () => {
         targetAudience: '',
         preferredDate: '',
         preferredTime: '',
-        cityId: '',
-        language: 'vi',
+        preferredCity: '',
+        language: 'en',
     });
     const [aiGeneratedEvent, setAiGeneratedEvent] = useState(null);
     const [selectedTitleIndex, setSelectedTitleIndex] = useState(0);
@@ -619,9 +619,9 @@ const OrganiserEvents = () => {
             valueGetter: (params) => {
                 if (!params.row) return 'Free';
                 if (params.row.isFree || !params.row.ticketPrice) return 'Free';
-                return new Intl.NumberFormat('vi-VN', {
+                return new Intl.NumberFormat('en-US', {
                     style: 'currency',
-                    currency: 'VND',
+                    currency: 'USD',
                 }).format(params.row.ticketPrice);
             },
         },
@@ -949,7 +949,7 @@ const OrganiserEvents = () => {
                             <Grid item xs={12} md={4}>
                                 <TextField
                                     fullWidth
-                                    label="Price (VND)"
+                                    label="Price (USD)"
                                     type="number"
                                     value={formData.ticketPrice}
                                     onChange={(e) => {
@@ -1196,7 +1196,7 @@ const OrganiserEvents = () => {
                                     <Box>
                                         <Typography variant="caption" color="text.secondary">Price</Typography>
                                         <Typography variant="body2">
-                                            {quickViewEvent.isFree ? 'Free' : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(quickViewEvent.ticketPrice)}
+                                            {quickViewEvent.isFree ? 'Free' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(quickViewEvent.ticketPrice)}
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -1343,32 +1343,24 @@ const OrganiserEvents = () => {
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
-                                        <FormControl fullWidth>
-                                            <InputLabel>City</InputLabel>
-                                            <Select
-                                                value={aiEventForm.cityId}
-                                                label="City"
-                                                onChange={(e) => setAiEventForm({ ...aiEventForm, cityId: e.target.value })}
-                                            >
-                                                <MenuItem value="">Not specified</MenuItem>
-                                                {cities.map((city) => (
-                                                    <MenuItem key={city.id} value={city.id}>
-                                                        {city.name}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
+                                        <TextField
+                                            fullWidth
+                                            label="Preferred City"
+                                            placeholder="e.g., Ho Chi Minh City, Hanoi, Singapore"
+                                            value={aiEventForm.preferredCity}
+                                            onChange={(e) => setAiEventForm({ ...aiEventForm, preferredCity: e.target.value })}
+                                        />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <FormControl fullWidth>
-                                            <InputLabel>Language</InputLabel>
+                                            <InputLabel>Content Language</InputLabel>
                                             <Select
                                                 value={aiEventForm.language}
-                                                label="Language"
+                                                label="Content Language"
                                                 onChange={(e) => setAiEventForm({ ...aiEventForm, language: e.target.value })}
                                             >
-                                                <MenuItem value="vi">Vietnamese</MenuItem>
                                                 <MenuItem value="en">English</MenuItem>
+                                                <MenuItem value="vi">Vietnamese</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>
@@ -1421,9 +1413,31 @@ const OrganiserEvents = () => {
                                     <Grid item xs={12} sm={6}>
                                         <Typography variant="caption" color="text.secondary">Price</Typography>
                                         <Typography variant="body1">
-                                            {aiGeneratedEvent.isFree ? 'Free' : `${aiGeneratedEvent.suggestedPrice?.toLocaleString()} VND`}
+                                            {aiGeneratedEvent.isFree ? 'Free' : `$${aiGeneratedEvent.suggestedPrice?.toLocaleString()}`}
                                         </Typography>
                                     </Grid>
+                                    {aiGeneratedEvent.suggestedCity && (
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="caption" color="text.secondary">City</Typography>
+                                            <Typography variant="body1">{aiGeneratedEvent.suggestedCity}</Typography>
+                                        </Grid>
+                                    )}
+                                    {aiGeneratedEvent.suggestedStartTime && (
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="caption" color="text.secondary">Start Time</Typography>
+                                            <Typography variant="body1">
+                                                {new Date(aiGeneratedEvent.suggestedStartTime).toLocaleString()}
+                                            </Typography>
+                                        </Grid>
+                                    )}
+                                    {aiGeneratedEvent.suggestedEndTime && (
+                                        <Grid item xs={12} sm={6}>
+                                            <Typography variant="caption" color="text.secondary">End Time</Typography>
+                                            <Typography variant="body1">
+                                                {new Date(aiGeneratedEvent.suggestedEndTime).toLocaleString()}
+                                            </Typography>
+                                        </Grid>
+                                    )}
                                     {aiGeneratedEvent.suggestedAddress && (
                                         <Grid item xs={12}>
                                             <Typography variant="caption" color="text.secondary">Address</Typography>
@@ -1492,7 +1506,7 @@ const OrganiserEvents = () => {
                                         targetAudience: '',
                                         preferredDate: '',
                                         preferredTime: '',
-                                        cityId: '',
+                                        preferredCity: '',
                                         language: 'vi',
                                     });
                                 }}>
@@ -1501,17 +1515,41 @@ const OrganiserEvents = () => {
                                 <Button
                                     variant="contained"
                                     onClick={async () => {
-                                        const matchedCategory = categories.find(
-                                            c => c.name.toLowerCase().includes(aiGeneratedEvent.suggestedCategory?.toLowerCase()) ||
-                                                 aiGeneratedEvent.suggestedCategory?.toLowerCase().includes(c.name.toLowerCase())
-                                        );
+                                        const now = new Date();
+                                        let defaultStartTime;
+                                        let defaultEndTime;
 
-                                        const defaultStartTime = new Date();
-                                        defaultStartTime.setDate(defaultStartTime.getDate() + 7);
-                                        defaultStartTime.setHours(9, 0, 0, 0);
+                                        if (aiGeneratedEvent.suggestedStartTime) {
+                                            defaultStartTime = new Date(aiGeneratedEvent.suggestedStartTime);
+                                            if (defaultStartTime <= now) {
+                                                const daysDiff = Math.ceil((now - defaultStartTime) / (1000 * 60 * 60 * 24));
+                                                const weeksToAdd = Math.ceil(daysDiff / 7) * 7 + 14;
+                                                defaultStartTime.setDate(defaultStartTime.getDate() + weeksToAdd);
+                                            }
+                                        } else {
+                                            defaultStartTime = new Date();
+                                            defaultStartTime.setDate(defaultStartTime.getDate() + 14);
+                                            defaultStartTime.setHours(9, 0, 0, 0);
+                                        }
 
-                                        const defaultEndTime = new Date(defaultStartTime);
-                                        defaultEndTime.setHours(12, 0, 0, 0);
+                                        if (aiGeneratedEvent.suggestedEndTime) {
+                                            defaultEndTime = new Date(aiGeneratedEvent.suggestedEndTime);
+                                            if (aiGeneratedEvent.suggestedStartTime) {
+                                                const originalStart = new Date(aiGeneratedEvent.suggestedStartTime);
+                                                const timeDiff = defaultStartTime - originalStart;
+                                                defaultEndTime = new Date(defaultEndTime.getTime() + timeDiff);
+                                            }
+                                        } else {
+                                            const eventType = aiEventForm.eventType?.toUpperCase() || '';
+                                            let durationHours = 3;
+                                            if (eventType === 'WORKSHOP') durationHours = 3;
+                                            else if (eventType === 'CONFERENCE') durationHours = 8;
+                                            else if (eventType === 'SEMINAR') durationHours = 2;
+                                            else if (eventType === 'MEETUP' || eventType === 'NETWORKING') durationHours = 2;
+                                            else if (eventType === 'PARTY' || eventType === 'CONCERT') durationHours = 4;
+                                            else if (eventType === 'EXHIBITION') durationHours = 6;
+                                            defaultEndTime = new Date(defaultStartTime.getTime() + durationHours * 60 * 60 * 1000);
+                                        }
 
                                         let latitude = '';
                                         let longitude = '';
@@ -1544,8 +1582,8 @@ const OrganiserEvents = () => {
                                             capacity: aiGeneratedEvent.suggestedCapacity || 100,
                                             ticketPrice: aiGeneratedEvent.suggestedPrice || 0,
                                             isFree: aiGeneratedEvent.isFree ?? true,
-                                            categoryId: matchedCategory?.id || '',
-                                            cityId: aiEventForm.cityId || '',
+                                            categoryId: aiGeneratedEvent.categoryId || '',
+                                            cityId: aiGeneratedEvent.cityId || '',
                                             startTime: defaultStartTime,
                                             endTime: defaultEndTime,
                                             registrationDeadline: getDefaultDeadline(defaultStartTime),
@@ -1557,6 +1595,13 @@ const OrganiserEvents = () => {
                                             })) || [],
                                         });
 
+                                        const [catRes, cityRes] = await Promise.all([
+                                            publicApi.getCategories(),
+                                            publicApi.getCities(),
+                                        ]);
+                                        setCategories(catRes.data.data || []);
+                                        setCities(cityRes.data.data || []);
+
                                         setAiEventDialog(false);
                                         setAiGeneratedEvent(null);
                                         setAiEventForm({
@@ -1565,7 +1610,7 @@ const OrganiserEvents = () => {
                                             targetAudience: '',
                                             preferredDate: '',
                                             preferredTime: '',
-                                            cityId: '',
+                                            preferredCity: '',
                                             language: 'vi',
                                         });
                                         setDialogOpen(true);

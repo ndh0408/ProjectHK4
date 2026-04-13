@@ -36,6 +36,9 @@ import {
     Email as EmailIcon,
     Phone as PhoneIcon,
     AccessTime as TimeIcon,
+    Star as StarIcon,
+    LocalOffer as OfferIcon,
+    Timer as TimerIcon,
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
@@ -62,6 +65,7 @@ const OrganiserRegistrations = () => {
     const [tabValue, setTabValue] = useState(0);
     const [answersDialog, setAnswersDialog] = useState({ open: false, registration: null, answers: [] });
     const [loadingAnswers, setLoadingAnswers] = useState(false);
+    const [waitlistOffers, setWaitlistOffers] = useState([]);
 
     useEffect(() => {
         loadEvents();
@@ -107,10 +111,22 @@ const OrganiserRegistrations = () => {
         }
     }, [selectedEvent]);
 
+    const loadWaitlistOffers = useCallback(async () => {
+        if (!selectedEvent) return;
+
+        try {
+            const response = await organiserApi.getWaitlistOffers(selectedEvent);
+            setWaitlistOffers(response.data.data || []);
+        } catch (error) {
+            console.error('Failed to load waitlist offers:', error);
+        }
+    }, [selectedEvent]);
+
     useEffect(() => {
         loadRegistrations();
         loadWaitingList();
-    }, [loadRegistrations, loadWaitingList]);
+        loadWaitlistOffers();
+    }, [loadRegistrations, loadWaitingList, loadWaitlistOffers]);
 
     const handleViewAnswers = async (registration) => {
         setLoadingAnswers(true);
@@ -332,6 +348,24 @@ const OrganiserRegistrations = () => {
             valueGetter: (params) => params.row.userEmail || '',
         },
         {
+            field: 'priorityScore',
+            headerName: 'Priority',
+            width: 100,
+            renderCell: (params) => {
+                const score = params.row.priorityScore || 0;
+                const color = score >= 60 ? 'success' : score >= 30 ? 'warning' : 'default';
+                return (
+                    <Chip
+                        icon={<StarIcon sx={{ fontSize: 16 }} />}
+                        label={score}
+                        size="small"
+                        color={color}
+                        variant="outlined"
+                    />
+                );
+            },
+        },
+        {
             field: 'createdAt',
             headerName: 'Joined At',
             width: 150,
@@ -370,6 +404,83 @@ const OrganiserRegistrations = () => {
         },
     ];
 
+    const offerStatusColors = {
+        PENDING: 'warning',
+        ACCEPTED: 'success',
+        DECLINED: 'error',
+        EXPIRED: 'default',
+    };
+
+    const waitlistOfferColumns = [
+        {
+            field: 'userName',
+            headerName: 'User',
+            flex: 1,
+            minWidth: 150,
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 120,
+            renderCell: (params) => (
+                <Chip
+                    label={params.value}
+                    size="small"
+                    color={offerStatusColors[params.value] || 'default'}
+                />
+            ),
+        },
+        {
+            field: 'priorityScore',
+            headerName: 'Priority',
+            width: 90,
+            renderCell: (params) => (
+                <Chip
+                    icon={<StarIcon sx={{ fontSize: 16 }} />}
+                    label={params.value || 0}
+                    size="small"
+                    variant="outlined"
+                />
+            ),
+        },
+        {
+            field: 'remainingMinutes',
+            headerName: 'Time Left',
+            width: 120,
+            renderCell: (params) => {
+                if (params.row.status !== 'PENDING') return '-';
+                const mins = params.value;
+                if (mins <= 0) return <Chip label="Expired" size="small" color="error" />;
+                return (
+                    <Chip
+                        icon={<TimerIcon sx={{ fontSize: 16 }} />}
+                        label={`${mins} min`}
+                        size="small"
+                        color={mins <= 5 ? 'error' : mins <= 15 ? 'warning' : 'info'}
+                    />
+                );
+            },
+        },
+        {
+            field: 'createdAt',
+            headerName: 'Offered At',
+            width: 160,
+            valueFormatter: (params) => {
+                if (!params.value) return '';
+                return new Date(params.value).toLocaleString();
+            },
+        },
+        {
+            field: 'expiresAt',
+            headerName: 'Expires At',
+            width: 160,
+            valueFormatter: (params) => {
+                if (!params.value) return '';
+                return new Date(params.value).toLocaleString();
+            },
+        },
+    ];
+
     const selectedEventData = events.find(e => e.id === selectedEvent);
 
     return (
@@ -379,7 +490,7 @@ const OrganiserRegistrations = () => {
                     Registrations
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<RefreshIcon />} onClick={() => { loadRegistrations(); loadWaitingList(); }}>
+                    <Button startIcon={<RefreshIcon />} onClick={() => { loadRegistrations(); loadWaitingList(); loadWaitlistOffers(); }}>
                         Refresh
                     </Button>
                     <Button
@@ -489,6 +600,16 @@ const OrganiserRegistrations = () => {
                                     </Badge>
                                 }
                             />
+                            <Tab
+                                label={
+                                    <Badge badgeContent={waitlistOffers.filter(o => o.status === 'PENDING').length} color="info">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 2 }}>
+                                            <OfferIcon sx={{ fontSize: 18 }} />
+                                            <span>Waitlist Offers</span>
+                                        </Box>
+                                    </Badge>
+                                }
+                            />
                         </Tabs>
 
                         {tabValue === 0 && (
@@ -520,6 +641,32 @@ const OrganiserRegistrations = () => {
                                     },
                                 }}
                             />
+                        )}
+
+                        {tabValue === 2 && (
+                            <Box>
+                                {waitlistOffers.length > 0 ? (
+                                    <DataGrid
+                                        rows={waitlistOffers}
+                                        columns={waitlistOfferColumns}
+                                        pageSizeOptions={[10, 25]}
+                                        disableRowSelectionOnClick
+                                        autoHeight
+                                        initialState={{
+                                            sorting: {
+                                                sortModel: [{ field: 'createdAt', sort: 'desc' }],
+                                            },
+                                        }}
+                                    />
+                                ) : (
+                                    <Box sx={{ p: 4, textAlign: 'center' }}>
+                                        <OfferIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                                        <Typography color="text.secondary">
+                                            No waitlist offers yet. Offers are automatically created when a spot opens up.
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Box>
                         )}
                     </Paper>
                 </>

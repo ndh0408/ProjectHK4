@@ -85,7 +85,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Phone verified successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         context.go('/home');
@@ -120,7 +120,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('OTP sent successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         _startResendTimer();
@@ -130,7 +130,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to send OTP: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -155,13 +155,6 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final hPadding = screenWidth < 600 ? 24.0 : 32.0;
-    final cardPadding = screenWidth < 600 ? 24.0 : 32.0;
-    final otpBoxWidth = (screenWidth * 0.12).clamp(36.0, 50.0);
-    final textTheme = Theme.of(context).textTheme;
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -174,41 +167,42 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(hPadding),
+              padding: const EdgeInsets.all(24),
               child: Card(
                 elevation: 8,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
-                  padding: EdgeInsets.all(cardPadding),
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.lock_outline,
-                        size: screenHeight * 0.08,
+                        size: 64,
                         color: AppColors.primary,
                       ),
                       const SizedBox(height: 24),
                       Text(
                         'Verify OTP',
-                        style: textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Enter the 6-digit code sent to\n${widget.phone}',
                         textAlign: TextAlign.center,
-                        style: textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: List.generate(6, (index) {
                           return SizedBox(
-                            width: otpBoxWidth,
+                            width: 45,
                             child: TextFormField(
                               controller: _controllers[index],
                               focusNode: _focusNodes[index],
@@ -216,13 +210,14 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                               textAlign: TextAlign.center,
                               maxLength: 1,
                               enabled: !_isLoading,
-                              style: textTheme.headlineMedium?.copyWith(
+                              style: const TextStyle(
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                               ),
                               decoration: InputDecoration(
                                 counterText: '',
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: screenHeight * 0.015,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -242,18 +237,18 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
+                            color: AppColors.errorLight,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red.shade200),
+                            border: Border.all(color: AppColors.error.withOpacity(0.5)),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                              Icon(Icons.error_outline, color: AppColors.error, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: TextStyle(color: Colors.red.shade700, fontSize: 14),
+                                  style: TextStyle(color: AppColors.error, fontSize: 14),
                                 ),
                               ),
                             ],
@@ -272,14 +267,14 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: AppColors.textOnPrimary,
                                   ),
                                 )
-                              : Text(
+                              : const Text(
                                   'Verify',
-                                  style: textTheme.titleMedium?.copyWith(
+                                  style: TextStyle(
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white,
                                   ),
                                 ),
                         ),

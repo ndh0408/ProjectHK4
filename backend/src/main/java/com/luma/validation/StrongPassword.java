@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface StrongPassword {
 
-    String message() default "Password must be at least 8 characters and contain uppercase, lowercase, number, and special character";
+    String message() default "Password must be at least 6 characters";
 
     Class<?>[] groups() default {};
 

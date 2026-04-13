@@ -115,7 +115,7 @@ const RegistrationQuestions = () => {
             loadQuestions();
         } catch (error) {
             toast.error('Failed to save questions');
-            loadQuestions(); // Reload to revert local state on failure
+            loadQuestions();
         } finally {
             setLoading(false);
         }
@@ -242,7 +242,7 @@ const RegistrationQuestions = () => {
             });
             const questions = response.data.data.questions || [];
             setSuggestedQuestions(questions);
-            setSelectedSuggestions(questions.map((_, index) => index)); // Select all by default
+            setSelectedSuggestions(questions.map((_, index) => index));
             toast.success(`${questions.length} questions suggested!`);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to generate questions');

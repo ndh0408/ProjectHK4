@@ -20,15 +20,25 @@ public class AIGeneratedEventResponse {
 
     private String suggestedCategory;
 
+    private Long categoryId;
+
     private String suggestedVenue;
 
     private String suggestedAddress;
+
+    private String suggestedStartTime;
+
+    private String suggestedEndTime;
 
     private Integer suggestedCapacity;
 
     private BigDecimal suggestedPrice;
 
     private Boolean isFree;
+
+    private String suggestedCity;
+
+    private Long cityId;
 
     private List<SpeakerSuggestion> suggestedSpeakers;
 

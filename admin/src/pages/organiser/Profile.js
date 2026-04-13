@@ -63,7 +63,7 @@ const OrganiserProfile = () => {
     };
 
     const isValidUrl = (url) => {
-        if (!url) return true; // Optional field
+        if (!url) return true;
         const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
         return urlPattern.test(url);
     };

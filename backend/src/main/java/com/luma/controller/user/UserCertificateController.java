@@ -64,4 +64,14 @@ public class UserCertificateController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+
+    @PostMapping("/registration/{registrationId}/send-email")
+    @Operation(summary = "Send certificate to user's email")
+    public ResponseEntity<ApiResponse<CertificateResponse>> sendCertificateByEmail(
+            @PathVariable UUID registrationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        CertificateResponse response = certificateService.sendCertificateByEmail(registrationId, user);
+        return ResponseEntity.ok(ApiResponse.success("Certificate sent to your email", response));
+    }
 }

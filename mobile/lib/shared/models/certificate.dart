@@ -11,8 +11,6 @@ class Certificate {
   final String? userName;
   final String? registrationId;
   final String? certificateUrl;
-  final String? verificationCode;
-  final DateTime? issuedAt;
   final DateTime? createdAt;
 
   Certificate({
@@ -23,8 +21,6 @@ class Certificate {
     this.userName,
     this.registrationId,
     this.certificateUrl,
-    this.verificationCode,
-    this.issuedAt,
     this.createdAt,
   });
 

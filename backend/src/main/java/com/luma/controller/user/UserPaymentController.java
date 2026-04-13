@@ -29,9 +29,10 @@ public class UserPaymentController {
     @Operation(summary = "Create payment intent for a registration")
     public ResponseEntity<ApiResponse<PaymentIntentResponse>> createPaymentIntent(
             @PathVariable UUID registrationId,
+            @RequestParam(required = false) String couponCode,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        PaymentIntentResponse response = paymentService.createPaymentIntent(registrationId, user);
+        PaymentIntentResponse response = paymentService.createPaymentIntent(registrationId, user, couponCode);
         return ResponseEntity.ok(ApiResponse.success("Payment intent created", response));
     }
 
@@ -59,9 +60,10 @@ public class UserPaymentController {
     @Operation(summary = "Create Stripe Checkout Session for web payment")
     public ResponseEntity<ApiResponse<PaymentIntentResponse>> createCheckoutSession(
             @PathVariable UUID registrationId,
+            @RequestParam(required = false) String couponCode,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        PaymentIntentResponse response = paymentService.createCheckoutSession(registrationId, user);
+        PaymentIntentResponse response = paymentService.createCheckoutSession(registrationId, user, couponCode);
         return ResponseEntity.ok(ApiResponse.success("Checkout session created", response));
     }
 }

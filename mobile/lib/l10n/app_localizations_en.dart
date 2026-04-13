@@ -783,41 +783,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get share => 'Share';
 
   @override
-  String get certificate => 'Certificate';
-
-  @override
-  String get certificateOfAttendance => 'Certificate of Attendance';
-
-  @override
-  String get thisCertifiesThat => 'This is to certify that';
-
-  @override
-  String get hasSuccessfullyAttended => 'has successfully attended';
-
-  @override
-  String get hasAttended => 'has attended';
-
-  @override
-  String get scanToVerify => 'Scan to verify';
-
-  @override
-  String get issuedOn => 'Issued on';
-
-  @override
-  String get certificateCode => 'Certificate Code';
-
-  @override
-  String get verifyAt => 'Verify at';
-
-  @override
   String get download => 'Download';
-
-  @override
-  String get certificateNotAvailable => 'Certificate Not Available';
-
-  @override
-  String get certificateRequirements =>
-      'You must check in to the event and the event must have ended to receive your certificate.';
 
   @override
   String get reviews => 'Reviews';

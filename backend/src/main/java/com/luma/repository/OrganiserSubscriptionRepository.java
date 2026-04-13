@@ -44,4 +44,22 @@ public interface OrganiserSubscriptionRepository extends JpaRepository<Organiser
     List<Object[]> countByPlan();
 
     Optional<OrganiserSubscription> findByStripeSubscriptionId(String stripeSubscriptionId);
+
+    @Query("SELECT os FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE'")
+    List<OrganiserSubscription> findAllPaidSubscriptions();
+
+    @Query("SELECT os FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE' AND os.startDate >= :start")
+    List<OrganiserSubscription> findPaidSubscriptionsAfter(@Param("start") LocalDateTime start);
+
+    @Query("SELECT os FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE' AND os.startDate >= :start AND os.startDate < :end")
+    List<OrganiserSubscription> findPaidSubscriptionsBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("SELECT COUNT(os) FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE'")
+    int countAllPaidSubscriptions();
+
+    @Query("SELECT COUNT(os) FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE' AND os.isActive = true AND (os.endDate IS NULL OR os.endDate > :now)")
+    int countActiveValidSubscriptions(@Param("now") LocalDateTime now);
+
+    @Query("SELECT os.plan, COUNT(os), SUM(CASE WHEN os.isActive = true AND (os.endDate IS NULL OR os.endDate > :now) THEN 1 ELSE 0 END) FROM OrganiserSubscription os WHERE os.startDate IS NOT NULL AND os.plan != 'FREE' GROUP BY os.plan")
+    List<Object[]> countAndActiveByPlan(@Param("now") LocalDateTime now);
 }

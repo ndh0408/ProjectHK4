@@ -9,6 +9,7 @@ import '../../../../core/config/theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/conversation.dart';
+import '../../../../shared/models/event_buddy.dart';
 import '../../../../shared/models/notification.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../chat/presentation/screens/conversations_screen.dart';
@@ -50,20 +51,32 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
   String? _selectedUserId;
   String? _selectedUserName;
   String? _selectedEventId;
+  bool _isSelectionMode = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _scrollController.addListener(_onScroll);
     Future.microtask(() {
       ref.read(conversationsProvider.notifier).loadConversations(refresh: true);
       ref.read(notificationsProvider.notifier).loadNotifications(refresh: true);
+      ref.read(eventBuddiesProvider.notifier).loadBuddies();
     });
+  }
+
+  void _onTabChanged() {
+    if (_tabController.index != 2 && _isSelectionMode) {
+      setState(() => _isSelectionMode = false);
+      ref.read(eventBuddiesProvider.notifier).clearSelection();
+    }
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _scrollController.dispose();
     _messageController.dispose();
@@ -201,12 +214,12 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     switch (type) {
       case 'EVENT_APPROVED':
       case 'REGISTRATION_APPROVED':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'EVENT_REJECTED':
       case 'REGISTRATION_REJECTED':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'EVENT_REMINDER':
-        return const Color(0xFFF97316);
+        return AppColors.warning;
       case 'NEW_FOLLOWER':
         return const Color(0xFF8B5CF6);
       case 'QUESTION_ANSWERED':
@@ -358,7 +371,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         (unreadMessages.maybeWhen(data: (count) => count, orElse: () => 0));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8E8E8),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -380,7 +393,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0EA5E9).withValues(alpha: 0.2),
+                      color: AppColors.info.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -391,7 +404,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF0EA5E9),
+                          color: AppColors.info,
                         ),
                       ),
                     ),
@@ -410,7 +423,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                         ),
                         const Text(
                           'Question & Answer',
-                          style: TextStyle(fontSize: 12, color: Colors.white70),
+                          style: const TextStyle(fontSize: 12, color: AppColors.textOnPrimary),
                         ),
                       ],
                     ),
@@ -424,7 +437,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppColors.textOnPrimary,
                     ),
                   ),
                   if (totalUnread > 0) ...[
@@ -433,7 +446,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                       padding:
                           const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -451,23 +464,25 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         bottom: _selectedUserId == null
             ? TabBar(
                 controller: _tabController,
-                indicatorColor: Colors.white,
+                indicatorColor: AppColors.textOnPrimary,
                 indicatorWeight: 3,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                 tabs: [
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.notifications, size: 18),
-                        const SizedBox(width: 6),
-                        const Text('LUMA'),
+                        const Icon(Icons.notifications, size: 16),
+                        const SizedBox(width: 4),
+                        const Text('LUMA', style: TextStyle(fontSize: 13)),
                         if (lumaUnreadCount > 0) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                                horizontal: 5, vertical: 1),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -475,7 +490,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                                   ? '99+'
                                   : lumaUnreadCount.toString(),
                               style: const TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -488,17 +503,18 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.chat, size: 18),
-                        const SizedBox(width: 6),
-                        Text(AppLocalizations.of(context)!.chat),
+                        const Icon(Icons.chat, size: 16),
+                        const SizedBox(width: 4),
+                        Text(AppLocalizations.of(context)!.chat, style: const TextStyle(fontSize: 13)),
                         if (chatsUnreadCount > 0) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                                horizontal: 5, vertical: 1),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -506,7 +522,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                                   ? '99+'
                                   : chatsUnreadCount.toString(),
                               style: const TextStyle(
-                                fontSize: 10,
+                                fontSize: 9,
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -516,11 +532,27 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                       ],
                     ),
                   ),
+                  const Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.people, size: 16),
+                        SizedBox(width: 4),
+                        Text('Buddies', style: TextStyle(fontSize: 13)),
+                      ],
+                    ),
+                  ),
                 ],
               )
             : null,
         actions: [
-          if (_selectedUserId == null)
+          if (_selectedUserId == null) ...[
+            IconButton(
+              onPressed: () => context.push('/waitlist-offers'),
+              icon: const Icon(Icons.local_offer, size: 22),
+              tooltip: 'Waitlist Offers',
+            ),
             IconButton(
               onPressed: () async {
                 final success = await ref
@@ -533,6 +565,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
               icon: const Icon(Icons.done_all, size: 22),
               tooltip: 'Mark all as read',
             ),
+          ],
         ],
       ),
       body: _selectedUserId != null
@@ -545,8 +578,24 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                     _groupChatMessages(notificationsState.notifications, ref.watch(currentUserProvider)?.id),
                     conversationsState,
                     notificationsState),
+                _buildEventBuddiesTab(),
               ],
             ),
+      floatingActionButton: _tabController.index == 2 && _isSelectionMode
+          ? FloatingActionButton.extended(
+              onPressed: ref.watch(eventBuddiesProvider).selectedBuddies.isNotEmpty
+                  ? _showCreateGroupDialog
+                  : null,
+              backgroundColor: ref.watch(eventBuddiesProvider).selectedBuddies.isNotEmpty
+                  ? AppColors.primary
+                  : AppColors.textLight,
+              icon: const Icon(Icons.group_add, color: AppColors.textOnPrimary),
+              label: Text(
+                'Create Group (${ref.watch(eventBuddiesProvider).selectedBuddies.length})',
+                style: const TextStyle(color: AppColors.textOnPrimary),
+              ),
+            )
+          : null,
     );
   }
 
@@ -762,7 +811,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: SafeArea(
@@ -786,7 +835,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F2F5),
+                  color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: TextField(
@@ -820,7 +869,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.send, color: Colors.white, size: 20),
+                child: const Icon(Icons.send, color: AppColors.textOnPrimary, size: 20),
               ),
             ),
           ],
@@ -862,14 +911,14 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
           decoration: BoxDecoration(
-            color: AppColors.textLight?.withValues(alpha: 0.4),
+            color: AppColors.textLight.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _formatDateHeader(dateTime),
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textPrimary,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -887,11 +936,11 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: AppColors.textPrimary.withValues(alpha: 0.1),
                   blurRadius: 10,
                 ),
               ],
@@ -910,6 +959,251 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildEventBuddiesTab() {
+    final state = ref.watch(eventBuddiesProvider);
+
+    if (state.isLoading && state.buddies.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.buddies.isEmpty) {
+      return _buildEmptyState(
+        'No event buddies yet',
+        Icons.people_outline,
+      );
+    }
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border(
+              bottom: BorderSide(color: AppColors.divider, width: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _isSelectionMode
+                      ? '${state.selectedBuddies.length} selected'
+                      : 'People who joined same events as you',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontWeight: _isSelectionMode ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = !_isSelectionMode;
+                    if (!_isSelectionMode) {
+                      ref.read(eventBuddiesProvider.notifier).clearSelection();
+                    }
+                  });
+                },
+                icon: Icon(
+                  _isSelectionMode ? Icons.close : Icons.group_add,
+                  size: 18,
+                  color: _isSelectionMode ? AppColors.error : AppColors.primary,
+                ),
+                label: Text(
+                  _isSelectionMode ? 'Cancel' : 'Create Group',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _isSelectionMode ? AppColors.error : AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(eventBuddiesProvider.notifier).refresh(),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: state.buddies.length,
+              itemBuilder: (context, index) {
+                final buddy = state.buddies[index];
+                final isSelected = state.selectedBuddies.any((b) => b.userId == buddy.userId);
+
+                return _BuddyTile(
+                  buddy: buddy,
+                  isSelectionMode: _isSelectionMode,
+                  isSelected: isSelected,
+                  onTap: () {
+                    if (_isSelectionMode) {
+                      ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy);
+                    } else {
+                      _startDirectChat(buddy);
+                    }
+                  },
+                  onLongPress: () {
+                    if (!_isSelectionMode) {
+                      setState(() => _isSelectionMode = true);
+                      ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy);
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _startDirectChat(EventBuddy buddy) async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final conversation = await api.getDirectChat(buddy.userId);
+
+      if (mounted) {
+        context.push('/chat/${conversation.id}', extra: conversation);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to open chat: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCreateGroupDialog() {
+    final selectedBuddies = ref.read(eventBuddiesProvider).selectedBuddies;
+    if (selectedBuddies.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select at least 1 buddy to create a group')),
+      );
+      return;
+    }
+
+    final groupNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Group Chat'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: groupNameController,
+              decoration: const InputDecoration(
+                labelText: 'Group Name',
+                hintText: 'Enter group name',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Members (${selectedBuddies.length}):',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: selectedBuddies.map((buddy) {
+                return Chip(
+                  avatar: CircleAvatar(
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                    backgroundImage: buddy.avatarUrl != null
+                        ? NetworkImage(buddy.avatarUrl!)
+                        : null,
+                    child: buddy.avatarUrl == null
+                        ? Text(
+                            buddy.fullName.isNotEmpty
+                                ? buddy.fullName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : null,
+                  ),
+                  label: Text(
+                    buddy.fullName,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final groupName = groupNameController.text.trim();
+              if (groupName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a group name')),
+                );
+                return;
+              }
+              Navigator.pop(context);
+              await _createGroupChat(groupName, selectedBuddies);
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createGroupChat(String groupName, List<EventBuddy> members) async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final memberIds = members.map((b) => b.userId).toList();
+
+      final conversation = await api.createGroupChat(
+        name: groupName,
+        participantIds: memberIds,
+      );
+
+      ref.read(eventBuddiesProvider.notifier).clearSelection();
+      setState(() => _isSelectionMode = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Group "$groupName" created successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.push('/chat/${conversation.id}', extra: conversation);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create group: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -952,7 +1246,7 @@ class _NotificationBubble extends StatelessWidget {
             ),
             child: const Icon(
               Icons.notifications_active,
-              color: Colors.white,
+              color: AppColors.surface,
               size: 18,
             ),
           ),
@@ -970,7 +1264,7 @@ class _NotificationBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isUnread
                           ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.white,
+                          : AppColors.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
                         topRight: Radius.circular(18),
@@ -979,7 +1273,7 @@ class _NotificationBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -1024,7 +1318,7 @@ class _NotificationBubble extends StatelessWidget {
                           notification.body,
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textSecondary,
                             height: 1.3,
                           ),
                         ),
@@ -1101,9 +1395,9 @@ class _ChatMessageBubble extends StatelessWidget {
     if (isSentByMe) return AppColors.primary;
     switch (notification.type) {
       case 'NEW_REGISTRATION':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'REGISTRATION_CANCELLED':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'NEW_QUESTION':
         return const Color(0xFF0EA5E9);
       case 'REPLY_MESSAGE':
@@ -1140,7 +1434,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -1150,7 +1444,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       notification.body,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.white,
+                        color: AppColors.surface,
                         height: 1.4,
                       ),
                     ),
@@ -1214,7 +1508,7 @@ class _ChatMessageBubble extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isUnread
                           ? _typeColor.withValues(alpha: 0.1)
-                          : Colors.white,
+                          : AppColors.surface,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(4),
                         topRight: Radius.circular(18),
@@ -1223,7 +1517,7 @@ class _ChatMessageBubble extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.textPrimary.withValues(alpha: 0.06),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -1300,9 +1594,9 @@ class _UserChatTile extends StatelessWidget {
   Color get _typeColor {
     switch (notificationType) {
       case 'NEW_REGISTRATION':
-        return const Color(0xFF22C55E);
+        return AppColors.success;
       case 'REGISTRATION_CANCELLED':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'NEW_QUESTION':
       default:
         return const Color(0xFF0EA5E9);
@@ -1319,8 +1613,8 @@ class _UserChatTile extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: const Color(0xFFEF4444),
-        child: const Icon(Icons.delete, color: Colors.white),
+        color: AppColors.error,
+        child: const Icon(Icons.delete, color: AppColors.textOnPrimary),
       ),
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
@@ -1335,7 +1629,7 @@ class _UserChatTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
                 child: const Text('Delete'),
               ),
             ],
@@ -1350,7 +1644,7 @@ class _UserChatTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: hasUnread
                 ? AppColors.primary.withValues(alpha: 0.05)
-                : Colors.white,
+                : AppColors.surface,
             border: Border(
               bottom: BorderSide(color: AppColors.divider, width: 0.5),
             ),
@@ -1386,11 +1680,11 @@ class _UserChatTile extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: _typeColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: AppColors.surface, width: 2),
                     ),
                     child: Icon(
                       _typeIcon,
-                      color: Colors.white,
+                      color: AppColors.surface,
                       size: 12,
                     ),
                   ),
@@ -1462,7 +1756,7 @@ class _UserChatTile extends StatelessWidget {
                             unreadCount > 99 ? '99+' : unreadCount.toString(),
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.white,
+                              color: AppColors.surface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1504,8 +1798,8 @@ class _ConversationTile extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        color: const Color(0xFFEF4444),
-        child: const Icon(Icons.delete, color: Colors.white),
+        color: AppColors.error,
+        child: const Icon(Icons.delete, color: AppColors.textOnPrimary),
       ),
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
@@ -1520,7 +1814,7 @@ class _ConversationTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(foregroundColor: AppColors.error),
                 child: const Text('Delete'),
               ),
             ],
@@ -1535,7 +1829,7 @@ class _ConversationTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: hasUnread
               ? AppColors.primary.withValues(alpha: 0.05)
-              : Colors.white,
+              : AppColors.surface,
           border: Border(
             bottom: BorderSide(color: AppColors.divider, width: 0.5),
           ),
@@ -1581,11 +1875,11 @@ class _ConversationTile extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: AppColors.surface, width: 2),
                       ),
                       child: const Icon(
                         Icons.event,
-                        color: Colors.white,
+                        color: AppColors.surface,
                         size: 10,
                       ),
                     ),
@@ -1657,7 +1951,7 @@ class _ConversationTile extends StatelessWidget {
                                 : conversation.unreadCount.toString(),
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Colors.white,
+                              color: AppColors.surface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1672,6 +1966,168 @@ class _ConversationTile extends StatelessWidget {
         ),
       ),
     ),
+    );
+  }
+}
+
+class _BuddyTile extends StatelessWidget {
+  const _BuddyTile({
+    required this.buddy,
+    required this.isSelectionMode,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final EventBuddy buddy;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
+          border: Border(
+            bottom: BorderSide(color: AppColors.divider, width: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Stack(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    image: buddy.avatarUrl != null
+                        ? DecorationImage(
+                            image: NetworkImage(buddy.avatarUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: buddy.avatarUrl == null
+                      ? Center(
+                          child: Text(
+                            buddy.fullName.isNotEmpty
+                                ? buddy.fullName[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                if (isSelectionMode)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : AppColors.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : AppColors.textLight,
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              color: AppColors.textOnPrimary,
+                              size: 14,
+                            )
+                          : null,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    buddy.fullName,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.event,
+                        size: 14,
+                        color: AppColors.textLight,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${buddy.sharedEventsCount} shared event${buddy.sharedEventsCount > 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (buddy.displayLatestEventName != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      buddy.displayLatestEventName!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textLight,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (!isSelectionMode)
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_bubble_outline,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

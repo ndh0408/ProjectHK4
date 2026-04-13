@@ -53,4 +53,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
     @Query("SELECT COUNT(r) FROM Review r WHERE r.event.organiser.id = :organiserId")
     long countReviewsForOrganiser(@Param("organiserId") UUID organiserId);
+
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.event.organiser.id = :organiserId")
+    long countByOrganiserId(@Param("organiserId") UUID organiserId);
 }

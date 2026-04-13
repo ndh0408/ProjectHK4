@@ -68,7 +68,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -125,7 +125,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+            color: AppColors.success.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -160,7 +160,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
             onPressed: () => context.go('/my-events'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textOnPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -198,7 +198,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
           width: 100,
           height: 100,
           decoration: BoxDecoration(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+            color: AppColors.error.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -238,7 +238,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textOnPrimary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

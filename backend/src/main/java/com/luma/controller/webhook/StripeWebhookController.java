@@ -4,7 +4,6 @@ import com.luma.service.PaymentService;
 import com.luma.service.OrganiserSubscriptionService;
 import com.luma.service.EventBoostService;
 import com.luma.service.UserBoostService;
-import com.luma.service.UserEventLimitService;
 import com.luma.service.WebhookService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -32,7 +31,6 @@ public class StripeWebhookController {
     private final OrganiserSubscriptionService subscriptionService;
     private final EventBoostService boostService;
     private final UserBoostService userBoostService;
-    private final UserEventLimitService userEventLimitService;
 
     @Value("${stripe.webhook-secret}")
     private String webhookSecret;
@@ -147,19 +145,6 @@ public class StripeWebhookController {
                 log.error("Error activating user boost: {}", e.getMessage(), e);
             }
 
-        } else if ("extra_event".equals(type)) {
-            String userId = session.getMetadata().get("user_id");
-            String quantityStr = session.getMetadata().get("quantity");
-            String paymentIntentId = session.getPaymentIntent();
-
-            try {
-                int quantity = Integer.parseInt(quantityStr);
-                userEventLimitService.purchaseExtraEventAfterPayment(
-                        UUID.fromString(userId), quantity, paymentIntentId);
-                log.info("User {} purchased {} extra event(s) after payment {}", userId, quantity, paymentIntentId);
-            } catch (Exception e) {
-                log.error("Error processing extra event purchase: {}", e.getMessage(), e);
-            }
         }
     }
 }

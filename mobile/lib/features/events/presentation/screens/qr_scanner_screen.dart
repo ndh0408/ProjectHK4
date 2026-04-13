@@ -128,14 +128,14 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             Icon(
               success ? Icons.check_circle : Icons.error,
               size: 64,
-              color: success ? Colors.green : Colors.red,
+              color: success ? AppColors.success : AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: success ? Colors.green : Colors.red,
+                    color: success ? AppColors.success : AppColors.error,
                   ),
             ),
             const SizedBox(height: 8),
@@ -149,7 +149,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.background,
+                  color: AppColors.surfaceVariant,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -208,10 +208,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.textPrimary,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.textPrimary,
+        foregroundColor: AppColors.textOnPrimary,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -219,7 +219,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             Text(
               widget.eventTitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white70,
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.7),
                   ),
             ),
           ],
@@ -252,13 +252,13 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: AppColors.textPrimary.withValues(alpha: 0.54),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Text(
                   _isProcessing ? l10n.processing : l10n.pointCameraAtQr,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.textOnPrimary,
                     fontSize: 16,
                   ),
                 ),
@@ -278,16 +278,16 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   Widget _buildScannerOverlay() {
     return ColorFiltered(
-      colorFilter: const ColorFilter.mode(
-        Colors.black54,
+      colorFilter: ColorFilter.mode(
+        AppColors.textPrimary.withValues(alpha: 0.54),
         BlendMode.srcOut,
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.black,
+            decoration: BoxDecoration(
+              color: AppColors.textPrimary,
               backgroundBlendMode: BlendMode.dstOut,
             ),
           ),
@@ -296,7 +296,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               width: 280,
               height: 280,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
             ),

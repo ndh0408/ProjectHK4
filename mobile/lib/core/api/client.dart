@@ -21,7 +21,7 @@ final dioProvider = Provider<Dio>((ref) {
   );
 
   dio.interceptors.addAll([
-    AuthInterceptor(storage),
+    AuthInterceptor(storage, dio),
     LogInterceptor(
       requestBody: true,
       responseBody: true,

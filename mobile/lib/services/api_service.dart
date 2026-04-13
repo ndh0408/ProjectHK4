@@ -17,6 +17,9 @@ import '../shared/models/registration.dart';
 import '../shared/models/review.dart';
 import '../shared/models/registration_question.dart';
 import '../shared/models/user.dart';
+import '../shared/models/event_image.dart';
+import '../shared/models/event_buddy.dart';
+import '../shared/models/blocked_user.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
   final client = ref.watch(apiClientProvider);
@@ -259,9 +262,183 @@ class ApiService {
     await _client.delete('/user/events/registrations/$registrationId');
   }
 
-  Future<Map<String, dynamic>> initiatePayment(String registrationId) async {
+  Future<void> trackEventView(String eventId) async {
+    try {
+      await _client.post<Map<String, dynamic>>('/user/events/$eventId/track-view');
+    } catch (_) {}
+  }
+
+  Future<List<Map<String, dynamic>>> getEventPolls(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/polls/event/$eventId/all',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> getActiveEventPolls(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/polls/event/$eventId',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> votePoll(String pollId, {List<String>? optionIds, int? ratingValue}) async {
+    final body = <String, dynamic>{};
+    if (optionIds != null) body['optionIds'] = optionIds;
+    if (ratingValue != null) body['ratingValue'] = ratingValue;
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/polls/$pollId/vote',
+      data: body,
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<List<Map<String, dynamic>>> discoverNetworking({int page = 0, int size = 20}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/networking/discover',
+      queryParameters: {'page': page, 'size': size},
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> sendConnectionRequest(String userId, {String? message}) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/networking/connect/$userId',
+      data: message != null ? {'message': message} : {},
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> acceptConnectionRequest(String requestId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/networking/requests/$requestId/accept',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> declineConnectionRequest(String requestId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/networking/requests/$requestId/decline',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> getPendingConnectionRequests({int page = 0}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/networking/requests/pending',
+      queryParameters: {'page': page, 'size': 20},
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> getConnections({int page = 0}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/networking/connections',
+      queryParameters: {'page': page, 'size': 20},
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> validateCoupon(String code, double amount, String registrationId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/coupons/validate',
+      queryParameters: {'code': code, 'amount': amount, 'registrationId': registrationId},
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> compareEvents(List<String> eventIds) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/event-comparison/compare',
+      queryParameters: {'eventIds': eventIds},
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> getSeatMap(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/seat-map/event/$eventId',
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> lockSeats(List<String> seatIds) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/seat-map/lock',
+      data: {'seatIds': seatIds},
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> getEventSchedule(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/schedule/event/$eventId',
+    );
+    return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<Map<String, dynamic>> registerForSession(String sessionId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/schedule/sessions/$sessionId/register',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<List<Map<String, dynamic>>> getMyEventSchedule(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/schedule/event/$eventId/my-schedule',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> transferTicket(String registrationId, String toEmail) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/transfers/$registrationId/transfer',
+      data: {'toEmail': toEmail},
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<List<Map<String, dynamic>>> getResaleListings(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/transfers/event/$eventId/resale',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<List<Map<String, dynamic>>> getWaitlistOffers() async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/waitlist/offers',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> acceptWaitlistOffer(String offerId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/waitlist/offers/$offerId/accept',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> declineWaitlistOffer(String offerId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/waitlist/offers/$offerId/decline',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> initiatePayment(String registrationId, {String? couponCode}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/payments/registrations/$registrationId/payment-intent',
+      queryParameters: couponCode != null && couponCode.isNotEmpty
+          ? {'couponCode': couponCode}
+          : null,
     );
     return response['data'] as Map<String, dynamic>? ?? response;
   }
@@ -280,9 +457,12 @@ class ApiService {
     return response.data!['data'] as Map<String, dynamic>? ?? response.data!;
   }
 
-  Future<Map<String, dynamic>> createCheckoutSession(String registrationId) async {
+  Future<Map<String, dynamic>> createCheckoutSession(String registrationId, {String? couponCode}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/payments/registrations/$registrationId/checkout-session',
+      queryParameters: couponCode != null && couponCode.isNotEmpty
+          ? {'couponCode': couponCode}
+          : null,
     );
     return response['data'] as Map<String, dynamic>? ?? response;
   }
@@ -413,120 +593,6 @@ class ApiService {
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
-  Future<Event> createEvent({
-    required String title,
-    String? description,
-    String? imageUrl,
-    required DateTime startTime,
-    required DateTime endTime,
-    String? venue,
-    String? address,
-    double? latitude,
-    double? longitude,
-    int? cityId,
-    int? categoryId,
-    bool isFree = true,
-    double? ticketPrice,
-    int? capacity,
-    String visibility = 'PUBLIC',
-    bool requiresApproval = false,
-  }) async {
-    final response = await _client.post<Map<String, dynamic>>(
-      '/user/events',
-      data: {
-        'title': title,
-        if (description != null) 'description': description,
-        if (imageUrl != null) 'imageUrl': imageUrl,
-        'startTime': startTime.toIso8601String(),
-        'endTime': endTime.toIso8601String(),
-        if (venue != null) 'venue': venue,
-        if (address != null) 'address': address,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        if (cityId != null) 'cityId': cityId,
-        if (categoryId != null) 'categoryId': categoryId,
-        'isFree': isFree,
-        if (ticketPrice != null) 'ticketPrice': ticketPrice,
-        if (capacity != null) 'capacity': capacity,
-        'visibility': visibility,
-        'requiresApproval': requiresApproval,
-      },
-    );
-    final data = response['data'] as Map<String, dynamic>? ?? response;
-    return Event.fromJson(data);
-  }
-
-  Future<PaginatedResponse<Event>> getMyCreatedEvents({
-    int page = 0,
-    int size = 20,
-  }) async {
-    final response = await _client.getRaw<Map<String, dynamic>>(
-      '/user/events/my-events',
-      queryParameters: {'page': page, 'size': size},
-    );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
-    return PaginatedResponse.fromJson(data, Event.fromJson);
-  }
-
-  Future<void> deleteMyEvent(String eventId) async {
-    await _client.delete('/user/events/$eventId');
-  }
-
-  Future<Event> updateMyEvent(String eventId, Map<String, dynamic> data) async {
-    final response = await _client.put<Map<String, dynamic>>(
-      '/user/events/$eventId',
-      data: data,
-    );
-    final responseData = response['data'] as Map<String, dynamic>? ?? response;
-    return Event.fromJson(responseData);
-  }
-
-  Future<PaginatedResponse<Registration>> getEventRegistrations(
-    String eventId, {
-    int page = 0,
-    int size = 50,
-    String? status,
-  }) async {
-    final queryParams = <String, dynamic>{'page': page, 'size': size};
-    if (status != null) queryParams['status'] = status;
-
-    final response = await _client.getRaw<Map<String, dynamic>>(
-      '/user/events/$eventId/registrations',
-      queryParameters: queryParams,
-    );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
-    return PaginatedResponse.fromJson(data, Registration.fromJson);
-  }
-
-  Future<Registration> approveRegistration(String registrationId) async {
-    final response = await _client.put<Map<String, dynamic>>(
-      '/user/events/registrations/$registrationId/approve',
-    );
-    final data = response['data'] as Map<String, dynamic>? ?? response;
-    return Registration.fromJson(data);
-  }
-
-  Future<Registration> rejectRegistration(String registrationId, {String? reason}) async {
-    final queryParams = <String, dynamic>{};
-    if (reason != null && reason.isNotEmpty) {
-      queryParams['reason'] = reason;
-    }
-    final response = await _client.put<Map<String, dynamic>>(
-      '/user/events/registrations/$registrationId/reject',
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
-    final data = response['data'] as Map<String, dynamic>? ?? response;
-    return Registration.fromJson(data);
-  }
-
-  Future<Registration> checkInRegistration(String registrationId) async {
-    final response = await _client.put<Map<String, dynamic>>(
-      '/user/events/registrations/$registrationId/check-in',
-    );
-    final data = response['data'] as Map<String, dynamic>? ?? response;
-    return Registration.fromJson(data);
-  }
-
   Future<String> uploadImageBytes(List<int> bytes, String filename, {String folder = 'events'}) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(
@@ -631,6 +697,27 @@ class ApiService {
     );
   }
 
+  Future<void> muteConversation(String conversationId, bool mute) async {
+    await _client.put<Map<String, dynamic>>(
+      '/user/chat/conversations/$conversationId/mute',
+      data: {'muted': mute},
+    );
+  }
+
+  Future<void> pinConversation(String conversationId, bool pin) async {
+    await _client.put<Map<String, dynamic>>(
+      '/user/chat/conversations/$conversationId/pin',
+      data: {'pinned': pin},
+    );
+  }
+
+  Future<void> archiveConversation(String conversationId, bool archive) async {
+    await _client.put<Map<String, dynamic>>(
+      '/user/chat/conversations/$conversationId/archive',
+      data: {'archived': archive},
+    );
+  }
+
   Future<int> getUnreadMessageCount() async {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/chat/unread-count',
@@ -653,6 +740,32 @@ class ApiService {
 
   Future<void> deleteConversation(String conversationId) async {
     await _client.delete('/user/chat/conversations/$conversationId');
+  }
+
+  Future<void> blockUser(String userId, {String? reason}) async {
+    await _client.post<Map<String, dynamic>>(
+      '/user/chat/block/$userId',
+      data: reason != null ? {'reason': reason} : {},
+    );
+  }
+
+  Future<void> unblockUser(String userId) async {
+    await _client.delete('/user/chat/block/$userId');
+  }
+
+  Future<List<BlockedUser>> getBlockedUsers() async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/blocked',
+    );
+    final data = response['data'] as List<dynamic>? ?? [];
+    return data.map((e) => BlockedUser.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<bool> isUserBlocked(String userId) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/block/$userId/status',
+    );
+    return response['data'] as bool? ?? false;
   }
 
   Future<ChatMessage> sendImageMessage(
@@ -685,6 +798,52 @@ class ApiService {
     );
   }
 
+  Future<List<EventBuddy>> getEventBuddies({int page = 0, int size = 20}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/chat/buddies',
+      queryParameters: {'page': page, 'size': size},
+    );
+    final data = response.data!['data'] as Map<String, dynamic>?;
+    final content = data?['content'] as List<dynamic>? ?? [];
+    return content.map((e) => EventBuddy.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<EventBuddy>> getEventBuddiesByEvent(String eventId) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/events/$eventId/buddies',
+    );
+    final data = response['data'] as List<dynamic>? ?? [];
+    return data.map((e) => EventBuddy.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<Conversation> createGroupChat({
+    required String name,
+    required List<String> participantIds,
+    String? imageUrl,
+  }) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/chat/conversations/group',
+      data: {
+        'name': name,
+        'participantIds': participantIds,
+        if (imageUrl != null) 'imageUrl': imageUrl,
+      },
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Conversation.fromJson(data);
+  }
+
+  Future<void> addGroupParticipants(String conversationId, List<String> userIds) async {
+    await _client.post<void>(
+      '/user/chat/conversations/$conversationId/participants',
+      data: {'userIds': userIds},
+    );
+  }
+
+  Future<void> removeGroupParticipant(String conversationId, String userId) async {
+    await _client.delete('/user/chat/conversations/$conversationId/participants/$userId');
+  }
+
   Future<Certificate> getCertificateByRegistration(String registrationId) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/certificates/registration/$registrationId',
@@ -694,6 +853,50 @@ class ApiService {
 
   Future<List<int>> downloadCertificate(String certificateId) async {
     return _client.downloadBytes('/user/certificates/$certificateId/download');
+  }
+
+  Future<Certificate> sendCertificateByEmail(String registrationId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/certificates/registration/$registrationId/send-email',
+    );
+    return Certificate.fromJson(response);
+  }
+
+  Future<Registration> checkInRegistration(String registrationId) async {
+    final response = await _client.put<Map<String, dynamic>>(
+      '/organiser/registrations/$registrationId/check-in',
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Registration.fromJson(data);
+  }
+
+  Future<List<Event>> getPersonalizedRecommendations({int limit = 10}) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/recommendations/personalized',
+      queryParameters: {'limit': limit},
+    );
+    final recommendedEvents = response['recommendedEvents'] as List<dynamic>? ?? [];
+    return recommendedEvents
+        .map((e) => Event.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<Event>> getSimilarEvents(String eventId, {int limit = 5}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/recommendations/similar/$eventId',
+      queryParameters: {'limit': limit},
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.map((e) => Event.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<Event>> getTrendingEvents({int limit = 10}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/recommendations/trending',
+      queryParameters: {'limit': limit},
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.map((e) => Event.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<PaginatedResponse<Review>> getEventReviews(
@@ -881,6 +1084,40 @@ class ApiService {
     );
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return data['syncedCount'] as int? ?? 0;
+  }
+
+  Future<EventImage?> getEventImage(String eventId) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/gallery/event/$eventId',
+    );
+    final data = response.data!['data'];
+    if (data == null) return null;
+    return EventImage.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<PaginatedResponse<EventImage>> getGalleryImages({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/gallery',
+      queryParameters: {'page': page, 'size': size},
+    );
+    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    return PaginatedResponse.fromJson(data, EventImage.fromJson);
+  }
+
+  Future<PaginatedResponse<EventImage>> getGalleryImagesByCategory(
+    int categoryId, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/gallery/category/$categoryId',
+      queryParameters: {'page': page, 'size': size},
+    );
+    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    return PaginatedResponse.fromJson(data, EventImage.fromJson);
   }
 }
 

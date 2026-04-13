@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
-import '../../../../core/utils/responsive.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -67,11 +67,6 @@ class _SavedEventItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final imageSize = screenWidth * 0.19;
-    final hPadding = Responsive.horizontalPadding(context);
 
     return GestureDetector(
       onTap: () {
@@ -79,7 +74,7 @@ class _SavedEventItem extends ConsumerWidget {
         context.push('/event/${event.id}');
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: Responsive.spacing(context, base: 12)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -88,12 +83,12 @@ class _SavedEventItem extends ConsumerWidget {
               child: event.imageUrl != null
                   ? Image.network(
                       event.imageUrl!,
-                      width: imageSize,
-                      height: imageSize,
+                      width: 72,
+                      height: 72,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildPlaceholder(imageSize),
+                      errorBuilder: (_, __, ___) => _buildPlaceholder(),
                     )
-                  : _buildPlaceholder(imageSize),
+                  : _buildPlaceholder(),
             ),
             const SizedBox(width: 12),
 
@@ -104,15 +99,15 @@ class _SavedEventItem extends ConsumerWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: Responsive.iconSize(context, base: 10),
-                        backgroundColor: theme.disabledColor,
+                        radius: 10,
+                        backgroundColor: AppColors.divider,
                         backgroundImage: event.organiser?.avatarUrl != null
                             ? NetworkImage(event.organiser!.avatarUrl!)
                             : null,
                         child: event.organiser?.avatarUrl == null
                             ? Text(
                                 (event.organiser?.fullName ?? 'U')[0].toUpperCase(),
-                                style: const TextStyle(fontSize: 10, color: Colors.white),
+                                style: const TextStyle(fontSize: 10, color: AppColors.textOnPrimary),
                               )
                             : null,
                       ),
@@ -120,7 +115,10 @@ class _SavedEventItem extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           event.organiser?.fullName ?? 'Unknown Organiser',
-                          style: theme.textTheme.bodySmall,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -132,16 +130,16 @@ class _SavedEventItem extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(l10n.removedFromSaved),
-                                backgroundColor: theme.textTheme.bodyMedium?.color,
+                                backgroundColor: AppColors.textSecondary,
                                 duration: const Duration(seconds: 2),
                               ),
                             );
                           }
                         },
-                        child: Icon(
+                        child: const Icon(
                           Icons.bookmark,
-                          size: Responsive.iconSize(context, base: 20),
-                          color: Colors.amber,
+                          size: 20,
+                          color: AppColors.warning,
                         ),
                       ),
                     ],
@@ -150,8 +148,10 @@ class _SavedEventItem extends ConsumerWidget {
 
                   Text(
                     event.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
+                    style: const TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -160,30 +160,39 @@ class _SavedEventItem extends ConsumerWidget {
 
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
+                      Icon(Icons.calendar_today, size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('EEE, MMM d').format(event.startTime),
-                        style: theme.textTheme.bodySmall,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.access_time, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
+                      Icon(Icons.access_time, size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Text(
                         DateFormat('h:mm a').format(event.startTime),
-                        style: theme.textTheme.bodySmall,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: Responsive.iconSize(context, base: 14), color: theme.textTheme.bodySmall?.color),
+                      Icon(Icons.location_on_outlined, size: 14, color: AppColors.textLight),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           event.location,
-                          style: theme.textTheme.bodySmall,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -199,19 +208,19 @@ class _SavedEventItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlaceholder(double size) {
+  Widget _buildPlaceholder() {
     return Container(
-      width: size,
-      height: size,
+      width: 72,
+      height: 72,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.orange[200]!, Colors.orange[400]!],
+          colors: [AppColors.warningLight, AppColors.warning],
         ),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(Icons.event, color: Colors.orange[700], size: size * 0.44),
+      child: Icon(Icons.event, color: AppColors.warning, size: 32),
     );
   }
 }

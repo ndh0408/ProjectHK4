@@ -11,7 +11,7 @@
     background: var(--gradient-dark);
     display: none;
     position: relative;
-    padding: 3.75rem;
+    padding: 60px;
     overflow: hidden;
 }
 
@@ -68,8 +68,8 @@
 }
 
 .login-left-logo-icon {
-    width: 3.75rem;
-    height: 3.75rem;
+    width: 60px;
+    height: 60px;
     border-radius: var(--radius-xl);
     background: var(--gradient-purple-pink);
     display: flex;
@@ -79,7 +79,7 @@
 }
 
 .login-left-logo-icon svg {
-    font-size: 2rem;
+    font-size: 32px;
     color: white;
 }
 
@@ -125,8 +125,8 @@
 }
 
 .login-feature-icon {
-    width: 3rem;
-    height: 3rem;
+    width: 48px;
+    height: 48px;
     border-radius: var(--radius-lg);
     background: rgba(255, 255, 255, 0.1);
     display: flex;
@@ -136,7 +136,7 @@
 }
 
 .login-feature-icon svg {
-    font-size: 1.5rem;
+    font-size: 24px;
     color: var(--primary-400);
 }
 
@@ -165,7 +165,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2.5rem;
+    padding: 40px;
     background: var(--neutral-50);
 }
 
@@ -194,8 +194,8 @@
 }
 
 .login-form-header .mobile-logo-icon {
-    width: 3.125rem;
-    height: 3.125rem;
+    width: 50px;
+    height: 50px;
     border-radius: var(--radius-lg);
     background: var(--gradient-purple-pink);
     display: flex;
@@ -205,7 +205,7 @@
 }
 
 .login-form-header .mobile-logo-icon svg {
-    font-size: 1.75rem;
+    font-size: 28px;
     color: white;
 }
 
@@ -455,37 +455,6 @@
     margin: 12px 0 4px 0;
     padding-top: 8px;
     border-top: 1px dashed var(--neutral-300);
-}
-
-@media (min-width: 600px) and (max-width: 900px) {
-    .login-right {
-        padding: 2rem;
-    }
-
-    .login-form-container {
-        max-width: 24rem;
-    }
-
-    .login-form-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .login-form-card {
-        padding: 1.5rem;
-    }
-
-    .login-form-header .mobile-logo-icon {
-        width: 2.75rem;
-        height: 2.75rem;
-    }
-
-    .login-form-header .mobile-logo-icon svg {
-        font-size: 1.5rem;
-    }
-
-    .login-form-header .mobile-logo h1 {
-        font-size: 1.75rem;
-    }
 }
 
 .floating-shape {

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,16 +36,19 @@ public class NotificationService {
     private final WebSocketNotificationService webSocketNotificationService;
     private final EmailService emailService;
 
+    @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getUserNotifications(User user, Pageable pageable) {
         Page<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
         return PageResponse.from(notifications, NotificationResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getUnreadNotifications(User user, Pageable pageable) {
         Page<Notification> notifications = notificationRepository.findByUserAndIsReadOrderByCreatedAtDesc(user, false, pageable);
         return PageResponse.from(notifications, NotificationResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
     public long getUnreadCount(User user) {
         return notificationRepository.countByUserAndIsRead(user, false);
     }
@@ -186,8 +190,20 @@ public class NotificationService {
         String title = "New Event Pending Review";
         String message = "Organiser \"" + event.getOrganiser().getFullName() + "\" created a new event: \"" + event.getTitle() + "\". Please review.";
 
+        List<Notification> notifications = new ArrayList<>(admins.size());
         for (User admin : admins) {
-            sendNotification(admin, title, message, NotificationType.EVENT_CREATED, event.getId(), "EVENT");
+            notifications.add(Notification.builder()
+                    .user(admin)
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_CREATED)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
         }
     }
 
@@ -250,8 +266,20 @@ public class NotificationService {
         String title = "Event Resubmitted";
         String message = "\"" + event.getTitle() + "\" by " + event.getOrganiser().getFullName() + " has been edited and resubmitted for approval.";
 
+        List<Notification> notifications = new ArrayList<>(admins.size());
         for (User admin : admins) {
-            sendNotification(admin, title, message, NotificationType.EVENT_CREATED, event.getId(), "EVENT");
+            notifications.add(Notification.builder()
+                    .user(admin)
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_CREATED)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
         }
     }
 
@@ -268,19 +296,24 @@ public class NotificationService {
             message += " Reason: " + reason;
         }
 
-        int count = 0;
+        List<Notification> notifications = new ArrayList<>(registrations.size());
         for (Registration registration : registrations) {
-            User attendee = registration.getUser();
-            sendNotification(
-                    attendee,
-                    title,
-                    message,
-                    NotificationType.EVENT_UPDATE,
-                    event.getId(),
-                    "EVENT",
-                    event.getOrganiser().getId(),
-                    event.getOrganiser().getFullName()
-            );
+            notifications.add(Notification.builder()
+                    .user(registration.getUser())
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_UPDATE)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .senderId(event.getOrganiser().getId())
+                    .senderName(event.getOrganiser().getFullName())
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+
+        for (int i = 0; i < registrations.size(); i++) {
+            User attendee = registrations.get(i).getUser();
+            webSocketNotificationService.sendToUser(attendee.getId(), notifications.get(i));
 
             emailService.sendEventCancelledEmail(
                     attendee.getEmail(),
@@ -291,11 +324,9 @@ public class NotificationService {
                     event.getStartTime(),
                     reason
             );
-
-            count++;
         }
 
-        return count;
+        return registrations.size();
     }
 
     @Transactional
@@ -382,43 +413,68 @@ public class NotificationService {
     @Transactional
     public void broadcastNotification(String title, String message) {
         List<User> users = userRepository.findAll();
+        List<Notification> notifications = new ArrayList<>(users.size());
         for (User user : users) {
-            sendNotification(user, title, message, NotificationType.BROADCAST, null, null);
+            notifications.add(Notification.builder()
+                    .user(user)
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.BROADCAST)
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
         }
     }
 
     @Transactional
     public void sendNotificationToRole(String title, String message, UserRole role) {
         List<User> users = userRepository.findAllByRole(role);
+        List<Notification> notifications = new ArrayList<>(users.size());
         for (User user : users) {
-            sendNotification(user, title, message, NotificationType.BROADCAST, null, null);
+            notifications.add(Notification.builder()
+                    .user(user)
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.BROADCAST)
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
         }
     }
 
     @Transactional
     public int sendNotificationToEventAttendees(Event event, User sender, String title, String message) {
         List<Registration> registrations = registrationRepository.findByEventAndStatus(event, RegistrationStatus.APPROVED);
-        int count = 0;
+        List<Notification> notifications = new ArrayList<>(registrations.size());
         for (Registration registration : registrations) {
-            sendNotification(
-                    registration.getUser(),
-                    title,
-                    message,
-                    NotificationType.EVENT_UPDATE,
-                    event.getId(),
-                    "EVENT",
-                    sender.getId(),
-                    sender.getFullName()
-            );
-            count++;
+            notifications.add(Notification.builder()
+                    .user(registration.getUser())
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_UPDATE)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .senderId(sender.getId())
+                    .senderName(sender.getFullName())
+                    .build());
         }
-        return count;
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
+        }
+        return notifications.size();
     }
 
     @Transactional
     public int sendNotificationByType(Event event, User sender, String title, String message, String notificationType) {
         java.util.Set<UUID> notifiedUserIds = new java.util.HashSet<>();
-        int count = 0;
+        List<Notification> notifications = new ArrayList<>();
+
+        List<User> recipients = new ArrayList<>();
 
         switch (notificationType) {
             case "EVENT_REMINDER":
@@ -426,9 +482,7 @@ public class NotificationService {
                 List<Registration> approvedRegs = registrationRepository.findByEventAndStatus(event, RegistrationStatus.APPROVED);
                 for (Registration reg : approvedRegs) {
                     if (notifiedUserIds.add(reg.getUser().getId())) {
-                        sendNotification(reg.getUser(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(reg.getUser());
                     }
                 }
                 break;
@@ -438,9 +492,7 @@ public class NotificationService {
                         List.of(RegistrationStatus.APPROVED, RegistrationStatus.PENDING));
                 for (Registration reg : updateRegs) {
                     if (notifiedUserIds.add(reg.getUser().getId())) {
-                        sendNotification(reg.getUser(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(reg.getUser());
                     }
                 }
                 break;
@@ -450,17 +502,13 @@ public class NotificationService {
                         List.of(RegistrationStatus.APPROVED, RegistrationStatus.PENDING));
                 for (Registration reg : announcementRegs) {
                     if (notifiedUserIds.add(reg.getUser().getId())) {
-                        sendNotification(reg.getUser(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(reg.getUser());
                     }
                 }
                 List<com.luma.entity.Follow> followers = followRepository.findAllByOrganiserUser(sender);
                 for (com.luma.entity.Follow follow : followers) {
                     if (notifiedUserIds.add(follow.getFollower().getId())) {
-                        sendNotification(follow.getFollower(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(follow.getFollower());
                     }
                 }
                 break;
@@ -469,9 +517,7 @@ public class NotificationService {
                 List<Registration> checkedInRegs = registrationRepository.findCheckedInByEvent(event);
                 for (Registration reg : checkedInRegs) {
                     if (notifiedUserIds.add(reg.getUser().getId())) {
-                        sendNotification(reg.getUser(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(reg.getUser());
                     }
                 }
                 break;
@@ -480,16 +526,32 @@ public class NotificationService {
                 List<Registration> defaultRegs = registrationRepository.findByEventAndStatus(event, RegistrationStatus.APPROVED);
                 for (Registration reg : defaultRegs) {
                     if (notifiedUserIds.add(reg.getUser().getId())) {
-                        sendNotification(reg.getUser(), title, message, NotificationType.EVENT_UPDATE,
-                                event.getId(), "EVENT", sender.getId(), sender.getFullName());
-                        count++;
+                        recipients.add(reg.getUser());
                     }
                 }
         }
 
-        return count;
+        for (User recipient : recipients) {
+            notifications.add(Notification.builder()
+                    .user(recipient)
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_UPDATE)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .senderId(sender.getId())
+                    .senderName(sender.getFullName())
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (Notification notification : notifications) {
+            webSocketNotificationService.sendToUser(notification.getUser().getId(), notification);
+        }
+
+        return notifications.size();
     }
 
+    @Transactional(readOnly = true)
     public long getRecipientCountByType(Event event, User organiser, String notificationType) {
         java.util.Set<UUID> userIds = new java.util.HashSet<>();
 
@@ -520,5 +582,32 @@ public class NotificationService {
             default:
                 return registrationRepository.countByEventAndStatus(event, RegistrationStatus.APPROVED);
         }
+    }
+
+    @Transactional
+    public void sendWaitlistOfferNotification(com.luma.entity.WaitlistOffer offer) {
+        long minutes = offer.getRemainingMinutes();
+        sendNotification(
+                offer.getUser(),
+                "A Spot Opened Up!",
+                "Great news! A spot is available for \"" + offer.getEvent().getTitle() +
+                        "\". You have " + minutes + " minutes to accept. Act fast before it expires!",
+                NotificationType.WAITLIST_OFFER,
+                offer.getEvent().getId(),
+                "EVENT"
+        );
+    }
+
+    @Transactional
+    public void sendWaitlistOfferExpiredNotification(com.luma.entity.WaitlistOffer offer) {
+        sendNotification(
+                offer.getUser(),
+                "Waitlist Offer Expired",
+                "Your waitlist offer for \"" + offer.getEvent().getTitle() +
+                        "\" has expired. You have been moved back in the queue.",
+                NotificationType.WAITLIST_OFFER_EXPIRED,
+                offer.getEvent().getId(),
+                "EVENT"
+        );
     }
 }

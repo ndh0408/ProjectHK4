@@ -1,6 +1,8 @@
 package com.luma.scheduler;
 
 import com.luma.config.RateLimitConfig;
+import com.luma.service.PollService;
+import com.luma.service.SeatMapService;
 import com.luma.service.WebhookService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +16,23 @@ public class CleanupScheduler {
 
     private final RateLimitConfig rateLimitConfig;
     private final WebhookService webhookService;
+    private final PollService pollService;
+    private final SeatMapService seatMapService;
 
     @Scheduled(fixedRate = 3600000)
     public void cleanupRateLimitBuckets() {
         log.debug("Running rate limit bucket cleanup...");
         rateLimitConfig.cleanupOldBuckets();
+    }
+
+    @Scheduled(fixedRate = 120000)
+    public void autoCloseExpiredPolls() {
+        pollService.autoCloseExpiredPolls();
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void releaseExpiredSeatLocks() {
+        seatMapService.releaseExpiredLocks();
     }
 
     @Scheduled(cron = "0 0 3 * * *")

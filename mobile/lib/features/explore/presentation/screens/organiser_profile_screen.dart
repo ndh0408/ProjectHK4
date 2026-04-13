@@ -96,7 +96,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
     final isOwnProfile = currentUser?.id == organiserId;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       body: profile.when(
         data: (organiser) => NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -108,11 +108,11 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: AppColors.textPrimary.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.arrow_back,
-                      color: Colors.white, size: 20),
+                      color: AppColors.textOnPrimary, size: 20),
                 ),
                 onPressed: () => context.pop(),
               ),
@@ -121,11 +121,11 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: AppColors.textPrimary.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.share_outlined,
-                        color: Colors.white, size: 20),
+                        color: AppColors.textOnPrimary, size: 20),
                   ),
                   onPressed: () => _shareOrganiser(organiser),
                 ),
@@ -133,11 +133,11 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: AppColors.textPrimary.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.more_vert,
-                        color: Colors.white, size: 20),
+                        color: AppColors.textOnPrimary, size: 20),
                   ),
                   onPressed: () => _showMoreOptions(context, organiser),
                 ),
@@ -162,7 +162,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                 end: Alignment.bottomRight,
                                 colors: [
                                   AppColors.primary.withValues(alpha: 0.6),
-                                  Colors.purple.shade400.withValues(alpha: 0.6),
+                                  AppColors.secondary.withValues(alpha: 0.6),
                                 ],
                               ),
                             ),
@@ -177,9 +177,9 @@ class OrganiserProfileScreen extends ConsumerWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.3),
+                            AppColors.textPrimary.withValues(alpha: 0.3),
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.1),
+                            AppColors.textPrimary.withValues(alpha: 0.1),
                           ],
                         ),
                       ),
@@ -193,7 +193,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
             child: Column(
               children: [
                 Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   child: Column(
                     children: [
                       const SizedBox(height: 16),
@@ -226,7 +226,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                       child: const Icon(
                                         Icons.check,
                                         size: 14,
-                                        color: Colors.white,
+                                        color: AppColors.textOnPrimary,
                                       ),
                                     ),
                                   ],
@@ -251,7 +251,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                               styleSheet: MarkdownStyleSheet(
                                 p: TextStyle(
                                   fontSize: 15,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textSecondary,
                                   height: 1.5,
                                 ),
                                 strong: TextStyle(
@@ -262,7 +262,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                 em: TextStyle(
                                   fontSize: 15,
                                   fontStyle: FontStyle.italic,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textSecondary,
                                 ),
                                 a: const TextStyle(
                                   fontSize: 15,
@@ -271,7 +271,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                 ),
                                 listBullet: TextStyle(
                                   fontSize: 15,
-                                  color: AppColors.textPrimary,
+                                  color: AppColors.textSecondary,
                                 ),
                                 h1: TextStyle(
                                   fontSize: 20,
@@ -438,7 +438,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
         backgroundColor:
             followState.isFollowing ? AppColors.divider : AppColors.primary,
         foregroundColor:
-            followState.isFollowing ? AppColors.textPrimary : Colors.white,
+            followState.isFollowing ? AppColors.textPrimary : AppColors.textOnPrimary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: RoundedRectangleBorder(
@@ -620,7 +620,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
           colors: [
             AppColors.primary,
             AppColors.primary.withValues(alpha: 0.8),
-            Colors.purple.shade400,
+            AppColors.secondary,
           ],
         ),
       ),
@@ -708,11 +708,11 @@ class _ActionButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: AppColors.surfaceVariant,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.divider),
         ),
-        child: Icon(icon, size: 20, color: AppColors.textPrimary),
+        child: Icon(icon, size: 20, color: AppColors.textSecondary),
       ),
     );
   }
@@ -840,8 +840,8 @@ class _OrganiserEventCard extends StatelessWidget {
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: event.isFree
-                              ? Colors.green[50]
-                              : Colors.orange[50],
+                              ? AppColors.successLight
+                              : AppColors.warningLight,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -852,8 +852,8 @@ class _OrganiserEventCard extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: event.isFree
-                                ? Colors.green[700]
-                                : Colors.orange[700],
+                                ? AppColors.success
+                                : AppColors.warning,
                           ),
                         ),
                       ),

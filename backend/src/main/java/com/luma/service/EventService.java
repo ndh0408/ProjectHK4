@@ -17,8 +17,10 @@ import com.luma.exception.ResourceNotFoundException;
 import com.luma.entity.OrganiserProfile;
 import com.luma.repository.EventRepository;
 import com.luma.repository.EventBoostRepository;
+import com.luma.repository.EventSessionRepository;
 import com.luma.repository.OrganiserProfileRepository;
 import com.luma.repository.ReviewRepository;
+import com.luma.repository.SeatZoneRepository;
 import com.luma.entity.enums.BoostPackage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,8 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final EventBoostRepository eventBoostRepository;
+    private final SeatZoneRepository seatZoneRepository;
+    private final EventSessionRepository eventSessionRepository;
     private final CategoryService categoryService;
     private final CityService cityService;
     private final NotificationService notificationService;
@@ -49,11 +53,13 @@ public class EventService {
     private final ReviewRepository reviewRepository;
     private final OrganiserSubscriptionService subscriptionService;
 
+    @Transactional(readOnly = true)
     public Event getEntityById(UUID id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
     }
 
+    @Transactional(readOnly = true)
     public Event getEntityByIdWithRelationships(UUID id) {
         Event event = eventRepository.findByIdWithBasicRelationships(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -62,6 +68,7 @@ public class EventService {
         return event;
     }
 
+    @Transactional(readOnly = true)
     public EventResponse getEventById(UUID id) {
         Event event = getEntityById(id);
         EventResponse response = enrichEventResponseWithBoostInfo(event);
@@ -82,6 +89,7 @@ public class EventService {
         }
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getUpcomingEvents(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
@@ -89,11 +97,13 @@ public class EventService {
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getFeaturedEvents(Pageable pageable) {
         Page<Event> events = eventRepository.findFeaturedPublicEvents(pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsByCity(Long cityId, Pageable pageable) {
         City city = cityService.getEntityById(cityId);
         LocalDateTime now = LocalDateTime.now();
@@ -102,6 +112,7 @@ public class EventService {
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsByCountry(String country, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
@@ -109,6 +120,7 @@ public class EventService {
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsByCategory(Long categoryId, Pageable pageable) {
         Category category = categoryService.getEntityById(categoryId);
         LocalDateTime now = LocalDateTime.now();
@@ -116,6 +128,7 @@ public class EventService {
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> searchEvents(String query, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         Page<Event> events = eventRepository.searchEventsWithBoostPriority(query, now, pageable);
@@ -149,19 +162,25 @@ public class EventService {
             response.setBoostBadge(null);
         }
 
+        response.setHasSeatMap(!seatZoneRepository.findByEventOrderByDisplayOrderAsc(event).isEmpty());
+        response.setHasSchedule(!eventSessionRepository.findByEventOrderByStartTimeAscDisplayOrderAsc(event).isEmpty());
+
         return response;
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsByOrganiser(User organiser, Pageable pageable) {
         Page<Event> events = eventRepository.findByOrganiser(organiser, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsByOrganiserAndStatus(User organiser, EventStatus status, Pageable pageable) {
         Page<Event> events = eventRepository.findByOrganiserAndStatus(organiser, status, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getUpcomingEventsByOrganiserId(UUID organiserId, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
@@ -169,6 +188,7 @@ public class EventService {
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getPastEventsByOrganiserId(UUID organiserId, Pageable pageable) {
         Page<Event> events = eventRepository.findPastEventsByOrganiser(organiserId, pageable);
         return PageResponse.from(events, EventResponse::fromEntity);
@@ -247,85 +267,6 @@ public class EventService {
         }
 
         subscriptionService.incrementEventCount(organiser.getId());
-
-        try {
-            notificationService.notifyAdminsEventCreated(savedEvent);
-        } catch (Exception e) {
-            log.error("Failed to notify admins about new event: {}", e.getMessage());
-        }
-
-        return EventResponse.fromEntity(savedEvent);
-    }
-
-    @Transactional
-    public EventResponse createEventForUser(User user, EventCreateRequest request) {
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(5);
-        if (request.getStartTime().isBefore(cutoffTime)) {
-            throw new BadRequestException("Start time must be in the future");
-        }
-        if (request.getEndTime().isBefore(request.getStartTime())) {
-            throw new BadRequestException("End time must be after start time");
-        }
-
-        ensureOrganiserProfile(user);
-
-        String recurrenceDaysStr = null;
-        if (request.getRecurrenceDaysOfWeek() != null && !request.getRecurrenceDaysOfWeek().isEmpty()) {
-            recurrenceDaysStr = String.join(",", request.getRecurrenceDaysOfWeek());
-        }
-
-        Event event = Event.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .imageUrl(request.getImageUrl())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .registrationDeadline(request.getRegistrationDeadline())
-                .venue(request.getVenue())
-                .address(request.getAddress())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .ticketPrice(request.getTicketPrice() != null ? request.getTicketPrice() : BigDecimal.ZERO)
-                .isFree(request.isFree())
-                .capacity(request.getCapacity())
-                .visibility(request.getVisibility())
-                .requiresApproval(request.isRequiresApproval())
-                .status(EventStatus.DRAFT)
-                .organiser(user)
-                .recurrenceType(request.getRecurrenceType() != null ? request.getRecurrenceType() : RecurrenceType.NONE)
-                .recurrenceInterval(request.getRecurrenceInterval())
-                .recurrenceDaysOfWeek(recurrenceDaysStr)
-                .recurrenceEndDate(request.getRecurrenceEndDate())
-                .recurrenceCount(request.getRecurrenceCount())
-                .occurrenceIndex(1)
-                .build();
-
-        if (request.getCityId() != null) {
-            event.setCity(cityService.getEntityById(request.getCityId()));
-        }
-        if (request.getCategoryId() != null) {
-            event.setCategory(categoryService.getEntityById(request.getCategoryId()));
-        }
-
-        Event savedEvent = eventRepository.save(event);
-
-        if (request.getSpeakers() != null && !request.getSpeakers().isEmpty()) {
-            for (SpeakerRequest speakerRequest : request.getSpeakers()) {
-                Speaker speaker = Speaker.builder()
-                        .name(speakerRequest.getName())
-                        .title(speakerRequest.getTitle())
-                        .bio(speakerRequest.getBio())
-                        .imageUrl(speakerRequest.getImageUrl())
-                        .event(savedEvent)
-                        .build();
-                savedEvent.getSpeakers().add(speaker);
-            }
-            savedEvent = eventRepository.save(savedEvent);
-        }
-
-        if (request.getRecurrenceType() != null && request.getRecurrenceType() != RecurrenceType.NONE) {
-            createRecurringEventInstances(savedEvent, request);
-        }
 
         try {
             notificationService.notifyAdminsEventCreated(savedEvent);
@@ -782,6 +723,7 @@ public class EventService {
         log.info("Cancelled recurring series for event: {}", event.getId());
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getAllEventsForAdmin(String search, String status, Pageable pageable) {
         Page<Event> events;
         EventStatus eventStatus = null;
@@ -805,6 +747,7 @@ public class EventService {
         return PageResponse.from(events, EventResponse::fromEntity);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getPendingEventsForAdmin(Pageable pageable) {
         Page<Event> events = eventRepository.findByStatus(EventStatus.DRAFT, pageable);
         return PageResponse.from(events, EventResponse::fromEntity);
@@ -941,67 +884,6 @@ public class EventService {
     }
 
     @Transactional
-    public void deleteEventByUser(UUID eventId, User user) {
-        deleteEventByOrganiser(eventId, user);
-    }
-
-    @Transactional
-    public EventResponse updateEventByUser(UUID eventId, User user, EventCreateRequest request) {
-        Event event = getEntityById(eventId);
-
-        if (!event.getOrganiser().getId().equals(user.getId())) {
-            throw new BadRequestException("You do not have permission to update this event");
-        }
-
-        if (event.getStatus() == EventStatus.CANCELLED) {
-            throw new BadRequestException("Cannot edit a cancelled event");
-        }
-
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setImageUrl(request.getImageUrl());
-        event.setStartTime(request.getStartTime());
-        event.setEndTime(request.getEndTime());
-        event.setRegistrationDeadline(request.getRegistrationDeadline());
-        event.setVenue(request.getVenue());
-        event.setAddress(request.getAddress());
-        event.setLatitude(request.getLatitude());
-        event.setLongitude(request.getLongitude());
-        event.setTicketPrice(request.getTicketPrice() != null ? request.getTicketPrice() : BigDecimal.ZERO);
-        event.setCapacity(request.getCapacity());
-        event.setVisibility(request.getVisibility());
-        event.setRequiresApproval(request.isRequiresApproval());
-
-        if (request.getCategoryId() != null) {
-            Category category = categoryService.getEntityById(request.getCategoryId());
-            event.setCategory(category);
-        }
-
-        if (request.getCityId() != null) {
-            City city = cityService.getEntityById(request.getCityId());
-            event.setCity(city);
-        }
-
-        boolean wasRejected = event.getStatus() == EventStatus.REJECTED;
-        if (wasRejected) {
-            event.setStatus(EventStatus.DRAFT);
-            event.setRejectionReason(null);
-        }
-
-        Event savedEvent = eventRepository.save(event);
-
-        if (wasRejected) {
-            try {
-                notificationService.notifyAdminEventResubmitted(savedEvent);
-            } catch (Exception e) {
-                log.error("Failed to send resubmit notification: {}", e.getMessage(), e);
-            }
-        }
-
-        return EventResponse.fromEntity(savedEvent);
-    }
-
-    @Transactional
     public void incrementApprovedCount(Event event) {
         event.setApprovedCount(event.getApprovedCount() + 1);
         eventRepository.save(event);
@@ -1015,14 +897,17 @@ public class EventService {
         }
     }
 
+    @Transactional(readOnly = true)
     public long countByOrganiser(User organiser) {
         return eventRepository.countByOrganiser(organiser);
     }
 
+    @Transactional(readOnly = true)
     public long countByOrganiserAndStatus(User organiser, EventStatus status) {
         return eventRepository.countByOrganiserAndStatus(organiser, status);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<EventResponse> getEventsBySpeaker(String speakerName, Pageable pageable) {
         Page<Event> events = eventRepository.findEventsBySpeakerName(speakerName, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));

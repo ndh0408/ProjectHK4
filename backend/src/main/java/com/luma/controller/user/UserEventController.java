@@ -1,6 +1,5 @@
 package com.luma.controller.user;
 
-import com.luma.dto.request.EventCreateRequest;
 import com.luma.dto.request.QuestionRequest;
 import com.luma.dto.request.RegistrationWithAnswersRequest;
 import com.luma.dto.response.*;
@@ -33,7 +32,7 @@ public class UserEventController {
     private final CategoryService categoryService;
     private final CityService cityService;
     private final RegistrationQuestionService registrationQuestionService;
-    private final UserEventLimitService userEventLimitService;
+    private final FunnelAnalyticsService funnelAnalyticsService;
 
     @GetMapping("/upcoming")
     @Operation(summary = "Get upcoming events (next month)")
@@ -187,97 +186,16 @@ public class UserEventController {
         return ResponseEntity.ok(ApiResponse.success(questionService.getUserQuestions(user, pageable)));
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new event")
-    public ResponseEntity<ApiResponse<EventResponse>> createEvent(
-            @Valid @RequestBody EventCreateRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-
-        userEventLimitService.validateEventCreation(user.getId());
-        if (request.getCapacity() != null) {
-            userEventLimitService.validateAttendeeCapacity(request.getCapacity());
-        }
-
-        EventResponse response = eventService.createEventForUser(user, request);
-
-        userEventLimitService.useEventSlot(user.getId());
-
-        return ResponseEntity.ok(ApiResponse.success("Event created successfully", response));
-    }
-
-    @GetMapping("/my-events")
-    @Operation(summary = "Get events created by the current user")
-    public ResponseEntity<ApiResponse<PageResponse<EventResponse>>> getMyCreatedEvents(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20) Pageable pageable) {
-        if (userDetails == null) {
-            throw new com.luma.exception.UnauthorizedException("Authentication required. Please login again.");
-        }
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        return ResponseEntity.ok(ApiResponse.success(eventService.getEventsByOrganiser(user, pageable)));
-    }
-
-    @DeleteMapping("/{eventId}")
-    @Operation(summary = "Delete an event created by the current user")
-    public ResponseEntity<ApiResponse<Void>> deleteMyEvent(
-            @PathVariable UUID eventId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        eventService.deleteEventByUser(eventId, user);
-        return ResponseEntity.ok(ApiResponse.success("Event deleted successfully", null));
-    }
-
-    @PutMapping("/{eventId}")
-    @Operation(summary = "Update an event created by the current user")
-    public ResponseEntity<ApiResponse<EventResponse>> updateMyEvent(
-            @PathVariable UUID eventId,
-            @Valid @RequestBody EventCreateRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        EventResponse response = eventService.updateEventByUser(eventId, user, request);
-        return ResponseEntity.ok(ApiResponse.success("Event updated successfully", response));
-    }
-
-    @GetMapping("/{eventId}/registrations")
-    @Operation(summary = "Get registrations for an event created by the current user")
-    public ResponseEntity<ApiResponse<PageResponse<RegistrationResponse>>> getEventRegistrations(
+    @PostMapping("/{eventId}/track-view")
+    @Operation(summary = "Track event view for funnel analytics")
+    public ResponseEntity<ApiResponse<Void>> trackEventView(
             @PathVariable UUID eventId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 50) Pageable pageable) {
+            @RequestParam(required = false) String sessionId) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        PageResponse<RegistrationResponse> response = registrationService.getRegistrationsByEventForOwner(user, eventId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        com.luma.entity.Event event = eventService.getEntityById(eventId);
+        funnelAnalyticsService.trackEventView(event, user, sessionId);
+        return ResponseEntity.ok(ApiResponse.success("View tracked", null));
     }
 
-    @PutMapping("/registrations/{registrationId}/approve")
-    @Operation(summary = "Approve a registration for user's event")
-    public ResponseEntity<ApiResponse<RegistrationResponse>> approveRegistration(
-            @PathVariable UUID registrationId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        RegistrationResponse response = registrationService.approveRegistrationByOwner(registrationId, user);
-        return ResponseEntity.ok(ApiResponse.success("Registration approved successfully", response));
-    }
-
-    @PutMapping("/registrations/{registrationId}/reject")
-    @Operation(summary = "Reject a registration for user's event")
-    public ResponseEntity<ApiResponse<RegistrationResponse>> rejectRegistration(
-            @PathVariable UUID registrationId,
-            @RequestParam(required = false) String reason,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        RegistrationResponse response = registrationService.rejectRegistrationByOwner(registrationId, user, reason);
-        return ResponseEntity.ok(ApiResponse.success("Registration rejected successfully", response));
-    }
-
-    @PutMapping("/registrations/{registrationId}/check-in")
-    @Operation(summary = "Check in a registration for user's event")
-    public ResponseEntity<ApiResponse<RegistrationResponse>> checkInRegistration(
-            @PathVariable UUID registrationId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getEntityByEmail(userDetails.getUsername());
-        RegistrationResponse response = registrationService.checkInRegistrationByOwner(registrationId, user);
-        return ResponseEntity.ok(ApiResponse.success("Check-in successful", response));
-    }
 }

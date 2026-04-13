@@ -4,9 +4,10 @@ import '../constants/api_constants.dart';
 import '../storage/secure_storage.dart';
 
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this._storage);
+  AuthInterceptor(this._storage, this._dio);
 
   final SecureStorageService _storage;
+  final Dio _dio;
 
   @override
   Future<void> onRequest(
@@ -107,8 +108,7 @@ class AuthInterceptor extends Interceptor {
       final token = await _storage.read(key: StorageKeys.accessToken);
       options.headers['Authorization'] = 'Bearer $token';
 
-      final dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
-      return await dio.fetch<dynamic>(options);
+      return await _dio.fetch<dynamic>(options);
     } catch (_) {
       return null;
     }

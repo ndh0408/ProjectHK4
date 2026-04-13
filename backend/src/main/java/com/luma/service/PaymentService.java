@@ -43,6 +43,7 @@ public class PaymentService {
     private final TicketTypeRepository ticketTypeRepository;
     private final EventService eventService;
     private final CommissionService commissionService;
+    private final CouponService couponService;
 
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
@@ -87,6 +88,11 @@ public class PaymentService {
 
     @Transactional
     public PaymentIntentResponse createPaymentIntent(UUID registrationId, User user) {
+        return createPaymentIntent(registrationId, user, null);
+    }
+
+    @Transactional
+    public PaymentIntentResponse createPaymentIntent(UUID registrationId, User user, String couponCode) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
 
@@ -96,6 +102,23 @@ public class PaymentService {
 
         Event event = registration.getEvent();
         BigDecimal totalPrice = getActualPrice(registration);
+
+        if (couponCode != null && !couponCode.isBlank()) {
+            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId());
+            if (couponResult.isValid()) {
+                couponService.applyCoupon(couponCode, registration, user);
+                totalPrice = couponResult.getFinalAmount();
+                if (totalPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                    registration.setStatus(com.luma.entity.enums.RegistrationStatus.APPROVED);
+                    registration.setApprovedAt(LocalDateTime.now());
+                    registrationRepository.save(registration);
+                    return PaymentIntentResponse.builder()
+                            .amount(BigDecimal.ZERO)
+                            .currency(defaultCurrency)
+                            .build();
+                }
+            }
+        }
 
         if (!isPaymentRequired(registration)) {
             throw new BadRequestException("This event is free and doesn't require payment");
@@ -404,6 +427,11 @@ public class PaymentService {
 
     @Transactional
     public PaymentIntentResponse createCheckoutSession(UUID registrationId, User user) {
+        return createCheckoutSession(registrationId, user, null);
+    }
+
+    @Transactional
+    public PaymentIntentResponse createCheckoutSession(UUID registrationId, User user, String couponCode) {
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
 
@@ -416,6 +444,23 @@ public class PaymentService {
 
         if (!isPaymentRequired(registration)) {
             throw new BadRequestException("This event is free and doesn't require payment");
+        }
+
+        if (couponCode != null && !couponCode.isBlank()) {
+            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId());
+            if (couponResult.isValid()) {
+                couponService.applyCoupon(couponCode, registration, user);
+                totalPrice = couponResult.getFinalAmount();
+                if (totalPrice.compareTo(BigDecimal.ZERO) <= 0) {
+                    registration.setStatus(com.luma.entity.enums.RegistrationStatus.APPROVED);
+                    registration.setApprovedAt(LocalDateTime.now());
+                    registrationRepository.save(registration);
+                    return PaymentIntentResponse.builder()
+                            .amount(BigDecimal.ZERO)
+                            .currency(defaultCurrency)
+                            .build();
+                }
+            }
         }
 
         if (paymentRepository.existsByRegistrationId(registrationId)) {

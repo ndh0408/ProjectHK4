@@ -202,6 +202,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     List<Event> findByStatusAndEndTimeBefore(EventStatus status, LocalDateTime dateTime);
 
+    List<Event> findByStatusAndEndTimeBetween(EventStatus status, LocalDateTime start, LocalDateTime end);
+
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     long countByOrganiserId(UUID organiserId);
@@ -235,4 +237,42 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "GROUP BY e.id, e.title, u.full_name, e.image_url, e.capacity " +
            "ORDER BY reg_count DESC", nativeQuery = true)
     List<Object[]> findTopEventsByRegistrations(@Param("limit") int limit);
+
+    @Query("SELECT e FROM Event e LEFT JOIN FETCH e.organiser WHERE e.imageUrl IS NOT NULL")
+    Page<Event> findByImageUrlIsNotNull(Pageable pageable);
+
+    @Query("SELECT e FROM Event e LEFT JOIN FETCH e.organiser WHERE e.category.id = :categoryId AND e.imageUrl IS NOT NULL")
+    Page<Event> findByCategoryIdAndImageUrlIsNotNull(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.organiser.id = :organiserId ORDER BY e.startTime DESC")
+    List<Event> findByOrganiserIdOrderByStartTimeDesc(@Param("organiserId") UUID organiserId);
+
+    @Query("SELECT e FROM Event e WHERE e.category.id = :categoryId AND e.status = 'PUBLISHED' " +
+           "AND e.description IS NOT NULL AND LENGTH(e.description) > 200 " +
+           "ORDER BY e.approvedCount DESC")
+    List<Event> findTopEventsByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.category.id = :categoryId AND e.status = 'PUBLISHED' " +
+           "AND e.capacity > 0 AND e.approvedCount > 0 ORDER BY (CAST(e.approvedCount AS double) / e.capacity) DESC")
+    List<Event> findHighFillRateEventsByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.category.id = :categoryId AND e.status IN ('PUBLISHED', 'COMPLETED') " +
+           "AND e.ticketPrice IS NOT NULL AND e.ticketPrice > 0")
+    List<Event> findPaidEventsByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.status = 'REJECTED' AND e.rejectionReason IS NOT NULL " +
+           "ORDER BY e.updatedAt DESC")
+    List<Event> findRecentRejectedEvents(Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.status = 'PUBLISHED' AND e.organiser.id = :organiserId " +
+           "ORDER BY e.approvedCount DESC")
+    List<Event> findTopEventsByOrganiser(@Param("organiserId") UUID organiserId, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
+           "AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "AND e.startTime > :now")
+    List<Event> searchEventsByKeyword(@Param("keyword") String keyword,
+                                       @Param("now") LocalDateTime now,
+                                       Pageable pageable);
 }

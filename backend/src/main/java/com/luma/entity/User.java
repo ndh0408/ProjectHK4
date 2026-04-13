@@ -44,6 +44,16 @@ public class User {
     @Column(name = "signature_url")
     private String signatureUrl;
 
+    @Column(columnDefinition = "NVARCHAR(1000)")
+    private String bio;
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String interests;
+
+    @Column(name = "networking_visible", nullable = false, columnDefinition = "BIT DEFAULT 1")
+    @Builder.Default
+    private boolean networkingVisible = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

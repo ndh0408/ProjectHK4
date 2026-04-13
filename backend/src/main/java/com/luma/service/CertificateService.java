@@ -2,33 +2,15 @@ package com.luma.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.itextpdf.io.image.ImageData;
-import com.itextpdf.io.image.ImageDataFactory;
-import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Image;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.HorizontalAlignment;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import com.itextpdf.layout.properties.VerticalAlignment;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.Document;
 import com.luma.dto.response.CertificateResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.Certificate;
@@ -50,8 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -65,13 +45,12 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final RegistrationRepository registrationRepository;
     private final Cloudinary cloudinary;
+    private final EmailService emailService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
     private static final String CERTIFICATE_CODE_PREFIX = "CERT-";
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:mm a");
 
     @Transactional
     public CertificateResponse generateCertificate(UUID registrationId) {
@@ -124,6 +103,7 @@ public class CertificateService {
         return CertificateResponse.fromEntity(certificate);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<CertificateResponse> getUserCertificates(User user, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByUser(user, pageable);
 
@@ -137,6 +117,7 @@ public class CertificateService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<CertificateResponse> getOrganiserCertificates(User organiser, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByOrganiser(organiser, pageable);
 
@@ -150,6 +131,7 @@ public class CertificateService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<CertificateResponse> getEventCertificates(UUID eventId, User organiser, Pageable pageable) {
         Page<Certificate> certificates = certificateRepository.findByEventId(eventId, pageable);
 
@@ -170,6 +152,7 @@ public class CertificateService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public CertificateResponse verifyCertificate(String code) {
         Certificate certificate = certificateRepository.findByCertificateCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found or invalid"));
@@ -177,6 +160,7 @@ public class CertificateService {
         return CertificateResponse.fromEntity(certificate);
     }
 
+    @Transactional(readOnly = true)
     public byte[] downloadCertificate(UUID certificateId, User user) {
         Certificate certificate = certificateRepository.findById(certificateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found"));
@@ -188,6 +172,7 @@ public class CertificateService {
         return generateCertificatePdf(certificate.getRegistration(), certificate.getCertificateCode());
     }
 
+    @Transactional(readOnly = true)
     public byte[] getCertificatePdfByCode(String code) {
         Certificate certificate = certificateRepository.findByCertificateCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Certificate not found"));
@@ -195,6 +180,43 @@ public class CertificateService {
         return generateCertificatePdf(certificate.getRegistration(), certificate.getCertificateCode());
     }
 
+    @Transactional
+    public CertificateResponse sendCertificateByEmail(UUID registrationId, User user) {
+        Registration registration = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
+
+        if (!registration.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("You can only request certificates for your own registrations");
+        }
+
+        validateCertificateEligibility(registration);
+
+        Certificate certificate = certificateRepository.findByRegistration(registration)
+                .orElseGet(() -> {
+                    CertificateResponse response = generateCertificate(registrationId);
+                    return certificateRepository.findById(response.getId()).orElseThrow();
+                });
+
+        Event event = registration.getEvent();
+        User attendee = registration.getUser();
+
+        emailService.sendCertificateEmail(
+                attendee.getEmail(),
+                attendee.getFullName(),
+                event.getTitle(),
+                event.getStartTime(),
+                event.getOrganiser().getFullName(),
+                event.getVenue(),
+                certificate.getCertificateCode(),
+                certificate.getCertificateUrl()
+        );
+
+        log.info("Certificate email sent to {} for event {}", attendee.getEmail(), event.getTitle());
+
+        return CertificateResponse.fromEntity(certificate);
+    }
+
+    @Transactional(readOnly = true)
     public boolean isEligibleForCertificate(Registration registration) {
         try {
             validateCertificateEligibility(registration);
@@ -241,7 +263,6 @@ public class CertificateService {
             DeviceRgb darkColor = new DeviceRgb(45, 45, 45);
             DeviceRgb grayColor = new DeviceRgb(80, 80, 80);
 
-            PdfFont boldFont = PdfFontFactory.createFont("Helvetica-Bold");
             PdfFont regularFont = PdfFontFactory.createFont("Helvetica");
             PdfFont italicFont = PdfFontFactory.createFont("Helvetica-BoldOblique");
 
@@ -294,7 +315,6 @@ public class CertificateService {
 
             float contentStartX = darkPointX + 30;
             float contentWidth = pageWidth - contentStartX - 60;
-            float contentCenterX = contentStartX + (contentWidth / 2);
 
             canvas.beginText();
             canvas.setFontAndSize(italicFont, 48);
@@ -391,21 +411,6 @@ public class CertificateService {
         }
     }
 
-    private byte[] generateQRCode(String content) {
-        try {
-            QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, 200, 200);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            MatrixToImageWriter.writeToStream(bitMatrix, "PNG", baos);
-            return baos.toByteArray();
-
-        } catch (WriterException | IOException e) {
-            log.error("Failed to generate QR code", e);
-            throw new RuntimeException("Failed to generate QR code", e);
-        }
-    }
-
     private String uploadPdfToCloudinary(byte[] pdfBytes, String certificateCode) {
         try {
             Map<String, Object> options = ObjectUtils.asMap(
@@ -425,21 +430,4 @@ public class CertificateService {
         }
     }
 
-    private byte[] downloadImage(String imageUrl) {
-        try {
-            URL url = new URL(imageUrl);
-            try (InputStream is = url.openStream();
-                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    baos.write(buffer, 0, bytesRead);
-                }
-                return baos.toByteArray();
-            }
-        } catch (IOException e) {
-            log.warn("Failed to download image from {}: {}", imageUrl, e.getMessage());
-            return null;
-        }
-    }
 }

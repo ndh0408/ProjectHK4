@@ -18,8 +18,6 @@ public interface CertificateRepository extends JpaRepository<Certificate, UUID> 
 
     Optional<Certificate> findByRegistration(Registration registration);
 
-    Optional<Certificate> findByRegistrationId(UUID registrationId);
-
     Optional<Certificate> findByCertificateCode(String certificateCode);
 
     boolean existsByRegistration(Registration registration);
@@ -27,18 +25,9 @@ public interface CertificateRepository extends JpaRepository<Certificate, UUID> 
     @Query("SELECT c FROM Certificate c WHERE c.registration.user = :user ORDER BY c.generatedAt DESC")
     Page<Certificate> findByUser(@Param("user") User user, Pageable pageable);
 
-    @Query("SELECT COUNT(c) FROM Certificate c WHERE c.registration.user = :user")
-    long countByUser(@Param("user") User user);
-
     @Query("SELECT c FROM Certificate c WHERE c.registration.event.organiser = :organiser ORDER BY c.generatedAt DESC")
     Page<Certificate> findByOrganiser(@Param("organiser") User organiser, Pageable pageable);
 
     @Query("SELECT c FROM Certificate c WHERE c.registration.event.id = :eventId ORDER BY c.generatedAt DESC")
     Page<Certificate> findByEventId(@Param("eventId") UUID eventId, Pageable pageable);
-
-    @Query("SELECT COUNT(c) FROM Certificate c WHERE c.registration.event.organiser = :organiser")
-    long countByOrganiser(@Param("organiser") User organiser);
-
-    @Query("SELECT COUNT(c) FROM Certificate c WHERE c.registration.event.id = :eventId")
-    long countByEventId(@Param("eventId") UUID eventId);
 }
