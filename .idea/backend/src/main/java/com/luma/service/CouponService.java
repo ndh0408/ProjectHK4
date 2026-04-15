@@ -1,0 +1,192 @@
+package com.luma.service;
+
+import com.luma.dto.request.CreateCouponRequest;
+import com.luma.dto.response.CouponResponse;
+import com.luma.dto.response.CouponValidationResponse;
+import com.luma.dto.response.PageResponse;
+import com.luma.entity.*;
+import com.luma.entity.enums.CouponStatus;
+import com.luma.exception.BadRequestException;
+import com.luma.exception.ResourceNotFoundException;
+import com.luma.repository.CouponRepository;
+import com.luma.repository.CouponUsageRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CouponService {
+
+    private final CouponRepository couponRepository;
+    private final CouponUsageRepository couponUsageRepository;
+    private final EventService eventService;
+
+    @Transactional
+    public CouponResponse createCoupon(CreateCouponRequest request, User creator) {
+        if (couponRepository.existsByCode(request.getCode().toUpperCase())) {
+            throw new BadRequestException("Coupon code already exists");
+        }
+
+        Coupon coupon = Coupon.builder()
+                .code(request.getCode().toUpperCase())
+                .description(request.getDescription())
+                .discountType(request.getDiscountType())
+                .discountValue(request.getDiscountValue())
+                .maxDiscountAmount(request.getMaxDiscountAmount())
+                .minOrderAmount(request.getMinOrderAmount())
+                .createdBy(creator)
+                .maxUsageCount(request.getMaxUsageCount())
+                .maxUsagePerUser(request.getMaxUsagePerUser())
+                .validFrom(request.getValidFrom())
+                .validUntil(request.getValidUntil())
+                .build();
+
+        if (request.getEventId() != null) {
+            Event event = eventService.getEntityById(request.getEventId());
+            coupon.setEvent(event);
+        }
+
+        coupon = couponRepository.save(coupon);
+        log.info("Coupon created: {} by user {}", coupon.getCode(), creator.getId());
+        return CouponResponse.fromEntity(coupon);
+    }
+
+    @Transactional(readOnly = true)
+    public CouponValidationResponse validateCoupon(String code, BigDecimal orderAmount, User user, UUID eventId) {
+        Coupon coupon = couponRepository.findActiveByCode(code.toUpperCase())
+                .orElse(null);
+
+        if (coupon == null) {
+            return CouponValidationResponse.builder()
+                    .valid(false)
+                    .message("Invalid coupon code")
+                    .build();
+        }
+
+        if (!coupon.isValid()) {
+            return CouponValidationResponse.builder()
+                    .valid(false)
+                    .message("This coupon has expired or is no longer valid")
+                    .build();
+        }
+
+        if (coupon.getEvent() != null && !coupon.getEvent().getId().equals(eventId)) {
+            return CouponValidationResponse.builder()
+                    .valid(false)
+                    .message("This coupon is not valid for this event")
+                    .build();
+        }
+
+        if (coupon.getMinOrderAmount() != null && orderAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
+            return CouponValidationResponse.builder()
+                    .valid(false)
+                    .message("Minimum order amount is " + coupon.getMinOrderAmount())
+                    .build();
+        }
+
+        if (coupon.getMaxUsagePerUser() != null) {
+            long userUsage = couponUsageRepository.countByCouponAndUser(coupon, user);
+            if (userUsage >= coupon.getMaxUsagePerUser()) {
+                return CouponValidationResponse.builder()
+                        .valid(false)
+                        .message("You have already used this coupon the maximum number of times")
+                        .build();
+            }
+        }
+
+        BigDecimal discount = coupon.calculateDiscount(orderAmount);
+        BigDecimal finalAmount = orderAmount.subtract(discount);
+
+        return CouponValidationResponse.builder()
+                .valid(true)
+                .message("Coupon applied successfully")
+                .code(coupon.getCode())
+                .description(coupon.getDescription())
+                .discountAmount(discount)
+                .originalAmount(orderAmount)
+                .finalAmount(finalAmount.max(BigDecimal.ZERO))
+                .build();
+    }
+
+    @Transactional
+    public CouponUsage applyCoupon(String code, Registration registration, User user) {
+        Coupon coupon = couponRepository.findActiveByCode(code.toUpperCase())
+                .orElseThrow(() -> new BadRequestException("Invalid coupon code"));
+
+        if (!coupon.isValid()) {
+            throw new BadRequestException("Coupon is no longer valid");
+        }
+
+        if (couponUsageRepository.findByRegistrationId(registration.getId()).isPresent()) {
+            throw new BadRequestException("A coupon has already been applied to this registration");
+        }
+
+        BigDecimal orderAmount = getOrderAmount(registration);
+        BigDecimal discount = coupon.calculateDiscount(orderAmount);
+
+        CouponUsage usage = CouponUsage.builder()
+                .coupon(coupon)
+                .user(user)
+                .registration(registration)
+                .discountAmount(discount)
+                .originalAmount(orderAmount)
+                .finalAmount(orderAmount.subtract(discount).max(BigDecimal.ZERO))
+                .build();
+
+        couponUsageRepository.save(usage);
+        couponRepository.incrementUsedCount(coupon.getId());
+
+        registration.setCouponCode(coupon.getCode());
+
+        return usage;
+    }
+
+    private BigDecimal getOrderAmount(Registration registration) {
+        if (registration.getTicketType() != null) {
+            int qty = registration.getQuantity() != null ? registration.getQuantity() : 1;
+            return registration.getTicketType().getPrice().multiply(BigDecimal.valueOf(qty));
+        }
+        return registration.getEvent().getTicketPrice() != null
+                ? registration.getEvent().getTicketPrice()
+                : BigDecimal.ZERO;
+    }
+
+    public PageResponse<CouponResponse> getOrganiserCoupons(User organiser, Pageable pageable) {
+        Page<Coupon> page = couponRepository.findByCreatedByOrderByCreatedAtDesc(organiser, pageable);
+        return PageResponse.from(page, CouponResponse::fromEntity);
+    }
+
+    @Transactional
+    public CouponResponse disableCoupon(UUID couponId, User organiser) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon not found"));
+        if (!coupon.getCreatedBy().getId().equals(organiser.getId())) {
+            throw new BadRequestException("You can only manage your own coupons");
+        }
+        coupon.setStatus(CouponStatus.DISABLED);
+        couponRepository.save(coupon);
+        return CouponResponse.fromEntity(coupon);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CouponResponse> getAvailableCouponsForUser(UUID eventId) {
+        List<Coupon> coupons;
+        if (eventId != null) {
+            coupons = couponRepository.findAvailableCouponsByEvent(eventId);
+        } else {
+            coupons = couponRepository.findAvailableGlobalCoupons();
+        }
+        return coupons.stream()
+                .map(CouponResponse::fromEntity)
+                .toList();
+    }
+}
