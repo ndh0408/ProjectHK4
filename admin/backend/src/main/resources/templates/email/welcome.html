@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to LUMA</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .email-wrapper { background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 40px; text-align: center; }
+        .logo { font-size: 32px; font-weight: bold; color: #ffffff; letter-spacing: 2px; margin-bottom: 10px; }
+        .tagline { color: rgba(255,255,255,0.9); font-size: 16px; }
+        .content { padding: 40px; }
+        .greeting { font-size: 22px; margin-bottom: 20px; font-weight: 600; }
+        .feature-grid { margin: 30px 0; }
+        .feature-item { display: flex; align-items: flex-start; margin-bottom: 20px; }
+        .feature-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white; font-size: 18px; flex-shrink: 0; }
+        .feature-text { }
+        .feature-title { font-weight: 600; margin-bottom: 4px; }
+        .feature-desc { color: #666; font-size: 14px; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff !important; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; margin: 20px 0; font-size: 16px; }
+        .footer { background-color: #f8f9fa; padding: 30px 40px; text-align: center; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-wrapper">
+            <div class="header">
+                <div class="logo">LUMA</div>
+                <div class="tagline">Delighthat events start here</div>
+            </div>
+            <div class="content">
+                <p class="greeting">Welcome to LUMA, <span th:text="${userName}">there</span>!</p>
+
+                <p>We're excited to have you join our community. LUMA is your gateway to discovering and creating amazing events.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">1</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Discover Events</div>
+                            <div class="feature-desc">Find events that match your interests, from tech meetups to art exhibitions.</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">2</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Easy Registration</div>
+                            <div class="feature-desc">Register for events with just a few taps and get your digital ticket instantly.</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">3</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Stay Connected</div>
+                            <div class="feature-desc">Chat with organizers, get reminders, and never miss an event.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="text-align: center;">
+                    <a th:href="${exploreUrl}" class="btn">Explore Events</a>
+                </p>
+
+                <p>Have questions? We're here to help!</p>
+            </div>
+            <div class="footer">
+                <p>This email was sent by LUMA Events</p>
+                <p style="font-size: 12px; color: #999;">Welcome to LUMA! We're glad to have you.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

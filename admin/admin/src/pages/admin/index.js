@@ -1,0 +1,9 @@
+export { default as AdminDashboard } from './Dashboard';
+export { default as AdminUsers } from './Users';
+export { default as AdminOrganisers } from './Organisers';
+export { default as AdminEvents } from './Events';
+export { default as AdminCategories } from './Categories';
+export { default as AdminCities } from './Cities';
+export { default as AdminNotifications } from './Notifications';
+export { default as AdminBoosts } from './Boosts';
+export { default as AdminRevenue } from './Revenue';

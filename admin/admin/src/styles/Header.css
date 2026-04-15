@@ -1,0 +1,217 @@
+/* ========================================
+   LUMA Admin - Header Styles
+   ======================================== */
+
+.header {
+    height: var(--header-height);
+    background: white;
+    border-bottom: 1px solid var(--neutral-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: var(--sidebar-width);
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 600px) {
+    .header {
+        left: 0;
+    }
+}
+
+/* Search Bar */
+.header-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--neutral-100);
+    border-radius: var(--radius-lg);
+    padding: 10px 16px;
+    max-width: 400px;
+    flex: 1;
+    margin-right: 24px;
+}
+
+.header-search input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 0.9rem;
+    color: var(--neutral-700);
+    width: 100%;
+}
+
+.header-search input::placeholder {
+    color: var(--neutral-400);
+}
+
+.header-search svg {
+    color: var(--neutral-400);
+    font-size: 20px;
+}
+
+/* Actions */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.header-icon-btn:hover {
+    background: var(--neutral-200);
+    color: var(--primary-600);
+}
+
+.header-icon-btn .badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--error-500);
+    border-radius: var(--radius-full);
+    border: 2px solid white;
+}
+
+/* User Menu */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px 6px 6px;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-left: 8px;
+}
+
+.header-user:hover {
+    background: var(--neutral-100);
+}
+
+.header-user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    background: var(--gradient-purple-pink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.header-user-info {
+    text-align: right;
+}
+
+.header-user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--neutral-800);
+}
+
+.header-user-role {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+}
+
+/* Dropdown Menu */
+.header-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 220px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--neutral-200);
+    padding: 8px;
+    z-index: 1001;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-fast);
+}
+
+.header-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.header-dropdown-header {
+    padding: 12px;
+    border-bottom: 1px solid var(--neutral-100);
+    margin-bottom: 8px;
+}
+
+.header-dropdown-header h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--neutral-800);
+    margin: 0;
+}
+
+.header-dropdown-header p {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    margin: 4px 0 0 0;
+}
+
+.header-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--neutral-700);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.header-dropdown-item:hover {
+    background: var(--neutral-100);
+    color: var(--primary-600);
+}
+
+.header-dropdown-item.danger:hover {
+    background: var(--error-50);
+    color: var(--error-600);
+}
+
+.header-dropdown-item svg {
+    font-size: 18px;
+}
+
+.header-dropdown-divider {
+    height: 1px;
+    background: var(--neutral-100);
+    margin: 8px 0;
+}
