@@ -1747,6 +1747,23 @@ class _ReviewsSection extends ConsumerWidget {
                 if (event.reviewCount > 3)
                   TextButton(
                     onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        builder: (_) => DraggableScrollableSheet(
+                          initialChildSize: 0.7,
+                          maxChildSize: 0.9,
+                          minChildSize: 0.4,
+                          expand: false,
+                          builder: (context, scrollController) => _AllReviewsSheet(
+                            eventId: event.id,
+                            scrollController: scrollController,
+                          ),
+                        ),
+                      );
                     },
                     child: Text(l10n.seeAllReviews),
                   ),
@@ -1978,6 +1995,79 @@ class _BookmarkButton extends ConsumerWidget {
           );
         }
       },
+    );
+  }
+}
+
+class _AllReviewsSheet extends ConsumerStatefulWidget {
+  const _AllReviewsSheet({required this.eventId, required this.scrollController});
+  final String eventId;
+  final ScrollController scrollController;
+
+  @override
+  ConsumerState<_AllReviewsSheet> createState() => _AllReviewsSheetState();
+}
+
+class _AllReviewsSheetState extends ConsumerState<_AllReviewsSheet> {
+  List<Review> _reviews = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final api = ref.read(apiServiceProvider);
+      final response = await api.getEventReviews(widget.eventId, size: 50);
+      if (mounted) {
+        setState(() {
+          _reviews = response.content;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.divider,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            l10n.seeAllReviews,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _reviews.isEmpty
+                  ? Center(child: Text(l10n.noReviewsYet))
+                  : ListView.builder(
+                      controller: widget.scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _reviews.length,
+                      itemBuilder: (context, index) =>
+                          _ReviewCard(review: _reviews[index]),
+                    ),
+        ),
+      ],
     );
   }
 }
