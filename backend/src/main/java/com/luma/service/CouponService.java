@@ -52,6 +52,9 @@ public class CouponService {
 
         if (request.getEventId() != null) {
             Event event = eventService.getEntityById(request.getEventId());
+            if (!event.getOrganiser().getId().equals(creator.getId())) {
+                throw new BadRequestException("You can only create coupons for your own events");
+            }
             coupon.setEvent(event);
         }
 

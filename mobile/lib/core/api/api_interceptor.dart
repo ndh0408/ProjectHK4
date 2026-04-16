@@ -15,8 +15,6 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     final token = await _storage.read(key: StorageKeys.accessToken);
-    print(
-        '=== AuthInterceptor: token=${token != null ? "${token.substring(0, 20)}..." : "NULL"} for ${options.path}');
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -64,11 +62,9 @@ class AuthInterceptor extends Interceptor {
     try {
       final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
       if (refreshToken == null) {
-        print('=== No refresh token available');
         return false;
       }
 
-      print('=== Trying to refresh token...');
       final dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
       final response = await dio.post<Map<String, dynamic>>(
         ApiConstants.refreshToken,
@@ -92,13 +88,12 @@ class AuthInterceptor extends Interceptor {
               key: StorageKeys.refreshToken,
               value: newRefreshToken,
             );
-            print('=== Token refreshed successfully');
             return true;
           }
         }
       }
-    } catch (e) {
-      print('=== Refresh token failed: $e');
+    } catch (_) {
+      // Token refresh failed silently - user will be redirected to login
     }
     return false;
   }

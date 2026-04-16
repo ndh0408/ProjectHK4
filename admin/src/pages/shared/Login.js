@@ -39,8 +39,8 @@ const Login = () => {
 
         if (!password) {
             errors.password = 'Password is required';
-        } else if (password.length < 6) {
-            errors.password = 'Password must be at least 6 characters';
+        } else if (password.length < 8) {
+            errors.password = 'Password must be at least 8 characters';
         }
 
         setFieldErrors(errors);
@@ -187,7 +187,7 @@ const Login = () => {
                                                 setFieldErrors({ ...fieldErrors, password: '' });
                                             }
                                         }}
-                                        placeholder="Enter your password (min 6 characters)"
+                                        placeholder="Enter your password (min 8 characters)"
                                     />
                                     <button
                                         type="button"
