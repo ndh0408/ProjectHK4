@@ -81,11 +81,6 @@ class NotificationService {
   Future<void> _connectStomp() async {
     if (_userId == null) return;
 
-    if (kIsWeb) {
-      debugPrint('WebSocket disabled on web platform, using polling only');
-      return;
-    }
-
     try {
       final storage = _ref.read(secureStorageProvider);
       final token = await storage.read(key: 'access_token');
@@ -95,6 +90,7 @@ class NotificationService {
         return;
       }
 
+      // Use SockJS for both web and native platforms
       _stompClient = StompClient(
         config: StompConfig.sockJS(
           url: ApiConstants.wsBaseUrl,
@@ -113,7 +109,7 @@ class NotificationService {
       );
 
       _stompClient!.activate();
-      debugPrint('STOMP client activating...');
+      debugPrint('STOMP client activating for notifications...');
     } catch (e) {
       debugPrint('STOMP connection error: $e');
     }

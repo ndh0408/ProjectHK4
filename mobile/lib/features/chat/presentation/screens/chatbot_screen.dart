@@ -1,9 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../models/chatbot_message.dart';
 import '../providers/chatbot_provider.dart';
 
@@ -22,7 +23,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     '🔍 Show me tech events in Hanoi',
     '🎉 What\'s happening this weekend?',
     '💡 Recommend something fun',
-    '🎓 Find events in my city',
+    '📂 Show all categories',
     '💰 What are free events?',
     '🌟 Show trending events',
   ];
@@ -55,6 +56,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
+    _messageController.clear();
     await ref.read(chatbotProvider.notifier).sendMessage(message);
     _scrollToBottom();
   }
@@ -64,9 +66,31 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final chatState = ref.watch(chatbotProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: const Text('LUMA Assistant'),
+        title: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.auto_awesome, size: 18),
+            ),
+            const SizedBox(width: 10),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('LUMA Assistant', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('AI-powered event discovery', style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal)),
+              ],
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -75,9 +99,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            onPressed: () {
-              _showClearDialog(context);
-            },
+            onPressed: () => _showClearDialog(context),
             tooltip: 'Clear chat',
           ),
         ],
@@ -98,6 +120,9 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                       },
                     ),
             ),
+            // Quick suggestions when chatting
+            if (messages.isNotEmpty && messages.last.isUser == false && !messages.last.isLoading)
+              _buildQuickSuggestions(),
             _buildInputArea(context),
           ],
         ),
@@ -116,9 +141,29 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             ],
           ),
         ),
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+
+  Widget _buildQuickSuggestions() {
+    final suggestions = ['More events', 'Free events', 'This weekend', 'Categories'];
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: suggestions.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          return ActionChip(
+            label: Text(suggestions[index], style: const TextStyle(fontSize: 12)),
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
+            onPressed: () => _sendMessage(suggestions[index]),
+            visualDensity: VisualDensity.compact,
+          );
+        },
       ),
     );
   }
@@ -131,35 +176,36 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const SizedBox(height: 24),
               Container(
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.1),
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-                child: Icon(
-                  Icons.auto_awesome,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
+                child: const Icon(Icons.auto_awesome, size: 40, color: Colors.white),
               ),
               const SizedBox(height: 24),
               const Text(
                 'LUMA Assistant',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Hi! I\'m here to help you discover amazing events.\nTap a suggestion or ask me anything:',
+              Text(
+                'Your AI-powered event discovery assistant.\nAsk me anything about events!',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Column(
                 children: _suggestedQuestions
                     .map((question) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 10),
                           child: _buildSuggestedQuestion(question),
                         ))
                     .toList(),
@@ -176,15 +222,26 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       onTap: () => _sendMessage(text),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Text(
-          text,
-          style: TextStyle(color: AppColors.primary, fontSize: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(text, style: TextStyle(color: AppColors.textPrimary, fontSize: 14)),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.primary.withOpacity(0.5)),
+          ],
         ),
       ),
     );
@@ -201,6 +258,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       );
     }
 
+    final isError = message.intent == 'ERROR';
+
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
@@ -208,62 +267,67 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
+            margin: const EdgeInsets.symmetric(vertical: 6),
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: message.isUser ? AppTheme.primaryColor : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: message.isUser
+                  ? AppColors.primary
+                  : isError
+                      ? AppColors.error.withOpacity(0.1)
+                      : Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(message.isUser ? 16 : 4),
+                bottomRight: Radius.circular(message.isUser ? 4 : 16),
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
               ],
               border: message.isUser
                   ? null
-                  : Border.all(color: Colors.grey[300]!),
+                  : isError
+                      ? Border.all(color: AppColors.error.withOpacity(0.3))
+                      : Border.all(color: Colors.grey[200]!),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  message.content,
-                  style: TextStyle(
-                    color: message.isUser ? Colors.white : Colors.black,
-                    fontSize: 15,
-                    height: 1.4,
-                  ),
-                ),
-                if (!message.isUser && message.intent != null && message.intent != 'ERROR')
+                if (isError)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Chip(
-                          label: Text(
-                            _formatIntent(message.intent!),
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          backgroundColor: Colors.grey[200],
-                        ),
-                        if (message.dataPointsUsed != null &&
-                            message.dataPointsUsed! > 0)
+                        Icon(Icons.warning_amber_rounded, size: 16, color: AppColors.error),
+                        const SizedBox(width: 4),
+                        Text('Error', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.error)),
+                      ],
+                    ),
+                  ),
+                _buildFormattedText(
+                  message.content,
+                  isUser: message.isUser,
+                ),
+                if (!message.isUser && message.intent != null && !isError
+                    && message.intent != 'OFF_TOPIC' && message.intent != 'GREETING')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildIntentChip(message.intent!),
+                        if (message.dataPointsUsed != null && message.dataPointsUsed! > 0)
                           Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Chip(
-                              label: Text(
-                                '${message.dataPointsUsed} items',
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                              visualDensity: VisualDensity.compact,
-                              backgroundColor: Colors.grey[200],
-                            ),
+                            padding: const EdgeInsets.only(left: 6),
+                            child: _buildInfoChip('${message.dataPointsUsed} items', Icons.dataset_outlined),
                           ),
                       ],
                     ),
@@ -274,13 +338,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           // Event cards
           if (message.events != null && message.events!.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
               child: SizedBox(
-                height: 200,
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: ListView.builder(
+                height: 180,
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: message.events!.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
                   itemBuilder: (context, index) {
                     return _buildEventCard(context, message.events![index]);
                   },
@@ -292,47 +357,143 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
   }
 
+  /// Renders text with basic markdown: **bold**, bullet points
+  Widget _buildFormattedText(String text, {bool isUser = false}) {
+    final color = isUser ? Colors.white : AppColors.textPrimary;
+    final lines = text.split('\n');
+    final spans = <InlineSpan>[];
+
+    for (int i = 0; i < lines.length; i++) {
+      if (i > 0) spans.add(const TextSpan(text: '\n'));
+      final line = lines[i];
+
+      // Handle bullet points
+      String processedLine = line;
+      if (line.trimLeft().startsWith('• ') || line.trimLeft().startsWith('- ')) {
+        processedLine = line;
+      }
+
+      // Parse **bold** within line
+      final parts = _parseBold(processedLine);
+      for (final part in parts) {
+        spans.add(TextSpan(
+          text: part.text,
+          style: TextStyle(
+            color: color,
+            fontSize: 14.5,
+            height: 1.5,
+            fontWeight: part.isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ));
+      }
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+    );
+  }
+
+  List<_TextPart> _parseBold(String text) {
+    final parts = <_TextPart>[];
+    final regex = RegExp(r'\*\*(.*?)\*\*');
+    int lastEnd = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        parts.add(_TextPart(text.substring(lastEnd, match.start), false));
+      }
+      parts.add(_TextPart(match.group(1)!, true));
+      lastEnd = match.end;
+    }
+    if (lastEnd < text.length) {
+      parts.add(_TextPart(text.substring(lastEnd), false));
+    }
+    if (parts.isEmpty) {
+      parts.add(_TextPart(text, false));
+    }
+    return parts;
+  }
+
+  Widget _buildIntentChip(String intent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        _formatIntent(intent),
+        style: TextStyle(fontSize: 10, color: AppColors.primary, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.textSecondary),
+          const SizedBox(width: 3),
+          Text(text, style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEventCard(BuildContext context, ChatbotEvent event) {
     return GestureDetector(
-      onTap: () {
-        context.push('/event/${event.id}');
-      },
+      onTap: () => context.push('/event/${event.id}'),
       child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 12),
+        width: 200,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: Colors.grey[200]!),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
-              blurRadius: 4,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image placeholder
-            Container(
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.event,
-                  color: AppTheme.primaryColor,
-                  size: 40,
-                ),
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: SizedBox(
+                height: 80,
+                width: double.infinity,
+                child: event.imageUrl != null && event.imageUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: event.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: AppColors.primary.withOpacity(0.1),
+                          child: const Center(child: Icon(Icons.event, color: AppColors.primary)),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.primary.withOpacity(0.1),
+                          child: const Center(child: Icon(Icons.event, color: AppColors.primary)),
+                        ),
+                      )
+                    : Container(
+                        color: AppColors.primary.withOpacity(0.1),
+                        child: const Center(child: Icon(Icons.event, color: AppColors.primary, size: 32)),
+                      ),
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -340,34 +501,62 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                       event.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                      ),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, height: 1.2),
                     ),
-                    const SizedBox(height: 4),
-                    if (event.city != null)
-                      Text(
-                        '📍 ${event.city}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    const Spacer(),
+                    if (event.startTime != null)
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, size: 12, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              _formatEventDate(event.startTime!),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                            ),
+                          ),
+                        ],
                       ),
-                    if (event.price != null && event.price! > 0)
-                      Text(
-                        '💰 ${event.price!.toStringAsFixed(0)}đ',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (event.city != null) ...[
+                          Icon(Icons.location_on, size: 12, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              event.city!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                            ),
+                          ),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (event.price != null && event.price! > 0)
+                                ? AppColors.primary.withOpacity(0.1)
+                                : AppColors.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            (event.price != null && event.price! > 0)
+                                ? '\$${event.price!.toStringAsFixed(0)}'
+                                : 'Free',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: (event.price != null && event.price! > 0)
+                                  ? AppColors.primary
+                                  : AppColors.success,
+                            ),
+                          ),
                         ),
-                      ),
-                    if (event.approvedAttendees != null)
-                      Text(
-                        '👥 ${event.approvedAttendees}',
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
-                      ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -378,13 +567,22 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
   }
 
+  String _formatEventDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('MMM dd, yyyy').format(date);
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
   Widget _buildTypingAnimation() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -394,6 +592,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           _buildTypingDot(1),
           const SizedBox(width: 4),
           _buildTypingDot(2),
+          const SizedBox(width: 8),
+          Text('Thinking...', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontStyle: FontStyle.italic)),
         ],
       ),
     );
@@ -409,31 +609,36 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           width: 8,
           height: height,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.6 + (value.abs() * 0.4)),
+            color: AppColors.primary.withOpacity(0.6 + (value.abs() * 0.4)),
             borderRadius: BorderRadius.circular(4),
           ),
         );
       },
       onEnd: () {
-        setState(() {});
+        if (mounted) setState(() {});
       },
     );
   }
 
   Widget _buildInputArea(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-              ),
-            ],
+            border: Border.all(color: Colors.grey[300]!),
           ),
           child: Row(
             children: [
@@ -441,33 +646,28 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 child: TextField(
                   controller: _messageController,
                   decoration: InputDecoration(
-                    hintText: 'Ask me anything...',
+                    hintText: 'Ask me about events...',
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     hintStyle: TextStyle(color: Colors.grey[400]),
                   ),
                   textInputAction: TextInputAction.send,
-                  onSubmitted: (text) {
-                    _sendMessage(text);
-                    _messageController.clear();
-                  },
+                  onSubmitted: (text) => _sendMessage(text),
                   maxLines: null,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(right: 4),
-                child: IconButton(
-                  onPressed: () {
-                    final text = _messageController.text;
-                    _sendMessage(text);
-                    _messageController.clear();
-                  },
-                  icon: Icon(
-                    Icons.send_rounded,
-                    color: AppTheme.primaryColor,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () => _sendMessage(_messageController.text),
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
                   ),
                 ),
               ),
@@ -509,4 +709,10 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         .map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
         .join(' ');
   }
+}
+
+class _TextPart {
+  final String text;
+  final bool isBold;
+  _TextPart(this.text, this.isBold);
 }

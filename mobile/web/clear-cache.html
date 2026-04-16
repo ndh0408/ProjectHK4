@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Clear Cache</title></head>
+<body>
+<h2>Clearing Flutter cache...</h2>
+<pre id="log"></pre>
+<script>
+async function clearAll() {
+  const log = document.getElementById('log');
+
+  // 1. Unregister all service workers
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      await reg.unregister();
+      log.textContent += 'Unregistered service worker: ' + reg.scope + '\n';
+    }
+  }
+
+  // 2. Delete all caches
+  const cacheNames = await caches.keys();
+  for (const name of cacheNames) {
+    await caches.delete(name);
+    log.textContent += 'Deleted cache: ' + name + '\n';
+  }
+
+  log.textContent += '\nDone! Redirecting to app in 2 seconds...';
+  setTimeout(() => { window.location.href = '/#/home'; }, 2000);
+}
+clearAll();
+</script>
+</body>
+</html>

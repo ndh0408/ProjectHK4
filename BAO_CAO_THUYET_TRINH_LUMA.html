@@ -1046,7 +1046,64 @@
 
         <div class="how-block">
             <h5>📱 Cách sử dụng</h5>
-            <p>Khi người dùng vào danh sách chờ, hệ thống tự động tính điểm ưu tiên dựa trên: role (Organiser/Admin +20), subscription tier (VIP +40, Premium +30), lịch sử tham dự (max +20), verification (max +10), penalty cancel (max -20). Khi có chỗ trống, người có điểm cao nhất nhận thông báo "A Spot Opened Up!" với countdown 30 phút. Họ vào màn hình "Waitlist Offers" và bấm Accept hoặc Decline.</p>
+            <p>Khi người dùng vào danh sách chờ, hệ thống tự động tính điểm ưu tiên (priority score). Khi có chỗ trống, người có điểm cao nhất nhận thông báo "A Spot Opened Up!" với countdown 30 phút. Họ vào màn hình "Waitlist Offers" và bấm Accept hoặc Decline.</p>
+
+            <h5 style="margin-top: 16px;">📊 Bảng tính điểm ưu tiên (Priority Scoring)</h5>
+            <table style="width:100%; border-collapse: collapse; margin: 12px 0; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Tiêu chí</th>
+                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: center;">Điểm</th>
+                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Lấy từ Table</th>
+                        <th style="border: 1px solid #e2e8f0; padding: 10px; text-align: left;">Column / Query</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Role là Admin/Organiser</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+20</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;"><code>users</code></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;"><code>role</code> = 'ORGANISER' hoặc 'ADMIN'</td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Subscription VIP</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+40</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;" rowspan="3"><code>organiser_subscriptions</code></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;" rowspan="3"><code>plan</code> (VIP/PREMIUM/STANDARD) với <code>is_active = true</code><br>Query: <code>findActiveByOrganiserId(userId)</code></td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Subscription Premium</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+30</td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Subscription Standard</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+20</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Lịch sử tham dự tốt<br><small style="color: #64748b;">Mỗi event đã approved = +2, tối đa +20</small></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">max +20</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;"><code>registrations</code></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Query: <code>COUNT(*) FROM registrations WHERE user_id = ? AND status = 'APPROVED'</code><br>Công thức: <code>min(count × 2, 20)</code></td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Xác thực Email + Phone</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+10</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;" rowspan="2"><code>users</code></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;" rowspan="2"><code>email_verified</code> + <code>phone_verified</code><br>Cả hai = +10, chỉ email = +5</td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Chỉ xác thực Email</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #10b981; font-weight: bold;">+5</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Penalty hủy vé<br><small style="color: #64748b;">Mỗi lần hủy = -5, tối đa -20</small></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px; text-align: center; color: #ef4444; font-weight: bold;">max -20</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;"><code>registrations</code></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 10px;">Query: <code>COUNT(*) FROM registrations WHERE user_id = ? AND status = 'CANCELLED'</code><br>Công thức: <code>min(count × 5, 20)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 13px; color: #64748b; margin-top: 8px;"><strong>Ví dụ:</strong> Organiser Premium, 5 events đã attend, email+phone verified, 1 lần hủy → 20 + 30 + 10 + 10 − 5 = <strong>65 điểm</strong>. User thường, 2 events, chỉ email verified, chưa hủy lần nào → 0 + 0 + 4 + 5 − 0 = <strong>9 điểm</strong>.</p>
         </div>
 
         <div class="result-block">
@@ -1083,33 +1140,68 @@
 
         <div class="why-block">
             <h5>💡 Tại sao chúng em xây dựng chức năng này?</h5>
-            <p>Một số sự kiện như concert, theater yêu cầu khán giả ngồi đúng chỗ. Trên các nền tảng đặt vé hiện tại ở Việt Nam, người dùng thường không thấy sơ đồ chỗ ngồi và không biết mình sẽ ngồi ở đâu — đến hôm sự kiện mới biết. Em muốn nhà tổ chức có thể tạo sơ đồ chỗ ngồi với nhiều zone (VIP, Standard, Economy) với giá khác nhau, và người dùng chọn được chỗ cụ thể trước khi thanh toán.</p>
+            <p>Khi một sự kiện có nhiều hạng vé với giá khác nhau (ví dụ: VIP $50, Standard $30, Economy $10), người dùng cần biết rõ mình sẽ ngồi ở <strong>vùng nào</strong> và <strong>vị trí cụ thể nào</strong> trước khi trả tiền. Trên nhiều nền tảng hiện tại, người dùng chỉ chọn loại vé rồi hệ thống tự gán chỗ ngẫu nhiên — họ không có quyền chọn.</p>
+            <p style="margin-top: 8px;">Chức năng này <strong>không phải</strong> vẽ lại bản đồ vật lý venue. Thay vào đó, nhà tổ chức chia thành các <strong>zone (vùng chỗ ngồi)</strong> — mỗi zone có tên, giá, số hàng, số ghế/hàng — và hệ thống tự tạo ra một sơ đồ grid dạng hàng-cột (A1, A2, B1, B2...). Người dùng nhìn vào grid này để chọn chỗ mình muốn trong zone đã chọn.</p>
         </div>
 
         <div class="how-block">
             <h5>📱 Cách sử dụng</h5>
-            <p>Phía nhà tổ chức tạo sơ đồ với nhiều zone, mỗi zone có tên, màu, giá, số hàng và số ghế. Phía người dùng, khi đăng ký, một màn hình sơ đồ ghế hiện ra với grid trực quan: ghế xanh là available, xám là sold, cam là đang lock. Người dùng tap vào ghế mình muốn, ghế chuyển màu tím và bị lock 5 phút. Sau khi nhấn "Confirm &amp; Pay", hệ thống chuyển sang Stripe.</p>
+            <p><strong>Phía nhà tổ chức (Organiser):</strong> Khi tạo event, organiser thiết lập các zone chỗ ngồi. Ví dụ:</p>
+            <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
+                <li><strong>Zone "VIP"</strong> — màu vàng, giá $50, 3 hàng × 10 ghế = 30 chỗ</li>
+                <li><strong>Zone "Standard"</strong> — màu xanh, giá $30, 5 hàng × 15 ghế = 75 chỗ</li>
+                <li><strong>Zone "Economy"</strong> — màu xám, giá $10, 4 hàng × 20 ghế = 80 chỗ</li>
+            </ul>
+            <p>Hệ thống tự generate grid ghế cho mỗi zone (A1–A10, B1–B10... tương ứng số hàng và số ghế). Organiser <strong>không cần biết</strong> bố trí vật lý chính xác của venue — họ chỉ cần quy định có bao nhiêu zone, mỗi zone bao nhiêu chỗ và giá bao nhiêu.</p>
+
+            <p style="margin-top: 12px;"><strong>Phía người dùng (User):</strong> Khi đăng ký event có seat map, màn hình hiển thị grid trực quan:</p>
+            <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
+                <li>🟢 <strong>Xanh</strong> = available (chưa ai chọn)</li>
+                <li>⬜ <strong>Xám</strong> = sold (đã bán)</li>
+                <li>🟠 <strong>Cam</strong> = locked (ai đó đang giữ, chờ thanh toán)</li>
+                <li>🟣 <strong>Tím</strong> = ghế bạn vừa chọn</li>
+            </ul>
+            <p>Người dùng tap vào ghế → ghế bị <strong>lock 5 phút</strong> (không ai khác chọn được) → nhấn "Confirm &amp; Pay" → chuyển sang Stripe thanh toán. Nếu quá 5 phút không thanh toán, lock tự động giải phóng bởi scheduler chạy mỗi 60 giây.</p>
         </div>
 
         <div class="result-block">
             <h5>✅ Kết quả đạt được</h5>
-            <p>Người dùng có toàn quyền chọn chỗ ngồi tốt nhất. Họ biết rõ mình sẽ ngồi ở đâu trước khi trả tiền. Hệ thống lock 5 phút cho phép user suy nghĩ và hoàn tất thanh toán. Nhờ pessimistic locking, hệ thống đảm bảo 100% không có chuyện hai người cùng mua một ghế dù có hàng trăm người tap đồng thời.</p>
+            <p>Người dùng có toàn quyền chọn vị trí cụ thể trong zone mình muốn. Họ biết rõ mình sẽ ngồi ghế nào (ví dụ: VIP-A3) trước khi trả tiền. Hệ thống lock 5 phút cho phép user suy nghĩ và hoàn tất thanh toán mà không sợ mất ghế. Nhờ <strong>pessimistic write lock</strong> ở database, hệ thống đảm bảo 100% không có chuyện hai người cùng mua một ghế dù có hàng trăm người tap đồng thời.</p>
+        </div>
+
+        <div class="note" style="background: #fff3cd; border-left-color: #f59e0b;">
+            <h5 style="margin-bottom: 8px;">⚠️ Giới hạn hiện tại &amp; Hướng phát triển</h5>
+            <p style="font-size: 14px;">Hiện tại seat map dạng <strong>grid đơn giản</strong> (hàng × cột), chưa hỗ trợ vẽ bản đồ venue thực tế (ví dụ: hình bán nguyệt, balcony, lối đi giữa). Tuy nhiên, mô hình zone-based phù hợp với phần lớn sự kiện (hội thảo, workshop, conference) vì organiser chỉ cần phân vùng chỗ ngồi theo hạng vé, không cần bản đồ chính xác 100%.</p>
+            <p style="font-size: 14px; margin-top: 6px;"><strong>Hướng phát triển:</strong> Tích hợp drag-and-drop seat editor để organiser có thể tùy chỉnh bố cục ghế (xóa ghế ở lối đi, thêm khoảng trống, đánh dấu ghế khuyết tật), thay vì chỉ dùng grid cố định.</p>
         </div>
 
         <div class="note" style="background: #ede9fe; border-left-color: #8b5cf6;">
             <strong>📁 Đường dẫn Code:</strong><br>
             <strong>Backend:</strong> <code>backend\src\main\java\com\luma\controller\user\UserSeatMapController.java</code><br>
             <strong>Organiser:</strong> <code>backend\src\main\java\com\luma\controller\organiser\OrganiserSeatMapController.java</code><br>
-            <strong>Mobile:</strong> <code>mobile\lib\features\events\screens\seat_map_screen.dart</code><br><br>
+            <strong>Service:</strong> <code>backend\src\main\java\com\luma\service\SeatMapService.java</code><br>
+            <strong>Entity:</strong> <code>backend\src\main\java\com\luma\entity\Seat.java</code>, <code>SeatZone.java</code><br><br>
             <strong>🌐 Đường dẫn UI:</strong><br>
-            <strong>Mobile App:</strong> <code>http://localhost:5000</code> → Event Registration → Seat Selection
+            <strong>API Endpoints:</strong><br>
+            &nbsp;&nbsp;• <code>GET /api/user/seat-map/event/{eventId}</code> — Xem sơ đồ ghế<br>
+            &nbsp;&nbsp;• <code>POST /api/user/seat-map/lock</code> — Lock ghế 5 phút<br>
+            &nbsp;&nbsp;• <code>POST /api/user/seat-map/confirm</code> — Xác nhận ghế sau thanh toán<br>
+            &nbsp;&nbsp;• <code>POST /api/organiser/seat-map/event/{eventId}</code> — Tạo sơ đồ ghế
         </div>
 
         <div class="qa-section">
             <h4>❓ Câu Hỏi Từ Ban Giám Khảo</h4>
             <div class="qa-item">
+                <div class="question">Organiser không biết bố trí venue thì tạo seat map thế nào?</div>
+                <div class="answer">Organiser không cần biết bố trí vật lý chính xác. Họ chỉ cần quyết định: event có mấy hạng vé (zone), mỗi hạng bao nhiêu chỗ, giá bao nhiêu. Hệ thống tự generate grid ghế (hàng A, B, C... × số ghế mỗi hàng). Đây là <strong>zone-based assignment</strong> — giống cách các rạp phim hoặc nền tảng Eventbrite phân chia General Admission, VIP, Balcony mà không cần bản đồ venue chi tiết.</div>
+            </div>
+            <div class="qa-item">
                 <div class="question">Vì sao chọn 5 phút lock?</div>
-                <div class="answer">5 phút đủ để user xem ghế, suy nghĩ và hoàn tất thanh toán Stripe. Khi 2 user cùng tap một ghế cùng lúc, chỉ 1 user thắng nhờ pessimistic write lock ở database.</div>
+                <div class="answer">5 phút đủ để user xem ghế, suy nghĩ và hoàn tất thanh toán Stripe. Quá ngắn (1-2 phút) sẽ gây áp lực, quá dài (15-30 phút) sẽ giữ ghế lãng phí. Lock được tự động giải phóng bởi scheduler chạy mỗi 60 giây. Khi 2 user cùng tap một ghế cùng lúc, chỉ 1 user thắng nhờ <strong>pessimistic write lock</strong> ở database.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Chức năng này có nhất thiết phải có không?</div>
+                <div class="answer">Không phải mọi event đều cần seat map. Hệ thống thiết kế <strong>optional</strong> — organiser có thể tạo event có hoặc không có seat map (flag <code>hasSeatMap</code> trong EventResponse). Các event nhỏ (meetup, workshop) không cần, nhưng event có nhiều hạng vé giá khác nhau (concert, hội thảo lớn) thì cần để người dùng chọn được vị trí tương ứng với số tiền họ trả.</div>
             </div>
         </div>
     </div>
@@ -1121,26 +1213,106 @@
 
         <div class="why-block">
             <h5>💡 Tại sao chúng em xây dựng chức năng này?</h5>
-            <p>Các sự kiện lớn như tech conference thường có hàng chục session diễn ra song song trên nhiều phòng. Người tham dự phải tự xem agenda PDF rồi quyết định tham gia session nào — rất bất tiện. Phía nhà tổ chức cũng khổ sở khi phải sắp xếp lịch sao cho không có 2 session cùng phòng/cùng giờ. Em muốn xây dựng công cụ giúp nhà tổ chức tạo lịch trình chi tiết với conflict detection tự động.</p>
+            <p>Các sự kiện lớn (tech conference, hội thảo chuyên ngành, festival) thường có <strong>nhiều session diễn ra song song</strong> trên nhiều phòng — ví dụ Google I/O có 50+ sessions cùng lúc, hay Vietnam Web Summit có 3-4 tracks chạy đồng thời. Nếu không có công cụ quản lý:</p>
+            <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
+                <li><strong>Nhà tổ chức</strong> dễ mắc lỗi: xếp 2 speaker vào cùng giờ, hoặc đặt 2 session trong cùng 1 phòng</li>
+                <li><strong>Người tham dự</strong> phải đọc agenda PDF dài và tự ghi nhớ session mình muốn tham gia</li>
+            </ul>
+
+            <h5 style="margin-top: 16px;">🌍 Thực tế ngoài đời — nền tảng nào đã có chức năng này?</h5>
+            <table style="width:100%; border-collapse: collapse; margin: 12px 0; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th style="border: 1px solid #e2e8f0; padding: 8px; text-align: left;">Nền tảng</th>
+                        <th style="border: 1px solid #e2e8f0; padding: 8px; text-align: left;">Schedule Builder</th>
+                        <th style="border: 1px solid #e2e8f0; padding: 8px; text-align: left;">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;"><strong>Eventbrite</strong></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">❌ Không có</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">Chỉ hỗ trợ 1 event = 1 thời gian, không có multi-session</td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;"><strong>Lu.ma</strong></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">⚠️ Cơ bản</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">Có agenda nhưng không có multi-track, không conflict detection</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;"><strong>Hopin / Whova</strong></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">✅ Có đầy đủ</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">Multi-track, personal schedule, nhưng giá rất cao ($500+/event)</td>
+                    </tr>
+                    <tr style="background: #f8fafc;">
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;"><strong>LUMA (dự án em)</strong></td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">✅ Có đầy đủ</td>
+                        <td style="border: 1px solid #e2e8f0; padding: 8px;">Multi-track, conflict detection (speaker + room), personal schedule, capacity control</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 13px; color: #64748b;">→ Chức năng này <strong>cần thiết cho sự kiện có 2+ sessions trở lên</strong>. Các event nhỏ (meetup, workshop đơn) không cần — nhưng conference, summit, festival thì không thể thiếu.</p>
         </div>
 
         <div class="how-block">
             <h5>📱 Cách sử dụng</h5>
-            <p>Phía nhà tổ chức tạo session với title, giờ bắt đầu/kết thúc, phòng, track, capacity, speaker. Hệ thống tự động kiểm tra conflict: nếu speaker đã có session khác cùng giờ, hoặc phòng đã được dùng cùng giờ, sẽ báo lỗi. Phía người tham dự, vào event detail và chọn tab "Schedule", filter theo track và đăng ký session mình muốn vào lịch cá nhân.</p>
+            <p><strong>Phía nhà tổ chức (Organiser):</strong></p>
+            <ul style="margin: 8px 0 12px 20px; font-size: 14px;">
+                <li>Tạo session với: title, mô tả, giờ bắt đầu/kết thúc, phòng (room), track, speaker, capacity</li>
+                <li>Hệ thống <strong>tự động kiểm tra conflict</strong>:
+                    <ul style="margin: 4px 0 4px 16px;">
+                        <li>🚫 Speaker A đã có session 10:00-11:00 → không thể tạo session khác cho Speaker A trong khoảng 10:00-11:00</li>
+                        <li>🚫 Room B đã có session 14:00-15:00 → không thể tạo session khác ở Room B trong khoảng đó</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p><strong>Phía người tham dự (User):</strong></p>
+            <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
+                <li>Vào event detail → tab "Schedule" → xem tất cả sessions theo track/room</li>
+                <li>Filter theo track (ví dụ: chỉ xem track "AI" hoặc track "Workshop")</li>
+                <li>Nhấn "Register" cho session mình muốn → lưu vào <strong>lịch cá nhân (My Schedule)</strong></li>
+                <li>Xem riêng "My Schedule" để biết mình sẽ tham gia sessions nào</li>
+            </ul>
+
+            <p style="margin-top: 12px;"><strong>Ví dụ thực tế trong hệ thống:</strong> Event "Tokyo Tech Summit" có 4 sessions trên 3 tracks (AI, Workshop, Quantum) diễn ra ở 3 phòng (Hall A, Hall B, Lab Room). Session "AI & Robotics Keynote" và "Autonomous Vehicles Workshop" diễn ra <strong>cùng giờ nhưng khác phòng</strong> — người tham dự chọn 1 trong 2.</p>
         </div>
 
         <div class="result-block">
             <h5>✅ Kết quả đạt được</h5>
-            <p>Nhà tổ chức tiết kiệm rất nhiều thời gian sắp xếp lịch và tránh được sai sót như "speaker bị trùng giờ". Người tham dự có lịch trình cá nhân hóa — chỉ cần xem các session mình đã đăng ký. Đây là chức năng đặc biệt hữu ích cho các sự kiện chuyên nghiệp như Vietnam Web Summit, Tech Talks.</p>
+            <p>Nhà tổ chức tiết kiệm rất nhiều thời gian sắp xếp lịch và tránh được sai sót như "speaker bị trùng giờ" hoặc "2 session cùng phòng cùng lúc". Người tham dự có lịch trình cá nhân hóa — chỉ cần xem các session mình đã đăng ký, không phải đọc toàn bộ agenda. Hệ thống cũng theo dõi <strong>capacity từng session</strong> để không quá tải phòng.</p>
         </div>
 
         <div class="note" style="background: #ede9fe; border-left-color: #8b5cf6;">
             <strong>📁 Đường dẫn Code:</strong><br>
             <strong>Backend:</strong> <code>backend\src\main\java\com\luma\controller\user\UserScheduleController.java</code><br>
             <strong>Organiser:</strong> <code>backend\src\main\java\com\luma\controller\organiser\OrganiserScheduleController.java</code><br>
-            <strong>Mobile:</strong> <code>mobile\lib\features\events\screens\event_schedule_screen.dart</code><br><br>
-            <strong>🌐 Đường dẫn UI:</strong><br>
-            <strong>Mobile App:</strong> <code>http://localhost:5000</code> → Event Detail → Schedule Tab
+            <strong>Service:</strong> <code>backend\src\main\java\com\luma\service\ScheduleBuilderService.java</code><br>
+            <strong>Entity:</strong> <code>backend\src\main\java\com\luma\entity\EventSession.java</code>, <code>SessionRegistration.java</code><br><br>
+            <strong>🌐 API Endpoints:</strong><br>
+            &nbsp;&nbsp;• <code>POST /api/organiser/schedule/event/{eventId}/sessions</code> — Tạo session (có conflict detection)<br>
+            &nbsp;&nbsp;• <code>GET /api/user/schedule/event/{eventId}</code> — Xem lịch trình event<br>
+            &nbsp;&nbsp;• <code>POST /api/user/schedule/sessions/{sessionId}/register</code> — Đăng ký session<br>
+            &nbsp;&nbsp;• <code>GET /api/user/schedule/event/{eventId}/my-schedule</code> — Xem lịch cá nhân
+        </div>
+
+        <div class="qa-section">
+            <h4>❓ Câu Hỏi Từ Ban Giám Khảo</h4>
+            <div class="qa-item">
+                <div class="question">Chức năng này có cần thiết không? Event nào mới cần?</div>
+                <div class="answer">Không phải mọi event đều cần. Một buổi meetup hay workshop 2 tiếng thì không cần schedule builder. Nhưng event có <strong>2+ sessions trở lên</strong> hoặc <strong>nhiều track song song</strong> (conference, summit, festival nhiều ngày) thì rất cần. Ví dụ: Google I/O có 50+ sessions, Vietnam Web Summit có 3-4 tracks chạy đồng thời — nếu không có multi-track schedule, người tham dự sẽ rất lúng túng. Trong hệ thống LUMA, 11 events đều có sessions data, từ 3-4 sessions/event.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Conflict detection hoạt động thế nào?</div>
+                <div class="answer">Khi organiser tạo session mới, hệ thống kiểm tra 2 loại conflict bằng database query:<br>
+                1. <strong>Speaker conflict:</strong> <code>findConflictingSpeakerSessions(speaker, startTime, endTime)</code> — nếu speaker đã có session trùng giờ → báo lỗi<br>
+                2. <strong>Room conflict:</strong> <code>findConflictingRoomSessions(event, room, startTime, endTime)</code> — nếu phòng đã có session trùng giờ → báo lỗi<br>
+                Cả 2 query đều check khoảng thời gian overlap, không chỉ giờ bắt đầu trùng nhau.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Nền tảng nào ngoài đời có chức năng tương tự?</div>
+                <div class="answer"><strong>Hopin</strong> và <strong>Whova</strong> là 2 nền tảng enterprise có multi-track schedule đầy đủ, nhưng giá rất cao ($500+/event). <strong>Eventbrite</strong> không hỗ trợ multi-session. <strong>Lu.ma</strong> chỉ có agenda đơn giản. LUMA cung cấp chức năng tương đương Hopin/Whova nhưng tích hợp miễn phí trong hệ thống.</div>
+            </div>
         </div>
     </div>
 

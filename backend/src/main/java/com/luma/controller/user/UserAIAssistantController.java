@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,9 +27,9 @@ public class UserAIAssistantController {
     @PostMapping("/chat")
     @Operation(summary = "Chat with AI assistant — detects intent, queries DB, generates natural response")
     public ResponseEntity<ApiResponse<Map<String, Object>>> chat(
-            @RequestBody Map<String, String> body,
+            @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal UserDetails userDetails) {
-        String message = body.get("message");
+        String message = (String) body.get("message");
         if (message == null || message.isBlank()) {
             throw new com.luma.exception.BadRequestException("Message is required");
         }
@@ -37,7 +38,11 @@ public class UserAIAssistantController {
                 ? userService.getEntityByEmail(userDetails.getUsername())
                 : null;
 
-        Map<String, Object> result = assistantService.chat(message, user);
+        // Extract conversation history if provided
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> history = (List<Map<String, String>>) body.get("history");
+
+        Map<String, Object> result = assistantService.chat(message, user, history);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }
