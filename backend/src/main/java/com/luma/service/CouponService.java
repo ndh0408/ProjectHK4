@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -174,5 +175,18 @@ public class CouponService {
         coupon.setStatus(CouponStatus.DISABLED);
         couponRepository.save(coupon);
         return CouponResponse.fromEntity(coupon);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CouponResponse> getAvailableCouponsForUser(UUID eventId) {
+        List<Coupon> coupons;
+        if (eventId != null) {
+            coupons = couponRepository.findAvailableCouponsByEvent(eventId);
+        } else {
+            coupons = couponRepository.findAvailableGlobalCoupons();
+        }
+        return coupons.stream()
+                .map(CouponResponse::fromEntity)
+                .toList();
     }
 }

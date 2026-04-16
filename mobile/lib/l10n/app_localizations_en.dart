@@ -1021,4 +1021,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reasonOther => 'Other';
+
+  @override
+  String get myCoupons => 'My Coupons';
+
+  @override
+  String get noCouponsAvailable => 'No Coupons Available';
+
+  @override
+  String get checkBackLaterForOffers =>
+      'Check back later for exclusive offers and discounts';
+
+  @override
+  String get failedToLoadCoupons => 'Failed to load coupons';
+
+  @override
+  String get refresh => 'Refresh';
 }

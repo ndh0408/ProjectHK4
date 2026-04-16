@@ -16,5 +16,7 @@ public interface PollVoteRepository extends JpaRepository<PollVote, UUID> {
 
     List<PollVote> findByPollAndUser(Poll poll, User user);
 
+    List<PollVote> findByPoll(Poll poll);
+
     long countByPoll(Poll poll);
 }

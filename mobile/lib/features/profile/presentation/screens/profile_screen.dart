@@ -673,6 +673,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: l10n.savedEvents,
                 onTap: () => context.push('/saved-events'),
               ),
+              _SettingsTile(
+                icon: Icons.local_offer_outlined,
+                title: 'My Coupons',
+                onTap: () => context.push('/my-coupons'),
+              ),
               _LanguageSettingsTile(),
               _SettingsTile(
                 icon: Icons.notifications_outlined,

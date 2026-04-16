@@ -20,6 +20,7 @@ import '../shared/models/user.dart';
 import '../shared/models/event_image.dart';
 import '../shared/models/event_buddy.dart';
 import '../shared/models/blocked_user.dart';
+import '../shared/models/coupon.dart';
 
 final apiServiceProvider = Provider<ApiService>((ref) {
   final client = ref.watch(apiClientProvider);
@@ -348,6 +349,15 @@ class ApiService {
       queryParameters: {'code': code, 'amount': amount, 'registrationId': registrationId},
     );
     return response.data!['data'] as Map<String, dynamic>? ?? {};
+  }
+
+  Future<List<Coupon>> getUserCoupons({String? eventId}) async {
+    final response = await _client.getRaw<Map<String, dynamic>>(
+      '/user/coupons',
+      queryParameters: eventId != null ? {'eventId': eventId} : null,
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data.map((json) => Coupon.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<Map<String, dynamic>> compareEvents(List<String> eventIds) async {
@@ -1118,6 +1128,17 @@ class ApiService {
     );
     final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, EventImage.fromJson);
+  }
+
+  /// Chat with AI Assistant
+  /// Returns: {response, intent, data, dataPointsUsed}
+  Future<Map<String, dynamic>> askChatbot(String message) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/assistant/chat',
+      data: {'message': message},
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return data;
   }
 }
 

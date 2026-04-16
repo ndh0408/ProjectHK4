@@ -163,6 +163,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/chatbot'),
+        icon: const Icon(Icons.smart_toy_rounded),
+        label: const Text('Ask LUMA'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 

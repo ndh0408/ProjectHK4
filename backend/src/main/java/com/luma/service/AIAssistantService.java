@@ -235,7 +235,7 @@ public class AIAssistantService {
             1. Use ONLY the data provided — never invent events or facts
             2. If data is empty, politely say nothing was found and suggest alternatives
             3. Format event lists with bullets, include title and key info
-            4. Detect language from user message (Vietnamese → reply in Vietnamese)
+            4. Always respond in English, regardless of the language of the user message
             5. Be concise (under 200 words)
             6. End with a helpful follow-up question if appropriate
             """;

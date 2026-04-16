@@ -66,6 +66,8 @@ abstract final class AppColorsDark {
 }
 
 abstract final class AppTheme {
+  static const Color primaryColor = AppColors.primary;
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

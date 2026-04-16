@@ -110,7 +110,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           IconButton(
             icon: const Icon(Icons.compare_arrows),
             tooltip: 'Compare Events',
-            onPressed: () => context.push('/compare-events', extra: {'eventIds': <String>[]}),
+            onPressed: () => context.push('/compare-events'),
           ),
           IconButton(
             icon: const Icon(Icons.search),

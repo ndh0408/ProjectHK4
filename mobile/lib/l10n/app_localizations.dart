@@ -2071,6 +2071,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get reasonOther;
+
+  /// My Coupons screen title
+  ///
+  /// In en, this message translates to:
+  /// **'My Coupons'**
+  String get myCoupons;
+
+  /// No coupons message
+  ///
+  /// In en, this message translates to:
+  /// **'No Coupons Available'**
+  String get noCouponsAvailable;
+
+  /// Check back later message
+  ///
+  /// In en, this message translates to:
+  /// **'Check back later for exclusive offers and discounts'**
+  String get checkBackLaterForOffers;
+
+  /// Failed to load coupons error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load coupons'**
+  String get failedToLoadCoupons;
+
+  /// Refresh button
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
 }
 
 class _AppLocalizationsDelegate

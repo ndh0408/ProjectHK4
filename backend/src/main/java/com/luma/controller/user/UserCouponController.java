@@ -1,6 +1,7 @@
 package com.luma.controller.user;
 
 import com.luma.dto.response.ApiResponse;
+import com.luma.dto.response.CouponResponse;
 import com.luma.dto.response.CouponValidationResponse;
 import com.luma.entity.Registration;
 import com.luma.entity.User;
@@ -16,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -49,5 +51,16 @@ public class UserCouponController {
 
         CouponValidationResponse response = couponService.validateCoupon(code, amount, user, resolvedEventId);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping
+    @Operation(summary = "Get available coupons for user")
+    public ResponseEntity<ApiResponse<List<CouponResponse>>> getAvailableCoupons(
+            @RequestParam(required = false) UUID eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        // Just validate user is authenticated
+        userService.getEntityByEmail(userDetails.getUsername());
+        List<CouponResponse> coupons = couponService.getAvailableCouponsForUser(eventId);
+        return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 }

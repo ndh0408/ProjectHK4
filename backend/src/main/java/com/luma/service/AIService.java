@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -533,6 +535,81 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 1200);
     }
 
+    public String generateCoupon(String description, String discountType, BigDecimal discountValue,
+                                  BigDecimal maxDiscountAmount, BigDecimal minOrderAmount,
+                                  Integer maxUsageCount, Integer maxUsagePerUser,
+                                  LocalDateTime validFrom, LocalDateTime validUntil,
+                                  String eventName, String language) {
+        String systemPrompt = """
+            You are a coupon marketing specialist. Your task is to generate creative coupon codes and descriptions.
+
+            CRITICAL RULES:
+            1. Generate a unique, creative coupon CODE (8-12 characters, alphanumeric, uppercase)
+            2. Write an engaging DESCRIPTION (50-100 words) explaining the offer
+            3. Suggest improvements to the discount parameters if needed
+            4. Return ONLY valid JSON with no extra text
+
+            JSON format:
+            {
+              "code": "CREATIVECODE",
+              "description": "Compelling description here...",
+              "suggestedDiscountType": "PERCENTAGE or FIXED_AMOUNT",
+              "suggestedDiscountValue": 20,
+              "suggestedMaxDiscountAmount": 50,
+              "suggestedMinOrderAmount": 100,
+              "suggestedMaxUsageCount": 100,
+              "suggestedMaxUsagePerUser": 1,
+              "suggestedValidFrom": "2026-05-01T00:00:00",
+              "suggestedValidUntil": "2026-05-31T23:59:59",
+              "suggestedValidDays": 30,
+              "reasoning": "Brief explanation of why these settings work well"
+            }
+
+            Guidelines:
+            - Code should be memorable and relevant to the event/promotion
+            - Description should create urgency and excitement
+            - If PERCENTAGE: suggest 10-50% with max cap if needed
+            - If FIXED_AMOUNT: suggest $5-$100 depending on context
+            - Consider the event type and target audience
+            """;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("Generate a coupon for:\n\n");
+        if (eventName != null && !eventName.isEmpty()) {
+            userPrompt.append("Event: ").append(eventName).append("\n");
+        }
+        if (description != null && !description.isEmpty()) {
+            userPrompt.append("User's description: ").append(description).append("\n");
+        }
+        userPrompt.append("\nCurrent Settings:\n");
+        userPrompt.append("Discount Type: ").append(discountType != null ? discountType : "Not specified").append("\n");
+        userPrompt.append("Discount Value: ").append(discountValue != null ? discountValue : "Not specified").append("\n");
+        if (maxDiscountAmount != null) {
+            userPrompt.append("Max Discount: ").append(maxDiscountAmount).append("\n");
+        }
+        if (minOrderAmount != null) {
+            userPrompt.append("Min Order: ").append(minOrderAmount).append("\n");
+        }
+        if (maxUsageCount != null) {
+            userPrompt.append("Max Usage: ").append(maxUsageCount).append("\n");
+        }
+        if (maxUsagePerUser != null) {
+            userPrompt.append("Max Per User: ").append(maxUsagePerUser).append("\n");
+        }
+        if (validFrom != null) {
+            userPrompt.append("Valid From: ").append(validFrom.format(formatter)).append("\n");
+        }
+        if (validUntil != null) {
+            userPrompt.append("Valid Until: ").append(validUntil.format(formatter)).append("\n");
+        }
+        userPrompt.append("\nLanguage: ").append("vi".equals(language) ? "Vietnamese" : "English").append("\n");
+        userPrompt.append("\nGenerate creative coupon code and description. Return ONLY valid JSON.");
+
+        return callGroqApi(systemPrompt, userPrompt.toString(), 800);
+    }
+
     public String generateOrganiserBio(String organizationName, String eventTypes, String targetAudience, String additionalInfo) {
         String systemPrompt = """
             You are an expert copywriter specializing in professional bios for event organizers.
@@ -806,9 +883,81 @@ public class AIService {
         return callGroqApi(systemPrompt, userPrompt.toString(), 500);
     }
 
+    public String generatePoll(String topic, Integer numOptions, String pollType, Integer maxRating,
+                               Integer numberOfQuestions, String language, String additionalContext) {
+        String systemPrompt = """
+            You are an expert event engagement specialist. Your task is to generate engaging poll questions and options.
+
+            CRITICAL RULES:
+            1. Return ONLY valid JSON, nothing else
+            2. Generate poll questions that are clear, engaging, and relevant
+            3. For choice options, make them distinct and balanced
+            4. Match language to the language preference provided
+            5. Create questions that will drive engagement and provide useful data
+
+            JSON format for single question:
+            {
+              "question": "What is your main interest in attending events?",
+              "pollType": "SINGLE_CHOICE",
+              "options": ["Networking", "Learning & Skills", "Entertainment", "Career Growth", "Social Experience"]
+            }
+
+            For RATING type (ignore options):
+            {
+              "question": "How likely are you to attend events regularly?",
+              "pollType": "RATING",
+              "maxRating": 5,
+              "options": null
+            }
+
+            Guidelines:
+            - For SINGLE_CHOICE: Generate 3-5 clear, distinct options
+            - For MULTIPLE_CHOICE: Generate 4-6 options covering different aspects
+            - For RATING: Create a statement to rate (on a scale)
+            - Questions should be concise (5-15 words)
+            - Options should be brief (2-4 words each)
+            - Ensure relevance to event context
+            """;
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("Generate poll questions for:\n\n");
+        userPrompt.append("Topic: ").append(topic != null && !topic.isEmpty() ? topic : "Event engagement").append("\n");
+        userPrompt.append("Poll Type: ").append(pollType != null && !pollType.isEmpty() ? pollType : "SINGLE_CHOICE").append("\n");
+        if (numOptions != null && numOptions > 0) {
+            userPrompt.append("Number of Options: ").append(numOptions).append("\n");
+        }
+        if (maxRating != null && maxRating > 0) {
+            userPrompt.append("Max Rating: ").append(maxRating).append("\n");
+        }
+        if (language != null && !language.isEmpty()) {
+            userPrompt.append("Language: ").append(language).append("\n");
+        } else {
+            userPrompt.append("Language: English\n");
+        }
+        if (additionalContext != null && !additionalContext.isEmpty()) {
+            userPrompt.append("Additional Context: ").append(additionalContext).append("\n");
+        }
+
+        if (numberOfQuestions != null && numberOfQuestions > 1) {
+            userPrompt.append("\nGenerate ").append(numberOfQuestions).append(" different poll questions. Return as a JSON array: [{ question, pollType, options }, ...]");
+        } else {
+            userPrompt.append("\nGenerate 1 poll question. Return as a JSON object: { question, pollType, options }");
+        }
+        userPrompt.append("\n\nReturn ONLY valid JSON with no additional text or explanation.");
+
+        return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+    }
+
     private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
-            log.info("Calling Groq API with model: {}", model);
+            log.info("=== Starting Groq API Call ===");
+            log.info("Model: {}", model);
+            log.info("Max tokens: {}", maxTokens);
+            log.info("RestTemplate: {}", restTemplate != null ? "✅ Initialized" : "❌ NULL");
+
+            if (restTemplate == null) {
+                throw new RuntimeException("RestTemplate is not properly initialized!");
+            }
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -830,26 +979,52 @@ public class AIService {
             requestBody.put("messages", messages);
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
-            log.debug("Groq Request JSON: {}", requestJson);
+            log.debug("Groq Request JSON: {} chars", requestJson.length());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
+            log.info("Making POST request to: {}", GROQ_API_URL);
             String responseStr = restTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            log.info("✅ Received response from Groq API: {} chars", responseStr != null ? responseStr.length() : "null");
+
+            if (responseStr == null) {
+                log.error("❌ Groq API returned null response!");
+                throw new RuntimeException("Groq API returned null response. Check if API key is valid.");
+            }
 
             JsonNode responseJson = objectMapper.readTree(responseStr);
             JsonNode choices = responseJson.get("choices");
 
             if (choices != null && choices.isArray() && choices.size() > 0) {
-                return choices.get(0).get("message").get("content").asText().trim();
+                String result = choices.get(0).get("message").get("content").asText().trim();
+                log.info("✅ Successfully extracted AI response: {} chars", result.length());
+                return result;
             }
 
+            log.warn("⚠️ No valid choices in Groq response. Full response: {}", responseStr);
             return "Unable to generate content. Please try again.";
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            log.error("❌ HTTP Client Error: status={}, message={}, body={}", 
+                e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
+            if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
+                String msg = "Groq API authentication failed: Invalid or missing API key. Status: " + e.getStatusCode();
+                throw new RuntimeException(msg);
+            }
+            String msg = "Groq API Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
+            throw new RuntimeException(msg);
+        } catch (org.springframework.web.client.HttpServerErrorException e) {
+            log.error("❌ HTTP Server Error: status={}, message={}, body={}", 
+                e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
+            String msg = "Groq API Server Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
+            throw new RuntimeException(msg);
         } catch (Exception e) {
-            log.error("Error calling Groq API: ", e);
-            throw new RuntimeException("Failed to generate AI content: " + e.getMessage());
+            log.error("❌ Unexpected error calling Groq API: ", e);
+            String errorDetail = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            String msg = "Failed to generate AI content: " + errorDetail;
+            throw new RuntimeException(msg);
         }
     }
 }

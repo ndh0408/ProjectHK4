@@ -1020,4 +1020,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get reasonOther => 'Khác';
+
+  @override
+  String get myCoupons => 'Mã Giảm Giá';
+
+  @override
+  String get noCouponsAvailable => 'Chưa Có Mã Giảm Giá';
+
+  @override
+  String get checkBackLaterForOffers => 'Quay lại sau để nhận ưu đãi độc quyền';
+
+  @override
+  String get failedToLoadCoupons => 'Không thể tải mã giảm giá';
+
+  @override
+  String get refresh => 'Làm mới';
 }

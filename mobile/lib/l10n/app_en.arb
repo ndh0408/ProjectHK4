@@ -708,5 +708,26 @@
   "reasonFakeReview": "Fake Review",
   "reasonHarassment": "Harassment",
   "reasonOffTopic": "Off Topic",
-  "reasonOther": "Other"
+  "reasonOther": "Other",
+
+  "myCoupons": "My Coupons",
+  "@myCoupons": {
+    "description": "My Coupons screen title"
+  },
+  "noCouponsAvailable": "No Coupons Available",
+  "@noCouponsAvailable": {
+    "description": "No coupons message"
+  },
+  "checkBackLaterForOffers": "Check back later for exclusive offers and discounts",
+  "@checkBackLaterForOffers": {
+    "description": "Check back later message"
+  },
+  "failedToLoadCoupons": "Failed to load coupons",
+  "@failedToLoadCoupons": {
+    "description": "Failed to load coupons error"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button"
+  }
 }

@@ -30,6 +30,23 @@ public class CleanupScheduler {
         pollService.autoCloseExpiredPolls();
     }
 
+    @Scheduled(fixedRate = 60000)  // Mỗi phút kiểm tra poll cần mở
+    public void autoOpenScheduledPolls() {
+        pollService.autoOpenScheduledPolls();
+    }
+
+    @Scheduled(fixedRate = 60000)  // Mỗi phút kiểm tra event bắt đầu/kết thúc
+    public void autoOpenCloseByEventTime() {
+        pollService.autoOpenPollsByEventStart();
+        pollService.autoClosePollsByEventEnd();
+        pollService.autoClosePollsTenDaysAfterEventEnd();  // Kiểm tra đóng poll sau 10 ngày
+    }
+
+    @Scheduled(fixedRate = 30000)  // Mỗi 30 giây kiểm tra vote count
+    public void autoCloseByVoteCount() {
+        pollService.autoCloseByVoteCount();
+    }
+
     @Scheduled(fixedRate = 60000)
     public void releaseExpiredSeatLocks() {
         seatMapService.releaseExpiredLocks();
