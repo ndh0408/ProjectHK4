@@ -4,12 +4,10 @@ import com.luma.dto.request.GoogleAuthRequest;
 import com.luma.dto.request.LoginRequest;
 import com.luma.dto.request.RefreshTokenRequest;
 import com.luma.dto.request.RegisterRequest;
-import com.luma.dto.request.VerifyCodeRequest;
 import com.luma.dto.response.ApiResponse;
 import com.luma.dto.response.AuthResponse;
 import com.luma.entity.User;
 import com.luma.service.AuthService;
-import com.luma.service.OtpService;
 import com.luma.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,7 +26,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
-    private final OtpService otpService;
 
     @PostMapping("/register")
     @Operation(summary = "Register a new user")
@@ -64,23 +61,5 @@ public class AuthController {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         authService.logout(user);
         return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
-    }
-
-    @PostMapping("/send-otp")
-    @Operation(summary = "Send OTP to phone number for verification")
-    public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestBody java.util.Map<String, String> body) {
-        String phone = body.get("phone");
-        if (phone == null || phone.isBlank()) {
-            throw new com.luma.exception.BadRequestException("Phone number is required");
-        }
-        otpService.generateOtp(phone);
-        return ResponseEntity.ok(ApiResponse.success("OTP sent successfully", null));
-    }
-
-    @PostMapping("/verify-otp")
-    @Operation(summary = "Verify OTP code")
-    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyCodeRequest request) {
-        otpService.verifyOtp(request.getPhone(), request.getCode());
-        return ResponseEntity.ok(ApiResponse.success("Phone verified successfully", null));
     }
 }

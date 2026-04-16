@@ -66,136 +66,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _verifyPhone() async {
-    final user = ref.read(currentUserProvider);
-    if (user?.phone == null || user!.phone!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add a phone number first'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
-      return;
-    }
 
-    final otpController = TextEditingController();
-    bool isSending = false;
-    bool isVerifying = false;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Verify Phone'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('We will send an OTP to ${user.phone}'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: otpController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter OTP',
-                  hintText: '000000',
-                ),
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: isSending
-                  ? null
-                  : () async {
-                      setDialogState(() => isSending = true);
-                      try {
-                        final api = ref.read(apiServiceProvider);
-                        await api.sendOtp(phone: user.phone!);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('OTP sent successfully'),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(ErrorUtils.extractMessage(e)),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
-                      } finally {
-                        setDialogState(() => isSending = false);
-                      }
-                    },
-              child: isSending
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Send OTP'),
-            ),
-            ElevatedButton(
-              onPressed: isVerifying || otpController.text.length != 6
-                  ? null
-                  : () async {
-                      setDialogState(() => isVerifying = true);
-                      try {
-                        final api = ref.read(apiServiceProvider);
-                        await api.verifyOtp(
-                          phone: user.phone!,
-                          otp: otpController.text,
-                        );
-                        if (context.mounted) {
-                          Navigator.of(dialogContext).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Phone verified successfully!'),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
-                          ref.invalidate(currentUserProvider);
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(ErrorUtils.extractMessage(e)),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                        }
-                      } finally {
-                        setDialogState(() => isVerifying = false);
-                      }
-                    },
-              child: isVerifying
-                  ? const SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.textOnPrimary,
-                      ),
-                    )
-                  : const Text('Verify'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
@@ -563,12 +434,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   prefixIcon: const Icon(Icons.phone_outlined),
                   suffixIcon: user?.phoneVerified == true
                       ? const Icon(Icons.verified, color: AppColors.success)
-                      : user?.phone != null && user!.phone!.isNotEmpty
-                          ? TextButton(
-                              onPressed: _isEditing ? null : _verifyPhone,
-                              child: const Text('Verify'),
-                            )
-                          : null,
+                      : null,
                 ),
                 enabled: _isEditing,
                 keyboardType: TextInputType.phone,

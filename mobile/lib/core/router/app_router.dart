@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/bookmarks/presentation/screens/saved_events_screen.dart';
 import '../../features/coupons/presentation/screens/my_coupons_screen.dart';
@@ -50,14 +49,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState is Authenticated;
       final isLoggingIn = state.matchedLocation == '/login';
-      final isOtpScreen = state.matchedLocation.startsWith('/otp');
       final isInitial = authState is AuthInitial;
 
       if (isInitial) {
         return null;
       }
 
-      if (!isAuthenticated && !isLoggingIn && !isOtpScreen) {
+      if (!isAuthenticated && !isLoggingIn) {
         return '/login';
       }
 
@@ -72,14 +70,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/otp/:phone',
-        name: 'otp',
-        builder: (context, state) {
-          final phone = state.pathParameters['phone'] ?? '';
-          return OtpScreen(phone: phone);
-        },
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
