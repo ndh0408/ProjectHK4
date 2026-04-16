@@ -68,7 +68,11 @@ public class AuthController {
 
     @PostMapping("/send-otp")
     @Operation(summary = "Send OTP to phone number for verification")
-    public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestParam String phone) {
+    public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestBody java.util.Map<String, String> body) {
+        String phone = body.get("phone");
+        if (phone == null || phone.isBlank()) {
+            throw new com.luma.exception.BadRequestException("Phone number is required");
+        }
         otpService.generateOtp(phone);
         return ResponseEntity.ok(ApiResponse.success("OTP sent successfully", null));
     }

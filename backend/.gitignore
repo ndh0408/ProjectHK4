@@ -4,3 +4,6 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+# Environment variables - NEVER commit
+.env
