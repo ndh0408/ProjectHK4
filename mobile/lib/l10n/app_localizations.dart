@@ -704,18 +704,6 @@ abstract class AppLocalizations {
   /// **'Ticket'**
   String get ticket;
 
-  /// No description provided for @verifyOtp.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify Code'**
-  String get verifyOtp;
-
-  /// No description provided for @enterOtp.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter verification code'**
-  String get enterOtp;
-
   /// No description provided for @resendCode.
   ///
   /// In en, this message translates to:

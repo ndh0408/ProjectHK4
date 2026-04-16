@@ -29,7 +29,3 @@ class AuthError extends AuthState {
 
   final String message;
 }
-
-class OtpSent extends AuthState {
-  const OtpSent();
-}
