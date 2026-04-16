@@ -28,41 +28,44 @@ if "%FLUTTER_PATH%"=="" (
 echo [OK] Flutter found at: %FLUTTER_PATH%
 echo.
 
-echo [1/3] Starting Backend (Spring Boot - Maven)...
+echo [1/4] Starting Backend (Spring Boot - Maven)...
 echo      Note: Backend requires MANUAL RESTART when Java code changes
 echo.
 start "LUMA Backend" cmd /k "cd /d "%PROJECT_DIR%\backend" && mvnw spring-boot:run"
 
 timeout /t 5 /nobreak > nul
 
-echo [2/3] Starting Admin Frontend (React)...
+echo [2/4] Starting Admin Frontend (React)...
 echo      Note: Frontend has HOT RELOAD - changes auto-refresh in browser
 echo.
 start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && npm start"
 
 timeout /t 2 /nobreak > nul
 
-echo [3/3] Starting Mobile App (Flutter on Chrome - Port 5000)...
-echo      Note: Mobile runs on Chrome Web browser at http://localhost:5000
+echo [3/4] Building Mobile App (Flutter Web)...
+echo      Building fresh web bundle...
 echo.
-start "LUMA Mobile (Chrome)" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" run -d chrome --web-port=5000"
+start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" clean && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
 
 echo.
 echo ============================================
-echo           All Services Started!
+echo           All Services Starting!
 echo ============================================
 echo.
-echo Backend:  http://localhost:8080
-echo Admin:    http://localhost:3000
-echo Mobile:   http://localhost:5000
-echo Swagger:  http://localhost:8080/swagger-ui.html
+echo Backend:       http://localhost:8080
+echo Admin:         http://localhost:3000
+echo Mobile:        http://localhost:5000
+echo Swagger:       http://localhost:8080/swagger-ui.html
+echo Clear Cache:   http://localhost:5000/clear-cache.html
 echo.
 echo ============================================
 echo                 IMPORTANT
 echo ============================================
-echo - Frontend (React): Auto-reload on file save
-echo - Mobile (Flutter): Hot reload with 'r' in terminal
-echo - Backend (Java):   RESTART REQUIRED on code change
+echo - Admin (React):     Auto-reload on file save
+echo - Mobile (Flutter):  Rebuild required: flutter build web
+echo                      Then refresh browser (Ctrl+Shift+R)
+echo                      Or visit /clear-cache.html to force refresh
+echo - Backend (Java):    RESTART REQUIRED on code change
 echo ============================================
 echo.
 echo Press any key to close this window...

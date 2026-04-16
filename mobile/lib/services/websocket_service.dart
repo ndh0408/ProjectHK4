@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
@@ -82,6 +83,7 @@ class WebSocketService {
   final List<StompUnsubscribe> _subscriptions = [];
   bool _isConnected = false;
   String? _authToken;
+  String? _userEmail;
 
   final _eventController = StreamController<ChatEvent>.broadcast();
   Stream<ChatEvent> get eventStream => _eventController.stream;
@@ -95,31 +97,46 @@ class WebSocketService {
   bool get isConnected => _isConnected;
   Map<String, bool> get onlineUsers => Map.unmodifiable(_onlineUsers);
 
-  void connect(String token) {
+  void connect(String token, {String? userEmail}) {
     if (_isConnected && _authToken == token) return;
 
     _authToken = token;
+    _userEmail = userEmail;
     disconnect();
 
     final wsUrl = ApiConstants.wsBaseUrl;
 
-    _stompClient = StompClient(
-      config: StompConfig(
-        url: wsUrl,
-        onConnect: _onConnect,
-        onDisconnect: _onDisconnect,
-        onWebSocketError: _onError,
-        onStompError: _onStompError,
-        stompConnectHeaders: {
-          'Authorization': 'Bearer $token',
-        },
-        webSocketConnectHeaders: {
-          'Authorization': 'Bearer $token',
-        },
-        reconnectDelay: const Duration(seconds: 5),
-      ),
-    );
+    final stompConfig = kIsWeb
+        ? StompConfig.sockJS(
+            url: wsUrl,
+            onConnect: _onConnect,
+            onDisconnect: _onDisconnect,
+            onWebSocketError: _onError,
+            onStompError: _onStompError,
+            stompConnectHeaders: {
+              'Authorization': 'Bearer $token',
+            },
+            webSocketConnectHeaders: {
+              'Authorization': 'Bearer $token',
+            },
+            reconnectDelay: const Duration(seconds: 5),
+          )
+        : StompConfig(
+            url: wsUrl,
+            onConnect: _onConnect,
+            onDisconnect: _onDisconnect,
+            onWebSocketError: _onError,
+            onStompError: _onStompError,
+            stompConnectHeaders: {
+              'Authorization': 'Bearer $token',
+            },
+            webSocketConnectHeaders: {
+              'Authorization': 'Bearer $token',
+            },
+            reconnectDelay: const Duration(seconds: 5),
+          );
 
+    _stompClient = StompClient(config: stompConfig);
     _stompClient!.activate();
   }
 
@@ -128,6 +145,11 @@ class WebSocketService {
     _connectionController.add(true);
 
     _subscribeToPresence();
+
+    // Auto-subscribe to user queue for global message notifications
+    if (_userEmail != null) {
+      subscribeToUserQueue(_userEmail!);
+    }
   }
 
   void _onDisconnect(StompFrame frame) {
@@ -282,7 +304,7 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
     if (next is Authenticated) {
       final token = await storage.read(key: StorageKeys.accessToken);
       if (token != null) {
-        service.connect(token);
+        service.connect(token, userEmail: next.user.email);
       }
     } else {
       service.disconnect();
@@ -290,9 +312,11 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
   }, fireImmediately: true);
 
   Future.microtask(() async {
+    final authState = ref.read(authProvider);
     final token = await storage.read(key: StorageKeys.accessToken);
     if (token != null) {
-      service.connect(token);
+      final email = authState is Authenticated ? authState.user.email : null;
+      service.connect(token, userEmail: email);
     }
   });
 

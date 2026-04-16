@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/websocket_service.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../../shared/models/event_buddy.dart';
 import '../../../../shared/models/notification.dart';
@@ -48,6 +49,12 @@ class UnreadMessageCountNotifier extends StateNotifier<AsyncValue<int>> {
     }
   }
 
+  void increment() {
+    state.whenData((count) {
+      state = AsyncValue.data(count + 1);
+    });
+  }
+
   void decrement() {
     state.whenData((count) {
       if (count > 0) {
@@ -58,6 +65,10 @@ class UnreadMessageCountNotifier extends StateNotifier<AsyncValue<int>> {
 
   void setZero() {
     state = const AsyncValue.data(0);
+  }
+
+  void refresh() {
+    loadCount();
   }
 }
 
@@ -219,6 +230,18 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final notificationsState = ref.watch(notificationsProvider);
     final buddiesState = ref.watch(eventBuddiesProvider);
+
+    // Listen to WebSocket chat events for real-time updates
+    ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (previous, next) {
+      next.whenData((event) {
+        if (event.type == ChatEventType.newMessage) {
+          // Refresh conversations list to show latest message
+          ref.read(conversationsProvider.notifier).loadConversations(refresh: true);
+          // Update unread message count
+          ref.read(unreadMessageCountProvider.notifier).loadCount();
+        }
+      });
+    });
 
     final hasUnreadNotifications = unreadNotifications.maybeWhen(
       data: (count) => count > 0,

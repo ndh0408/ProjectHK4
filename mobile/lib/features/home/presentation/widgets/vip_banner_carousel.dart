@@ -167,7 +167,7 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
 
   Widget _buildBannerCard(Event event) {
     return GestureDetector(
-      onTap: () => context.push('/events/${event.id}'),
+      onTap: () => context.push('/event/${event.id}'),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
