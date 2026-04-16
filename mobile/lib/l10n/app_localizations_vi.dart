@@ -314,12 +314,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ticket => 'Vé';
 
   @override
-  String get verifyOtp => 'Xác thực mã';
-
-  @override
-  String get enterOtp => 'Nhập mã xác thực';
-
-  @override
   String get resendCode => 'Gửi lại mã';
 
   @override

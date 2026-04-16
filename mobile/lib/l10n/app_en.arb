@@ -446,8 +446,6 @@
   "eventRegistrations": "Registrations",
   "speakerEvents": "Speaker Events",
   "ticket": "Ticket",
-  "verifyOtp": "Verify Code",
-  "enterOtp": "Enter verification code",
   "resendCode": "Resend Code",
   "descriptionEditor": "Description",
   "organiserProfile": "Organiser Profile",

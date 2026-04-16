@@ -142,39 +142,6 @@ class AuthRepository {
     }
   }
 
-  Future<void> sendOtp(String phone) async {
-    try {
-      await _apiClient.post<void>(
-        '/auth/send-otp',
-        data: {'phone': phone},
-      );
-    } on DioException catch (e) {
-      final responseData = e.response?.data;
-      String message = 'Failed to send OTP. Please try again.';
-      if (responseData is Map<String, dynamic>) {
-        message = responseData['message'] as String? ?? message;
-      }
-      throw AuthException(message);
-    }
-  }
-
-  Future<Map<String, dynamic>> verifyOtp(String phone, String code) async {
-    try {
-      final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/verify-otp',
-        data: {'phone': phone, 'code': code},
-      );
-      return response;
-    } on DioException catch (e) {
-      final responseData = e.response?.data;
-      String message = 'Invalid OTP code. Please try again.';
-      if (responseData is Map<String, dynamic>) {
-        message = responseData['message'] as String? ?? message;
-      }
-      throw AuthException(message);
-    }
-  }
-
   Future<void> logout() async {
     try {
       await _apiClient.post<void>(ApiConstants.logout);
