@@ -12,12 +12,18 @@ import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
 
-const stripePublishableKey = 'pk_test_51Sxd7VGtkdFFe1B5SLNRHhqdiHxfwGJlqdJeLADAsTB0DgxJsKQeYC9tQZ8HgjyUpzkMYEWdowoLJT7Sk3AeNLKp00aDdwCReQ';
+// Stripe key is passed via --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_xxx at build time
+const stripePublishableKey = String.fromEnvironment(
+  'STRIPE_PUBLISHABLE_KEY',
+  defaultValue: '',
+);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Stripe.publishableKey = stripePublishableKey;
+  if (stripePublishableKey.isNotEmpty) {
+    Stripe.publishableKey = stripePublishableKey;
+  }
 
   if (!kIsWeb) {
     await SystemChrome.setPreferredOrientations([

@@ -60,10 +60,6 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
-    print('=== LoginResponse.fromJson ===');
-    print('accessToken: ${data['accessToken']}');
-    print('refreshToken: ${data['refreshToken']}');
-    print('user: ${data['user']}');
     return LoginResponse(
       accessToken: data['accessToken'] as String,
       refreshToken: data['refreshToken'] as String,
@@ -150,7 +146,7 @@ class AuthRepository {
     try {
       await _apiClient.post<void>(
         '/auth/send-otp',
-        queryParameters: {'phone': phone},
+        data: {'phone': phone},
       );
     } on DioException catch (e) {
       final responseData = e.response?.data;
@@ -166,7 +162,7 @@ class AuthRepository {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/verify-otp',
-        queryParameters: {'phone': phone, 'otp': code},
+        data: {'phone': phone, 'code': code},
       );
       return response;
     } on DioException catch (e) {

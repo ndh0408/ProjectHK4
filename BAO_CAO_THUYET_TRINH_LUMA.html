@@ -428,25 +428,26 @@
         <div class="tagline">Event Marketplace Platform</div>
         <div class="subtitle">
             BÀI THUYẾT TRÌNH BẢO VỆ DỰ ÁN<br>
-            27 Chức Năng — 5 Thành Viên — 1 Hệ Thống Toàn Diện
+            27 Chức Năng — 55 Entities — 200+ API Endpoints — 3 Platforms
         </div>
         <div class="badge">📅 Năm học 2024-2025</div>
     </div>
 
     <!-- TOC -->
     <div class="toc">
-        <h2>📑 Mục Lục</h2>
+        <h2>Mục Lục</h2>
         <div class="toc-grid">
-            <a href="#mo-dau">I. Phần Mở Đầu</a>
-            <a href="#trien-khai">I.4 Hướng dẫn Triển khai</a>
+            <a href="#mo-dau">I. Phần Mở Đầu (HUY trình bày)</a>
             <a href="#phan-cong">II. Phân Công Thuyết Trình</a>
             <a href="#tong-quan">III. Tổng Quan 27 Chức Năng</a>
-            <a href="#huy-section">IV.1. HUY thuyết trình</a>
-            <a href="#duy-section">IV.2. DUY thuyết trình</a>
-            <a href="#khoa-section">IV.3. KHOA thuyết trình</a>
-            <a href="#khanh-section">IV.4. KHÁNH thuyết trình</a>
-            <a href="#trinh-section">IV.5. TRINH thuyết trình</a>
-            <a href="#ket-luan">V. Kết Luận</a>
+            <a href="#huy-section">IV.1. HUY — User Journey</a>
+            <a href="#duy-section">IV.2. DUY — Đăng Ký &amp; Vé</a>
+            <a href="#khoa-section">IV.3. KHOA — Thanh Toán &amp; AI</a>
+            <a href="#khanh-section">IV.4. KHÁNH — Công Cụ Tổ Chức</a>
+            <a href="#trinh-section">IV.5. TRINH — Quản Trị Hệ Thống</a>
+            <a href="#demo-flow">V. Luồng Demo End-to-End</a>
+            <a href="#qa-bank">VI. Câu Hỏi Giảng Viên &amp; Cách Trả Lời</a>
+            <a href="#ket-luan">VII. Kết Luận (TRINH trình bày)</a>
         </div>
     </div>
 
@@ -456,6 +457,23 @@
     <div class="section" id="mo-dau">
         <h2>I. Phần Mở Đầu</h2>
 
+        <div class="note warning" style="background: #dbeafe; border-left-color: var(--huy);">
+            <strong>Người trình bày: HUY</strong> — Phần này HUY sẽ mở đầu bài thuyết trình, giới thiệu đề tài, kiến trúc và công nghệ trước khi đi vào chi tiết từng chức năng.
+        </div>
+
+        <div class="qa-section" style="border-color: var(--huy); background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <h4>SCRIPT GỢI Ý CHO HUY (Phần mở đầu ~3 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    "Kính thưa quý thầy cô và các bạn. Hôm nay nhóm chúng em xin trình bày dự án LUMA — một sàn thương mại sự kiện toàn diện. Em là Huy, sẽ mở đầu bài thuyết trình."<br><br>
+                    "Trong những năm gần đây, ngành tổ chức sự kiện ở Việt Nam phát triển mạnh mẽ. Tuy nhiên, người tham dự thường gặp khó khăn: tìm sự kiện ở nhiều nguồn khác nhau, đăng ký phức tạp, không có công cụ kết nối. Phía nhà tổ chức cũng phải dùng nhiều tool rời rạc. LUMA ra đời để giải quyết tất cả vấn đề đó trong một nền tảng duy nhất."<br><br>
+                    "Dự án LUMA hướng đến 3 mục tiêu chính: <strong>Thứ nhất</strong>, xây dựng nền tảng đa thiết bị gồm ứng dụng di động Flutter, web portal React cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ hiện đại như Stripe Payment, Groq AI và WebSocket real-time. <strong>Thứ ba</strong>, phát triển 5 chức năng AI nâng cao sử dụng pattern RAG — đây là điểm nhấn kỹ thuật của dự án."<br><br>
+                    "Về kiến trúc, hệ thống gồm 3 thành phần chính: Backend Spring Boot 3.4 chạy trên port 8080 với 200+ API endpoints và 55 database entities. Frontend React chạy trên port 3000 dành cho admin và nhà tổ chức. Mobile Flutter chạy trên port 5000 dành cho người dùng cuối. Tất cả giao tiếp qua REST API và WebSocket."<br><br>
+                    "Toàn bộ dự án có hơn 500 file source code, 27 chức năng chính, trong đó 5 chức năng AI sử dụng pattern RAG. Bây giờ em sẽ trình bày chi tiết 5 chức năng đầu tiên về User Journey."
+                </div>
+            </div>
+        </div>
+
         <p>Kính thưa quý thầy cô trong ban giám khảo và các bạn,</p>
 
         <p>Hôm nay, nhóm chúng em vinh dự được trình bày dự án <strong>LUMA — Event Marketplace Platform</strong>, một sàn thương mại sự kiện toàn diện được phát triển trong suốt học kỳ vừa qua. Dự án không chỉ là sản phẩm học tập mà còn là một nỗ lực giải quyết các vấn đề thực tế trong ngành tổ chức sự kiện tại Việt Nam.</p>
@@ -464,7 +482,7 @@
         <p>Trong những năm gần đây, ngành tổ chức sự kiện ở Việt Nam phát triển mạnh mẽ với sự xuất hiện của hàng nghìn workshop, hội thảo, concert và lễ hội mỗi tháng. Tuy nhiên, người tham dự thường gặp khó khăn trong việc tìm kiếm sự kiện phù hợp, đăng ký phức tạp, không có công cụ kết nối với những người tham dự khác. Phía nhà tổ chức cũng đối mặt với việc phải dùng nhiều công cụ rời rạc — gây mất thời gian và dễ sai sót. Nhận thấy khoảng trống đó, nhóm chúng em quyết định xây dựng <strong>LUMA</strong> — một nền tảng "tất cả trong một".</p>
 
         <h3>1.2. Mục Tiêu Dự Án</h3>
-        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động cho người tham dự, web portal cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe), trí tuệ nhân tạo (Groq LLM) và các công nghệ real-time (WebSocket). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Seat Map, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
+        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động Flutter cho người tham dự, web portal React cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe SDK), trí tuệ nhân tạo (Groq LLM — model llama-3.3-70b) và các công nghệ real-time (WebSocket STOMP). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Seat Map, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
 
         <h3>1.3. Công Nghệ Sử Dụng</h3>
 
@@ -569,12 +587,12 @@
                 <span class="label">File source code</span>
             </div>
             <div class="stat-box">
-                <span class="number">60+</span>
-                <span class="label">Entities</span>
+                <span class="number">55</span>
+                <span class="label">Database Entities</span>
             </div>
             <div class="stat-box">
-                <span class="number">70+</span>
-                <span class="label">REST Controllers</span>
+                <span class="number">200+</span>
+                <span class="label">REST API Endpoints</span>
             </div>
             <div class="stat-box">
                 <span class="number">27</span>
@@ -589,7 +607,7 @@
     <div class="section" id="phan-cong">
         <h2>II. Phân Công Thuyết Trình</h2>
 
-        <p>Nhóm chúng em gồm 5 thành viên, mỗi người sẽ trình bày một nhóm chức năng theo flow logic của hệ thống. Thứ tự thuyết trình đi từ <strong>người dùng khám phá sự kiện → đăng ký → thanh toán → tổ chức quản lý → admin giám sát</strong>, đảm bảo người nghe theo dõi được toàn bộ vòng đời của một sự kiện trên nền tảng LUMA.</p>
+        <p>Nhóm chúng em gồm 5 thành viên, mỗi người sẽ trình bày một nhóm chức năng theo flow logic end-to-end của hệ thống. Thứ tự thuyết trình đi từ <strong>mở đầu đề tài → khám phá sự kiện → đăng ký → thanh toán → công cụ tổ chức → quản trị hệ thống → demo → kết luận</strong>.</p>
 
         <table>
             <thead>
@@ -597,46 +615,57 @@
                     <th>STT</th>
                     <th>Người Thuyết Trình</th>
                     <th>Chủ Đề</th>
-                    <th>Số Chức Năng</th>
+                    <th>Nội dung</th>
+                    <th>~Thời gian</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><strong>1</strong></td>
                     <td><strong>HUY</strong> <span class="role-badge user">Mobile FE</span></td>
-                    <td>User Journey: Khám phá &amp; Tương tác</td>
-                    <td>5 chức năng</td>
+                    <td>Mở đầu + User Journey</td>
+                    <td>Giới thiệu đề tài, kiến trúc, công nghệ + 5 chức năng (Auth, Discovery, Comparison, AI Chatbot, Chat/Poll)</td>
+                    <td>~8 phút</td>
                 </tr>
                 <tr>
                     <td><strong>2</strong></td>
                     <td><strong>DUY</strong> <span class="role-badge organiser">Backend</span></td>
-                    <td>Đăng Ký, Vé &amp; Tham Dự Sự Kiện</td>
-                    <td>6 chức năng</td>
+                    <td>Đăng Ký &amp; Tham Dự</td>
+                    <td>6 chức năng (Registration, Waitlist, Seat Map, Schedule, Ticket Transfer, Certificate)</td>
+                    <td>~8 phút</td>
                 </tr>
                 <tr>
                     <td><strong>3</strong></td>
                     <td><strong>KHOA</strong> <span class="role-badge admin">Team Lead</span></td>
-                    <td>Thanh Toán &amp; Monetization</td>
-                    <td>6 chức năng</td>
+                    <td>Thanh Toán &amp; AI Smart</td>
+                    <td>6 chức năng (Stripe, Coupon, AI Pricing, RAG Description, Subscription, Boost)</td>
+                    <td>~8 phút</td>
                 </tr>
                 <tr>
                     <td><strong>4</strong></td>
                     <td><strong>KHÁNH</strong> <span class="role-badge organiser">Organiser FE</span></td>
-                    <td>Công Cụ Tổ Chức &amp; Phân Tích</td>
-                    <td>5 chức năng</td>
+                    <td>Công Cụ Tổ Chức</td>
+                    <td>5 chức năng (RAG Questions, Dashboard, Funnel, Networking, Notification)</td>
+                    <td>~8 phút</td>
                 </tr>
                 <tr>
                     <td><strong>5</strong></td>
                     <td><strong>TRINH</strong> <span class="role-badge admin">Admin Full-stack</span></td>
-                    <td>Quản Trị Hệ Thống &amp; Moderation</td>
-                    <td>5 chức năng</td>
+                    <td>Quản Trị + Demo + Kết luận</td>
+                    <td>5 chức năng (User Mgmt, Event Approval, RAG Moderation, Email, Categories) + Demo End-to-End + Kết luận</td>
+                    <td>~10 phút</td>
                 </tr>
             </tbody>
         </table>
 
         <div class="note">
-            <strong>📌 Lưu ý về thứ tự thuyết trình:</strong>
-            Mỗi người sẽ trình bày <strong>tuần tự tất cả các chức năng của mình</strong> trước khi chuyển sang người tiếp theo. Cách phân chia này giúp ban giám khảo dễ theo dõi flow nghiệp vụ và biết rõ ai chịu trách nhiệm cho phần nào.
+            <strong>Lưu ý về thứ tự thuyết trình:</strong>
+            <ul>
+                <li><strong>HUY mở đầu</strong>: giới thiệu đề tài, kiến trúc tổng quan, rồi đi vào 5 chức năng User Journey.</li>
+                <li><strong>DUY → KHOA → KHÁNH</strong>: lần lượt trình bày các chức năng theo flow nghiệp vụ, mỗi người có câu chuyển ý sang người tiếp theo.</li>
+                <li><strong>TRINH kết thúc</strong>: trình bày quản trị, demo luồng end-to-end, kết luận và mở Q&amp;A.</li>
+                <li>Tổng thời gian dự kiến: <strong>~42 phút</strong> (chưa tính Q&amp;A).</li>
+            </ul>
         </div>
     </div>
 
@@ -646,18 +675,18 @@
     <div class="section" id="tong-quan">
         <h2>III. Tổng Quan 27 Chức Năng</h2>
 
-        <p>Hệ thống LUMA gồm <strong>27 chức năng chính</strong>, được chia thành ba cấp độ từ cơ bản đến nâng cao. Trong đó nổi bật nhất là <strong>5 chức năng AI tier 3</strong> sử dụng pattern <strong>RAG (Retrieval-Augmented Generation)</strong> và <strong>Function Calling</strong> — không chỉ gọi LLM thuần mà còn query database để build context phong phú trước khi gọi AI.</p>
+        <p>Hệ thống LUMA gồm <strong>27 chức năng chính</strong>, được chia thành ba cấp độ từ cơ bản đến nâng cao. Trong đó nổi bật nhất là <strong>5 chức năng AI</strong> sử dụng pattern <strong>RAG (Retrieval-Augmented Generation)</strong> và <strong>Function Calling</strong> — không chỉ gọi LLM thuần mà còn query database để build context phong phú trước khi gọi AI.</p>
 
-        <h3>🟦 Nhóm 1 — Chức Năng Cơ Bản (8 chức năng)</h3>
+        <h3>Nhóm 1 — Chức Năng Cơ Bản (8 chức năng)</h3>
         <p>Authentication, Event Discovery, Event Management, Ticketing &amp; QR Check-in, Reviews, Certificates, Categories/Cities Management, User &amp; Organiser Management.</p>
 
-        <h3>🟨 Nhóm 2 — Chức Năng Trung Bình (8 chức năng)</h3>
+        <h3>Nhóm 2 — Chức Năng Trung Bình (8 chức năng)</h3>
         <p>Stripe Payment, Real-time Chat, Google Calendar Sync, Email Marketing, Notification System, Subscription Plans, Boost Event, AI Insights cơ bản.</p>
 
-        <h3>🟩 Nhóm 3 — Chức Năng Nâng Cao (6 chức năng)</h3>
-        <p>Smart Waitlist, Live Poll, Funnel Analytics, Networking &amp; Matchmaking (4 nâng cấp); Coupon Engine, Ticket Transfer, Event Comparison, Seat Map, Schedule Builder, Multi-step Wizard (6 mới).</p>
+        <h3>Nhóm 3 — Chức Năng Nâng Cao (6 chức năng)</h3>
+        <p>Smart Waitlist, Live Poll, Funnel Analytics, Networking &amp; Matchmaking (4 nâng cấp); Coupon Engine, Ticket Transfer, Event Comparison, Seat Map, Schedule Builder (5 mới).</p>
 
-        <h3>🟪 Nhóm 4 — Chức Năng AI Smart Tier 3 <span class="ai-tag">5 Mới</span></h3>
+        <h3>Nhóm 4 — Chức Năng AI Smart <span class="ai-tag">5 AI RAG</span></h3>
         <p>Đây là điểm nhấn AI của dự án — 5 chức năng AI thực sự áp dụng RAG pattern thay vì chỉ wrapper LLM:</p>
         <ol>
             <li><strong>RAG Event Description</strong> — Query 5 events thành công nhất cùng category làm reference cho AI học pattern.</li>
@@ -668,8 +697,8 @@
         </ol>
 
         <div class="note success">
-            <strong>📊 Tổng kết quy mô:</strong>
-            Toàn dự án có hơn 500 file source code, 60+ entities, 70+ REST controllers, hỗ trợ end-to-end từ Backend → Mobile App → Web Admin/Organiser. Tổng cộng <strong>21 chức năng AI</strong> trong đó <strong>8 chức năng có RAG/data integration sâu</strong>.
+            <strong>Tổng kết quy mô:</strong>
+            Toàn dự án có hơn 500 file source code, 55 database entities, 200+ REST API endpoints, 30+ controllers, hỗ trợ end-to-end từ Backend Spring Boot → Mobile App Flutter → Web Admin/Organiser React. Trong đó <strong>5 chức năng AI có RAG/data integration sâu</strong> vào database.
         </div>
     </div>
 
@@ -695,7 +724,35 @@
                 AI Smart (Chatbot)
             </div>
         </div>
-        <p style="margin-top: 20px;">"Em sẽ trình bày phần đầu vòng đời của user trên LUMA: từ khi đăng nhập, khám phá sự kiện, so sánh, sử dụng AI assistant, đến tương tác trực tiếp với organiser qua chat và live poll."</p>
+        <p style="margin-top: 20px;"><strong>Chủ đề:</strong> "Em sẽ trình bày phần đầu vòng đời của user trên LUMA: từ khi đăng nhập, khám phá sự kiện, so sánh, sử dụng AI assistant, đến tương tác trực tiếp với organiser qua chat và live poll."</p>
+
+        <div class="qa-section" style="border-color: var(--huy); background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <h4>SCRIPT THUYẾT TRÌNH CHO HUY (~8 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    <strong>Mở đầu (sau phần giới thiệu đề tài):</strong><br>
+                    "Bây giờ em sẽ trình bày 5 chức năng đầu tiên trong hành trình của người dùng trên LUMA. Điểm bắt đầu là khi user mở app và đăng nhập."<br><br>
+
+                    <strong>Chức năng 1 — Authentication:</strong><br>
+                    "Hệ thống xác thực của LUMA hỗ trợ 2 cách: đăng nhập bằng email/mật khẩu và đăng nhập nhanh bằng Google OAuth. Backend sử dụng JWT với access token 24 giờ và refresh token 7 ngày, lưu trong database với hash. Trên mobile, token được lưu an toàn trong flutter_secure_storage. Hệ thống phân quyền 3 role: User, Organiser và Admin. Mỗi role có quyền truy cập khác nhau được bảo vệ bởi Spring Security."<br><br>
+
+                    <strong>Chức năng 2 — Event Discovery:</strong><br>
+                    "Sau khi đăng nhập, user thấy trang chủ với nhiều khu khám phá. Hệ thống hỗ trợ tìm kiếm theo keyword, category, city, country, speaker với pagination. Có AI recommendation cá nhân hóa và gợi ý sự kiện tương tự. Backend có hơn 15 endpoints riêng cho phần Event Discovery."<br><br>
+
+                    <strong>Chức năng 3 — Event Comparison:</strong><br>
+                    "Khi user phân vân giữa nhiều sự kiện, họ có thể chọn 2-4 sự kiện để so sánh trên cùng 1 màn hình. Backend trả về dữ liệu của tất cả events được chọn, frontend hiển thị dạng bảng matrix để dễ so sánh."<br><br>
+
+                    <strong>Chức năng 4 — AI Chatbot (Điểm nhấn AI):</strong><br>
+                    "Đây là 1 trong 5 chức năng AI nâng cao của LUMA. Thay vì chỉ gọi LLM thuần, em áp dụng pattern 2-pass Function Calling. Pass 1: gửi câu hỏi của user cho Groq AI để phân loại intent — ví dụ SEARCH_EVENTS, RECOMMEND, PRICE_QUERY. Pass 2: backend tự động query database theo intent, sau đó gửi raw data kèm câu hỏi gốc lại cho AI để generate câu trả lời tự nhiên. Kết quả là AI không bao giờ hallucinate vì luôn dựa trên data thực."<br><br>
+
+                    <strong>Chức năng 5 — Chat, Q&amp;A &amp; Live Poll:</strong><br>
+                    "LUMA tích hợp WebSocket STOMP để hỗ trợ chat real-time giữa user và organiser, Q&amp;A công khai trong sự kiện, và Live Poll với kết quả cập nhật tức thì. Database có unique constraint trên cặp poll_id và user_id để đảm bảo mỗi user chỉ vote 1 lần."<br><br>
+
+                    <strong>Chuyển ý sang DUY:</strong><br>
+                    "Vừa rồi em đã trình bày hành trình của user từ đăng nhập đến khám phá và tương tác. Bây giờ, khi user đã tìm được sự kiện ưng ý, em xin mời bạn Duy trình bày tiếp phần đăng ký và tham dự sự kiện."
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- HUY 1 - Auth -->
@@ -913,7 +970,38 @@
                 Chức năng phụ trách
             </div>
         </div>
-        <p style="margin-top: 20px;">"Sau khi user đã tìm được sự kiện ưng ý, em sẽ trình bày tiếp toàn bộ flow đăng ký: từ điền form, vào waitlist nếu hết chỗ, chọn ghế, theo dõi lịch trình session, chuyển nhượng vé khi cần, đến nhận chứng chỉ sau sự kiện."</p>
+        <p style="margin-top: 20px;"><strong>Chủ đề:</strong> "Sau khi user đã tìm được sự kiện ưng ý, em sẽ trình bày tiếp toàn bộ flow đăng ký: từ điền form, vào waitlist nếu hết chỗ, chọn ghế, theo dõi lịch trình session, chuyển nhượng vé khi cần, đến nhận chứng chỉ sau sự kiện."</p>
+
+        <div class="qa-section" style="border-color: var(--duy); background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+            <h4>SCRIPT THUYẾT TRÌNH CHO DUY (~8 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    <strong>Mở đầu:</strong><br>
+                    "Cảm ơn Huy. Tiếp nối hành trình, khi user đã chọn được sự kiện, bước tiếp theo là đăng ký tham dự. Em sẽ trình bày 6 chức năng liên quan đến Registration, Ticketing và toàn bộ quy trình tham dự sự kiện."<br><br>
+
+                    <strong>Chức năng 1 — Registration:</strong><br>
+                    "Hệ thống đăng ký cho phép organiser tự định nghĩa các câu hỏi riêng cho từng sự kiện. Backend có RegistrationService xử lý toàn bộ flow: validate form, kiểm tra capacity, tạo registration với trạng thái phù hợp. Sự kiện miễn phí thì auto-approve, sự kiện có phí thì chuyển sang trạng thái Pending cho đến khi thanh toán."<br><br>
+
+                    <strong>Chức năng 2 — Smart Waitlist:</strong><br>
+                    "Khác với waitlist thông thường theo thứ tự 'ai đến trước', em xây dựng hệ thống priority scoring. Điểm được tính từ: role (+20 cho organiser), subscription tier (VIP +40), lịch sử tham dự (max +20), penalty cancel (max -20). Khi có chỗ trống, người có điểm cao nhất nhận offer với countdown 30 phút. Hệ thống đảm bảo chỉ có 1 offer pending tại 1 thời điểm bằng pessimistic write lock."<br><br>
+
+                    <strong>Chức năng 3 — Seat Map:</strong><br>
+                    "Cho các sự kiện có chỗ ngồi cố định, organiser tạo sơ đồ với nhiều zone khác nhau. User tap vào ghế để chọn, ghế bị lock 5 phút để hoàn tất thanh toán. Pessimistic locking ở database đảm bảo 100% không có 2 người mua cùng 1 ghế."<br><br>
+
+                    <strong>Chức năng 4 — Schedule Builder:</strong><br>
+                    "Dành cho sự kiện lớn có nhiều session song song. Organiser tạo session với title, giờ, phòng, speaker. Hệ thống tự động kiểm tra conflict: speaker trùng giờ hoặc phòng trùng giờ sẽ báo lỗi. User có thể đăng ký session vào lịch cá nhân."<br><br>
+
+                    <strong>Chức năng 5 — Ticket Transfer:</strong><br>
+                    "User có thể chuyển nhượng vé cho người khác bằng cách nhập email người nhận. Khi accept, vé QR cũ bị vô hiệu hóa và mã QR mới được tạo. Hệ thống giới hạn giá bán lại tối đa 150% giá gốc để chống đầu cơ vé."<br><br>
+
+                    <strong>Chức năng 6 — Certificate:</strong><br>
+                    "Sau sự kiện, hệ thống tự động generate chứng chỉ PDF với template có logo, tên người tham dự, mã QR verification. File upload lên Cloudinary và gửi qua email. Mỗi chứng chỉ có UUID riêng để chống giả mạo."<br><br>
+
+                    <strong>Chuyển ý sang KHOA:</strong><br>
+                    "Vừa rồi em đã trình bày toàn bộ flow đăng ký và tham dự sự kiện. Bây giờ, khi đã có đăng ký, vấn đề tiếp theo là thanh toán. Em xin mời bạn Khoa trình bày phần Thanh Toán và các chức năng AI thông minh."
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- DUY 1 - Registration -->
@@ -1155,7 +1243,38 @@
                 AI Smart (RAG)
             </div>
         </div>
-        <p style="margin-top: 20px;">"Phần em trình bày là toàn bộ flow tiền bạc của hệ thống: từ thanh toán Stripe, áp dụng coupon, gói subscription, boost event, cho đến 2 chức năng AI Smart liên quan: AI Smart Pricing dùng phân tích thống kê để đề xuất giá tối ưu, và AI RAG Event Description giúp organiser viết description chuyên nghiệp dựa trên các sự kiện thành công."</p>
+        <p style="margin-top: 20px;"><strong>Chủ đề:</strong> "Phần em trình bày là toàn bộ flow tiền bạc của hệ thống: từ thanh toán Stripe, áp dụng coupon, gói subscription, boost event, cho đến 2 chức năng AI Smart: AI Smart Pricing và RAG Event Description."</p>
+
+        <div class="qa-section" style="border-color: var(--khoa); background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);">
+            <h4>SCRIPT THUYẾT TRÌNH CHO KHOA (~8 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    <strong>Mở đầu:</strong><br>
+                    "Cảm ơn Duy. User đã đăng ký xong, bây giờ đến bước thanh toán. Em sẽ trình bày 6 chức năng liên quan đến Payment, Monetization và 2 chức năng AI Smart."<br><br>
+
+                    <strong>Chức năng 1 — Stripe Payment:</strong><br>
+                    "LUMA tích hợp Stripe SDK v24 để xử lý thanh toán. Flow: backend tạo Payment Intent qua Stripe API, frontend hiển thị Payment Sheet, sau khi thanh toán thành công thì Stripe gửi Webhook về backend để xác nhận và cập nhật trạng thái. Vé được tạo ngay với mã QR. Nhà tổ chức nhận tiền qua Stripe Connect sau 48 giờ, trừ 5% phí nền tảng."<br><br>
+
+                    <strong>Chức năng 2 — Coupon Engine:</strong><br>
+                    "Organiser tạo mã giảm giá với 2 loại: Percentage hoặc Fixed Amount. Hệ thống sử dụng atomic operation ở database level để tăng usedCount — đảm bảo khi 100 user cùng apply 1 coupon còn 1 lượt thì chỉ 1 người được. Đặc biệt, khi coupon giảm 100%, hệ thống tự động bypass Stripe và approve ngay."<br><br>
+
+                    <strong>Chức năng 3 — AI Smart Pricing (Điểm nhấn AI):</strong><br>
+                    "Đây là AI không chỉ wrapper LLM. Quy trình 4 bước: (1) Query 50 paid events trong cùng category từ database; (2) Tính thống kê: min, max, median, p25, p75; (3) Phân tích price-fill correlation — chia thành 3 nhóm low/mid/high, tính fill rate trung bình mỗi nhóm; (4) Gửi tất cả phân tích cho Groq AI để generate 3 mức giá: Budget, Optimal và Premium kèm reasoning. Đây là pattern data-driven AI thực sự."<br><br>
+
+                    <strong>Chức năng 4 — RAG Event Description (Điểm nhấn AI):</strong><br>
+                    "Thay vì gọi AI sinh nội dung chung chung, em retrieve 5 events thành công nhất trong cùng category từ database làm reference material. AI học pattern từ các event thật để tạo description phù hợp với phong cách LUMA. Response có metadata ragEnabled, referencesUsed để minh bạch."<br><br>
+
+                    <strong>Chức năng 5 — Subscription Plans:</strong><br>
+                    "LUMA có 4 gói subscription cho organiser: FREE, STANDARD ($19.99), PREMIUM ($49.99), VIP ($99.99). Mỗi gói giới hạn số event/tháng, số AI features/tháng, và có mức giảm giá Boost khác nhau. Thanh toán qua Stripe Subscription tự động charge hàng tháng."<br><br>
+
+                    <strong>Chức năng 6 — Boost Event:</strong><br>
+                    "Tương tự Facebook Ads, organiser mua gói boost để đẩy sự kiện lên vị trí ưu tiên trong search và homepage. 4 gói từ BASIC ($9.99/7 ngày) đến VIP ($99.99/30 ngày + banner). Sự kiện được boost có visibility cao hơn 1.5-5 lần."<br><br>
+
+                    <strong>Chuyển ý sang KHÁNH:</strong><br>
+                    "Em đã trình bày xong phần thanh toán và monetization. Bây giờ, các công cụ dành cho nhà tổ chức để quản lý và phân tích sự kiện. Em xin mời bạn Khánh trình bày tiếp."
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- KHOA 1 - Stripe Payment -->
@@ -1354,7 +1473,35 @@
                 AI Smart (RAG)
             </div>
         </div>
-        <p style="margin-top: 20px;">"Sau khi user đã trải nghiệm sản phẩm và Khoa đã trình bày phần tiền bạc, em sẽ trình bày các công cụ dành cho organiser: AI RAG để gợi ý câu hỏi đăng ký, dashboard analytics, funnel analytics phân tích chuyển đổi và chức năng networking giúp tổ chức cộng đồng."</p>
+        <p style="margin-top: 20px;"><strong>Chủ đề:</strong> "Em sẽ trình bày các công cụ dành cho organiser: AI RAG để gợi ý câu hỏi đăng ký, dashboard analytics, funnel analytics phân tích chuyển đổi, chức năng networking và hệ thống notification."</p>
+
+        <div class="qa-section" style="border-color: var(--khanh); background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
+            <h4>SCRIPT THUYẾT TRÌNH CHO KHÁNH (~8 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    <strong>Mở đầu:</strong><br>
+                    "Cảm ơn Khoa. Sau khi user đã trải nghiệm sản phẩm và thanh toán xong, bây giờ em sẽ trình bày các công cụ dành cho nhà tổ chức — những người đứng sau mỗi sự kiện. Em phụ trách 5 chức năng bao gồm 1 chức năng AI RAG."<br><br>
+
+                    <strong>Chức năng 1 — RAG Registration Questions (Điểm nhấn AI):</strong><br>
+                    "Khi tạo form đăng ký, organiser thường không biết nên hỏi câu gì. Em xây dựng AI feature dùng RAG: query 30 câu hỏi từ các events tương tự trong cùng category, dedupe các câu trùng nhau, sau đó gửi context cho Groq AI. AI trả về danh sách câu hỏi dạng JSON kèm question type như TEXT, SINGLE_CHOICE, MULTIPLE_CHOICE. Response có metadata referencedQuestionsCount để minh bạch."<br><br>
+
+                    <strong>Chức năng 2 — Dashboard Analytics:</strong><br>
+                    "Organiser cần nắm bắt tình hình kinh doanh nhanh chóng. Dashboard hiển thị 4 stat cards lớn: Total Events, Registrations, Followers, Revenue — mỗi card có mũi tên tăng/giảm so với tháng trước. Bên dưới là các biểu đồ MUI X-Charts: line chart growth, bar chart by category, pie chart by status. Cuối trang có AI Insights tự động phân tích dữ liệu."<br><br>
+
+                    <strong>Chức năng 3 — Funnel Analytics:</strong><br>
+                    "Phễu chuyển đổi 5 bước: View → Register → Approved → Attended → Reviewed. Mỗi bước hiển thị số lượng và tỷ lệ % so với bước trước. Organiser dễ dàng nhận ra bước nào cần cải thiện. Ví dụ: 'Tỷ lệ View → Register chỉ 5%' thì cần cải thiện thumbnail và mô tả sự kiện."<br><br>
+
+                    <strong>Chức năng 4 — Networking với Compatibility Scoring:</strong><br>
+                    "Người tham dự có thể khám phá những người cùng sở thích tại sự kiện. Hệ thống tính Match Score dựa trên: shared events, interest overlap, connection count. Giao diện dạng card swipe giống Tinder — user có thể Skip, Connect hoặc Chat. Khi cả hai accept, họ chat trực tiếp trong app."<br><br>
+
+                    <strong>Chức năng 5 — Notification System:</strong><br>
+                    "Hệ thống hỗ trợ 28 loại notification khác nhau: từ system, event, registration, Q&amp;A, payment, social, đến waitlist offer, ticket transfer. Thông báo qua WebSocket cho người đang online — real-time, và qua email cho người offline. User có thể tùy chỉnh loại thông báo muốn nhận trong Settings."<br><br>
+
+                    <strong>Chuyển ý sang TRINH:</strong><br>
+                    "Em đã trình bày xong các công cụ cho nhà tổ chức. Bây giờ, phần cuối cùng và cũng rất quan trọng — góc nhìn của Admin, người giám sát toàn bộ hệ thống. Em xin mời bạn Trinh trình bày."
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- KHANH 1 - RAG Registration Questions -->
@@ -1512,7 +1659,35 @@
                 AI Smart (RAG)
             </div>
         </div>
-        <p style="margin-top: 20px;">"Phần cuối cùng em sẽ trình bày là góc nhìn của Admin — người giám sát toàn bộ hệ thống. Em phụ trách quản lý users, organisers, duyệt sự kiện với hỗ trợ AI thông thường và đặc biệt là <strong>RAG Event Moderation</strong> — pattern AI cao cấp nhất so sánh new event với cả approved + rejected events trước đây để ra quyết định có evidence."</p>
+        <p style="margin-top: 20px;"><strong>Chủ đề:</strong> "Phần cuối cùng em trình bày là góc nhìn Admin — quản lý users, organisers, duyệt sự kiện với AI thông thường và RAG Event Moderation, email marketing, categories/cities. Sau đó em sẽ demo luồng end-to-end và kết luận."</p>
+
+        <div class="qa-section" style="border-color: var(--trinh); background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);">
+            <h4>SCRIPT THUYẾT TRÌNH CHO TRINH (~10 phút, bao gồm Demo &amp; Kết luận)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    <strong>Mở đầu:</strong><br>
+                    "Cảm ơn Khánh. Bốn bạn trước đã trình bày từ góc nhìn người dùng và nhà tổ chức. Bây giờ em sẽ trình bày phần quản trị hệ thống — nơi Admin giám sát và kiểm soát toàn bộ nền tảng LUMA."<br><br>
+
+                    <strong>Chức năng 1 — User &amp; Organiser Management:</strong><br>
+                    "Admin có DataGrid hiển thị toàn bộ users với các cột Name, Email, Role, Status. Có thể filter theo role, tìm kiếm, lock/unlock tài khoản, duyệt yêu cầu trở thành Organiser, cấp Verified Badge cho tổ chức uy tín. Khi lock user, hệ thống gửi email thông báo tự động."<br><br>
+
+                    <strong>Chức năng 2 — Event Approval (AI Basic):</strong><br>
+                    "Khi có hàng trăm sự kiện được tạo mỗi ngày, admin dùng AI Groq LLM để phân tích nội dung. Nhấn 'Analyze with AI', AI trả về kết quả: an toàn / cảnh báo / không phù hợp. Admin dựa vào đó để Approve, Reject hoặc Request Changes."<br><br>
+
+                    <strong>Chức năng 3 — RAG Event Moderation (Điểm nhấn AI):</strong><br>
+                    "Đây là chức năng AI cao cấp nhất. Khác với version basic, em retrieve 3 events đã được approve và 3 events đã bị reject cùng category kèm rejectionReason từ database. AI so sánh event mới với cả 2 nhóm positive/negative examples để ra quyết định có evidence. Output gồm: qualityScore 0-100, recommendation, confidence, comparisonInsight. Quyết định trở nên consistent — không phụ thuộc kinh nghiệm cá nhân từng admin."<br><br>
+
+                    <strong>Chức năng 4 — Email Marketing:</strong><br>
+                    "Admin tạo campaign email hàng loạt với HTML editor. Chọn audience: All Users, By Role, hoặc By Event Attendees. Tracking pixel 1x1 đo open rate, click tracking qua redirect endpoint. Admin xem stats real-time: đã gửi, mở, click, bounce."<br><br>
+
+                    <strong>Chức năng 5 — Categories &amp; Cities:</strong><br>
+                    "Admin quản lý master data: thêm/sửa/xóa category với tên, mô tả, icon. Cities có thêm country và continent. Khi disable category, events cũ vẫn hoạt động nhưng organiser không thể chọn cho event mới. Đảm bảo data sạch sẽ, nhất quán."<br><br>
+
+                    <strong>Chuyển sang Demo:</strong><br>
+                    "Em đã trình bày xong 5 chức năng quản trị. Bây giờ cho phép em demo luồng end-to-end để quý thầy cô thấy toàn bộ hệ thống hoạt động cùng nhau."
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- TRINH 1 - User Management -->
@@ -1645,14 +1820,183 @@
     </div>
 
     <!-- ============================================ -->
-    <!-- V. KẾT LUẬN                                  -->
+    <!-- VI. LUỒNG DEMO END-TO-END                    -->
+    <!-- ============================================ -->
+    <div class="section" id="demo-flow">
+        <h2>V. Luồng Demo End-to-End</h2>
+
+        <div class="note warning" style="background: #fef9c3; border-left-color: var(--trinh);">
+            <strong>Người trình bày: TRINH</strong> — Phần demo toàn bộ luồng hệ thống. TRINH vừa demo vừa giải thích dữ liệu đi qua từng tầng.
+        </div>
+
+        <div class="qa-section" style="border-color: var(--trinh); background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);">
+            <h4>SCRIPT DEMO (~3 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    "Bây giờ em sẽ demo toàn bộ luồng end-to-end để quý thầy cô thấy 3 platform hoạt động cùng nhau."
+                </div>
+            </div>
+        </div>
+
+        <h3>Bước 1: Organiser tạo sự kiện (Admin Portal — port 3000)</h3>
+        <div class="how-block">
+            <h5>Thao tác</h5>
+            <p>Organiser đăng nhập → vào trang Events → nhấn "Create Event" → nhập title, chọn category, city, ngày giờ, capacity, giá vé → nhấn "AI Generate Description" (RAG query 5 events thành công cùng category) → thêm Registration Questions bằng "AI Suggest" (RAG query 30 câu hỏi) → tạo Seat Map với 3 zones (VIP/Standard/Economy) → nhấn Publish.</p>
+            <p><strong>Dữ liệu đi:</strong> React frontend → POST /api/organiser/events → EventService → JPA save vào bảng Event, TicketType, SeatZone, Seat, RegistrationQuestion trong SQL Server.</p>
+        </div>
+
+        <h3>Bước 2: Admin duyệt sự kiện (Admin Portal — port 3000)</h3>
+        <div class="how-block">
+            <h5>Thao tác</h5>
+            <p>Admin vào tab "Pending Approval" → chọn event → nhấn "Smart Analyze with RAG" (backend query 3 approved + 3 rejected events cùng category) → AI trả về qualityScore, recommendation → Admin nhấn "Approve".</p>
+            <p><strong>Dữ liệu đi:</strong> React → POST /api/admin/events/{id}/approve → EventService update status = PUBLISHED → NotificationService gửi thông báo qua WebSocket cho organiser.</p>
+        </div>
+
+        <h3>Bước 3: User tìm và đăng ký sự kiện (Mobile App — port 5000)</h3>
+        <div class="how-block">
+            <h5>Thao tác</h5>
+            <p>User mở app Flutter → trang Home hiển thị sự kiện mới → hoặc hỏi AI Chatbot "có gì hay cuối tuần này?" (2-pass: intent classify → query DB → generate response) → tap vào event → xem chi tiết → nhấn "Register" → điền form đăng ký → chọn ghế trên Seat Map (ghế bị lock 5 phút) → áp dụng Coupon code → nhấn "Pay".</p>
+            <p><strong>Dữ liệu đi:</strong> Flutter (Dio) → POST /api/user/events/{id}/register-with-answers → RegistrationService validate + tạo Registration (PENDING) → POST /api/user/payments/.../payment-intent → PaymentService tạo Stripe PaymentIntent → Flutter hiển thị Stripe Payment Sheet → user nhập thẻ → Stripe xử lý → Webhook POST /api/webhooks/stripe → PaymentService update Payment (COMPLETED) + Registration (APPROVED) + tạo ticket code + QR.</p>
+        </div>
+
+        <h3>Bước 4: User tham dự sự kiện</h3>
+        <div class="how-block">
+            <h5>Thao tác</h5>
+            <p>Ngày sự kiện → User mở tab "My Events" → hiện vé với QR code → Organiser dùng QR scanner quét mã → Check-in thành công. Trong sự kiện: user tham gia Live Poll, chat với organiser qua WebSocket, đăng ký sessions.</p>
+            <p><strong>Dữ liệu đi:</strong> QR scan → PUT /api/organiser/registrations/{id}/check-in → RegistrationService update status = CHECKED_IN + set checkedInAt timestamp.</p>
+        </div>
+
+        <h3>Bước 5: Sau sự kiện</h3>
+        <div class="how-block">
+            <h5>Thao tác</h5>
+            <p>User viết Review (1-5 sao) → nhận Certificate PDF tự động (Cloudinary + email) → vào Networking để kết nối với người tham dự khác. Organiser xem Dashboard Analytics + Funnel để đánh giá hiệu quả. Admin theo dõi revenue, xử lý payout cho organiser.</p>
+            <p><strong>Dữ liệu đi:</strong> Certificate scheduler chạy hàng ngày → CertificateService generate PDF (iText7) → upload Cloudinary → gửi email (SMTP Gmail) → save link vào bảng Certificate.</p>
+        </div>
+
+        <div class="note success">
+            <strong>Tóm tắt luồng dữ liệu:</strong>
+            Mobile Flutter (Dio/Riverpod) ↔ REST API (Spring Boot) ↔ Service Layer ↔ JPA/Hibernate ↔ SQL Server. Real-time: WebSocket STOMP. Payment: Stripe SDK + Webhook. File: Cloudinary. AI: Groq LLM API (llama-3.3-70b). Email: Gmail SMTP.
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VII. CÂU HỎI GIẢNG VIÊN & CÁCH TRẢ LỜI      -->
+    <!-- ============================================ -->
+    <div class="section" id="qa-bank">
+        <h2>VI. Câu Hỏi Giảng Viên Có Thể Hỏi &amp; Cách Trả Lời</h2>
+
+        <div class="note warning">
+            <strong>Lưu ý:</strong> Phần này giúp cả 5 thành viên chuẩn bị trả lời câu hỏi. Mỗi người nên nắm rõ câu trả lời trong phần mình phụ trách, đồng thời hiểu sơ các phần khác.
+        </div>
+
+        <h3>Câu hỏi về Kiến trúc &amp; Công nghệ</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: HUY hoặc bất kỳ ai</h4>
+            <div class="qa-item">
+                <div class="question">Tại sao chọn Spring Boot + Flutter + React thay vì dùng 1 framework duy nhất?</div>
+                <div class="answer">Spring Boot là framework Java mạnh nhất cho enterprise API với ecosystem phong phú (Security, JPA, WebSocket). Flutter cho phép build mobile app cross-platform từ 1 codebase. React với MUI cung cấp dashboard admin chuyên nghiệp. Mỗi tool được chọn vì đúng thế mạnh của nó cho từng use case cụ thể.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Tại sao chọn SQL Server mà không phải MySQL hay PostgreSQL?</div>
+                <div class="answer">SQL Server được chọn vì đây là database mà nhóm đã học trong chương trình, có hỗ trợ tốt cho JPA/Hibernate, và có tính năng enterprise như row-level locking (pessimistic lock) mà em cần cho seat map và waitlist. Ngoài ra, SQL Server có công cụ quản trị SSMS rất trực quan.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Làm sao 3 services giao tiếp với nhau?</div>
+                <div class="answer">Tất cả giao tiếp qua REST API. Mobile và Admin gọi đến Backend qua HTTP (Dio/Axios). Real-time features dùng WebSocket STOMP để push data từ server xuống client. Stripe giao tiếp qua Webhook callback. Không có service-to-service communication trực tiếp giữa Mobile và Admin — cả hai đều đi qua Backend.</div>
+            </div>
+        </div>
+
+        <h3>Câu hỏi về Bảo mật</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: HUY hoặc TRINH</h4>
+            <div class="qa-item">
+                <div class="question">Hệ thống bảo mật như thế nào? Có những lớp bảo vệ nào?</div>
+                <div class="answer">Nhiều lớp: (1) Authentication bằng JWT + refresh token, password hash BCrypt; (2) Authorization bằng Spring Security với @PreAuthorize trên mỗi endpoint; (3) Rate limiting bằng Bucket4j: 10 request/phút cho login, 5/phút cho register; (4) Validation bằng Spring Validation trên mọi input; (5) CORS configured cho localhost; (6) Stripe xử lý PCI DSS compliance cho payment; (7) Pessimistic locking cho các thao tác concurrent.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Nếu JWT bị đánh cắp thì sao?</div>
+                <div class="answer">Access token có thời hạn 24 giờ nên thiệt hại giới hạn. Refresh token lưu trong database, khi logout sẽ bị xóa. Trên mobile, token lưu trong flutter_secure_storage (Keychain/Keystore), không phải SharedPreferences. Nếu phát hiện bất thường, admin có thể lock user ngay lập tức.</div>
+            </div>
+        </div>
+
+        <h3>Câu hỏi về Database</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: DUY hoặc KHOA</h4>
+            <div class="qa-item">
+                <div class="question">Dự án có bao nhiêu bảng? Quan hệ chính là gì?</div>
+                <div class="answer">55 entities/bảng. Quan hệ chính: User → Registration (1:N), Event → Registration (1:N), Event → TicketType (1:N), Registration → Payment (1:1), Event → Category (N:1), Event → City (N:1), Event → SeatZone → Seat (1:N:N), User → Conversation → Message (N:N:N). Tất cả được map qua JPA/Hibernate với lazy loading.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Xử lý concurrent access như thế nào? Ví dụ 2 người mua cùng 1 ghế?</div>
+                <div class="answer">Dùng pessimistic write lock ở database level. Khi user chọn ghế, backend chạy SELECT ... FOR UPDATE, lock row đó trong transaction. User thứ 2 sẽ bị block cho đến khi transaction đầu tiên commit hoặc rollback. Ngoài ra, ghế có trạng thái LOCKED với thời hạn 5 phút — nếu không thanh toán thì tự động release.</div>
+            </div>
+        </div>
+
+        <h3>Câu hỏi về AI/RAG</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: người phụ trách chức năng AI tương ứng</h4>
+            <div class="qa-item">
+                <div class="question">RAG trong dự án này khác gì với RAG chuẩn dùng vector database?</div>
+                <div class="answer">RAG chuẩn dùng vector embeddings + similarity search (Pinecone, Weaviate). Dự án em dùng structured RAG — query SQL database với điều kiện logic (cùng category, top rated, recent) thay vì semantic search. Ưu điểm: đơn giản hơn, deterministic, không cần thêm infrastructure. Nhược điểm: không bắt được semantic similarity. Cho scope đồ án này, structured RAG đã đủ mạnh và phù hợp.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Tại sao chọn Groq mà không phải OpenAI hay Claude?</div>
+                <div class="answer">Groq cung cấp free tier đủ dùng cho development và demo. Model llama-3.3-70b có chất lượng tốt cho các task generation và classification. API tương thích với OpenAI format nên có thể migrate sang OpenAI/Claude dễ dàng nếu cần production scale.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">AI có thể hallucinate không? Làm sao kiểm soát?</div>
+                <div class="answer">Có thể, nhưng em kiểm soát bằng 3 cách: (1) RAG — cung cấp data thực từ DB làm context, AI chỉ được dùng data đó; (2) Structured output — yêu cầu AI trả JSON theo format cố định, parse và validate trước khi return; (3) Fallback — nếu parse fail hoặc data rỗng, trả response default thay vì forward AI output trực tiếp. Đặc biệt AI Chatbot dùng 2-pass: pass 1 classify intent, pass 2 generate từ data thực — AI không tự bịa data.</div>
+            </div>
+        </div>
+
+        <h3>Câu hỏi về Thanh toán</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: KHOA</h4>
+            <div class="qa-item">
+                <div class="question">Stripe Payment flow hoạt động cụ thể như thế nào?</div>
+                <div class="answer">4 bước: (1) Frontend gọi API tạo Payment Intent — backend gọi Stripe API, nhận client_secret; (2) Frontend hiển thị Stripe Payment Sheet với client_secret, user nhập thẻ; (3) Stripe xử lý payment và gửi Webhook event về backend endpoint /api/webhooks/stripe; (4) Backend verify webhook signature, update Payment status = COMPLETED, update Registration status = APPROVED, generate ticket code + QR. Toàn bộ card data do Stripe xử lý — backend không bao giờ thấy số thẻ.</div>
+            </div>
+            <div class="qa-item">
+                <div class="question">Xử lý refund như thế nào?</div>
+                <div class="answer">Organiser nhấn Refund trên admin panel → backend gọi Stripe Refund API → Stripe hoàn tiền về thẻ user → Webhook thông báo refund success → backend update Payment status = REFUNDED, Registration status = CANCELLED. Nếu user dùng coupon, lượt dùng coupon được trả lại.</div>
+            </div>
+        </div>
+
+        <h3>Câu hỏi về Performance &amp; Scale</h3>
+        <div class="qa-section">
+            <h4>Ai trả lời: bất kỳ ai</h4>
+            <div class="qa-item">
+                <div class="question">Hệ thống có scale được không? Nếu có 10.000 users đồng thời thì sao?</div>
+                <div class="answer">Hiện tại chạy trên 1 server, phù hợp cho demo. Để scale: (1) Backend stateless (JWT) nên có thể chạy multiple instances phía sau load balancer; (2) Database có index trên các cột query thường xuyên; (3) Rate limiting bằng Bucket4j bảo vệ API; (4) Có thể thêm Redis cache cho hot data. Kiến trúc đã sẵn sàng cho horizontal scaling.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VIII. KẾT LUẬN                                -->
     <!-- ============================================ -->
     <div class="section" id="ket-luan">
-        <h2>V. Kết Luận</h2>
+        <h2>VII. Kết Luận</h2>
 
-        <h3>5.1. Tổng Kết</h3>
+        <div class="note warning" style="background: #fef9c3; border-left-color: var(--trinh);">
+            <strong>Người trình bày: TRINH</strong> — Trinh kết thúc bài thuyết trình sau phần demo.
+        </div>
 
-        <p>Sau hơn một học kỳ làm việc, nhóm chúng em đã hoàn thành dự án LUMA — một sàn thương mại sự kiện toàn diện với <strong>27 chức năng chính</strong>, được phân chia hợp lý cho 5 thành viên theo flow nghiệp vụ. Mỗi chức năng đều được thiết kế xuất phát từ nhu cầu thực tế của người dùng và nhà tổ chức, không phải làm cho có.</p>
+        <div class="qa-section" style="border-color: var(--trinh); background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);">
+            <h4>SCRIPT KẾT LUẬN CHO TRINH (~2 phút)</h4>
+            <div class="qa-item">
+                <div class="answer" style="display: block;">
+                    "Để kết luận, sau hơn một học kỳ làm việc, nhóm chúng em đã hoàn thành dự án LUMA với 27 chức năng chính trên 3 nền tảng. Điểm nổi bật nhất là 5 chức năng AI sử dụng pattern RAG thực sự — không chỉ gọi API mà có data integration sâu vào database."<br><br>
+                    "Về hạn chế, dự án chưa có push notification đến devices vì cần Firebase FCM, networking matching vẫn dùng rule-based chưa có Machine Learning, và funnel analytics chỉ track authenticated users."<br><br>
+                    "Hướng phát triển V2: tích hợp Firebase Cloud Messaging, áp dụng ML collaborative filtering cho recommendation, vector embeddings cho semantic search, và phát hành mobile app native qua App Store và Google Play."<br><br>
+                    "Nhóm chúng em xin chân thành cảm ơn quý thầy cô đã dành thời gian đánh giá dự án. Chúng em sẵn sàng trả lời các câu hỏi. Cảm ơn quý thầy cô và các bạn đã lắng nghe!"
+                </div>
+            </div>
+        </div>
+
+        <h3>7.1. Tổng Kết</h3>
+
+        <p>Sau hơn một học kỳ làm việc, nhóm chúng em đã hoàn thành dự án LUMA — một sàn thương mại sự kiện toàn diện với <strong>27 chức năng chính</strong>, được phân chia hợp lý cho 5 thành viên theo flow nghiệp vụ. Mỗi chức năng đều được thiết kế xuất phát từ nhu cầu thực tế của người dùng và nhà tổ chức.</p>
 
         <div class="stats-grid">
             <div class="stat-box">
@@ -1661,49 +2005,63 @@
             </div>
             <div class="stat-box">
                 <span class="number">5</span>
-                <span class="label">AI Smart RAG</span>
+                <span class="label">AI RAG Features</span>
             </div>
             <div class="stat-box">
-                <span class="number">500+</span>
-                <span class="label">Source files</span>
+                <span class="number">55</span>
+                <span class="label">Database Entities</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">200+</span>
+                <span class="label">API Endpoints</span>
             </div>
             <div class="stat-box">
                 <span class="number">3</span>
-                <span class="label">Platform</span>
+                <span class="label">Platforms</span>
             </div>
         </div>
 
-        <h3>5.2. Điểm Nổi Bật — 5 Chức Năng AI Smart Tier 3</h3>
+        <h3>7.2. Điểm Nổi Bật — 5 Chức Năng AI</h3>
 
-        <p>Điểm khác biệt lớn nhất của LUMA so với các nền tảng đặt vé khác là <strong>5 chức năng AI nâng cao</strong> sử dụng pattern RAG (Retrieval-Augmented Generation) và Function Calling thực sự, thay vì chỉ wrapper LLM:</p>
+        <table>
+            <thead>
+                <tr><th>Chức năng AI</th><th>Người phụ trách</th><th>Pattern</th><th>Data Source</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>AI Conversational Assistant</strong></td><td>HUY</td><td>2-pass Function Calling</td><td>Query DB theo intent tự động</td></tr>
+                <tr><td><strong>AI Smart Pricing</strong></td><td>KHOA</td><td>Statistical Analysis + LLM</td><td>50+ events cùng category</td></tr>
+                <tr><td><strong>RAG Event Description</strong></td><td>KHOA</td><td>RAG (Retrieve-Augment-Generate)</td><td>5 events thành công nhất</td></tr>
+                <tr><td><strong>RAG Registration Questions</strong></td><td>KHÁNH</td><td>RAG + Dedupe</td><td>30 câu hỏi từ events tương tự</td></tr>
+                <tr><td><strong>RAG Event Moderation</strong></td><td>TRINH</td><td>RAG + Positive/Negative Examples</td><td>3 approved + 3 rejected events</td></tr>
+            </tbody>
+        </table>
 
-        <ol>
-            <li><strong>AI Conversational Assistant</strong> (HUY) — Chatbot 2-pass với intent classification + function calling thủ công</li>
-            <li><strong>AI Smart Pricing</strong> (KHOA) — Statistical analysis (median, p25, p75, correlation) trên 50+ events trước khi gọi AI</li>
-            <li><strong>RAG Event Description</strong> (KHOA) — Query 5 events thành công cùng category làm reference cho AI học pattern</li>
-            <li><strong>RAG Registration Questions</strong> (KHÁNH) — Dedupe 30 câu hỏi từ events tương tự, build context cho AI</li>
-            <li><strong>RAG Event Moderation</strong> (TRINH) — So sánh với cả approved + rejected events để ra quyết định có evidence</li>
-        </ol>
+        <h3>7.3. Hạn Chế &amp; Hướng Phát Triển</h3>
 
-        <p>Đây không phải là những chức năng "gọi ChatGPT API thuần". Mỗi chức năng đều có <strong>data integration sâu</strong> vào database, query và phân tích dữ liệu thực, sau đó mới gửi context cho LLM để generate output chất lượng cao. Đây là pattern chuẩn của các AI agents hiện đại như ChatGPT plugins, Claude tools.</p>
-
-        <h3>5.3. Hạn Chế &amp; Hướng Phát Triển</h3>
-
-        <p>Mặc dù đã hoàn thành nhiều chức năng, dự án vẫn còn một số hạn chế cần cải thiện. Về <strong>hạn chế hiện tại</strong>: chưa có push notification đến devices (cần Firebase FCM), networking matching dùng rule-based chưa có Machine Learning, funnel chỉ track authenticated users.</p>
-
-        <p>Về <strong>hướng phát triển V2</strong>: tích hợp Firebase Cloud Messaging, áp dụng ML (collaborative filtering) cho recommendation và matching, anonymous tracking với session cookie, vector embeddings cho semantic search, distribute mobile app native qua iOS App Store và Google Play.</p>
+        <table>
+            <thead>
+                <tr><th>Hạn chế hiện tại</th><th>Hướng phát triển V2</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Chưa có push notification đến devices</td><td>Tích hợp Firebase Cloud Messaging</td></tr>
+                <tr><td>Networking matching dùng rule-based</td><td>Áp dụng ML collaborative filtering</td></tr>
+                <tr><td>Funnel chỉ track authenticated users</td><td>Anonymous tracking với session cookie</td></tr>
+                <tr><td>RAG dùng structured query, chưa có semantic search</td><td>Vector embeddings (Pinecone/Weaviate)</td></tr>
+                <tr><td>Chỉ chạy localhost</td><td>Deploy cloud + phát hành App Store/Google Play</td></tr>
+            </tbody>
+        </table>
 
         <div class="note success">
-            <strong>🎯 Lời Cảm Ơn</strong>
-            Nhóm chúng em xin chân thành cảm ơn quý thầy cô và ban giám khảo đã dành thời gian xem xét và đánh giá dự án LUMA. Chúng em rất mong nhận được những góp ý quý báu để tiếp tục hoàn thiện sản phẩm và nâng cao kỹ năng phát triển phần mềm. Cảm ơn các bạn đã lắng nghe!
+            <strong>Lời Cảm Ơn</strong><br>
+            Nhóm chúng em xin chân thành cảm ơn quý thầy cô và ban giám khảo đã dành thời gian xem xét và đánh giá dự án LUMA. Chúng em rất mong nhận được những góp ý quý báu để tiếp tục hoàn thiện sản phẩm. Cảm ơn các bạn đã lắng nghe!
         </div>
     </div>
 
     <!-- Footer -->
     <div class="footer">
-        <p><strong>LUMA</strong> - Event Marketplace Platform</p>
+        <p><strong>LUMA</strong> — Event Marketplace Platform</p>
         <p>Bài thuyết trình bảo vệ dự án | Nhóm: HUY • DUY • KHOA • KHÁNH • TRINH</p>
-        <p>27 Chức năng • 5 AI Smart RAG • Năm học 2024-2025</p>
+        <p>27 Chức năng • 55 Entities • 200+ APIs • 5 AI RAG • 3 Platforms • Năm học 2024-2025</p>
     </div>
 
 </div>
