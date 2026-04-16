@@ -21,6 +21,7 @@ import '../../../home/providers/events_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../explore/presentation/providers/comparison_provider.dart';
 import 'contact_host_screen.dart';
 import 'payment_screen.dart';
 import 'registration_form_screen.dart';
@@ -274,6 +275,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             expandedHeight: 280,
             pinned: true,
             actions: [
+              _CompareButton(eventId: event.id),
               _BookmarkButton(eventId: event.id),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -1864,6 +1866,77 @@ class _ReviewCard extends StatelessWidget {
     } else {
       return DateFormat('MMM d, yyyy').format(date);
     }
+  }
+}
+
+class _CompareButton extends ConsumerWidget {
+  const _CompareButton({required this.eventId});
+
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedIds = ref.watch(selectedEventsForComparisonProvider);
+    final isSelected = selectedIds.contains(eventId);
+    final canAdd = selectedIds.length < 4;
+
+    return IconButton(
+      icon: Icon(
+        Icons.compare_arrows,
+        color: isSelected
+            ? AppColors.primary
+            : AppColors.textOnPrimary,
+      ),
+      style: IconButton.styleFrom(
+        backgroundColor: isSelected
+            ? AppColors.primary.withValues(alpha: 0.2)
+            : AppColors.textPrimary.withValues(alpha: 0.3),
+      ),
+      onPressed: () {
+        final notifier = ref.read(selectedEventsForComparisonProvider.notifier);
+        
+        if (isSelected) {
+          notifier.removeEventId(eventId);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Removed from comparison'),
+              backgroundColor: AppColors.textSecondary,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        } else if (canAdd) {
+          notifier.addEventId(eventId);
+          final newCount = selectedIds.length + 1;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Added to comparison ($newCount/4)'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 1),
+              action: newCount >= 2
+                  ? SnackBarAction(
+                      label: 'Compare',
+                      textColor: AppColors.textOnPrimary,
+                      onPressed: () {
+                        context.push(
+                          '/compare-events',
+                          extra: {'eventIds': selectedIds + [eventId]},
+                        );
+                      },
+                    )
+                  : null,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Maximum 4 events for comparison'),
+              backgroundColor: AppColors.warning,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      },
+    );
   }
 }
 

@@ -94,7 +94,9 @@
       "Read(//tmp/**)",
       "Bash(python3 -c ':*)",
       "Bash(py --version)",
-      "Bash(py strip_comments.py)"
+      "Bash(py strip_comments.py)",
+      "Bash(./mvnw spring-boot:run)",
+      "Bash(echo \"Started with PID: $!\")"
     ],
     "additionalDirectories": [
       "d:\\ProjectHK4\\admin\\src\\pages\\organiser"

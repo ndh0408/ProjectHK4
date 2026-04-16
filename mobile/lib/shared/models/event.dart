@@ -271,6 +271,7 @@ class Event {
   String get location => venue ?? address ?? 'TBD';
   String get organiserId => organiser?.id ?? '';
   String get organiserName => organiser?.fullName ?? 'Unknown';
+  int? get categoryId => category?.id;
   double get price => ticketPrice ?? 0.0;
 
   bool get isFree => ticketPrice == null || ticketPrice == 0;

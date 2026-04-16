@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git restore *)",
+      "Bash(git add *)",
+      "Bash(cmd //c \"del /f D:\\\\\\\\ProjectHK4\\\\\\\\.git\\\\\\\\index.lock\")",
+      "Bash(git config *)",
+      "Bash(git filter-branch *)",
+      "Bash(git stash *)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --msg-filter 'sed \"/Co-Authored-By.*[Cc]laude/d\"' --force -- --all)"
+    ],
+    "additionalDirectories": [
+      "D:\\ProjectHK4\\.git"
+    ]
+  }
+}

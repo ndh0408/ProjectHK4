@@ -1,0 +1,342 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.luma:luma-backend >------------------------
+[INFO] Building LUMA Backend 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.4.1:run (default-cli) > test-compile @ luma-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ luma-backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 11 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ luma-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ luma-backend ---
+[INFO] skip non existing resourceDirectory D:\ProjectHK4\backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ luma-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.4.1:run (default-cli) < test-compile @ luma-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.4.1:run (default-cli) @ luma-backend ---
+[INFO] Attaching agents: []
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2026-04-15T09:27:39.190+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.luma.LumaApplication                 : Starting LumaApplication using Java 21.0.8 with PID 2456 (D:\ProjectHK4\backend\target\classes started by DELL in D:\ProjectHK4\backend)
+2026-04-15T09:27:39.194+07:00 DEBUG 2456 --- [luma-backend] [  restartedMain] com.luma.LumaApplication                 : Running with Spring Boot v3.4.1, Spring v6.2.1
+2026-04-15T09:27:39.196+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.luma.LumaApplication                 : No active profile set, falling back to 1 default profile: "default"
+2026-04-15T09:27:39.335+07:00  INFO 2456 --- [luma-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-04-15T09:27:39.336+07:00  INFO 2456 --- [luma-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-04-15T09:27:42.605+07:00  INFO 2456 --- [luma-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-15T09:27:43.085+07:00  INFO 2456 --- [luma-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 461 ms. Found 53 JPA repository interfaces.
+2026-04-15T09:27:45.863+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-15T09:27:45.899+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-15T09:27:45.900+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-04-15T09:27:46.031+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-15T09:27:46.041+07:00  INFO 2456 --- [luma-backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 6694 ms
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+2026-04-15T09:27:46.575+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-15T09:27:46.732+07:00  INFO 2456 --- [luma-backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.4.Final
+2026-04-15T09:27:46.831+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-15T09:27:47.446+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-15T09:27:47.534+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-15T09:27:48.343+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection ConnectionID:1 ClientConnectionId: d52eb0de-c75e-4e20-a641-b7d1efc50258
+2026-04-15T09:27:48.346+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-15T09:27:48.596+07:00  WARN 2456 --- [luma-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: SQLServerDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-15T09:27:48.646+07:00  INFO 2456 --- [luma-backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-15T09:27:54.140+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table activity_logs 
+       alter column description NVARCHAR(500)
+Hibernate: 
+    alter table connection_requests 
+       alter column message NVARCHAR(500)
+Hibernate: 
+    alter table conversations 
+       alter column last_message_content NVARCHAR(MAX)
+Hibernate: 
+    alter table coupons 
+       alter column description NVARCHAR(500)
+Hibernate: 
+    alter table email_campaigns 
+       alter column audience_filter NVARCHAR(2000)
+Hibernate: 
+    alter table email_campaigns 
+       alter column html_content NVARCHAR(MAX)
+Hibernate: 
+    alter table email_campaigns 
+       alter column plain_text_content NVARCHAR(MAX)
+Hibernate: 
+    alter table event_sessions 
+       alter column description NVARCHAR(MAX)
+Hibernate: 
+    alter table event_sessions 
+       alter column room NVARCHAR(200)
+Hibernate: 
+    alter table event_sessions 
+       alter column title NVARCHAR(300)
+Hibernate: 
+    alter table event_sessions 
+       alter column track NVARCHAR(100)
+Hibernate: 
+    alter table events 
+       alter column description NVARCHAR(MAX)
+Hibernate: 
+    alter table events 
+       alter column rejection_reason NVARCHAR(2000)
+Hibernate: 
+    alter table messages 
+       alter column content NVARCHAR(MAX)
+Hibernate: 
+    alter table notifications 
+       alter column message NVARCHAR(MAX)
+Hibernate: 
+    alter table organiser_profiles 
+       alter column bio NVARCHAR(MAX)
+Hibernate: 
+    alter table payouts 
+       alter column failure_reason NVARCHAR(1000)
+Hibernate: 
+    alter table poll_options 
+       alter column text NVARCHAR(500)
+Hibernate: 
+    alter table polls 
+       alter column question NVARCHAR(500)
+Hibernate: 
+    alter table questions 
+       alter column answer NVARCHAR(MAX)
+Hibernate: 
+    alter table questions 
+       alter column question NVARCHAR(MAX)
+Hibernate: 
+    alter table registration_answers 
+       alter column answer_text NVARCHAR(MAX)
+Hibernate: 
+    alter table registration_questions 
+       alter column options NVARCHAR(MAX)
+Hibernate: 
+    alter table registration_questions 
+       alter column question_text NVARCHAR(500)
+Hibernate: 
+    alter table registrations 
+       alter column rejection_reason NVARCHAR(500)
+Hibernate: 
+    alter table review_reports 
+       alter column description NVARCHAR(500)
+Hibernate: 
+    alter table review_reports 
+       alter column resolution_note NVARCHAR(500)
+Hibernate: 
+    alter table reviews 
+       alter column comment NVARCHAR(1000)
+Hibernate: 
+    alter table reviews 
+       alter column moderation_categories NVARCHAR(200)
+Hibernate: 
+    alter table reviews 
+       alter column moderation_reason NVARCHAR(500)
+Hibernate: 
+    alter table seat_zones 
+       alter column name NVARCHAR(100)
+Hibernate: 
+    alter table speakers 
+       alter column bio NVARCHAR(MAX)
+Hibernate: 
+    alter table ticket_types 
+       alter column description NVARCHAR(1000)
+Hibernate: 
+    alter table users 
+       alter column bio NVARCHAR(1000)
+Hibernate: 
+    alter table users 
+       alter column interests NVARCHAR(500)
+2026-04-15T09:27:59.337+07:00  INFO 2456 --- [luma-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-15T09:28:00.246+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-15T09:28:07.983+07:00 DEBUG 2456 --- [luma-backend] [  restartedMain] c.luma.security.JwtAuthenticationFilter  : Filter 'jwtAuthenticationFilter' configured for use
+2026-04-15T09:28:07.983+07:00 DEBUG 2456 --- [luma-backend] [  restartedMain] com.luma.security.RateLimitFilter        : Filter 'rateLimitFilter' configured for use
+2026-04-15T09:28:09.796+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.luma.config.GroqConfig               : ✅ Groq API key configured successfully
+2026-04-15T09:28:11.331+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.luma.service.AIService               : AIService initialized with Groq model: llama-3.3-70b-versatile
+2026-04-15T09:28:19.600+07:00  INFO 2456 --- [luma-backend] [  restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-04-15T09:28:19.600+07:00  WARN 2456 --- [luma-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-04-15T09:28:21.483+07:00  INFO 2456 --- [luma-backend] [  restartedMain] c.luma.scheduler.EventReminderScheduler  : Server started - checking for missed event reminders...
+2026-04-15T09:28:21.484+07:00  INFO 2456 --- [luma-backend] [  restartedMain] c.luma.scheduler.EventReminderScheduler  : Checking reminders for events starting tomorrow between 2026-04-16T00:00 and 2026-04-17T00:00
+Hibernate: 
+    select
+        r1_0.id,
+        r1_0.approved_at,
+        r1_0.checked_in_at,
+        r1_0.coupon_code,
+        r1_0.created_at,
+        r1_0.event_id,
+        e1_0.id,
+        e1_0.address,
+        e1_0.approved_count,
+        e1_0.capacity,
+        e1_0.category_id,
+        e1_0.city_id,
+        e1_0.created_at,
+        e1_0.deleted,
+        e1_0.deleted_at,
+        e1_0.description,
+        e1_0.end_time,
+        e1_0.image_url,
+        e1_0.is_free,
+        e1_0.latitude,
+        e1_0.longitude,
+        e1_0.occurrence_index,
+        e1_0.organiser_id,
+        o1_0.id,
+        o1_0.avatar_url,
+        o1_0.bio,
+        o1_0.created_at,
+        o1_0.deleted,
+        o1_0.deleted_at,
+        o1_0.email,
+        o1_0.email_event_reminders,
+        o1_0.email_notifications_enabled,
+        o1_0.email_verified,
+        o1_0.full_name,
+        o1_0.interests,
+        o1_0.last_login_at,
+        o1_0.networking_visible,
+        o1_0.password,
+        o1_0.phone,
+        o1_0.phone_verified,
+        o1_0.role,
+        o1_0.signature_url,
+        o1_0.status,
+        o1_0.updated_at,
+        o1_0.verification_code,
+        o1_0.verification_code_expiry,
+        e1_0.parent_event_id,
+        e1_0.recurrence_count,
+        e1_0.recurrence_days_of_week,
+        e1_0.recurrence_end_date,
+        e1_0.recurrence_interval,
+        e1_0.recurrence_type,
+        e1_0.registration_deadline,
+        e1_0.rejection_reason,
+        e1_0.requires_approval,
+        e1_0.start_time,
+        e1_0.status,
+        e1_0.ticket_price,
+        e1_0.title,
+        e1_0.updated_at,
+        e1_0.venue,
+        e1_0.visibility,
+        r1_0.priority_score,
+        r1_0.quantity,
+        r1_0.rejected_at,
+        r1_0.rejection_reason,
+        r1_0.reminder_sent,
+        r1_0.reminder_sent_at,
+        r1_0.status,
+        r1_0.ticket_code,
+        r1_0.ticket_type_id,
+        r1_0.updated_at,
+        r1_0.user_id,
+        u1_0.id,
+        u1_0.avatar_url,
+        u1_0.bio,
+        u1_0.created_at,
+        u1_0.deleted,
+        u1_0.deleted_at,
+        u1_0.email,
+        u1_0.email_event_reminders,
+        u1_0.email_notifications_enabled,
+        u1_0.email_verified,
+        u1_0.full_name,
+        u1_0.interests,
+        u1_0.last_login_at,
+        u1_0.networking_visible,
+        u1_0.password,
+        u1_0.phone,
+        u1_0.phone_verified,
+        u1_0.role,
+        u1_0.signature_url,
+        u1_0.status,
+        u1_0.updated_at,
+        u1_0.verification_code,
+        u1_0.verification_code_expiry,
+        r1_0.waiting_list_position 
+    from
+        registrations r1_0 
+    join
+        events e1_0 
+            on e1_0.id=r1_0.event_id 
+            and (e1_0.deleted = 0) 
+    join
+        users o1_0 
+            on o1_0.id=e1_0.organiser_id 
+            and (o1_0.deleted = 0) 
+    join
+        users u1_0 
+            on u1_0.id=r1_0.user_id 
+            and (u1_0.deleted = 0) 
+    where
+        e1_0.start_time between ? and ? 
+        and r1_0.status=? 
+        and (
+            r1_0.reminder_sent=0 
+            or r1_0.reminder_sent is null
+        )
+2026-04-15T09:28:21.814+07:00  INFO 2456 --- [luma-backend] [  restartedMain] c.luma.scheduler.EventReminderScheduler  : No missed reminders to send
+2026-04-15T09:28:22.189+07:00  WARN 2456 --- [luma-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-15T09:28:23.322+07:00 DEBUG 2456 --- [luma-backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, RateLimitFilter, JwtAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, SessionManagementFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-04-15T09:28:24.496+07:00  WARN 2456 --- [luma-backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-04-15T09:28:24.554+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-04-15T09:28:24.555+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2b706e2c]]
+2026-04-15T09:28:24.558+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-04-15T09:28:24.565+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopping...
+2026-04-15T09:28:24.565+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=false, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@2b706e2c]]
+2026-04-15T09:28:24.565+07:00  INFO 2456 --- [luma-backend] [  restartedMain] o.s.m.s.b.SimpleBrokerMessageHandler     : Stopped.
+2026-04-15T09:28:24.566+07:00  WARN 2456 --- [luma-backend] [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-04-15T09:28:24.595+07:00  INFO 2456 --- [luma-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-04-15T09:28:24.603+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-04-15T09:28:24.612+07:00  INFO 2456 --- [luma-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-04-15T09:28:24.638+07:00  INFO 2456 --- [luma-backend] [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-04-15T09:28:24.687+07:00 ERROR 2456 --- [luma-backend] [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  57.999 s
+[INFO] Finished at: 2026-04-15T09:28:25+07:00
+[INFO] ------------------------------------------------------------------------
+-

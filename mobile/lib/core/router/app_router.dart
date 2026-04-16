@@ -7,6 +7,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/bookmarks/presentation/screens/saved_events_screen.dart';
+import '../../features/coupons/presentation/screens/my_coupons_screen.dart';
 import '../../features/questions/presentation/screens/my_questions_screen.dart';
 import '../../features/events/presentation/screens/event_detail_screen.dart';
 import '../../features/events/presentation/screens/payment_cancelled_screen.dart';
@@ -28,6 +29,7 @@ import '../../features/my_events/presentation/screens/my_events_screen.dart';
 import '../../features/notifications/presentation/screens/alerts_screen.dart';
 import '../../features/notifications/presentation/screens/luma_notifications_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
+import '../../features/chat/presentation/screens/chatbot_screen.dart';
 import '../../features/chat/presentation/screens/event_buddies_screen.dart';
 import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -130,6 +132,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 conversation: conversation,
               );
             },
+          ),
+          GoRoute(
+            path: '/chatbot',
+            name: 'chatbot',
+            builder: (context, state) => const ChatbotScreen(),
           ),
           GoRoute(
             path: '/event-buddies',
@@ -299,6 +306,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const WaitlistOffersScreen(),
           ),
           GoRoute(
+            path: '/my-coupons',
+            name: 'my-coupons',
+            builder: (context, state) => const MyCouponsScreen(),
+          ),
+          GoRoute(
             path: '/event/:id/schedule',
             name: 'event-schedule',
             builder: (context, state) {
@@ -312,7 +324,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'compare-events',
             builder: (context, state) {
               final extra = state.extra as Map<String, dynamic>? ?? {};
-              final ids = (extra['eventIds'] as List<dynamic>?)?.cast<String>() ?? [];
+              final ids = (extra['eventIds'] as List<dynamic>?)?.cast<String>();
               return EventComparisonScreen(eventIds: ids);
             },
           ),

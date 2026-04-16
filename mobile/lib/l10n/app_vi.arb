@@ -364,5 +364,11 @@
   "reasonFakeReview": "Đánh giá giả",
   "reasonHarassment": "Quấy rối",
   "reasonOffTopic": "Không liên quan",
-  "reasonOther": "Khác"
+  "reasonOther": "Khác",
+
+  "myCoupons": "Mã Giảm Giá",
+  "noCouponsAvailable": "Chưa Có Mã Giảm Giá",
+  "checkBackLaterForOffers": "Quay lại sau để nhận ưu đãi độc quyền",
+  "failedToLoadCoupons": "Không thể tải mã giảm giá",
+  "refresh": "Làm mới"
 }

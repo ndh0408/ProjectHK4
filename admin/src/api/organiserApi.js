@@ -59,13 +59,24 @@ const organiserApi = {
     getAISuggestion: (questionId) => api.get(`/organiser/questions/${questionId}/ai-suggest`),
     deleteQuestion: (questionId) => api.delete(`/organiser/questions/${questionId}`),
 
-    getEventPolls: (eventId) => api.get(`/organiser/polls/event/${eventId}`),
+    getEventPolls: (eventId, params) => api.get(`/organiser/polls/event/${eventId}`, { params }),
     createPoll: (eventId, data) => api.post(`/organiser/polls/event/${eventId}`, data),
+    updatePoll: (pollId, data) => api.put(`/organiser/polls/${pollId}`, data),
+    // Poll State Transitions
+    publishPoll: (pollId) => api.post(`/organiser/polls/${pollId}/publish`),
+    schedulePoll: (pollId, openAt) => api.post(`/organiser/polls/${pollId}/schedule?openAt=${openAt}`),
+    openPoll: (pollId) => api.post(`/organiser/polls/${pollId}/open`),
     closePoll: (pollId) => api.post(`/organiser/polls/${pollId}/close`),
+    reopenPoll: (pollId) => api.post(`/organiser/polls/${pollId}/reopen`),
+    cancelPoll: (pollId) => api.post(`/organiser/polls/${pollId}/cancel`),
+    extendPoll: (pollId, params) => api.post(`/organiser/polls/${pollId}/extend`, null, { params }),
+    deletePoll: (pollId) => api.delete(`/organiser/polls/${pollId}`),
+    generatePollWithAI: (data) => api.post('/organiser/polls/ai/generate', data),
 
     getCoupons: (params) => api.get('/organiser/coupons', { params }),
     createCoupon: (data) => api.post('/organiser/coupons', data),
     disableCoupon: (id) => api.post(`/organiser/coupons/${id}/disable`),
+    generateCouponAI: (data) => api.post('/organiser/coupons/ai/generate', data),
 
     createSeatMap: (eventId, zones) => api.post(`/organiser/seat-map/event/${eventId}`, zones),
     getSeatMap: (eventId) => api.get(`/organiser/seat-map/event/${eventId}`),

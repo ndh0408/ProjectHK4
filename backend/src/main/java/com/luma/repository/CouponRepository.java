@@ -35,4 +35,18 @@ public interface CouponRepository extends JpaRepository<Coupon, UUID> {
     void incrementUsedCount(@Param("id") UUID id);
 
     boolean existsByCode(String code);
+
+    @Query("SELECT c FROM Coupon c WHERE c.event IS NULL AND c.status = 'ACTIVE' " +
+           "AND (c.validFrom IS NULL OR c.validFrom <= CURRENT_TIMESTAMP) " +
+           "AND (c.validUntil IS NULL OR c.validUntil >= CURRENT_TIMESTAMP) " +
+           "AND (c.maxUsageCount = 0 OR c.usedCount < c.maxUsageCount) " +
+           "ORDER BY c.createdAt DESC")
+    List<Coupon> findAvailableGlobalCoupons();
+
+    @Query("SELECT c FROM Coupon c WHERE c.event.id = :eventId AND c.status = 'ACTIVE' " +
+           "AND (c.validFrom IS NULL OR c.validFrom <= CURRENT_TIMESTAMP) " +
+           "AND (c.validUntil IS NULL OR c.validUntil >= CURRENT_TIMESTAMP) " +
+           "AND (c.maxUsageCount = 0 OR c.usedCount < c.maxUsageCount) " +
+           "ORDER BY c.discountValue DESC")
+    List<Coupon> findAvailableCouponsByEvent(@Param("eventId") UUID eventId);
 }
