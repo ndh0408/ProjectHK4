@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         ShaderMask(
                           shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Color(0xFFFF6B35), Color(0xFFFF1744)],
+                            colors: [AppColors.accent, AppColors.error],
                           ).createShader(bounds),
                           child: Text(
                             l10n.startHere,
@@ -195,7 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextSpan(
                         text: 'Terms of Use',
                         style: TextStyle(
-                          color: Color(0xFFFF6B35),
+                          color: AppColors.accent,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -296,7 +296,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Row(
+            child: isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.network(
@@ -515,7 +521,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text(
                   _isLoginMode ? l10n.signUp : l10n.signIn,
                   style: const TextStyle(
-                    color: Color(0xFFFF6B35),
+                    color: AppColors.accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
