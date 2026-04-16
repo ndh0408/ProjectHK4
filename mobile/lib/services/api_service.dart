@@ -75,23 +75,6 @@ class ApiService {
     );
   }
 
-  Future<Map<String, dynamic>> sendOtp({required String phone}) async {
-    return _client.post<Map<String, dynamic>>(
-      '/auth/send-otp',
-      queryParameters: {'phone': phone},
-    );
-  }
-
-  Future<Map<String, dynamic>> verifyOtp({
-    required String phone,
-    required String otp,
-  }) async {
-    return _client.post<Map<String, dynamic>>(
-      '/auth/verify-otp',
-      queryParameters: {'phone': phone, 'otp': otp},
-    );
-  }
-
   Future<User> getCurrentUser() async {
     final response = await _client.getRaw<Map<String, dynamic>>('/user/profile');
     final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;

@@ -86,45 +86,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> sendOtp(String phone) async {
-    state = const AuthLoading();
-
-    try {
-      await _repository.sendOtp(phone);
-      state = const OtpSent();
-    } on AuthException catch (e) {
-      state = AuthError(e.message);
-    } catch (e, stackTrace) {
-      debugPrint('Send OTP error: $e');
-      debugPrint('Stack trace: $stackTrace');
-      state = AuthError('Error: $e');
-    }
-  }
-
-  Future<bool> verifyOtp(String phone, String code) async {
-    state = const AuthLoading();
-
-    try {
-      final result = await _repository.verifyOtp(phone, code);
-      final verified = result['verified'] as bool? ?? false;
-      if (verified) {
-        state = const Unauthenticated();
-        return true;
-      } else {
-        state = AuthError(result['message'] as String? ?? 'OTP verification failed');
-        return false;
-      }
-    } on AuthException catch (e) {
-      state = AuthError(e.message);
-      return false;
-    } catch (e, stackTrace) {
-      debugPrint('Verify OTP error: $e');
-      debugPrint('Stack trace: $stackTrace');
-      state = AuthError('Error: $e');
-      return false;
-    }
-  }
-
   Future<void> signInWithGoogle() async {
     state = const AuthLoading();
 
@@ -135,17 +96,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return;
       }
 
-      debugPrint('=== Google Sign-In Success ===');
-      debugPrint('Email: ${googleUser.email}');
-      debugPrint('Display Name: ${googleUser.displayName}');
-      debugPrint('Photo URL: ${googleUser.photoUrl}');
-
       final googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
       final accessToken = googleAuth.accessToken;
-
-      debugPrint('ID Token: ${idToken != null ? '${idToken.substring(0, 50)}...' : 'NULL'}');
-      debugPrint('Access Token: ${accessToken != null ? '${accessToken.substring(0, 50)}...' : 'NULL'}');
 
       if (idToken != null) {
         final user = await _repository.googleAuth(idToken);
