@@ -1115,10 +1115,16 @@ class ApiService {
 
   /// Chat with AI Assistant
   /// Returns: {response, intent, data, dataPointsUsed}
-  Future<Map<String, dynamic>> askChatbot(String message) async {
+  Future<Map<String, dynamic>> askChatbot(String message, {List<Map<String, String>>? history}) async {
+    final requestData = <String, dynamic>{
+      'message': message,
+    };
+    if (history != null && history.isNotEmpty) {
+      requestData['history'] = history;
+    }
     final response = await _client.post<Map<String, dynamic>>(
       '/user/assistant/chat',
-      data: {'message': message},
+      data: requestData,
     );
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return data;

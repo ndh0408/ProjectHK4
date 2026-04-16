@@ -73,6 +73,7 @@ class ChatbotEvent {
   final String? category;
   final double? price;
   final int? approvedAttendees;
+  final String? imageUrl;
 
   ChatbotEvent({
     required this.id,
@@ -83,11 +84,12 @@ class ChatbotEvent {
     this.category,
     this.price,
     this.approvedAttendees,
+    this.imageUrl,
   });
 
   factory ChatbotEvent.fromJson(Map<String, dynamic> json) {
     return ChatbotEvent(
-      id: json['id'] as String? ?? '',
+      id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? 'Event',
       startTime: json['startTime'] as String?,
       venue: json['venue'] as String?,
@@ -95,6 +97,7 @@ class ChatbotEvent {
       category: json['category'] as String?,
       price: (json['price'] as num?)?.toDouble(),
       approvedAttendees: json['approvedAttendees'] as int?,
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 }

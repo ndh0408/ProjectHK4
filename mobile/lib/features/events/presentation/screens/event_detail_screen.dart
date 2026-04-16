@@ -2058,7 +2058,7 @@ class _AllReviewsSheetState extends ConsumerState<_AllReviewsSheet> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _reviews.isEmpty
-                  ? Center(child: Text(l10n.noReviewsYet))
+                  ? Center(child: Text(l10n.noReviews))
                   : ListView.builder(
                       controller: widget.scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 16),

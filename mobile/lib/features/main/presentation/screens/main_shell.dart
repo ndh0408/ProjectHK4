@@ -5,6 +5,7 @@ import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/websocket_service.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../chat/presentation/screens/conversations_screen.dart';
 
@@ -119,6 +120,15 @@ class _MainShellState extends ConsumerState<MainShell> {
     final l10n = AppLocalizations.of(context)!;
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final unreadMessages = ref.watch(unreadMessageCountProvider);
+
+    // Listen to WebSocket chat events for real-time badge updates
+    ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (previous, next) {
+      next.whenData((event) {
+        if (event.type == ChatEventType.newMessage) {
+          ref.read(unreadMessageCountProvider.notifier).loadCount();
+        }
+      });
+    });
 
     final totalUnread = (unreadNotifications.valueOrNull ?? 0) +
         (unreadMessages.valueOrNull ?? 0);

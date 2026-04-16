@@ -157,7 +157,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: const Text('So sánh sự kiện'),
+        title: const Text('Event Comparison'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -186,7 +186,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
               onPressed: _clearAll,
               backgroundColor: AppColors.error,
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Xóa tất cả'),
+              label: const Text('Clear All'),
             )
           : null,
     );
@@ -206,7 +206,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
     }
 
     if (_data == null || (_data?['events'] as List?)?.isEmpty == true) {
-      return const Center(child: Text('Không có dữ liệu'));
+      return const Center(child: Text('No data available'));
     }
 
     return _buildComparisonView();
@@ -233,7 +233,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Chọn sự kiện để so sánh',
+              'Select events to compare',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -243,7 +243,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Nhấn nút so sánh (⚖️) trong màn chi tiết sự kiện để thêm vào danh sách so sánh',
+              'Tap the compare button (⚖️) on the event detail screen to add events to the comparison list',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textSecondary,
@@ -255,7 +255,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
             ElevatedButton.icon(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.explore),
-              label: const Text('Khám phá sự kiện'),
+              label: const Text('Explore Events'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -301,7 +301,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
-                        'ĐÃ CHỌN',
+                        'SELECTED',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -397,7 +397,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Chọn thêm sự kiện để so sánh',
+                      'Select more events to compare',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -406,7 +406,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Dựa trên thể loại và thành phố tương tự',
+                      'Based on similar category and city',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
@@ -422,7 +422,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Text(
-                  'Cần thêm ít nhất 1',
+                  'Need at least 1 more',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -444,7 +444,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
-                      'Không tìm thấy sự kiện tương tự',
+                      'No similar events found',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -454,7 +454,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     ElevatedButton.icon(
                       onPressed: () => context.push('/events'),
                       icon: const Icon(Icons.explore),
-                      label: const Text('Tìm sự kiện khác'),
+                      label: const Text('Browse Events'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -488,7 +488,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
 
   Widget _buildComparisonView() {
     final events = (_data?['events'] as List<dynamic>?) ?? [];
-    if (events.isEmpty) return const Center(child: Text('Không có dữ liệu'));
+    if (events.isEmpty) return const Center(child: Text('No data available'));
 
     // Calculate best values
     final bestValues = _calculateBestValues(events);
@@ -506,7 +506,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'So sánh ${events.length} sự kiện',
+                      'Comparing ${events.length} events',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -515,7 +515,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Vuốt sang phải để xem chi tiết',
+                      'Swipe right to see details',
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.textSecondary,
@@ -531,7 +531,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     _showAddMoreDialog();
                   },
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Thêm'),
+                  label: const Text('Add'),
                 ),
             ],
           ),
@@ -599,7 +599,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
               const Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
-                  'Thêm sự kiện để so sánh',
+                  'Add events to compare',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -624,7 +624,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                         .toList();
 
                     if (allEvents.isEmpty) {
-                      return const Center(child: Text('Không còn sự kiện nào'));
+                      return const Center(child: Text('No more events available'));
                     }
 
                     return ListView.builder(
@@ -715,17 +715,17 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
     final badges = <String>[];
 
     if (event['ticketPrice'] == bestValues['lowestPrice'] && event['ticketPrice'] != null) {
-      badges.add('Giá tốt nhất');
+      badges.add('Best Price');
     }
     if (event['averageRating'] == bestValues['highestRating'] && event['averageRating'] != null) {
-      badges.add('Đánh giá cao nhất');
+      badges.add('Top Rated');
     }
     if (event['fillRate'] == bestValues['highestFillRate'] && event['fillRate'] != null) {
-      badges.add('Phổ biến nhất');
+      badges.add('Most Popular');
     }
     if (event['registrationCount'] == bestValues['mostRegistrations'] &&
         event['registrationCount'] != null) {
-      badges.add('Nhiều người đăng ký nhất');
+      badges.add('Most Registrations');
     }
 
     return badges;
@@ -734,29 +734,29 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
   Widget _buildComparisonTable(List<dynamic> events, Map<String, dynamic> bestValues) {
     final rows = [
       _ComparisonRow(
-        label: 'Giá vé',
+        label: 'Ticket Price',
         icon: Icons.attach_money,
         values: events.map((e) {
           final price = e['ticketPrice'];
-          if (price == null) return 'Miễn phí';
+          if (price == null) return 'Free';
           return '\$${(price as num).toStringAsFixed(0)}';
         }).toList(),
         highlights: events.map((e) => e['ticketPrice'] == bestValues['lowestPrice']).toList(),
         highlightColor: AppColors.success,
       ),
       _ComparisonRow(
-        label: 'Đánh giá',
+        label: 'Rating',
         icon: Icons.star,
         values: events.map((e) {
           final rating = e['averageRating'];
-          if (rating == null) return 'Chưa có';
+          if (rating == null) return 'N/A';
           return '${(rating as num).toStringAsFixed(1)} ⭐';
         }).toList(),
         highlights: events.map((e) => e['averageRating'] == bestValues['highestRating']).toList(),
         highlightColor: Colors.amber,
       ),
       _ComparisonRow(
-        label: 'Số người đăng ký',
+        label: 'Registrations',
         icon: Icons.people,
         values: events.map((e) {
           final count = e['registrationCount'];
@@ -767,7 +767,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
         highlightColor: AppColors.primary,
       ),
       _ComparisonRow(
-        label: 'Tỷ lệ lấp đầy',
+        label: 'Fill Rate',
         icon: Icons.pie_chart,
         values: events.map((e) {
           final rate = e['fillRate'];
@@ -778,7 +778,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
         highlightColor: AppColors.success,
       ),
       _ComparisonRow(
-        label: 'Thời gian',
+        label: 'Date',
         icon: Icons.schedule,
         values: events.map((e) {
           final startDate = e['startDate'] ?? e['startTime'];
@@ -792,17 +792,17 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
         }).toList(),
       ),
       _ComparisonRow(
-        label: 'Địa điểm',
+        label: 'Venue',
         icon: Icons.location_on,
         values: events.map((e) => e['venue']?.toString() ?? '-').toList(),
       ),
       _ComparisonRow(
-        label: 'Thành phố',
+        label: 'City',
         icon: Icons.location_city,
         values: events.map((e) => e['cityName']?.toString() ?? '-').toList(),
       ),
       _ComparisonRow(
-        label: 'Thể loại',
+        label: 'Category',
         icon: Icons.category,
         values: events.map((e) => e['categoryName']?.toString() ?? '-').toList(),
       ),
@@ -833,7 +833,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                 Icon(Icons.analytics, color: AppColors.primary, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  'Bảng so sánh chi tiết',
+                  'Detailed Comparison',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1053,7 +1053,7 @@ class _SimilarEventCard extends StatelessWidget {
                           child: Text(
                             event.ticketPrice != null
                                 ? '\$${event.ticketPrice!.toStringAsFixed(0)}'
-                                : 'Miễn phí',
+                                : 'Free',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -1072,7 +1072,7 @@ class _SimilarEventCard extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onAdd,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Thêm'),
+                label: const Text('Add'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.success,
                   foregroundColor: Colors.white,
@@ -1259,7 +1259,7 @@ class _EventComparisonCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            price != null ? '\$${(price as num).toStringAsFixed(0)}' : 'Miễn phí',
+                            price != null ? '\$${(price as num).toStringAsFixed(0)}' : 'Free',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -1283,7 +1283,7 @@ class _EventComparisonCard extends StatelessWidget {
                           ),
                         ),
                         child: const Text(
-                          'Xem chi tiết',
+                          'View Details',
                           style: TextStyle(fontSize: 12),
                         ),
                       ),

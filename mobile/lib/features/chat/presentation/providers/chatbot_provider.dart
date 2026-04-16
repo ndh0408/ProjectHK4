@@ -29,7 +29,9 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
   Future<void> _saveHistory(List<ChatbotMessage> messages) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonList = messages.map((m) => _messageToJson(m)).toList();
+      // Only save last 50 messages to prevent storage bloat
+      final toSave = messages.length > 50 ? messages.sublist(messages.length - 50) : messages;
+      final jsonList = toSave.map((m) => _messageToJson(m)).toList();
       await prefs.setString('chatbot_history', jsonEncode(jsonList));
     } catch (e) {
       // Silently fail
@@ -44,11 +46,28 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       'timestamp': m.timestamp.toIso8601String(),
       'intent': m.intent,
       'dataPointsUsed': m.dataPointsUsed,
-      'events': m.events?.map((e) => {'id': e.id, 'title': e.title}).toList(),
+      'events': m.events?.map((e) => <String, dynamic>{
+        'id': e.id,
+        'title': e.title,
+        'startTime': e.startTime,
+        'venue': e.venue,
+        'city': e.city,
+        'category': e.category,
+        'price': e.price,
+        'approvedAttendees': e.approvedAttendees,
+        'imageUrl': e.imageUrl,
+      }).toList(),
     };
   }
 
   ChatbotMessage _messageFromJson(Map<String, dynamic> json) {
+    List<ChatbotEvent>? events;
+    if (json['events'] is List) {
+      events = (json['events'] as List)
+          .map((e) => ChatbotEvent.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
     return ChatbotMessage(
       id: json['id'] as String,
       content: json['content'] as String,
@@ -56,7 +75,23 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       timestamp: DateTime.parse(json['timestamp'] as String),
       intent: json['intent'] as String?,
       dataPointsUsed: json['dataPointsUsed'] as int?,
+      events: events,
     );
+  }
+
+  /// Build conversation history for AI context
+  List<Map<String, String>> _buildHistory(List<ChatbotMessage> messages) {
+    // Take last 10 messages (5 pairs) for context
+    final recent = messages.length > 10 ? messages.sublist(messages.length - 10) : messages;
+    return recent
+        .where((m) => !m.isLoading && m.content.isNotEmpty)
+        .map((m) {
+          return <String, String>{
+            'role': m.isUser ? 'user' : 'assistant',
+            'content': m.content,
+          };
+        })
+        .toList();
   }
 
   Future<void> sendMessage(String message) async {
@@ -75,9 +110,12 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
     messages = [...messages, loadingMessage];
     state = AsyncValue.data(messages);
 
+    // Build conversation history from previous messages (excluding current user msg and loading)
+    final history = _buildHistory(messages.where((m) => !m.isLoading).toList());
+
     // Call API
     try {
-      final response = await _api.askChatbot(message);
+      final response = await _api.askChatbot(message, history: history);
 
       // Extract events from response data
       List<ChatbotEvent> events = [];
@@ -102,14 +140,25 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       messages = messages.where((m) => !m.isLoading).toList();
       messages = [...messages, assistantMessage];
       state = AsyncValue.data(messages);
-      
+
       await _saveHistory(messages);
     } catch (e, st) {
       messages = messages.where((m) => !m.isLoading).toList();
-      state = AsyncValue.data(messages);
-      
+
+      // Create user-friendly error message
+      String errorContent;
+      if (e.toString().contains('500')) {
+        errorContent = 'The AI service is temporarily unavailable. Please try again in a moment.';
+      } else if (e.toString().contains('timeout') || e.toString().contains('SocketException')) {
+        errorContent = 'Connection timed out. Please check your internet connection and try again.';
+      } else if (e.toString().contains('401') || e.toString().contains('403')) {
+        errorContent = 'Please log in to use the AI assistant.';
+      } else {
+        errorContent = 'Something went wrong. Please try again.';
+      }
+
       final errorMessage = ChatbotMessage.assistant(
-        content: 'Sorry, I encountered an error: ${e.toString()}',
+        content: errorContent,
         intent: 'ERROR',
         data: {},
         dataPointsUsed: 0,
