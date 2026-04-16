@@ -314,12 +314,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ticket => 'Ticket';
 
   @override
-  String get verifyOtp => 'Verify Code';
-
-  @override
-  String get enterOtp => 'Enter verification code';
-
-  @override
   String get resendCode => 'Resend Code';
 
   @override
