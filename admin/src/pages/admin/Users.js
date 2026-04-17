@@ -2,24 +2,40 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
-    TextField,
-    InputAdornment,
     IconButton,
-    Chip,
     Menu,
     MenuItem,
     Button,
+    Tooltip,
+    Divider,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
-    Search as SearchIcon,
     MoreVert as MoreVertIcon,
     Refresh as RefreshIcon,
+    PeopleAlt as PeopleAltIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatusChip,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
+
+const roleStatusMap = {
+    ADMIN: 'danger',
+    ORGANISER: 'warning',
+    ATTENDEE: 'neutral',
+};
+
+const userStatusConfig = {
+    ACTIVE: { status: 'success', label: 'Active' },
+    INACTIVE: { status: 'neutral', label: 'Inactive' },
+    LOCKED: { status: 'danger', label: 'Locked' },
+    PENDING_VERIFICATION: { status: 'warning', label: 'Pending' },
+};
 
 const Users = () => {
     const [users, setUsers] = useState([]);
@@ -107,48 +123,42 @@ const Users = () => {
             field: 'fullName',
             headerName: 'Name',
             flex: 1,
-            minWidth: 150,
+            minWidth: 160,
+            renderCell: (params) => (
+                <Typography variant="body2" fontWeight={600}>
+                    {params.value || '—'}
+                </Typography>
+            ),
         },
         {
             field: 'email',
             headerName: 'Email',
-            flex: 1,
-            minWidth: 200,
+            flex: 1.2,
+            minWidth: 220,
+            renderCell: (params) => (
+                <Typography variant="body2" color="text.secondary">
+                    {params.value}
+                </Typography>
+            ),
         },
         {
             field: 'role',
             headerName: 'Role',
-            width: 120,
+            width: 130,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value}
-                    size="small"
-                    color={
-                        params.value === 'ADMIN' ? 'error' :
-                        params.value === 'ORGANISER' ? 'warning' : 'default'
-                    }
+                    status={roleStatusMap[params.value] || 'neutral'}
                 />
             ),
         },
         {
             field: 'status',
             headerName: 'Status',
-            width: 120,
+            width: 130,
             renderCell: (params) => {
-                const statusConfig = {
-                    ACTIVE: { color: 'success', label: 'Active' },
-                    INACTIVE: { color: 'default', label: 'Inactive' },
-                    LOCKED: { color: 'error', label: 'Locked' },
-                    PENDING_VERIFICATION: { color: 'warning', label: 'Pending' },
-                };
-                const config = statusConfig[params.value] || { color: 'default', label: params.value };
-                return (
-                    <Chip
-                        label={config.label}
-                        size="small"
-                        color={config.color}
-                    />
-                );
+                const config = userStatusConfig[params.value] || { status: 'neutral', label: params.value };
+                return <StatusChip label={config.label} status={config.status} />;
             },
         },
         {
@@ -162,75 +172,86 @@ const Users = () => {
         },
         {
             field: 'actions',
-            headerName: 'Actions',
-            width: 80,
+            headerName: '',
+            width: 70,
             sortable: false,
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => (
-                <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, params.row)}
-                >
-                    <MoreVertIcon />
-                </IconButton>
+                <Tooltip title="More actions">
+                    <IconButton
+                        size="small"
+                        aria-label="user actions"
+                        onClick={(e) => handleMenuOpen(e, params.row)}
+                    >
+                        <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
             ),
         },
     ];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    User Management
-                </Typography>
-                <Button startIcon={<RefreshIcon />} onClick={loadUsers}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="User Management"
+                subtitle="View, search and moderate all platform users"
+                icon={<PeopleAltIcon />}
+                actions={
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={loadUsers}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <TextField
-                    placeholder="Search users..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    size="small"
-                    sx={{ width: 300 }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            </Paper>
+            <DataTableCard
+                toolbar={
+                    <PageToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Search users by name or email..."
+                    />
+                }
+                rows={users}
+                columns={columns}
+                loading={loading}
+                emptyTitle="No users found"
+                emptyDescription="Try adjusting your search or wait for new users to register."
+                emptyIcon={<PeopleAltIcon sx={{ fontSize: 40 }} />}
+                dataGridProps={{
+                    paginationModel,
+                    onPaginationModelChange: setPaginationModel,
+                    pageSizeOptions: [10, 25, 50],
+                    rowCount: totalRows,
+                    paginationMode: 'server',
+                }}
+            />
 
-            <Paper>
-                <DataGrid
-                    rows={users}
-                    columns={columns}
-                    loading={loading}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    pageSizeOptions={[10, 25, 50]}
-                    rowCount={totalRows}
-                    paginationMode="server"
-                    disableRowSelectionOnClick
-                    autoHeight
-                />
-            </Paper>
-
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                <MenuItem disabled>
-                    <Typography variant="caption">Change Status</Typography>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2 } } }}
+            >
+                <MenuItem disabled sx={{ opacity: 0.7 }}>
+                    <Typography variant="caption" fontWeight={600}>
+                        Change status
+                    </Typography>
                 </MenuItem>
                 {selectedUser?.status !== 'ACTIVE' && (
                     <MenuItem onClick={() => handleStatusChange('ACTIVE')}>Activate</MenuItem>
                 )}
                 {selectedUser?.status === 'ACTIVE' && (
-                    <MenuItem onClick={() => handleStatusChange('LOCKED')}>Lock Account</MenuItem>
+                    <MenuItem onClick={() => handleStatusChange('LOCKED')}>Lock account</MenuItem>
                 )}
-                <MenuItem divider />
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                <Divider sx={{ my: 0.5 }} />
+                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                    Delete user
+                </MenuItem>
             </Menu>
 
             <ConfirmDialog

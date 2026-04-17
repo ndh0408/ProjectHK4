@@ -21,11 +21,8 @@ import {
     ListItemText,
     Divider,
     Avatar,
-    Card,
-    CardContent,
     Grid,
     Badge,
-    Alert,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import {
@@ -48,15 +45,26 @@ import {
 import { Html5Qrcode } from 'html5-qrcode';
 import { organiserApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    StatusChip,
+    FormDialog,
+    SectionCard,
+    StatCard,
+    EmptyState,
+    LoadingButton,
+} from '../../components/ui';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { toast } from 'react-toastify';
 
-const statusColors = {
+const statusMap = {
     PENDING: 'warning',
     APPROVED: 'success',
-    REJECTED: 'error',
-    CANCELLED: 'default',
+    REJECTED: 'danger',
+    CANCELLED: 'neutral',
     CHECKED_IN: 'info',
-    WAITING_LIST: 'secondary',
+    WAITING_LIST: 'primary',
 };
 
 const OrganiserRegistrations = () => {
@@ -75,7 +83,9 @@ const OrganiserRegistrations = () => {
     const [quickSearch, setQuickSearch] = useState('');
     const [scanDialog, setScanDialog] = useState(false);
     const [scanManualCode, setScanManualCode] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [scanError, setScanError] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [scanSuccess, setScanSuccess] = useState('');
     const [scanBusy, setScanBusy] = useState(false);
     const [scanHistory, setScanHistory] = useState([]);
@@ -420,10 +430,9 @@ const OrganiserRegistrations = () => {
             headerName: 'Status',
             width: 130,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value}
-                    size="small"
-                    color={statusColors[params.value] || 'default'}
+                    status={statusMap[params.value] || 'neutral'}
                 />
             ),
         },
@@ -654,24 +663,25 @@ const OrganiserRegistrations = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Registrations
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<RefreshIcon />} onClick={() => { loadRegistrations(); loadWaitingList(); loadWaitlistOffers(); }}>
+            <PageHeader
+                title="Registrations"
+                subtitle="Approve attendees, run QR check-in and manage waiting-list offers."
+                icon={<HowToRegIcon />}
+                actions={[
+                    <Button key="refresh" startIcon={<RefreshIcon />} onClick={() => { loadRegistrations(); loadWaitingList(); loadWaitlistOffers(); }}>
                         Refresh
-                    </Button>
+                    </Button>,
                     <Button
+                        key="export"
                         variant="contained"
                         startIcon={<DownloadIcon />}
                         onClick={handleExport}
                         disabled={!selectedEvent}
                     >
                         Export Excel
-                    </Button>
-                </Box>
-            </Box>
+                    </Button>,
+                ]}
+            />
 
             <Paper sx={{ p: 2, mb: 2 }}>
                 <Autocomplete
@@ -704,46 +714,32 @@ const OrganiserRegistrations = () => {
             {selectedEvent ? (
                 <>
                     {selectedEventData && (
-                        <Paper sx={{ p: 2, mb: 2 }}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent sx={{ textAlign: 'center' }}>
-                                            <Typography color="text.secondary" gutterBottom>
-                                                Total Registrations
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {selectedEventData.currentRegistrations || 0}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent sx={{ textAlign: 'center' }}>
-                                            <Typography color="text.secondary" gutterBottom>
-                                                Capacity
-                                            </Typography>
-                                            <Typography variant="h4">
-                                                {selectedEventData.capacity || '∞'}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent sx={{ textAlign: 'center' }}>
-                                            <Typography color="text.secondary" gutterBottom>
-                                                Waiting List
-                                            </Typography>
-                                            <Typography variant="h4" color="warning.main">
-                                                {waitingList.length}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                            <Grid item xs={12} md={4}>
+                                <StatCard
+                                    label="Total Registrations"
+                                    value={selectedEventData.currentRegistrations || 0}
+                                    icon={<HowToRegIcon />}
+                                    iconColor="primary"
+                                />
                             </Grid>
-                        </Paper>
+                            <Grid item xs={12} md={4}>
+                                <StatCard
+                                    label="Capacity"
+                                    value={selectedEventData.capacity || '∞'}
+                                    icon={<StarIcon />}
+                                    iconColor="info"
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <StatCard
+                                    label="Waiting List"
+                                    value={waitingList.length}
+                                    icon={<TimerIcon />}
+                                    iconColor="warning"
+                                />
+                            </Grid>
+                        </Grid>
                     )}
 
                     <Paper>
@@ -880,33 +876,57 @@ const OrganiserRegistrations = () => {
                     </Paper>
                 </>
             ) : (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">
-                        Please select an event to view registrations
-                    </Typography>
-                </Paper>
+                <SectionCard noPadding>
+                    <EmptyState
+                        title="Select an event"
+                        description="Please select an event above to view its registrations."
+                        icon={<EventBusyIcon sx={{ fontSize: 40 }} />}
+                    />
+                </SectionCard>
             )}
 
-            <Dialog
+            <FormDialog
                 open={answersDialog.open}
                 onClose={() => setAnswersDialog({ open: false, registration: null, answers: [] })}
                 maxWidth="sm"
-                fullWidth
+                title={answersDialog.registration?.userName || 'Registration'}
+                subtitle="Registration details"
+                icon={
+                    <Avatar src={answersDialog.registration?.userAvatarUrl} sx={{ width: 40, height: 40 }}>
+                        {answersDialog.registration?.userName?.charAt(0)}
+                    </Avatar>
+                }
+                actions={
+                    <>
+                        <Button onClick={() => setAnswersDialog({ open: false, registration: null, answers: [] })}>
+                            Close
+                        </Button>
+                        {answersDialog.registration?.status === 'PENDING' && (
+                            <>
+                                <Button
+                                    color="error"
+                                    onClick={() => {
+                                        setAnswersDialog({ open: false, registration: null, answers: [] });
+                                        handleReject(answersDialog.registration);
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                                <LoadingButton
+                                    variant="contained"
+                                    color="success"
+                                    onClick={() => {
+                                        setAnswersDialog({ open: false, registration: null, answers: [] });
+                                        handleApprove(answersDialog.registration);
+                                    }}
+                                >
+                                    Approve
+                                </LoadingButton>
+                            </>
+                        )}
+                    </>
+                }
             >
-                <DialogTitle>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar src={answersDialog.registration?.userAvatarUrl} sx={{ width: 48, height: 48 }}>
-                            {answersDialog.registration?.userName?.charAt(0)}
-                        </Avatar>
-                        <Box>
-                            <Typography variant="h6">{answersDialog.registration?.userName}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                Registration Details
-                            </Typography>
-                        </Box>
-                    </Box>
-                </DialogTitle>
-                <DialogContent dividers>
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle2" color="primary" gutterBottom>
                             Contact Information
@@ -968,36 +988,7 @@ const OrganiserRegistrations = () => {
                             </Typography>
                         )}
                     </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAnswersDialog({ open: false, registration: null, answers: [] })}>
-                        Close
-                    </Button>
-                    {answersDialog.registration?.status === 'PENDING' && (
-                        <>
-                            <Button
-                                color="error"
-                                onClick={() => {
-                                    setAnswersDialog({ open: false, registration: null, answers: [] });
-                                    handleReject(answersDialog.registration);
-                                }}
-                            >
-                                Reject
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="success"
-                                onClick={() => {
-                                    setAnswersDialog({ open: false, registration: null, answers: [] });
-                                    handleApprove(answersDialog.registration);
-                                }}
-                            >
-                                Approve
-                            </Button>
-                        </>
-                    )}
-                </DialogActions>
-            </Dialog>
+            </FormDialog>
 
             <ConfirmDialog
                 open={confirmDialog.open}

@@ -15,8 +15,8 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Chip,
     LinearProgress,
+    Stack,
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
@@ -26,20 +26,37 @@ import {
     CheckCircle as ApprovedIcon,
     EventSeat as AttendedIcon,
     RateReview as ReviewIcon,
+    FilterAlt as FunnelIcon,
 } from '@mui/icons-material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { organiserApi } from '../../api';
 import { toast } from 'react-toastify';
+import {
+    PageHeader,
+    SectionCard,
+    StatusChip,
+    EmptyState,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 
 const stepIcons = {
-    'Views': <ViewIcon />,
-    'Registrations': <RegIcon />,
-    'Approved': <ApprovedIcon />,
-    'Attended': <AttendedIcon />,
-    'Reviewed': <ReviewIcon />,
+    Views: <ViewIcon />,
+    Registrations: <RegIcon />,
+    Approved: <ApprovedIcon />,
+    Attended: <AttendedIcon />,
+    Reviewed: <ReviewIcon />,
 };
 
-const stepColors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'];
+const STEP_COLORS = [
+    tokens.palette.info[500],
+    tokens.palette.primary[500],
+    tokens.palette.success[500],
+    tokens.palette.warning[500],
+    tokens.palette.danger[500],
+];
+
+const conversionVariant = (value) =>
+    value >= 50 ? 'success' : value >= 20 ? 'warning' : 'danger';
 
 const OrganiserFunnelAnalytics = () => {
     const [funnel, setFunnel] = useState(null);
@@ -83,63 +100,79 @@ const OrganiserFunnelAnalytics = () => {
     const funnelChartData = funnel?.steps?.map((step, i) => ({
         name: step.name,
         count: step.count,
-        color: stepColors[i],
+        color: STEP_COLORS[i],
     })) || [];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Conversion Funnel
-                </Typography>
-                <Button startIcon={<RefreshIcon />} onClick={() => loadFunnel(selectedEvent?.id)}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="Conversion Funnel"
+                subtitle="Track how users move through the registration lifecycle."
+                icon={<FunnelIcon />}
+                actions={
+                    <Button
+                        startIcon={<RefreshIcon fontSize="small" />}
+                        onClick={() => loadFunnel(selectedEvent?.id)}
+                        variant="outlined"
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <Paper sx={{ p: 2, mb: 3 }}>
+            <SectionCard sx={{ mb: 2 }}>
                 <Autocomplete
                     options={events}
                     getOptionLabel={(option) => option.title || ''}
                     value={selectedEvent}
                     onChange={handleEventChange}
                     renderInput={(params) => (
-                        <TextField {...params} label="Filter by Event (leave empty for all)" />
+                        <TextField {...params} label="Filter by event (leave empty for all)" />
                     )}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
-                    sx={{ minWidth: 400 }}
+                    sx={{ maxWidth: 520 }}
                 />
-            </Paper>
+            </SectionCard>
 
             {loading ? (
                 <LinearProgress />
             ) : funnel ? (
                 <>
-                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
                         {funnel.steps?.map((step, index) => (
-                            <Grid item xs={12} sm={6} md={2.4} key={step.name}>
-                                <Card variant="outlined" sx={{
-                                    borderTop: 3,
-                                    borderColor: stepColors[index],
-                                }}>
-                                    <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                                        <Box sx={{ color: stepColors[index], mb: 1 }}>
+                            <Grid item xs={12} sm={6} md={4} lg={12 / 5} key={step.name}>
+                                <Card sx={{ borderTop: '3px solid', borderColor: STEP_COLORS[index] }}>
+                                    <CardContent sx={{ textAlign: 'center', py: 2.5 }}>
+                                        <Box
+                                            sx={{
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                bgcolor: STEP_COLORS[index] + '20',
+                                                color: STEP_COLORS[index],
+                                                mx: 'auto',
+                                                mb: 1.5,
+                                            }}
+                                        >
                                             {stepIcons[step.name]}
                                         </Box>
-                                        <Typography variant="h4" fontWeight="bold">
+                                        <Typography variant="h1" sx={{ fontSize: '1.5rem', mb: 0.25 }}>
                                             {step.count.toLocaleString()}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">
+                                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                                             {step.name}
                                         </Typography>
                                         {index > 0 && (
-                                            <Chip
-                                                icon={<DropOffIcon sx={{ fontSize: 14 }} />}
-                                                label={`${step.percentage.toFixed(1)}%`}
-                                                size="small"
-                                                color={step.percentage >= 50 ? 'success' : step.percentage >= 20 ? 'warning' : 'error'}
-                                                sx={{ mt: 1 }}
-                                            />
+                                            <Box sx={{ mt: 1.25 }}>
+                                                <StatusChip
+                                                    icon={<DropOffIcon sx={{ fontSize: 12 }} />}
+                                                    label={`${step.percentage.toFixed(1)}%`}
+                                                    status={conversionVariant(step.percentage)}
+                                                />
+                                            </Box>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -147,68 +180,67 @@ const OrganiserFunnelAnalytics = () => {
                         ))}
                     </Grid>
 
-                    <Grid container spacing={3} sx={{ mb: 3 }}>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
                         <Grid item xs={12} md={8}>
-                            <Paper sx={{ p: 3 }}>
-                                <Typography variant="h6" gutterBottom>Funnel Visualization</Typography>
+                            <SectionCard title="Funnel visualisation" subtitle="Absolute counts at each step">
                                 <BarChart
-                                    height={300}
-                                    layout="horizontal"
+                                    height={320}
                                     series={[{
-                                        data: funnelChartData.map(d => d.count),
-                                        color: '#3B82F6',
+                                        data: funnelChartData.map((d) => d.count),
+                                        color: tokens.palette.primary[500],
                                     }]}
                                     xAxis={[{
-                                        data: funnelChartData.map(d => d.name),
+                                        data: funnelChartData.map((d) => d.name),
                                         scaleType: 'band',
                                     }]}
+                                    sx={{
+                                        '& .MuiChartsAxis-line': { stroke: tokens.palette.neutral[200] },
+                                        '& .MuiChartsAxis-tick': { stroke: tokens.palette.neutral[200] },
+                                    }}
                                 />
-                            </Paper>
+                            </SectionCard>
                         </Grid>
                         <Grid item xs={12} md={4}>
-                            <Paper sx={{ p: 3 }}>
-                                <Typography variant="h6" gutterBottom>Conversion Rates</Typography>
-                                <Box sx={{ mt: 2 }}>
+                            <SectionCard title="Conversion rates" subtitle="Step-by-step conversion">
+                                <Stack spacing={1.75}>
                                     {[
-                                        { label: 'View → Register', value: funnel.viewToRegistrationRate },
-                                        { label: 'Register → Approved', value: funnel.registrationToApprovedRate },
-                                        { label: 'Approved → Attended', value: funnel.approvedToAttendedRate },
-                                        { label: 'Attended → Reviewed', value: funnel.attendedToReviewedRate },
+                                        { label: 'View → Register', value: funnel.viewToRegistrationRate ?? 0 },
+                                        { label: 'Register → Approved', value: funnel.registrationToApprovedRate ?? 0 },
+                                        { label: 'Approved → Attended', value: funnel.approvedToAttendedRate ?? 0 },
+                                        { label: 'Attended → Reviewed', value: funnel.attendedToReviewedRate ?? 0 },
                                     ].map((rate) => (
-                                        <Box key={rate.label} sx={{ mb: 2 }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                <Typography variant="body2">{rate.label}</Typography>
-                                                <Typography variant="body2" fontWeight="bold">
+                                        <Box key={rate.label}>
+                                            <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+                                                <Typography variant="caption" color="text.secondary">{rate.label}</Typography>
+                                                <Typography variant="caption" sx={{ fontWeight: 600 }}>
                                                     {rate.value.toFixed(1)}%
                                                 </Typography>
-                                            </Box>
+                                            </Stack>
                                             <LinearProgress
                                                 variant="determinate"
                                                 value={Math.min(rate.value, 100)}
-                                                sx={{
-                                                    height: 8,
-                                                    borderRadius: 4,
-                                                    backgroundColor: 'grey.200',
-                                                }}
+                                                sx={{ height: 6 }}
                                             />
                                         </Box>
                                     ))}
-                                    <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.50', borderRadius: 2 }}>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Overall Conversion (View → Attended)
-                                        </Typography>
-                                        <Typography variant="h4" color="primary" fontWeight="bold">
-                                            {funnel.overallConversionRate.toFixed(1)}%
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Paper>
+                                </Stack>
+                                <Paper variant="outlined" sx={{ mt: 2.5, p: 2, bgcolor: 'primary.50', borderColor: 'primary.100' }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                        Overall conversion
+                                    </Typography>
+                                    <Typography variant="h1" color="primary.700" sx={{ fontSize: '1.75rem', mt: 0.5 }}>
+                                        {(funnel.overallConversionRate ?? 0).toFixed(1)}%
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        View → Attended
+                                    </Typography>
+                                </Paper>
+                            </SectionCard>
                         </Grid>
                     </Grid>
 
                     {funnel.eventFunnels && funnel.eventFunnels.length > 0 && (
-                        <Paper sx={{ p: 3 }}>
-                            <Typography variant="h6" gutterBottom>Event Breakdown</Typography>
+                        <SectionCard title="Event breakdown" subtitle="Funnel data per event" contentSx={{ px: 0 }}>
                             <TableContainer>
                                 <Table size="small">
                                     <TableHead>
@@ -226,7 +258,7 @@ const OrganiserFunnelAnalytics = () => {
                                         {funnel.eventFunnels.map((ef) => (
                                             <TableRow key={ef.eventId} hover>
                                                 <TableCell>
-                                                    <Typography variant="body2" noWrap sx={{ maxWidth: 250 }}>
+                                                    <Typography variant="body2" noWrap sx={{ maxWidth: 260, fontWeight: 500 }}>
                                                         {ef.eventTitle}
                                                     </Typography>
                                                 </TableCell>
@@ -236,10 +268,9 @@ const OrganiserFunnelAnalytics = () => {
                                                 <TableCell align="right">{ef.attended}</TableCell>
                                                 <TableCell align="right">{ef.reviewed}</TableCell>
                                                 <TableCell align="right">
-                                                    <Chip
+                                                    <StatusChip
                                                         label={`${ef.conversionRate.toFixed(1)}%`}
-                                                        size="small"
-                                                        color={ef.conversionRate >= 50 ? 'success' : ef.conversionRate >= 20 ? 'warning' : 'default'}
+                                                        status={conversionVariant(ef.conversionRate)}
                                                     />
                                                 </TableCell>
                                             </TableRow>
@@ -247,13 +278,17 @@ const OrganiserFunnelAnalytics = () => {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                        </Paper>
+                        </SectionCard>
                     )}
                 </>
             ) : (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">No funnel data available yet</Typography>
-                </Paper>
+                <SectionCard>
+                    <EmptyState
+                        icon={<FunnelIcon sx={{ fontSize: 28 }} />}
+                        title="No funnel data yet"
+                        description="Once attendees start interacting with your events, their journey will appear here."
+                    />
+                </SectionCard>
             )}
         </Box>
     );

@@ -281,7 +281,7 @@ const buildTheme = () => createTheme({
                     '&.Mui-error.Mui-focused': { boxShadow: shadow.focusDanger },
                     '&.Mui-disabled': { backgroundColor: palette.neutral[50] },
                 },
-                input: { padding: `${spacing[2.5]}px ${spacing[3.5] ?? 14}px` },
+                input: { padding: `${spacing[2.5]}px 14px` },
             },
         },
         MuiInputLabel: {

@@ -3,52 +3,30 @@ import {
     Box,
     Paper,
     Typography,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TablePagination,
-    Chip,
-    IconButton,
-    Tooltip,
-    Card,
-    CardContent,
-    Grid,
     Tabs,
     Tab,
     Avatar,
+    Stack,
+    IconButton,
+    Tooltip,
+    Grid,
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
-    TrendingUp as TrendingUpIcon,
     Rocket as RocketIcon,
     Star as StarIcon,
     Home as HomeIcon,
+    TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import adminApi from '../../api/adminApi';
-import { LoadingSpinner } from '../../components/common';
 import { toast } from 'react-toastify';
-
-const StatCard = ({ title, value, subtitle, icon, color }) => (
-    <Card sx={{ height: '100%' }}>
-        <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="body2" color="text.secondary">{title}</Typography>
-                    <Typography variant="h4" fontWeight="bold">{value}</Typography>
-                    {subtitle && (
-                        <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
-                    )}
-                </Box>
-                <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: `${color}15`, color }}>
-                    {icon}
-                </Box>
-            </Box>
-        </CardContent>
-    </Card>
-);
+import {
+    PageHeader,
+    StatCard,
+    StatusChip,
+    DataTableCard,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 
 const AdminBoosts = () => {
     const [loading, setLoading] = useState(true);
@@ -63,6 +41,7 @@ const AdminBoosts = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, rowsPerPage, tabValue]);
 
     const loadData = async () => {
@@ -86,81 +65,177 @@ const AdminBoosts = () => {
         }
     };
 
-    const getStatusChip = (status) => {
-        const config = {
-            PENDING: { label: 'Pending Payment', color: 'warning' },
-            ACTIVE: { label: 'Active', color: 'success' },
-            EXPIRED: { label: 'Expired', color: 'default' },
-            CANCELLED: { label: 'Cancelled', color: 'error' },
-        };
-        const c = config[status] || { label: status, color: 'default' };
-        return <Chip label={c.label} color={c.color} size="small" />;
+    const formatCurrency = (value) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+
+    const statusConfig = {
+        PENDING: { label: 'Pending Payment', status: 'warning' },
+        ACTIVE: { label: 'Active', status: 'success' },
+        EXPIRED: { label: 'Expired', status: 'neutral' },
+        CANCELLED: { label: 'Cancelled', status: 'danger' },
     };
 
-    const getPackageChip = (pkg) => {
-        const config = {
-            BASIC: { label: 'Basic', color: 'default' },
-            STANDARD: { label: 'Standard', color: 'info' },
-            PREMIUM: { label: 'Premium', color: 'warning' },
-            VIP: { label: 'VIP', color: 'error' },
-        };
-        const c = config[pkg] || { label: pkg, color: 'default' };
-        return <Chip label={c.label} color={c.color} size="small" variant="outlined" />;
+    const packageConfig = {
+        BASIC: { label: 'Basic', status: 'neutral' },
+        STANDARD: { label: 'Standard', status: 'info' },
+        PREMIUM: { label: 'Premium', status: 'warning' },
+        VIP: { label: 'VIP', status: 'danger' },
     };
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
-    };
-
-    if (loading && boosts.length === 0) {
-        return <LoadingSpinner message="Loading..." />;
-    }
-
-    return (
-        <Box className="dashboard">
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold">Boost Management</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Monitor boosted events
+    const columns = [
+        {
+            field: 'event',
+            headerName: 'Event',
+            flex: 1.6,
+            minWidth: 240,
+            sortable: false,
+            renderCell: (params) => (
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ py: 1 }}>
+                    <Avatar
+                        src={params.row.eventImageUrl}
+                        variant="rounded"
+                        sx={{ width: 40, height: 40 }}
+                    />
+                    <Typography variant="body2" fontWeight={600} noWrap sx={{ maxWidth: 220 }}>
+                        {params.row.eventTitle}
+                    </Typography>
+                </Stack>
+            ),
+        },
+        {
+            field: 'boostPackage',
+            headerName: 'Package',
+            width: 120,
+            renderCell: (params) => {
+                const cfg = packageConfig[params.value] || { label: params.value, status: 'neutral' };
+                return <StatusChip label={cfg.label} status={cfg.status} />;
+            },
+        },
+        {
+            field: 'amount',
+            headerName: 'Amount',
+            width: 120,
+            renderCell: (params) => (
+                <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(params.value)}
+                </Typography>
+            ),
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 150,
+            renderCell: (params) => {
+                const cfg = statusConfig[params.value] || { label: params.value, status: 'neutral' };
+                return <StatusChip label={cfg.label} status={cfg.status} />;
+            },
+        },
+        {
+            field: 'duration',
+            headerName: 'Duration',
+            flex: 1,
+            minWidth: 200,
+            sortable: false,
+            renderCell: (params) => (
+                <Typography variant="caption" color="text.secondary">
+                    {params.row.startTime ? new Date(params.row.startTime).toLocaleDateString('en-US') : '-'}
+                    {' → '}
+                    {params.row.endTime ? new Date(params.row.endTime).toLocaleDateString('en-US') : '-'}
+                </Typography>
+            ),
+        },
+        {
+            field: 'remaining',
+            headerName: 'Remaining',
+            width: 120,
+            sortable: false,
+            renderCell: (params) =>
+                params.row.isActive ? (
+                    <StatusChip label={`${params.row.daysRemaining} days`} status="success" />
+                ) : (
+                    <Typography variant="caption" color="text.disabled">-</Typography>
+                ),
+        },
+        {
+            field: 'performance',
+            headerName: 'Performance',
+            flex: 1,
+            minWidth: 180,
+            sortable: false,
+            renderCell: (params) => (
+                <Box sx={{ py: 0.5 }}>
+                    <Typography variant="caption" display="block" color="text.secondary">
+                        Views: <strong>+{params.row.viewsDuringBoost}</strong>
+                    </Typography>
+                    <Typography variant="caption" display="block" color="text.secondary">
+                        Regs: <strong>+{params.row.registrationsDuringBoost}</strong>
+                    </Typography>
+                    <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ color: tokens.palette.success[600], fontWeight: 600 }}
+                    >
+                        CVR: {params.row.conversionRate?.toFixed(1)}%
                     </Typography>
                 </Box>
-                <Tooltip title="Refresh">
-                    <IconButton onClick={loadData} color="primary">
-                        <RefreshIcon />
-                    </IconButton>
-                </Tooltip>
-            </Box>
+            ),
+        },
+    ];
 
-            <Grid container spacing={3} sx={{ mb: 3 }}>
+    return (
+        <Box>
+            <PageHeader
+                title="Boost Management"
+                subtitle="Monitor boosted events and their performance"
+                icon={<RocketIcon />}
+                actions={
+                    <Tooltip title="Refresh">
+                        <IconButton onClick={loadData} color="primary" aria-label="refresh boosts">
+                            <RefreshIcon />
+                        </IconButton>
+                    </Tooltip>
+                }
+            />
+
+            <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={12} sm={4}>
                     <StatCard
-                        title="Active"
+                        label="Active Boosts"
                         value={stats.totalActive}
                         icon={<RocketIcon />}
-                        color="#10b981"
+                        iconColor="success"
+                        helper="Running right now"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                     <StatCard
-                        title="Featured Events"
+                        label="Featured Events"
                         value={stats.totalFeatured}
                         icon={<StarIcon />}
-                        color="#f59e0b"
+                        iconColor="warning"
+                        helper="Highlighted in feed"
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                     <StatCard
-                        title="Home Banner"
+                        label="Home Banner"
                         value={stats.totalHomeBanner}
                         icon={<HomeIcon />}
-                        color="#6366f1"
+                        iconColor="primary"
+                        helper="On landing page"
                     />
                 </Grid>
             </Grid>
 
-            <Paper sx={{ mb: 2 }}>
-                <Tabs value={tabValue} onChange={(e, v) => { setTabValue(v); setPage(0); }}>
+            <Paper sx={{ mb: 2, borderRadius: 2 }}>
+                <Tabs
+                    value={tabValue}
+                    onChange={(e, v) => {
+                        setTabValue(v);
+                        setPage(0);
+                    }}
+                    sx={{ px: 2 }}
+                >
                     <Tab label="All" />
                     <Tab label="Pending Payment" />
                     <Tab label="Active" />
@@ -169,86 +244,27 @@ const AdminBoosts = () => {
                 </Tabs>
             </Paper>
 
-            <Paper sx={{ p: 2 }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Event</TableCell>
-                                <TableCell>Package</TableCell>
-                                <TableCell>Amount</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Duration</TableCell>
-                                <TableCell>Remaining</TableCell>
-                                <TableCell>Performance</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {boosts.map((boost) => (
-                                <TableRow key={boost.id} hover>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Avatar
-                                                src={boost.eventImageUrl}
-                                                variant="rounded"
-                                                sx={{ width: 40, height: 40 }}
-                                            />
-                                            <Typography variant="body2" fontWeight="medium" noWrap sx={{ maxWidth: 200 }}>
-                                                {boost.eventTitle}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>{getPackageChip(boost.boostPackage)}</TableCell>
-                                    <TableCell>{formatCurrency(boost.amount)}</TableCell>
-                                    <TableCell>{getStatusChip(boost.status)}</TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {boost.startTime ? new Date(boost.startTime).toLocaleDateString('en-US') : '-'}
-                                            {' → '}
-                                            {boost.endTime ? new Date(boost.endTime).toLocaleDateString('en-US') : '-'}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        {boost.isActive ? (
-                                            <Chip label={`${boost.daysRemaining} days`} size="small" color="success" />
-                                        ) : '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box>
-                                            <Typography variant="caption" display="block">
-                                                Views: +{boost.viewsDuringBoost}
-                                            </Typography>
-                                            <Typography variant="caption" display="block">
-                                                Regs: +{boost.registrationsDuringBoost}
-                                            </Typography>
-                                            <Typography variant="caption" color="success.main">
-                                                CVR: {boost.conversionRate?.toFixed(1)}%
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {boosts.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                                        <Typography color="text.secondary">No data available</Typography>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    component="div"
-                    count={totalElements}
-                    page={page}
-                    onPageChange={(e, p) => setPage(p)}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(0); }}
-                    rowsPerPageOptions={[5, 10, 25]}
-                    labelRowsPerPage="Rows per page:"
-                />
-            </Paper>
+            <DataTableCard
+                rows={boosts}
+                columns={columns}
+                loading={loading}
+                emptyIcon={<TrendingUpIcon sx={{ fontSize: 32 }} />}
+                emptyTitle="No boosts found"
+                emptyDescription="Nothing to show with the current filter. Try switching tabs."
+                dataGridProps={{
+                    autoHeight: true,
+                    paginationMode: 'server',
+                    rowCount: totalElements,
+                    paginationModel: { page, pageSize: rowsPerPage },
+                    onPaginationModelChange: (model) => {
+                        setPage(model.page);
+                        setRowsPerPage(model.pageSize);
+                    },
+                    pageSizeOptions: [5, 10, 25],
+                    rowHeight: 72,
+                    disableColumnMenu: true,
+                }}
+            />
         </Box>
     );
 };

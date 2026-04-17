@@ -139,15 +139,17 @@ abstract final class AppTheme {
       canvasColor: surface,
       dividerColor: divider,
       splashFactory: InkRipple.splashFactory,
+      // Keep AppBar in the brand primary so existing screens that draw
+      // white-on-primary content (search TextField, custom titles, icons) stay
+      // legible. Individual screens can override if they want a light header.
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
-        foregroundColor: textPrimary,
+        backgroundColor: isDark ? AppColorsDark.surface : AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        centerTitle: false,
-        titleSpacing: AppSpacing.lg,
-        iconTheme: IconThemeData(color: textPrimary),
-        titleTextStyle: AppTypography.h3.copyWith(color: textPrimary),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: AppTypography.h3.copyWith(color: Colors.white),
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
@@ -252,7 +254,7 @@ abstract final class AppTheme {
         backgroundColor: isDark
             ? AppColorsDark.surface
             : AppColors.neutral100,
-        selectedColor: scheme.primary.withOpacity(0.12),
+        selectedColor: scheme.primary.withValues(alpha: 0.12),
         disabledColor: divider,
         labelStyle: AppTypography.label.copyWith(color: textPrimary),
         secondaryLabelStyle:
@@ -329,12 +331,12 @@ abstract final class AppTheme {
             : AppColors.neutral100,
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) return Colors.white;
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.white;
           return isDark ? AppColorsDark.textLight : Colors.white;
         }),
-        trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) return scheme.primary;
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.primary;
           return isDark ? AppColorsDark.border : AppColors.neutral300;
         }),
       ),

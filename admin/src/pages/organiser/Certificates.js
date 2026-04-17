@@ -2,26 +2,27 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     Button,
-    Chip,
     Avatar,
-    TextField,
-    InputAdornment,
     IconButton,
     Tooltip,
     Link,
+    Grid,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
     Refresh as RefreshIcon,
-    Search as SearchIcon,
     Download as DownloadIcon,
     Visibility as VisibilityIcon,
     WorkspacePremium as CertificateIcon,
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
 import { toast } from 'react-toastify';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatCard,
+} from '../../components/ui';
 
 const OrganiserCertificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -51,7 +52,7 @@ const OrganiserCertificates = () => {
         loadCertificates();
     }, [loadCertificates]);
 
-    const filteredCertificates = certificates.filter(cert => {
+    const filteredCertificates = certificates.filter((cert) => {
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         return (
@@ -65,12 +66,12 @@ const OrganiserCertificates = () => {
     const columns = [
         {
             field: 'certificateCode',
-            headerName: 'Certificate Code',
-            width: 160,
+            headerName: 'Code',
+            width: 170,
             renderCell: (params) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CertificateIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-                    <Typography variant="body2" fontWeight="medium">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontFamily: 'monospace' }}>
+                    <CertificateIcon sx={{ color: 'primary.500', fontSize: 16 }} />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         {params.value}
                     </Typography>
                 </Box>
@@ -80,17 +81,17 @@ const OrganiserCertificates = () => {
             field: 'userName',
             headerName: 'Attendee',
             flex: 1,
-            minWidth: 200,
+            minWidth: 220,
             renderCell: (params) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.500' }}>
                         {params.value?.charAt(0)?.toUpperCase() || '?'}
                     </Avatar>
-                    <Box>
-                        <Typography variant="body2" fontWeight="medium">
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
                             {params.value}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
                             {params.row.userEmail}
                         </Typography>
                     </Box>
@@ -102,51 +103,48 @@ const OrganiserCertificates = () => {
             headerName: 'Event',
             flex: 1,
             minWidth: 200,
+            renderCell: (p) => (
+                <Typography variant="body2" noWrap sx={{ maxWidth: '100%' }}>{p.value}</Typography>
+            ),
         },
         {
             field: 'eventDate',
-            headerName: 'Event Date',
+            headerName: 'Event date',
             width: 130,
-            valueFormatter: (params) => {
-                if (!params.value) return '';
-                return new Date(params.value).toLocaleDateString();
-            },
+            valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString() : '',
         },
         {
             field: 'generatedAt',
-            headerName: 'Issued Date',
+            headerName: 'Issued',
             width: 130,
-            valueFormatter: (params) => {
-                if (!params.value) return '';
-                return new Date(params.value).toLocaleDateString();
-            },
+            valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString() : '',
         },
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 120,
+            width: 110,
             sortable: false,
+            align: 'right',
+            headerAlign: 'right',
             renderCell: (params) => {
                 const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
                 const viewUrl = `${baseUrl}/api/certificates/${params.row.certificateCode}/pdf`;
                 const downloadUrl = `${baseUrl}/api/certificates/${params.row.certificateCode}/pdf?download=true`;
-
                 return (
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <Tooltip title="View Certificate">
+                    <Box sx={{ display: 'flex', gap: 0.25 }}>
+                        <Tooltip title="Preview">
                             <IconButton
                                 size="small"
-                                color="primary"
                                 onClick={() => window.open(viewUrl, '_blank')}
                                 disabled={!params.row.certificateCode}
                             >
                                 <VisibilityIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Download Certificate">
+                        <Tooltip title="Download">
                             <IconButton
                                 size="small"
-                                color="secondary"
+                                color="primary"
                                 component={Link}
                                 href={downloadUrl}
                                 download={`${params.row.certificateCode}.pdf`}
@@ -163,73 +161,57 @@ const OrganiserCertificates = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h5" fontWeight="bold">
-                        Certificates
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        View all certificates issued for your events
-                    </Typography>
-                </Box>
-                <Button startIcon={<RefreshIcon />} onClick={loadCertificates}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="Certificates"
+                subtitle="View and download certificates issued for your events."
+                icon={<CertificateIcon />}
+                actions={
+                    <Button
+                        startIcon={<RefreshIcon fontSize="small" />}
+                        onClick={loadCertificates}
+                        variant="outlined"
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Paper sx={{ p: 2, flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <CertificateIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                    <Box>
-                        <Typography variant="h4" fontWeight="bold">
-                            {totalRows}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Total Certificates Issued
-                        </Typography>
-                    </Box>
-                </Paper>
-            </Box>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                    <StatCard
+                        label="Total certificates"
+                        value={totalRows.toLocaleString()}
+                        icon={<CertificateIcon />}
+                        iconColor="primary"
+                        helper="Issued across your events"
+                    />
+                </Grid>
+            </Grid>
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Search by attendee name, email, event title, or certificate code..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            </Paper>
-
-            <Paper>
-                <DataGrid
-                    rows={filteredCertificates}
-                    columns={columns}
-                    loading={loading}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    pageSizeOptions={[10, 25, 50]}
-                    rowCount={totalRows}
-                    paginationMode="server"
-                    disableRowSelectionOnClick
-                    autoHeight
-                    sx={{
-                        '& .MuiDataGrid-row:hover': {
-                            backgroundColor: 'action.hover',
-                        },
-                    }}
-                    localeText={{
-                        noRowsLabel: 'No certificates issued yet',
-                    }}
-                />
-            </Paper>
+            <DataTableCard
+                rows={filteredCertificates}
+                columns={columns}
+                loading={loading}
+                emptyTitle={searchQuery ? 'No certificates match your search' : 'No certificates issued yet'}
+                emptyDescription={searchQuery
+                    ? 'Try a different keyword or clear the search.'
+                    : 'Certificates will appear here once attendees complete your events.'}
+                emptyIcon={<CertificateIcon sx={{ fontSize: 28 }} />}
+                toolbar={
+                    <PageToolbar
+                        search={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        searchPlaceholder="Search attendee, event or code..."
+                    />
+                }
+                dataGridProps={{
+                    paginationModel,
+                    onPaginationModelChange: setPaginationModel,
+                    pageSizeOptions: [10, 25, 50],
+                    rowCount: totalRows,
+                    paginationMode: 'server',
+                }}
+            />
         </Box>
     );
 };

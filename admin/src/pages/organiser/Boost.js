@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box,
-    Paper,
     Typography,
-    Card,
-    CardContent,
     Grid,
     Button,
     IconButton,
     Tooltip,
     Chip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     TextField,
     Table,
     TableBody,
@@ -27,6 +20,7 @@ import {
     Autocomplete,
     CircularProgress,
     Divider,
+    Stack,
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
@@ -38,100 +32,203 @@ import {
     CheckCircle as ActiveIcon,
     TrendingUp as UpgradeIcon,
     AccessTime as ExtendIcon,
+    LocalFireDepartment as FireIcon,
+    CheckCircleOutline as CheckIcon,
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
 import { LoadingSpinner } from '../../components/common';
+import {
+    PageHeader,
+    SectionCard,
+    FormDialog,
+    LoadingButton,
+    StatusChip,
+    EmptyState,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
+const PACKAGE_META = {
+    BASIC: {
+        icon: <BoltIcon />,
+        accent: tokens.palette.neutral[500],
+        accentBg: tokens.palette.neutral[100],
+    },
+    STANDARD: {
+        icon: <StarIcon />,
+        accent: tokens.palette.info[600],
+        accentBg: tokens.palette.info[50],
+    },
+    PREMIUM: {
+        icon: <RocketIcon />,
+        accent: tokens.palette.warning[600],
+        accentBg: tokens.palette.warning[50],
+    },
+    VIP: {
+        icon: <DiamondIcon />,
+        accent: tokens.palette.secondary[600],
+        accentBg: tokens.palette.secondary[50],
+    },
+};
+
 const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, currentPackage }) => {
-    const getIcon = (type) => {
-        switch (type) {
-            case 'BASIC': return <BoltIcon />;
-            case 'STANDARD': return <StarIcon />;
-            case 'PREMIUM': return <RocketIcon />;
-            case 'VIP': return <DiamondIcon />;
-            default: return <BoltIcon />;
-        }
-    };
-
-    const getColor = (type) => {
-        switch (type) {
-            case 'BASIC': return '#64748b';
-            case 'STANDARD': return '#3b82f6';
-            case 'PREMIUM': return '#f59e0b';
-            case 'VIP': return '#ef4444';
-            default: return '#64748b';
-        }
-    };
-
-    const color = getColor(pkg.packageType);
+    const meta = PACKAGE_META[pkg.packageType] || PACKAGE_META.BASIC;
+    const accent = meta.accent;
     const isCurrentPackage = currentPackage === pkg.packageType;
     const isExtend = upgradeInfo?.action === 'EXTEND' && isCurrentPackage;
     const isUpgrade = upgradeInfo?.action === 'UPGRADE' && selected;
     const isDowngrade = upgradeInfo?.action === 'DOWNGRADE' && selected;
+    const isFeatured = pkg.packageType === 'PREMIUM';
 
     return (
-        <Card
-            sx={{
-                cursor: 'pointer',
-                border: selected ? `2px solid ${color}` : isCurrentPackage ? `2px dashed ${color}` : '2px solid transparent',
-                transition: 'all 0.2s',
-                '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
-                position: 'relative',
-                opacity: isCurrentPackage && !selected ? 0.8 : 1,
-            }}
+        <Box
             onClick={onSelect}
+            sx={{
+                height: '100%',
+                position: 'relative',
+                cursor: 'pointer',
+                borderRadius: `${tokens.radius.lg}px`,
+                border: '2px solid',
+                borderColor: selected
+                    ? accent
+                    : isCurrentPackage
+                        ? tokens.borders.default
+                        : tokens.borders.subtle,
+                borderStyle: isCurrentPackage && !selected ? 'dashed' : 'solid',
+                bgcolor: tokens.surfaces.card,
+                p: 2.5,
+                transition: tokens.motion.base,
+                boxShadow: selected ? tokens.shadow.md : tokens.shadow.xs,
+                '&:hover': {
+                    transform: 'translateY(-3px)',
+                    boxShadow: tokens.shadow.lg,
+                    borderColor: accent,
+                },
+            }}
         >
-            {isCurrentPackage && (
+            {isFeatured && !isCurrentPackage && (
                 <Chip
-                    label="Current"
+                    icon={<FireIcon sx={{ fontSize: 14 }} />}
+                    label="FEATURED"
                     size="small"
-                    color="primary"
-                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                    sx={{
+                        position: 'absolute',
+                        top: -10,
+                        left: 16,
+                        bgcolor: tokens.palette.warning[500],
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '0.6875rem',
+                        height: 22,
+                        '& .MuiChip-icon': { color: '#fff' },
+                    }}
                 />
             )}
-            <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: `${color}15`, color }}>
-                        {getIcon(pkg.packageType)}
-                    </Box>
-                    <Box>
-                        <Typography variant="h6" fontWeight="bold">{pkg.displayName}</Typography>
-                        {pkg.badge && <Chip label={pkg.badge} size="small" sx={{ bgcolor: color, color: 'white' }} />}
-                    </Box>
+            {isCurrentPackage && (
+                <StatusChip
+                    label="Current"
+                    status="primary"
+                    sx={{ position: 'absolute', top: 12, right: 12 }}
+                />
+            )}
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                <Box
+                    sx={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: `${tokens.radius.md}px`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: meta.accentBg,
+                        color: accent,
+                    }}
+                >
+                    {meta.icon}
                 </Box>
-                <Box sx={{ mb: 1 }}>
-                    {discountPercent > 0 && (
-                        <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
-                            {pkg.originalPriceFormatted || pkg.priceFormatted}
-                        </Typography>
-                    )}
-                    <Typography variant="h5" fontWeight="bold" color={color}>
-                        {pkg.priceFormatted}
-                        {discountPercent > 0 && (
-                            <Chip label={`-${discountPercent}%`} size="small" color="success" sx={{ ml: 1 }} />
-                        )}
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: tokens.text.strong }}>
+                        {pkg.displayName}
                     </Typography>
+                    {pkg.badge && (
+                        <Chip
+                            label={pkg.badge}
+                            size="small"
+                            sx={{
+                                bgcolor: accent,
+                                color: '#fff',
+                                height: 18,
+                                fontSize: '0.6875rem',
+                                fontWeight: 600,
+                                mt: 0.5,
+                            }}
+                        />
+                    )}
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {pkg.durationDays} days
-                </Typography>
-                <Typography variant="body2">{pkg.description}</Typography>
-                {selected && (
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                        {isExtend ? (
-                            <Chip icon={<ExtendIcon />} label="Extend" color="info" />
-                        ) : isUpgrade ? (
-                            <Chip icon={<UpgradeIcon />} label="Upgrade" color="warning" />
-                        ) : isDowngrade ? (
-                            <Chip icon={<UpgradeIcon />} label="Change" color="secondary" />
-                        ) : (
-                            <Chip icon={<ActiveIcon />} label="Selected" color="success" />
-                        )}
-                    </Box>
+            </Stack>
+
+            <Box sx={{ mb: 1.5 }}>
+                {discountPercent > 0 && (
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            textDecoration: 'line-through',
+                            color: tokens.text.muted,
+                            display: 'block',
+                        }}
+                    >
+                        {pkg.originalPriceFormatted || pkg.priceFormatted}
+                    </Typography>
                 )}
-            </CardContent>
-        </Card>
+                <Stack direction="row" alignItems="baseline" spacing={1}>
+                    <Typography
+                        sx={{
+                            fontSize: '1.75rem',
+                            fontWeight: 800,
+                            color: accent,
+                            lineHeight: 1.1,
+                        }}
+                    >
+                        {pkg.priceFormatted}
+                    </Typography>
+                    {discountPercent > 0 && (
+                        <Chip
+                            label={`-${discountPercent}%`}
+                            size="small"
+                            sx={{
+                                height: 18,
+                                fontSize: '0.6875rem',
+                                bgcolor: tokens.palette.success[50],
+                                color: tokens.palette.success[700],
+                                fontWeight: 700,
+                            }}
+                        />
+                    )}
+                </Stack>
+            </Box>
+
+            <Typography variant="caption" sx={{ color: tokens.text.muted, display: 'block', mb: 1.5 }}>
+                {pkg.durationDays} days duration
+            </Typography>
+            <Divider sx={{ mb: 1.5 }} />
+            <Typography variant="body2" sx={{ color: tokens.text.secondary, minHeight: 40 }}>
+                {pkg.description}
+            </Typography>
+
+            {selected && (
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                    {isExtend ? (
+                        <StatusChip icon={<ExtendIcon sx={{ fontSize: 16 }} />} label="Extend" status="info" />
+                    ) : isUpgrade ? (
+                        <StatusChip icon={<UpgradeIcon sx={{ fontSize: 16 }} />} label="Upgrade" status="warning" />
+                    ) : isDowngrade ? (
+                        <StatusChip icon={<UpgradeIcon sx={{ fontSize: 16 }} />} label="Change" status="neutral" />
+                    ) : (
+                        <StatusChip icon={<ActiveIcon sx={{ fontSize: 16 }} />} label="Selected" status="success" />
+                    )}
+                </Box>
+            )}
+        </Box>
     );
 };
 
@@ -185,6 +282,7 @@ const OrganiserBoost = () => {
         };
 
         handlePaymentCallback();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, rowsPerPage]);
 
     useEffect(() => {
@@ -260,24 +358,31 @@ const OrganiserBoost = () => {
 
     const getStatusChip = (status) => {
         const config = {
-            PENDING: { label: 'Pending Payment', color: 'warning' },
-            ACTIVE: { label: 'Active', color: 'success' },
-            EXPIRED: { label: 'Expired', color: 'default' },
-            CANCELLED: { label: 'Cancelled', color: 'error' },
+            PENDING: { label: 'Pending Payment', status: 'warning' },
+            ACTIVE: { label: 'Active', status: 'success' },
+            EXPIRED: { label: 'Expired', status: 'neutral' },
+            CANCELLED: { label: 'Cancelled', status: 'danger' },
         };
-        const c = config[status] || { label: status, color: 'default' };
-        return <Chip label={c.label} color={c.color} size="small" />;
+        const c = config[status] || { label: status, status: 'neutral' };
+        return <StatusChip label={c.label} status={c.status} />;
     };
 
     const getPackageChip = (pkg) => {
-        const config = {
-            BASIC: { color: 'default' },
-            STANDARD: { color: 'info' },
-            PREMIUM: { color: 'warning' },
-            VIP: { color: 'error' },
-        };
-        const c = config[pkg] || { color: 'default' };
-        return <Chip label={pkg} color={c.color} size="small" variant="outlined" />;
+        const meta = PACKAGE_META[pkg];
+        if (!meta) return <Chip label={pkg} size="small" variant="outlined" />;
+        return (
+            <Chip
+                label={pkg}
+                size="small"
+                variant="outlined"
+                sx={{
+                    borderColor: meta.accent,
+                    color: meta.accent,
+                    fontWeight: 600,
+                    bgcolor: meta.accentBg,
+                }}
+            />
+        );
     };
 
     const formatCurrency = (value) => {
@@ -314,292 +419,471 @@ const OrganiserBoost = () => {
     }
 
     return (
-        <Box className="dashboard">
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold">Event Boost</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Boost your events to increase visibility and registrations
-                    </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Tooltip title="Refresh">
-                        <IconButton onClick={loadData} color="primary">
-                            <RefreshIcon />
-                        </IconButton>
-                    </Tooltip>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setOpenDialog(true)}
-                    >
-                        New Boost
-                    </Button>
-                </Box>
-            </Box>
+        <Box>
+            <PageHeader
+                title="Event Boost"
+                subtitle="Boost your events to increase visibility and registrations"
+                icon={<RocketIcon />}
+                actions={
+                    <>
+                        <Tooltip title="Refresh">
+                            <IconButton
+                                onClick={loadData}
+                                sx={{
+                                    border: `1px solid ${tokens.borders.subtle}`,
+                                    borderRadius: `${tokens.radius.md}px`,
+                                }}
+                            >
+                                <RefreshIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setOpenDialog(true)}
+                        >
+                            New Boost
+                        </Button>
+                    </>
+                }
+            />
 
             {discountPercent > 0 && (
-                <Alert severity="success" sx={{ mb: 3 }}>
+                <Alert severity="success" sx={{ mb: 2, borderRadius: `${tokens.radius.md}px` }}>
                     <Typography variant="body2">
-                        <strong>Subscription Discount Active!</strong> You get <strong>{discountPercent}% off</strong> on all boost packages with your current subscription plan.
+                        <strong>Subscription Discount Active!</strong> You get{' '}
+                        <strong>{discountPercent}% off</strong> on all boost packages with your current subscription plan.
                     </Typography>
                 </Alert>
             )}
 
-            <Alert severity="info" sx={{ mb: 3 }}>
+            <Alert severity="info" sx={{ mb: 3, borderRadius: `${tokens.radius.md}px` }}>
                 <Typography variant="body2">
                     <strong>Event Boost</strong> helps your events appear in prominent positions, increasing views and registrations.
                     You can <strong>extend</strong> an existing boost with the same package, or <strong>upgrade</strong> to a higher tier.
                 </Typography>
             </Alert>
 
-            <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                    Boost History
-                </Typography>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Event</TableCell>
-                                <TableCell>Package</TableCell>
-                                <TableCell>Amount</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Duration</TableCell>
-                                <TableCell>Remaining</TableCell>
-                                <TableCell>Performance</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {boosts.map((boost) => (
-                                <TableRow key={boost.id} hover>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Avatar
-                                                src={boost.eventImageUrl}
-                                                variant="rounded"
-                                                sx={{ width: 40, height: 40 }}
-                                            />
-                                            <Typography variant="body2" fontWeight="medium" noWrap sx={{ maxWidth: 180 }}>
-                                                {boost.eventTitle}
+            {/* Pricing plans grid */}
+            <Typography variant="h2" sx={{ mb: 2, fontWeight: 700 }}>
+                Choose a Boost Package
+            </Typography>
+            <Grid container spacing={2.5} sx={{ mb: 4 }}>
+                {packages.map((pkg) => {
+                    const meta = PACKAGE_META[pkg.packageType] || PACKAGE_META.BASIC;
+                    const isFeatured = pkg.packageType === 'PREMIUM';
+                    return (
+                        <Grid item xs={12} sm={6} md={3} key={pkg.packageType}>
+                            <SectionCard
+                                sx={{
+                                    height: '100%',
+                                    position: 'relative',
+                                    border: '1px solid',
+                                    borderColor: isFeatured ? meta.accent : tokens.borders.subtle,
+                                    boxShadow: isFeatured ? tokens.shadow.md : tokens.shadow.xs,
+                                    transition: tokens.motion.base,
+                                    '&:hover': {
+                                        transform: 'translateY(-3px)',
+                                        boxShadow: tokens.shadow.lg,
+                                    },
+                                }}
+                                contentSx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                            >
+                                {isFeatured && (
+                                    <Chip
+                                        icon={<FireIcon sx={{ fontSize: 14 }} />}
+                                        label="FEATURED"
+                                        size="small"
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 12,
+                                            right: 12,
+                                            bgcolor: tokens.palette.warning[500],
+                                            color: '#fff',
+                                            fontWeight: 700,
+                                            fontSize: '0.6875rem',
+                                            height: 22,
+                                            '& .MuiChip-icon': { color: '#fff' },
+                                        }}
+                                    />
+                                )}
+                                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                                    <Box
+                                        sx={{
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: `${tokens.radius.md}px`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            bgcolor: meta.accentBg,
+                                            color: meta.accent,
+                                        }}
+                                    >
+                                        {meta.icon}
+                                    </Box>
+                                    <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                                        {pkg.displayName}
+                                    </Typography>
+                                </Stack>
+                                <Box sx={{ mb: 2 }}>
+                                    {discountPercent > 0 && (
+                                        <Typography
+                                            variant="caption"
+                                            sx={{ textDecoration: 'line-through', color: tokens.text.muted, display: 'block' }}
+                                        >
+                                            {pkg.originalPriceFormatted || pkg.priceFormatted}
+                                        </Typography>
+                                    )}
+                                    <Stack direction="row" alignItems="baseline" spacing={1}>
+                                        <Typography sx={{ fontSize: '2rem', fontWeight: 800, color: meta.accent, lineHeight: 1 }}>
+                                            {pkg.priceFormatted}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            / {pkg.durationDays}d
+                                        </Typography>
+                                    </Stack>
+                                    {discountPercent > 0 && (
+                                        <Chip
+                                            label={`${discountPercent}% OFF`}
+                                            size="small"
+                                            sx={{
+                                                mt: 0.5,
+                                                bgcolor: tokens.palette.success[50],
+                                                color: tokens.palette.success[700],
+                                                fontWeight: 700,
+                                                height: 20,
+                                                fontSize: '0.6875rem',
+                                            }}
+                                        />
+                                    )}
+                                </Box>
+                                <Divider sx={{ mb: 2 }} />
+                                <Typography variant="body2" sx={{ color: tokens.text.secondary, mb: 2, flexGrow: 1 }}>
+                                    {pkg.description}
+                                </Typography>
+                                <Stack spacing={0.75} sx={{ mb: 2.5 }}>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <CheckIcon sx={{ fontSize: 16, color: tokens.palette.success[600] }} />
+                                        <Typography variant="caption" color="text.secondary">
+                                            {pkg.durationDays} days active boost
+                                        </Typography>
+                                    </Stack>
+                                    {pkg.badge && (
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <CheckIcon sx={{ fontSize: 16, color: tokens.palette.success[600] }} />
+                                            <Typography variant="caption" color="text.secondary">
+                                                {pkg.badge}
                                             </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>{getPackageChip(boost.boostPackage)}</TableCell>
-                                    <TableCell>{formatCurrency(boost.amount)}</TableCell>
-                                    <TableCell>{getStatusChip(boost.status)}</TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {boost.startTime ? new Date(boost.startTime).toLocaleDateString('en-US') : '-'}
-                                            {' - '}
-                                            {boost.endTime ? new Date(boost.endTime).toLocaleDateString('en-US') : '-'}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        {boost.status === 'ACTIVE' && boost.daysRemaining !== undefined ? (
-                                            <Chip
-                                                label={`${boost.daysRemaining} ${boost.daysRemaining === 1 ? 'day' : 'days'}`}
-                                                size="small"
-                                                color="success"
-                                            />
-                                        ) : '-'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" display="block">
-                                            +{boost.viewsDuringBoost || 0} views
-                                        </Typography>
-                                        <Typography variant="caption" display="block" color="success.main">
-                                            +{boost.registrationsDuringBoost || 0} regs
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        {boost.status === 'ACTIVE' && (
-                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                <Tooltip title="Extend or Upgrade">
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        onClick={() => {
-                                                            setSelectedEvent(boost.eventId);
-                                                            setOpenDialog(true);
-                                                        }}
-                                                    >
-                                                        Manage
-                                                    </Button>
-                                                </Tooltip>
-                                            </Box>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {boosts.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                                        <Typography color="text.secondary">
-                                            No boosts yet. Create your first boost!
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                {boosts.length > 0 && (
-                    <TablePagination
-                        component="div"
-                        count={totalElements}
-                        page={page}
-                        onPageChange={(e, p) => setPage(p)}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(0); }}
-                        rowsPerPageOptions={[5, 10, 25]}
-                        labelRowsPerPage="Rows per page:"
-                    />
-                )}
-            </Paper>
+                                        </Stack>
+                                    )}
+                                </Stack>
+                                <LoadingButton
+                                    fullWidth
+                                    variant={isFeatured ? 'contained' : 'outlined'}
+                                    onClick={() => {
+                                        setSelectedPackage(pkg);
+                                        setOpenDialog(true);
+                                    }}
+                                    sx={
+                                        isFeatured
+                                            ? {}
+                                            : {
+                                                  borderColor: meta.accent,
+                                                  color: meta.accent,
+                                                  '&:hover': {
+                                                      borderColor: meta.accent,
+                                                      bgcolor: meta.accentBg,
+                                                  },
+                                              }
+                                    }
+                                >
+                                    Boost Now
+                                </LoadingButton>
+                            </SectionCard>
+                        </Grid>
+                    );
+                })}
+            </Grid>
 
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                <DialogTitle sx={{ fontWeight: 'bold' }}>
-                    {upgradeInfo?.hasExistingBoost ? 'Extend or Upgrade Boost' : 'Create New Boost'}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ mt: 2 }}>
-                        <Autocomplete
-                            fullWidth
-                            options={events}
-                            getOptionLabel={(option) => option.title || ''}
-                            value={events.find(e => e.id === selectedEvent) || null}
-                            onChange={(e, newValue) => {
-                                setSelectedEvent(newValue?.id || '');
-                                setSelectedPackage(null);
-                                setUpgradeInfo(null);
+            <SectionCard
+                title="Boost History"
+                subtitle={`${totalElements} boost${totalElements === 1 ? '' : 's'} total`}
+                contentSx={{ p: 0, pt: 0 }}
+            >
+                {boosts.length === 0 ? (
+                    <EmptyState
+                        icon={<RocketIcon sx={{ fontSize: 32 }} />}
+                        title="No boosts yet"
+                        description="Create your first boost to start promoting your events"
+                        action={
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={() => setOpenDialog(true)}
+                            >
+                                Create Boost
+                            </Button>
+                        }
+                    />
+                ) : (
+                    <>
+                        <TableContainer>
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: tokens.surfaces.sunken }}>
+                                        <TableCell sx={{ fontWeight: 600 }}>Event</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Package</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Duration</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Remaining</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Performance</TableCell>
+                                        <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {boosts.map((boost) => (
+                                        <TableRow key={boost.id} hover>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Avatar
+                                                        src={boost.eventImageUrl}
+                                                        variant="rounded"
+                                                        sx={{ width: 40, height: 40 }}
+                                                    />
+                                                    <Typography variant="body2" fontWeight="medium" noWrap sx={{ maxWidth: 180 }}>
+                                                        {boost.eventTitle}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>{getPackageChip(boost.boostPackage)}</TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" fontWeight={600}>
+                                                    {formatCurrency(boost.amount)}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>{getStatusChip(boost.status)}</TableCell>
+                                            <TableCell>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {boost.startTime ? new Date(boost.startTime).toLocaleDateString('en-US') : '-'}
+                                                    {' - '}
+                                                    {boost.endTime ? new Date(boost.endTime).toLocaleDateString('en-US') : '-'}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                {boost.status === 'ACTIVE' && boost.daysRemaining !== undefined ? (
+                                                    <StatusChip
+                                                        label={`${boost.daysRemaining} ${boost.daysRemaining === 1 ? 'day' : 'days'}`}
+                                                        status="success"
+                                                    />
+                                                ) : '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="caption" display="block">
+                                                    +{boost.viewsDuringBoost || 0} views
+                                                </Typography>
+                                                <Typography variant="caption" display="block" color="success.main">
+                                                    +{boost.registrationsDuringBoost || 0} regs
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                {boost.status === 'ACTIVE' && (
+                                                    <Tooltip title="Extend or Upgrade">
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            onClick={() => {
+                                                                setSelectedEvent(boost.eventId);
+                                                                setOpenDialog(true);
+                                                            }}
+                                                        >
+                                                            Manage
+                                                        </Button>
+                                                    </Tooltip>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <TablePagination
+                            component="div"
+                            count={totalElements}
+                            page={page}
+                            onPageChange={(e, p) => setPage(p)}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value)); setPage(0); }}
+                            rowsPerPageOptions={[5, 10, 25]}
+                            labelRowsPerPage="Rows per page:"
+                        />
+                    </>
+                )}
+            </SectionCard>
+
+            <FormDialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                maxWidth="md"
+                icon={<RocketIcon />}
+                title={upgradeInfo?.hasExistingBoost ? 'Extend or Upgrade Boost' : 'Create New Boost'}
+                subtitle="Select an event and boost package to get started"
+                actions={
+                    <>
+                        <Button onClick={handleCloseDialog} color="inherit">
+                            Cancel
+                        </Button>
+                        <LoadingButton
+                            variant="contained"
+                            onClick={handleCreateBoost}
+                            loading={submitting}
+                            disabled={!selectedEvent || !selectedPackage || checkingUpgrade}
+                            startIcon={checkingUpgrade ? <CircularProgress size={16} /> : null}
+                        >
+                            {getButtonText()}
+                        </LoadingButton>
+                    </>
+                }
+            >
+                <Autocomplete
+                    fullWidth
+                    options={events}
+                    getOptionLabel={(option) => option.title || ''}
+                    value={events.find(e => e.id === selectedEvent) || null}
+                    onChange={(e, newValue) => {
+                        setSelectedEvent(newValue?.id || '');
+                        setSelectedPackage(null);
+                        setUpgradeInfo(null);
+                    }}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Search and Select Event"
+                            placeholder="Type to search..."
+                        />
+                    )}
+                    renderOption={(props, option) => (
+                        <Box component="li" {...props} key={option.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar src={option.imageUrl} variant="rounded" sx={{ width: 32, height: 32 }} />
+                            <Box>
+                                <Typography variant="body2" fontWeight="medium">{option.title}</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {option.status} • {option.startTime ? new Date(option.startTime).toLocaleDateString() : ''}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
+                    sx={{ mb: 3 }}
+                    noOptionsText="No events found"
+                />
+
+                {upgradeInfo?.hasExistingBoost && (
+                    <Alert
+                        severity={upgradeInfo.action === 'EXTEND' ? 'info' : 'warning'}
+                        sx={{ mb: 3, borderRadius: `${tokens.radius.md}px` }}
+                        icon={upgradeInfo.action === 'EXTEND' ? <ExtendIcon /> : <UpgradeIcon />}
+                    >
+                        <Typography variant="body2">
+                            <strong>This event has an active {upgradeInfo.currentPackage} boost</strong>
+                            <br />
+                            Remaining: {upgradeInfo.remainingDays} days (ends {new Date(upgradeInfo.currentEndTime).toLocaleDateString()})
+                        </Typography>
+                        {upgradeInfo.message && (
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                {upgradeInfo.message}
+                            </Typography>
+                        )}
+                    </Alert>
+                )}
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                        Select Boost Package
+                    </Typography>
+                    {discountPercent > 0 && (
+                        <Chip
+                            label={`${discountPercent}% Subscription Discount`}
+                            size="small"
+                            sx={{
+                                bgcolor: tokens.palette.success[50],
+                                color: tokens.palette.success[700],
+                                fontWeight: 600,
                             }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Search and Select Event"
-                                    placeholder="Type to search..."
-                                />
-                            )}
-                            renderOption={(props, option) => (
-                                <Box component="li" {...props} key={option.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Avatar src={option.imageUrl} variant="rounded" sx={{ width: 32, height: 32 }} />
-                                    <Box>
-                                        <Typography variant="body2" fontWeight="medium">{option.title}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {option.status} • {option.startTime ? new Date(option.startTime).toLocaleDateString() : ''}
+                        />
+                    )}
+                </Box>
+                <Grid container spacing={2}>
+                    {packages.map((pkg) => (
+                        <Grid item xs={12} sm={6} md={3} key={pkg.packageType}>
+                            <PackageCard
+                                pkg={pkg}
+                                selected={selectedPackage?.packageType === pkg.packageType}
+                                onSelect={() => setSelectedPackage(pkg)}
+                                discountPercent={discountPercent}
+                                upgradeInfo={upgradeInfo}
+                                currentPackage={upgradeInfo?.currentPackage}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
+
+                {upgradeInfo && selectedPackage && (
+                    <Box
+                        sx={{
+                            mt: 3,
+                            p: 2.5,
+                            borderRadius: `${tokens.radius.md}px`,
+                            bgcolor: tokens.surfaces.sunken,
+                            border: `1px solid ${tokens.borders.subtle}`,
+                        }}
+                    >
+                        <Typography variant="h5" sx={{ mb: 1, fontWeight: 700 }}>
+                            Price Summary
+                        </Typography>
+                        <Divider sx={{ mb: 1.5 }} />
+                        {upgradeInfo.action === 'EXTEND' && (
+                            <>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Typography variant="body2">Extend {selectedPackage.displayName} ({selectedPackage.durationDays} days)</Typography>
+                                    <Typography variant="body2" fontWeight={600}>{formatCurrency(upgradeInfo.price)}</Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Typography variant="body2" color="text.secondary">New end date</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {new Date(upgradeInfo.newEndTime).toLocaleDateString()}
+                                    </Typography>
+                                </Box>
+                            </>
+                        )}
+                        {(upgradeInfo.action === 'UPGRADE' || upgradeInfo.action === 'DOWNGRADE') && (
+                            <>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Typography variant="body2">{selectedPackage.displayName} package</Typography>
+                                    <Typography variant="body2">{formatCurrency(upgradeInfo.originalPrice)}</Typography>
+                                </Box>
+                                {upgradeInfo.refundAmount > 0 && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Typography variant="body2" color="success.main">
+                                            Prorated credit ({upgradeInfo.remainingDays} days remaining)
+                                        </Typography>
+                                        <Typography variant="body2" color="success.main">
+                                            -{formatCurrency(upgradeInfo.refundAmount)}
                                         </Typography>
                                     </Box>
-                                </Box>
-                            )}
-                            sx={{ mb: 3 }}
-                            noOptionsText="No events found"
-                        />
-
-                        {upgradeInfo?.hasExistingBoost && (
-                            <Alert
-                                severity={upgradeInfo.action === 'EXTEND' ? 'info' : 'warning'}
-                                sx={{ mb: 3 }}
-                                icon={upgradeInfo.action === 'EXTEND' ? <ExtendIcon /> : <UpgradeIcon />}
-                            >
-                                <Typography variant="body2">
-                                    <strong>This event has an active {upgradeInfo.currentPackage} boost</strong>
-                                    <br />
-                                    Remaining: {upgradeInfo.remainingDays} days (ends {new Date(upgradeInfo.currentEndTime).toLocaleDateString()})
-                                </Typography>
-                                {upgradeInfo.message && (
-                                    <Typography variant="body2" sx={{ mt: 1 }}>
-                                        {upgradeInfo.message}
+                                )}
+                                <Divider sx={{ my: 1 }} />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="body2" fontWeight={700}>Total to pay</Typography>
+                                    <Typography variant="body2" fontWeight={700} color="primary">
+                                        {formatCurrency(upgradeInfo.price)}
                                     </Typography>
-                                )}
-                            </Alert>
-                        )}
-
-                        <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
-                            Select Boost Package
-                            {discountPercent > 0 && (
-                                <Chip label={`${discountPercent}% Subscription Discount`} size="small" color="success" sx={{ ml: 1 }} />
-                            )}
-                        </Typography>
-                        <Grid container spacing={2}>
-                            {packages.map((pkg) => (
-                                <Grid item xs={12} sm={6} md={3} key={pkg.packageType}>
-                                    <PackageCard
-                                        pkg={pkg}
-                                        selected={selectedPackage?.packageType === pkg.packageType}
-                                        onSelect={() => setSelectedPackage(pkg)}
-                                        discountPercent={discountPercent}
-                                        upgradeInfo={upgradeInfo}
-                                        currentPackage={upgradeInfo?.currentPackage}
-                                    />
-                                </Grid>
-                            ))}
-                        </Grid>
-
-                        {upgradeInfo && selectedPackage && (
-                            <Paper sx={{ mt: 3, p: 2, bgcolor: 'grey.50' }}>
-                                <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                                    Price Summary
-                                </Typography>
-                                <Divider sx={{ mb: 1 }} />
-                                {upgradeInfo.action === 'EXTEND' && (
-                                    <>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                            <Typography variant="body2">Extend {selectedPackage.displayName} ({selectedPackage.durationDays} days)</Typography>
-                                            <Typography variant="body2">{formatCurrency(upgradeInfo.price)}</Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                            <Typography variant="body2" color="text.secondary">New end date</Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {new Date(upgradeInfo.newEndTime).toLocaleDateString()}
-                                            </Typography>
-                                        </Box>
-                                    </>
-                                )}
-                                {(upgradeInfo.action === 'UPGRADE' || upgradeInfo.action === 'DOWNGRADE') && (
-                                    <>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                            <Typography variant="body2">{selectedPackage.displayName} package</Typography>
-                                            <Typography variant="body2">{formatCurrency(upgradeInfo.originalPrice)}</Typography>
-                                        </Box>
-                                        {upgradeInfo.refundAmount > 0 && (
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                                <Typography variant="body2" color="success.main">
-                                                    Prorated credit ({upgradeInfo.remainingDays} days remaining)
-                                                </Typography>
-                                                <Typography variant="body2" color="success.main">
-                                                    -{formatCurrency(upgradeInfo.refundAmount)}
-                                                </Typography>
-                                            </Box>
-                                        )}
-                                        <Divider sx={{ my: 1 }} />
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <Typography variant="body2" fontWeight="bold">Total to pay</Typography>
-                                            <Typography variant="body2" fontWeight="bold" color="primary">
-                                                {formatCurrency(upgradeInfo.price)}
-                                            </Typography>
-                                        </Box>
-                                    </>
-                                )}
-                            </Paper>
+                                </Box>
+                            </>
                         )}
                     </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={handleCloseDialog} color="inherit">
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleCreateBoost}
-                        disabled={submitting || !selectedEvent || !selectedPackage || checkingUpgrade}
-                        startIcon={checkingUpgrade ? <CircularProgress size={16} /> : null}
-                    >
-                        {getButtonText()}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                )}
+            </FormDialog>
         </Box>
     );
 };

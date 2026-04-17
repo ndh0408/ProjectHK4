@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     Autocomplete,
     FormControl,
     InputLabel,
@@ -11,20 +10,16 @@ import {
     Button,
     IconButton,
     TextField,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     List,
     ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
     Chip,
     Switch,
     FormControlLabel,
     Alert,
     Tooltip,
     Slider,
+    Stack,
+    Avatar,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -32,10 +27,22 @@ import {
     Delete as DeleteIcon,
     DragIndicator as DragIcon,
     AutoAwesome as AIIcon,
+    QuestionAnswer as QuestionIcon,
+    HelpOutline as HelpIcon,
 } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { organiserApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    SectionCard,
+    FormDialog,
+    FormSection,
+    EmptyState,
+    StatusChip,
+    LoadingButton,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
 const questionTypes = [
@@ -275,21 +282,26 @@ const RegistrationQuestions = () => {
         toast.success(`${newQuestions.length} questions added!`);
     };
 
+    const isChoiceType = formData.questionType === 'SINGLE_CHOICE' || formData.questionType === 'MULTIPLE_CHOICE';
+
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Registration Questions
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }} />
-            </Box>
+            <PageHeader
+                title="Registration Questions"
+                subtitle="Build custom registration forms for your events"
+                icon={<QuestionIcon />}
+            />
 
-            <Alert severity="info" sx={{ mb: 2 }}>
+            <Alert severity="info" sx={{ mb: 3, borderRadius: `${tokens.radius.md}px` }}>
                 Create registration questions that attendees must answer when registering for your event.
                 If no questions are added, attendees can register directly with a simple confirmation.
             </Alert>
 
-            <Paper sx={{ p: 2, mb: 2 }}>
+            <SectionCard
+                title="Select Event"
+                subtitle="Choose an event to manage its registration questions"
+                sx={{ mb: 3 }}
+            >
                 <Autocomplete
                     options={events}
                     getOptionLabel={(option) => option.title || ''}
@@ -299,28 +311,27 @@ const RegistrationQuestions = () => {
                         <TextField {...params} label="Search Event" placeholder="Type to search events..." />
                     )}
                     renderOption={(props, option) => (
-                        <li {...props} key={option.id}>
-                            <Box sx={{ width: '100%' }}>
-                                <Typography variant="body1" noWrap>{option.title}</Typography>
+                        <Box component="li" {...props} key={option.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar src={option.imageUrl} variant="rounded" sx={{ width: 32, height: 32 }} />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography variant="body2" fontWeight="medium" noWrap>{option.title}</Typography>
                                 <Typography variant="caption" color="text.secondary">
                                     {option.startTime ? new Date(option.startTime).toLocaleDateString() : ''}
                                 </Typography>
                             </Box>
-                        </li>
+                        </Box>
                     )}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
-                    sx={{ minWidth: 400 }}
                     noOptionsText="No events found"
                 />
-            </Paper>
+            </SectionCard>
 
             {selectedEvent ? (
-                <Paper sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">
-                            Questions ({questions.length})
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
+                <SectionCard
+                    title={`Questions (${questions.length})`}
+                    subtitle="Drag to reorder, click edit to modify"
+                    action={
+                        <Stack direction="row" spacing={1}>
                             <Tooltip title="AI will suggest questions based on your event">
                                 <Button
                                     variant="outlined"
@@ -338,37 +349,43 @@ const RegistrationQuestions = () => {
                             >
                                 Add Question
                             </Button>
-                        </Box>
-                    </Box>
-
+                        </Stack>
+                    }
+                >
                     {questions.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', py: 4 }}>
-                            <Typography color="text.secondary">
-                                No registration questions yet. Attendees will register with a simple confirmation.
-                            </Typography>
-                            <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
-                                <Button
-                                    variant="outlined"
-                                    color="secondary"
-                                    startIcon={<AIIcon />}
-                                    onClick={handleOpenAiDialog}
-                                >
-                                    AI Suggest Questions
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleAddQuestion}
-                                >
-                                    Add Manually
-                                </Button>
-                            </Box>
-                        </Box>
+                        <EmptyState
+                            icon={<HelpIcon sx={{ fontSize: 32 }} />}
+                            title="No registration questions yet"
+                            description="Attendees will register with a simple confirmation. Add questions to collect more information."
+                            action={
+                                <Stack direction="row" spacing={2}>
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<AIIcon />}
+                                        onClick={handleOpenAiDialog}
+                                    >
+                                        AI Suggest Questions
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<AddIcon />}
+                                        onClick={handleAddQuestion}
+                                    >
+                                        Add Manually
+                                    </Button>
+                                </Stack>
+                            }
+                        />
                     ) : (
                         <DragDropContext onDragEnd={handleDragEnd}>
                             <Droppable droppableId="questions">
                                 {(provided) => (
-                                    <List {...provided.droppableProps} ref={provided.innerRef}>
+                                    <List
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                        disablePadding
+                                    >
                                         {questions.map((question, index) => (
                                             <Draggable key={index} draggableId={`question-${index}`} index={index}>
                                                 {(provided, snapshot) => (
@@ -376,50 +393,100 @@ const RegistrationQuestions = () => {
                                                         ref={provided.innerRef}
                                                         {...provided.draggableProps}
                                                         sx={{
-                                                            bgcolor: snapshot.isDragging ? 'action.hover' : 'background.paper',
-                                                            mb: 1,
+                                                            bgcolor: snapshot.isDragging
+                                                                ? tokens.palette.primary[50]
+                                                                : tokens.surfaces.card,
+                                                            mb: 1.5,
                                                             border: '1px solid',
-                                                            borderColor: 'divider',
-                                                            borderRadius: 1,
+                                                            borderColor: snapshot.isDragging
+                                                                ? tokens.palette.primary[300]
+                                                                : tokens.borders.subtle,
+                                                            borderRadius: `${tokens.radius.md}px`,
+                                                            boxShadow: snapshot.isDragging ? tokens.shadow.md : 'none',
+                                                            transition: tokens.motion.fast,
+                                                            p: 2,
+                                                            alignItems: 'flex-start',
                                                         }}
-                                                    >
-                                                        <Box {...provided.dragHandleProps} sx={{ mr: 2, cursor: 'grab' }}>
-                                                            <DragIcon color="action" />
-                                                        </Box>
-                                                        <ListItemText
-                                                            primary={
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                    <Typography fontWeight="medium">
-                                                                        {question.questionText}
-                                                                    </Typography>
-                                                                    {question.required && (
-                                                                        <Chip label="Required" size="small" color="error" />
-                                                                    )}
-                                                                </Box>
-                                                            }
-                                                            secondary={
-                                                                <Box>
-                                                                    <Chip
-                                                                        label={questionTypes.find(t => t.value === question.questionType)?.label || question.questionType}
+                                                        secondaryAction={
+                                                            <Stack direction="row" spacing={0.5}>
+                                                                <Tooltip title="Edit">
+                                                                    <IconButton
                                                                         size="small"
-                                                                        sx={{ mr: 1 }}
-                                                                    />
-                                                                    {question.options?.length > 0 && (
-                                                                        <Typography variant="caption" color="text.secondary">
-                                                                            Options: {question.options.join(', ')}
-                                                                        </Typography>
-                                                                    )}
-                                                                </Box>
-                                                            }
-                                                        />
-                                                        <ListItemSecondaryAction>
-                                                            <IconButton onClick={() => handleEditQuestion(question, index)}>
-                                                                <EditIcon />
-                                                            </IconButton>
-                                                            <IconButton onClick={() => handleDeleteQuestion(index)} color="error">
-                                                                <DeleteIcon />
-                                                            </IconButton>
-                                                        </ListItemSecondaryAction>
+                                                                        onClick={() => handleEditQuestion(question, index)}
+                                                                    >
+                                                                        <EditIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                                <Tooltip title="Delete">
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => handleDeleteQuestion(index)}
+                                                                        sx={{ color: tokens.palette.danger[600] }}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            </Stack>
+                                                        }
+                                                    >
+                                                        <Box
+                                                            {...provided.dragHandleProps}
+                                                            sx={{
+                                                                mr: 1.5,
+                                                                mt: 0.25,
+                                                                cursor: 'grab',
+                                                                color: tokens.text.muted,
+                                                                display: 'flex',
+                                                                '&:active': { cursor: 'grabbing' },
+                                                            }}
+                                                        >
+                                                            <DragIcon />
+                                                        </Box>
+                                                        <Box
+                                                            sx={{
+                                                                width: 28,
+                                                                height: 28,
+                                                                borderRadius: `${tokens.radius.sm}px`,
+                                                                bgcolor: tokens.palette.primary[50],
+                                                                color: tokens.palette.primary[700],
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: 700,
+                                                                mr: 1.5,
+                                                                flexShrink: 0,
+                                                            }}
+                                                        >
+                                                            {index + 1}
+                                                        </Box>
+                                                        <Box sx={{ flex: 1, minWidth: 0, pr: 8 }}>
+                                                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                                                                <Typography variant="body1" fontWeight={600}>
+                                                                    {question.questionText}
+                                                                </Typography>
+                                                                {question.required && (
+                                                                    <StatusChip label="Required" status="danger" />
+                                                                )}
+                                                            </Stack>
+                                                            <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                                                                <Chip
+                                                                    label={questionTypes.find(t => t.value === question.questionType)?.label || question.questionType}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        bgcolor: tokens.palette.neutral[100],
+                                                                        color: tokens.text.secondary,
+                                                                        fontWeight: 600,
+                                                                        fontSize: '0.6875rem',
+                                                                    }}
+                                                                />
+                                                                {question.options?.length > 0 && (
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        Options: {question.options.join(', ')}
+                                                                    </Typography>
+                                                                )}
+                                                            </Stack>
+                                                        </Box>
                                                     </ListItem>
                                                 )}
                                             </Draggable>
@@ -430,21 +497,35 @@ const RegistrationQuestions = () => {
                             </Droppable>
                         </DragDropContext>
                     )}
-                </Paper>
+                </SectionCard>
             ) : (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">
-                        Please select an event to manage registration questions
-                    </Typography>
-                </Paper>
+                <SectionCard>
+                    <EmptyState
+                        icon={<QuestionIcon sx={{ fontSize: 32 }} />}
+                        title="No event selected"
+                        description="Please select an event above to manage its registration questions"
+                    />
+                </SectionCard>
             )}
 
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editingQuestion !== null ? 'Edit Question' : 'Add Question'}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                maxWidth="sm"
+                icon={<QuestionIcon />}
+                title={editingQuestion !== null ? 'Edit Question' : 'Add Question'}
+                subtitle={editingQuestion !== null ? 'Modify the question details' : 'Create a new registration question'}
+                actions={
+                    <>
+                        <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+                        <LoadingButton onClick={handleSaveQuestion} variant="contained" loading={loading}>
+                            {editingQuestion !== null ? 'Update' : 'Add'}
+                        </LoadingButton>
+                    </>
+                }
+            >
+                <FormSection title="Question Details">
+                    <Stack spacing={2.5}>
                         <TextField
                             label="Question Text"
                             value={formData.questionText}
@@ -453,6 +534,7 @@ const RegistrationQuestions = () => {
                             required
                             multiline
                             rows={2}
+                            placeholder="e.g. What is your dietary preference?"
                         />
 
                         <FormControl fullWidth>
@@ -475,39 +557,6 @@ const RegistrationQuestions = () => {
                             </Select>
                         </FormControl>
 
-                        {(formData.questionType === 'SINGLE_CHOICE' || formData.questionType === 'MULTIPLE_CHOICE') && (
-                            <Box>
-                                <Typography variant="subtitle2" gutterBottom>
-                                    Options
-                                </Typography>
-                                {formData.options.map((option, index) => (
-                                    <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                                        <TextField
-                                            value={option}
-                                            onChange={(e) => handleOptionChange(index, e.target.value)}
-                                            placeholder={`Option ${index + 1}`}
-                                            size="small"
-                                            fullWidth
-                                        />
-                                        <IconButton
-                                            onClick={() => handleRemoveOption(index)}
-                                            disabled={formData.options.length <= 1}
-                                            color="error"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                                <Button
-                                    startIcon={<AddIcon />}
-                                    onClick={handleAddOption}
-                                    size="small"
-                                >
-                                    Add Option
-                                </Button>
-                            </Box>
-                        )}
-
                         <FormControlLabel
                             control={
                                 <Switch
@@ -517,135 +566,175 @@ const RegistrationQuestions = () => {
                             }
                             label="Required question"
                         />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleSaveQuestion} variant="contained">
-                        {editingQuestion !== null ? 'Update' : 'Add'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    </Stack>
+                </FormSection>
 
-            <Dialog open={aiDialogOpen} onClose={() => setAiDialogOpen(false)} maxWidth="md" fullWidth>
-                <DialogTitle>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AIIcon color="secondary" />
-                        AI Suggest Questions
-                    </Box>
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 1 }}>
-                        {suggestedQuestions.length === 0 ? (
-                            <Box>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                    AI will suggest registration questions based on your event details.
-                                </Typography>
-                                <Box sx={{ mt: 3 }}>
-                                    <Typography variant="subtitle2" gutterBottom>
-                                        Number of questions: {numberOfQuestions}
-                                    </Typography>
-                                    <Slider
-                                        value={numberOfQuestions}
-                                        onChange={(_, value) => setNumberOfQuestions(value)}
-                                        min={1}
-                                        max={10}
-                                        marks
-                                        valueLabelDisplay="auto"
-                                        sx={{ maxWidth: 300 }}
+                {isChoiceType && (
+                    <FormSection
+                        title="Options"
+                        description="Add at least 2 options for this question"
+                        topDivider
+                    >
+                        <Stack spacing={1.25}>
+                            {formData.options.map((option, index) => (
+                                <Stack key={index} direction="row" spacing={1} alignItems="center">
+                                    <TextField
+                                        value={option}
+                                        onChange={(e) => handleOptionChange(index, e.target.value)}
+                                        placeholder={`Option ${index + 1}`}
+                                        size="small"
+                                        fullWidth
                                     />
-                                </Box>
-                                <Box sx={{ mt: 3, textAlign: 'center' }}>
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        startIcon={<AIIcon />}
-                                        onClick={handleGenerateAiQuestions}
-                                        disabled={aiLoading}
-                                        size="large"
+                                    <IconButton
+                                        onClick={() => handleRemoveOption(index)}
+                                        disabled={formData.options.length <= 1}
+                                        size="small"
+                                        sx={{ color: tokens.palette.danger[600] }}
                                     >
-                                        {aiLoading ? 'Generating...' : 'Generate Questions'}
-                                    </Button>
-                                </Box>
-                            </Box>
-                        ) : (
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </Stack>
+                            ))}
                             <Box>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                    Select the questions you want to add:
-                                </Typography>
-                                <List>
-                                    {suggestedQuestions.map((question, index) => (
-                                        <ListItem
-                                            key={index}
-                                            sx={{
-                                                border: '1px solid',
-                                                borderColor: selectedSuggestions.includes(index) ? 'primary.main' : 'divider',
-                                                borderRadius: 1,
-                                                mb: 1,
-                                                cursor: 'pointer',
-                                                bgcolor: selectedSuggestions.includes(index) ? 'action.selected' : 'background.paper',
-                                            }}
-                                            onClick={() => handleToggleSuggestion(index)}
-                                        >
-                                            <ListItemText
-                                                primary={
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography fontWeight="medium">
-                                                            {question.questionText}
-                                                        </Typography>
-                                                        {question.required && (
-                                                            <Chip label="Required" size="small" color="error" />
-                                                        )}
-                                                    </Box>
-                                                }
-                                                secondary={
-                                                    <Box sx={{ mt: 0.5 }}>
-                                                        <Chip
-                                                            label={questionTypes.find(t => t.value === question.questionType)?.label || question.questionType}
-                                                            size="small"
-                                                            sx={{ mr: 1 }}
-                                                        />
-                                                        {question.options?.length > 0 && (
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                Options: {question.options.join(', ')}
-                                                            </Typography>
-                                                        )}
-                                                    </Box>
-                                                }
-                                            />
+                                <Button
+                                    startIcon={<AddIcon />}
+                                    onClick={handleAddOption}
+                                    size="small"
+                                >
+                                    Add Option
+                                </Button>
+                            </Box>
+                        </Stack>
+                    </FormSection>
+                )}
+            </FormDialog>
+
+            <FormDialog
+                open={aiDialogOpen}
+                onClose={() => setAiDialogOpen(false)}
+                maxWidth="md"
+                icon={<AIIcon />}
+                title="AI Suggest Questions"
+                subtitle="Let AI generate registration questions based on your event details"
+                actions={
+                    <>
+                        <Button onClick={() => setAiDialogOpen(false)}>Cancel</Button>
+                        {suggestedQuestions.length > 0 && (
+                            <Button
+                                onClick={handleAddSuggestedQuestions}
+                                variant="contained"
+                                disabled={selectedSuggestions.length === 0}
+                            >
+                                Add {selectedSuggestions.length} Question{selectedSuggestions.length !== 1 ? 's' : ''}
+                            </Button>
+                        )}
+                    </>
+                }
+            >
+                {suggestedQuestions.length === 0 ? (
+                    <FormSection title="Configure Generation" description="AI will analyze your event title, category, and description">
+                        <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                                Number of questions: {numberOfQuestions}
+                            </Typography>
+                            <Slider
+                                value={numberOfQuestions}
+                                onChange={(_, value) => setNumberOfQuestions(value)}
+                                min={1}
+                                max={10}
+                                marks
+                                valueLabelDisplay="auto"
+                                sx={{ maxWidth: 360 }}
+                            />
+                        </Box>
+                        <Box sx={{ mt: 3, textAlign: 'center' }}>
+                            <LoadingButton
+                                variant="contained"
+                                color="secondary"
+                                startIcon={<AIIcon />}
+                                onClick={handleGenerateAiQuestions}
+                                loading={aiLoading}
+                                size="large"
+                            >
+                                {aiLoading ? 'Generating...' : 'Generate Questions'}
+                            </LoadingButton>
+                        </Box>
+                    </FormSection>
+                ) : (
+                    <Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Select the questions you want to add:
+                        </Typography>
+                        <List disablePadding>
+                            {suggestedQuestions.map((question, index) => {
+                                const isSelected = selectedSuggestions.includes(index);
+                                return (
+                                    <ListItem
+                                        key={index}
+                                        onClick={() => handleToggleSuggestion(index)}
+                                        sx={{
+                                            border: '1px solid',
+                                            borderColor: isSelected ? tokens.palette.primary[500] : tokens.borders.subtle,
+                                            borderRadius: `${tokens.radius.md}px`,
+                                            mb: 1.25,
+                                            cursor: 'pointer',
+                                            bgcolor: isSelected ? tokens.palette.primary[50] : tokens.surfaces.card,
+                                            transition: tokens.motion.fast,
+                                            '&:hover': {
+                                                borderColor: tokens.palette.primary[400],
+                                            },
+                                        }}
+                                        secondaryAction={
                                             <Switch
-                                                checked={selectedSuggestions.includes(index)}
+                                                checked={isSelected}
                                                 onChange={() => handleToggleSuggestion(index)}
                                             />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                                <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
-                                    <Button
-                                        variant="outlined"
-                                        onClick={handleGenerateAiQuestions}
-                                        disabled={aiLoading}
+                                        }
                                     >
-                                        {aiLoading ? 'Generating...' : 'Regenerate'}
-                                    </Button>
-                                </Box>
-                            </Box>
-                        )}
+                                        <Box sx={{ flex: 1, pr: 6 }}>
+                                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                                                <Typography variant="body1" fontWeight={600}>
+                                                    {question.questionText}
+                                                </Typography>
+                                                {question.required && (
+                                                    <StatusChip label="Required" status="danger" />
+                                                )}
+                                            </Stack>
+                                            <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                                                <Chip
+                                                    label={questionTypes.find(t => t.value === question.questionType)?.label || question.questionType}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: tokens.palette.neutral[100],
+                                                        color: tokens.text.secondary,
+                                                        fontWeight: 600,
+                                                        fontSize: '0.6875rem',
+                                                    }}
+                                                />
+                                                {question.options?.length > 0 && (
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Options: {question.options.join(', ')}
+                                                    </Typography>
+                                                )}
+                                            </Stack>
+                                        </Box>
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                            <LoadingButton
+                                variant="outlined"
+                                onClick={handleGenerateAiQuestions}
+                                loading={aiLoading}
+                                startIcon={<AIIcon />}
+                            >
+                                Regenerate
+                            </LoadingButton>
+                        </Box>
                     </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAiDialogOpen(false)}>Cancel</Button>
-                    {suggestedQuestions.length > 0 && (
-                        <Button
-                            onClick={handleAddSuggestedQuestions}
-                            variant="contained"
-                            disabled={selectedSuggestions.length === 0}
-                        >
-                            Add {selectedSuggestions.length} Question{selectedSuggestions.length !== 1 ? 's' : ''}
-                        </Button>
-                    )}
-                </DialogActions>
-            </Dialog>
+                )}
+            </FormDialog>
 
             <ConfirmDialog
                 open={confirmDialog.open}

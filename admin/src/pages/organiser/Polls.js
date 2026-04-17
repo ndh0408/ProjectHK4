@@ -21,7 +21,6 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
-    CircularProgress,
     FormControlLabel,
     Checkbox,
 } from '@mui/material';
@@ -40,7 +39,23 @@ import {
     Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
+import {
+    PageHeader,
+    SectionCard,
+    FormDialog,
+    LoadingButton,
+    EmptyState,
+    StatusChip,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
+
+const pollStatusMap = {
+    ACTIVE: 'success',
+    SCHEDULED: 'warning',
+    CLOSED: 'danger',
+    DRAFT: 'neutral',
+    CANCELLED: 'neutral',
+};
 
 const OrganiserPolls = () => {
     const [events, setEvents] = useState([]);
@@ -77,6 +92,10 @@ const OrganiserPolls = () => {
     const [aiGeneratedPolls, setAiGeneratedPolls] = useState([]);
     const [currentAIPollIndex, setCurrentAIPollIndex] = useState(0);
     const [isAIGeneratedMode, setIsAIGeneratedMode] = useState(false);
+    // Tracks which indices from aiGeneratedPolls have already been persisted so
+    // the final "Create Poll" button can catch up any polls the user skipped
+    // past via the Next arrow without explicitly creating them.
+    const [createdAIPollIndices, setCreatedAIPollIndices] = useState(() => new Set());
     const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(false);
     const [pollToDelete, setPollToDelete] = useState(null);
     const [extendDialog, setExtendDialog] = useState(false);
@@ -221,6 +240,11 @@ const OrganiserPolls = () => {
                 const statusMsg = createdPoll.status === 'DRAFT' ? 'saved as draft' : 'created';
                 toast.success(`Poll "${createdPoll.question}" ${statusMsg}!`);
 
+                // Remember that this AI-mode index has now been persisted.
+                const updatedCreatedSet = new Set(createdAIPollIndices);
+                if (isAIGeneratedMode) updatedCreatedSet.add(currentAIPollIndex);
+                setCreatedAIPollIndices(updatedCreatedSet);
+
                 // If in AI mode and more polls exist, show next
                 if (isAIGeneratedMode && currentAIPollIndex < aiGeneratedPolls.length - 1) {
                     const nextIndex = currentAIPollIndex + 1;
@@ -229,6 +253,52 @@ const OrganiserPolls = () => {
                     // Load polls in background without waiting
                     loadPolls(true);
                 } else {
+                    // Catch-up: if user navigated past some AI-generated polls
+                    // with the Next arrow without creating them, bulk-create
+                    // those remaining ones using the original AI data.
+                    if (isAIGeneratedMode) {
+                        const skipped = aiGeneratedPolls
+                            .map((p, i) => ({ poll: p, index: i }))
+                            .filter(({ index }) => !updatedCreatedSet.has(index));
+
+                        if (skipped.length > 0) {
+                            const baseCloseAt = data.closesAt;
+                            let bulkCreated = 0;
+                            for (const { poll } of skipped) {
+                                try {
+                                    const payload = {
+                                        question: poll.question,
+                                        type: poll.pollType || 'SINGLE_CHOICE',
+                                        options: (poll.pollType || 'SINGLE_CHOICE') !== 'RATING'
+                                            ? (poll.options || []).filter((o) => o?.trim())
+                                            : undefined,
+                                        maxRating: (poll.pollType || 'SINGLE_CHOICE') === 'RATING'
+                                            ? (poll.maxRating || 5)
+                                            : undefined,
+                                        closesAt: baseCloseAt,
+                                        scheduledOpenAt: null,
+                                        closeAtVoteCount: null,
+                                        autoOpenEventStart: data.autoOpenEventStart,
+                                        autoCloseEventEnd: data.autoCloseEventEnd,
+                                        autoCloseTenDaysAfterEventEnd: data.autoCloseTenDaysAfterEventEnd,
+                                        hideResultsUntilClosed: data.hideResultsUntilClosed,
+                                        draft: data.draft,
+                                    };
+                                    if (payload.type !== 'RATING' && (!payload.options || payload.options.length < 2)) {
+                                        continue;
+                                    }
+                                    await organiserApi.createPoll(selectedEvent, payload);
+                                    bulkCreated += 1;
+                                } catch (bulkErr) {
+                                    console.warn('[Polls] Skipped AI poll failed to create:', bulkErr);
+                                }
+                            }
+                            if (bulkCreated > 0) {
+                                toast.success(`Also created ${bulkCreated} skipped AI poll${bulkCreated > 1 ? 's' : ''}.`);
+                            }
+                        }
+                    }
+
                     // Close dialog and reset state
                     setCreateDialog(false);
                     setNewPoll({
@@ -248,6 +318,7 @@ const OrganiserPolls = () => {
                     setIsAIGeneratedMode(false);
                     setAiGeneratedPolls([]);
                     setCurrentAIPollIndex(0);
+                    setCreatedAIPollIndices(new Set());
                     // Reload polls immediately and again after delay to ensure sync
                     await loadPolls();
                     setTimeout(async () => {
@@ -602,6 +673,7 @@ const OrganiserPolls = () => {
             setIsAIGeneratedMode(false);
             setAiGeneratedPolls([]);
             setCurrentAIPollIndex(0);
+            setCreatedAIPollIndices(new Set());
             setNewPoll({
                 question: '',
                 type: 'SINGLE_CHOICE',
@@ -615,18 +687,6 @@ const OrganiserPolls = () => {
                 hideResultsUntilClosed: false,
                 draft: false,
             });
-        }
-    };
-
-    // Helper để lấy màu cho từng trạng thái
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'DRAFT': return 'default';
-            case 'SCHEDULED': return 'warning';
-            case 'ACTIVE': return 'success';
-            case 'CLOSED': return 'error';
-            case 'CANCELLED': return 'default';
-            default: return 'default';
         }
     };
 
@@ -731,6 +791,7 @@ const OrganiserPolls = () => {
             setAiGeneratedPolls(parsedPolls);
             setCurrentAIPollIndex(0);
             setIsAIGeneratedMode(true);
+            setCreatedAIPollIndices(new Set());
 
             // Load first poll into create dialog
             const firstPoll = parsedPolls[0];
@@ -755,24 +816,25 @@ const OrganiserPolls = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    <PollIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                    Live Polls
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<RefreshIcon />} onClick={loadPolls}>
+            <PageHeader
+                title="Live Polls"
+                subtitle="Create live polls, let attendees vote in real time and generate questions with AI."
+                icon={<PollIcon />}
+                actions={[
+                    <Button key="refresh" startIcon={<RefreshIcon />} onClick={loadPolls}>
                         Refresh
-                    </Button>
+                    </Button>,
                     <Button
+                        key="ai"
                         variant="outlined"
                         startIcon={<AIIcon />}
                         onClick={() => setAiDialog(true)}
                         disabled={!selectedEvent}
                     >
                         Generate with AI
-                    </Button>
+                    </Button>,
                     <Button
+                        key="create"
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => {
@@ -783,9 +845,9 @@ const OrganiserPolls = () => {
                         disabled={!selectedEvent}
                     >
                         Create Poll
-                    </Button>
-                </Box>
-            </Box>
+                    </Button>,
+                ]}
+            />
 
             <Paper sx={{ p: 2, mb: 2 }}>
                 <Autocomplete
@@ -835,10 +897,9 @@ const OrganiserPolls = () => {
                                                     )}
                                                 </Typography>
                                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                    <Chip
+                                                    <StatusChip
                                                         label={getStatusLabel(poll.status)}
-                                                        size="small"
-                                                        color={getStatusColor(poll.status)}
+                                                        status={pollStatusMap[poll.status] || 'neutral'}
                                                     />
                                                     <Chip
                                                         label={poll.type?.replace(/_/g, ' ') || 'Unknown'}
@@ -1104,30 +1165,59 @@ const OrganiserPolls = () => {
                         ))}
                     </Grid>
                 ) : (
-                    <Paper sx={{ p: 4, textAlign: 'center' }}>
-                        <PollIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-                        <Typography color="text.secondary">
-                            No polls yet. Create your first poll for this event!
-                        </Typography>
-                    </Paper>
+                    <SectionCard noPadding>
+                        <EmptyState
+                            title="No polls yet"
+                            description="Create your first poll for this event or generate one with AI."
+                            icon={<PollIcon sx={{ fontSize: 40 }} />}
+                            action={
+                                <Button
+                                    variant="contained"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => {
+                                        setIsAIGeneratedMode(false);
+                                        setNewPoll({ question: '', type: 'SINGLE_CHOICE', options: ['', ''], maxRating: 5, closesAt: '' });
+                                        setCreateDialog(true);
+                                    }}
+                                >
+                                    Create Poll
+                                </Button>
+                            }
+                        />
+                    </SectionCard>
                 )
             ) : (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography color="text.secondary">
-                        Please select an event to manage polls
-                    </Typography>
-                </Paper>
+                <SectionCard noPadding>
+                    <EmptyState
+                        title="Select an event"
+                        description="Please select an event above to manage its polls."
+                        icon={<PollIcon sx={{ fontSize: 40 }} />}
+                    />
+                </SectionCard>
             )}
 
             {/* AI Generation Dialog */}
-            <Dialog open={aiDialog} onClose={() => setAiDialog(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AIIcon />
-                        Generate Poll with AI
-                    </Box>
-                </DialogTitle>
-                <DialogContent>
+            <FormDialog
+                open={aiDialog}
+                onClose={() => setAiDialog(false)}
+                title="Generate Poll with AI"
+                subtitle="Describe the topic and let AI draft polls for your event."
+                icon={<AIIcon />}
+                maxWidth="sm"
+                actions={
+                    <>
+                        <Button onClick={() => setAiDialog(false)}>Cancel</Button>
+                        <LoadingButton
+                            variant="contained"
+                            onClick={handleGeneratePollWithAI}
+                            loading={aiLoading}
+                            startIcon={<AIIcon />}
+                        >
+                            {aiLoading ? 'Generating...' : 'Generate'}
+                        </LoadingButton>
+                    </>
+                }
+            >
                     <TextField
                         autoFocus
                         fullWidth
@@ -1198,19 +1288,7 @@ const OrganiserPolls = () => {
                         value={aiRequest.additionalContext}
                         onChange={(e) => setAiRequest({ ...aiRequest, additionalContext: e.target.value })}
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAiDialog(false)}>Cancel</Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleGeneratePollWithAI}
-                        disabled={aiLoading}
-                        startIcon={aiLoading ? <CircularProgress size={20} /> : <AIIcon />}
-                    >
-                        {aiLoading ? 'Generating...' : 'Generate'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            </FormDialog>
 
             {/* Create/Edit Poll Dialog */}
             <Dialog
@@ -1220,6 +1298,7 @@ const OrganiserPolls = () => {
                     setIsAIGeneratedMode(false);
                     setAiGeneratedPolls([]);
                     setCurrentAIPollIndex(0);
+                    setCreatedAIPollIndices(new Set());
                 }}
                 maxWidth="sm"
                 fullWidth
@@ -1433,7 +1512,13 @@ const OrganiserPolls = () => {
                                         {currentAIPollIndex < aiGeneratedPolls.length - 1 ? 'Skip' : 'Cancel'}
                                     </Button>
                                     <Button variant="contained" onClick={handleCreatePoll}>
-                                        {currentAIPollIndex < aiGeneratedPolls.length - 1 ? 'Create & Next' : 'Create Poll'}
+                                        {(() => {
+                                            const isLast = currentAIPollIndex === aiGeneratedPolls.length - 1;
+                                            if (!isLast) return 'Create & Next';
+                                            const skippedCount = aiGeneratedPolls.length - createdAIPollIndices.size - 1;
+                                            if (skippedCount > 0) return `Create All (${skippedCount + 1})`;
+                                            return 'Create Poll';
+                                        })()}
                                     </Button>
                                 </Box>
                             </>
@@ -1465,9 +1550,22 @@ const OrganiserPolls = () => {
             </Dialog>
 
             {/* Edit Poll Dialog */}
-            <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Edit Poll</DialogTitle>
-                <DialogContent>
+            <FormDialog
+                open={editDialog}
+                onClose={() => setEditDialog(false)}
+                title="Edit Poll"
+                subtitle="Update poll question, options or auto-close settings."
+                icon={<EditIcon />}
+                maxWidth="sm"
+                actions={
+                    <>
+                        <Button onClick={() => setEditDialog(false)}>Cancel</Button>
+                        <LoadingButton variant="contained" onClick={handleEditPoll}>
+                            Save Changes
+                        </LoadingButton>
+                    </>
+                }
+            >
                     {editPoll && (
                         <>
                             <TextField
@@ -1546,12 +1644,7 @@ const OrganiserPolls = () => {
                             />
                         </>
                     )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleEditPoll}>Save Changes</Button>
-                </DialogActions>
-            </Dialog>
+            </FormDialog>
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={deleteConfirmDialog} onClose={handleCloseDeleteConfirm} maxWidth="xs" fullWidth>

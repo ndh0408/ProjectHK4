@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/websocket_service.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -115,13 +116,43 @@ class _MainShellState extends ConsumerState<MainShell> {
     }
   }
 
+  Widget _buildBadge(int count) {
+    if (count <= 0) return const SizedBox.shrink();
+    return Positioned(
+      right: -8,
+      top: -6,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.error,
+          borderRadius: AppRadius.allPill,
+          border: Border.all(color: AppColors.surface, width: 1.5),
+        ),
+        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+        child: Text(
+          count > 99 ? '99+' : count.toString(),
+          style: AppTypography.caption.copyWith(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _navIcon(IconData icon, {int badge = 0}) => Stack(
+        clipBehavior: Clip.none,
+        children: [Icon(icon), _buildBadge(badge)],
+      );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final unreadMessages = ref.watch(unreadMessageCountProvider);
 
-    // Listen to WebSocket chat events for real-time badge updates
     ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (previous, next) {
       next.whenData((event) {
         if (event.type == ChatEventType.newMessage) {
@@ -137,31 +168,20 @@ class _MainShellState extends ConsumerState<MainShell> {
       body: widget.child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(color: AppColors.divider, width: 1),
+          ),
+          boxShadow: AppShadows.sm,
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: SafeArea(
+          top: false,
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: _onItemTapped,
             type: BottomNavigationBarType.fixed,
-            backgroundColor: AppColors.surface,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textLight,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.normal,
-              fontSize: 12,
-            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home_outlined),
@@ -179,68 +199,8 @@ class _MainShellState extends ConsumerState<MainShell> {
                 label: l10n.myEvents,
               ),
               BottomNavigationBarItem(
-                icon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.notifications_outlined),
-                    if (totalUnread > 0)
-                      Positioned(
-                        right: -6,
-                        top: -6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: const TextStyle(
-                              color: AppColors.textOnPrimary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                activeIcon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(Icons.notifications_rounded),
-                    if (totalUnread > 0)
-                      Positioned(
-                        right: -6,
-                        top: -6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            totalUnread > 99 ? '99+' : totalUnread.toString(),
-                            style: const TextStyle(
-                              color: AppColors.textOnPrimary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                icon: _navIcon(Icons.notifications_outlined, badge: totalUnread),
+                activeIcon: _navIcon(Icons.notifications_rounded, badge: totalUnread),
                 label: l10n.alerts,
               ),
               BottomNavigationBarItem(

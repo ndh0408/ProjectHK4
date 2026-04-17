@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
     Avatar,
-    Chip,
     Box,
+    Grid,
     Paper,
     Typography,
     Button,
@@ -12,14 +12,14 @@ import {
     IconButton,
     Tooltip,
     Collapse,
+    Stack,
+    LinearProgress,
 } from '@mui/material';
 import {
     Event as EventIcon,
     People as PeopleIcon,
     PersonAdd as FollowersIcon,
     AttachMoney as MoneyIcon,
-    ArrowUpward as ArrowUpIcon,
-    ArrowDownward as ArrowDownIcon,
     AutoAwesome as AIIcon,
     Lightbulb as TipIcon,
     CheckCircle as SuccessIcon,
@@ -32,48 +32,15 @@ import {
 import { LineChart } from '@mui/x-charts/LineChart';
 import { organiserApi } from '../../api';
 import { LoadingSpinner } from '../../components/common';
+import {
+    PageHeader,
+    StatCard,
+    SectionCard,
+    EmptyState,
+    StatusChip,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
-
-const StatCard = ({ title, value, icon, variant, change }) => {
-    const isPositive = change >= 0;
-
-    return (
-        <div className={`stat-card ${variant}`}>
-            <div className="stat-card-content">
-                <div className="stat-card-info">
-                    <h3>{title}</h3>
-                    <div className="stat-card-value">{value}</div>
-                    {change !== undefined && (
-                        <Chip
-                            size="small"
-                            icon={isPositive ? <ArrowUpIcon sx={{ fontSize: 14 }} /> : <ArrowDownIcon sx={{ fontSize: 14 }} />}
-                            label={`${isPositive ? '+' : ''}${change}%`}
-                            className={`stat-card-change ${isPositive ? 'positive' : 'negative'}`}
-                            sx={{
-                                height: 24,
-                                '& .MuiChip-icon': { ml: 0.5 },
-                                '& .MuiChip-label': { px: 0.5 }
-                            }}
-                        />
-                    )}
-                </div>
-                <div className="stat-card-icon">
-                    {icon}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ChartCard = ({ title, children, legend }) => (
-    <div className="chart-card">
-        <div className="chart-card-header">
-            <h3>{title}</h3>
-            {legend && <div className="chart-legend">{legend}</div>}
-        </div>
-        {children}
-    </div>
-);
 
 const InsightIcon = ({ type }) => {
     switch (type) {
@@ -89,18 +56,20 @@ const InsightIcon = ({ type }) => {
     }
 };
 
-const InsightSeverity = (type) => {
-    switch (type) {
-        case 'success':
-            return 'success';
-        case 'warning':
-            return 'warning';
-        case 'tip':
-            return 'info';
-        case 'info':
-        default:
-            return 'info';
-    }
+const insightSeverity = (type) =>
+    type === 'success' ? 'success'
+        : type === 'warning' ? 'warning'
+            : type === 'tip' ? 'info'
+                : 'info';
+
+const eventStatusVariant = (status) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'PUBLISHED' || s === 'LIVE') return 'success';
+    if (s === 'DRAFT') return 'neutral';
+    if (s === 'CANCELLED' || s === 'REJECTED') return 'danger';
+    if (s === 'PENDING') return 'warning';
+    if (s === 'COMPLETED') return 'info';
+    return 'neutral';
 };
 
 const OrganiserDashboard = () => {
@@ -129,7 +98,6 @@ const OrganiserDashboard = () => {
         setAiLoading(true);
         try {
             const response = await organiserApi.getAIInsights();
-
             if (response.data?.data) {
                 setAiInsights(response.data.data);
                 if (response.data.message === 'Basic insights') {
@@ -145,215 +113,305 @@ const OrganiserDashboard = () => {
         }
     };
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-        }).format(value || 0);
-    };
+    const formatCurrency = (value) =>
+        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
 
-    if (loading) {
-        return <LoadingSpinner message="Loading dashboard..." />;
-    }
-
-    const chartColors = {
-        primary: '#6366f1',
-        secondary: '#ec4899',
-        success: '#10b981',
-        warning: '#f59e0b',
-        info: '#3b82f6',
-    };
+    if (loading) return <LoadingSpinner message="Loading dashboard..." fullPage />;
 
     return (
-        <div className="dashboard">
-            <div className="dashboard-header">
-                <h1>Dashboard</h1>
-                <p>Welcome back! Here's your event performance overview.</p>
-            </div>
+        <Box>
+            <PageHeader
+                title="Dashboard"
+                subtitle="Welcome back. Here’s your event performance at a glance."
+                actions={
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon fontSize="small" />}
+                        onClick={loadDashboard}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <div className="stats-grid">
-                <StatCard
-                    title="Total Events"
-                    value={stats?.totalEvents?.toLocaleString() || 0}
-                    icon={<EventIcon />}
-                    variant="primary"
-                    change={5}
-                />
-                <StatCard
-                    title="Total Registrations"
-                    value={stats?.totalRegistrations?.toLocaleString() || 0}
-                    icon={<PeopleIcon />}
-                    variant="success"
-                    change={12}
-                />
-                <StatCard
-                    title="Followers"
-                    value={stats?.totalFollowers?.toLocaleString() || 0}
-                    icon={<FollowersIcon />}
-                    variant="warning"
-                    change={8}
-                />
-                <StatCard
-                    title="Total Revenue"
-                    value={formatCurrency(stats?.totalRevenue)}
-                    icon={<MoneyIcon />}
-                    variant="info"
-                    change={15}
-                />
-            </div>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Total Events"
+                        value={stats?.totalEvents?.toLocaleString() || 0}
+                        icon={<EventIcon />}
+                        iconColor="primary"
+                        change={5}
+                        changeLabel="vs. last month"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Registrations"
+                        value={stats?.totalRegistrations?.toLocaleString() || 0}
+                        icon={<PeopleIcon />}
+                        iconColor="success"
+                        change={12}
+                        changeLabel="vs. last month"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Followers"
+                        value={stats?.totalFollowers?.toLocaleString() || 0}
+                        icon={<FollowersIcon />}
+                        iconColor="warning"
+                        change={8}
+                        changeLabel="vs. last month"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Total Revenue"
+                        value={formatCurrency(stats?.totalRevenue)}
+                        icon={<MoneyIcon />}
+                        iconColor="info"
+                        change={15}
+                        changeLabel="vs. last month"
+                    />
+                </Grid>
+            </Grid>
 
-            <Paper sx={{ p: 2, mb: 3, background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AIIcon sx={{ color: 'secondary.main' }} />
-                        <Typography variant="h6" fontWeight="bold">
-                            AI Insights & Recommendations
-                        </Typography>
+            <Paper
+                variant="outlined"
+                sx={{
+                    mb: 3,
+                    p: { xs: 2, md: 2.5 },
+                    background: `linear-gradient(135deg, ${tokens.palette.primary[50]} 0%, ${tokens.palette.secondary[50]} 100%)`,
+                    borderColor: tokens.palette.primary[100],
+                }}
+            >
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flex: 1 }}>
+                        <Box
+                            sx={{
+                                width: 38,
+                                height: 38,
+                                borderRadius: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                bgcolor: 'secondary.100',
+                                color: 'secondary.700',
+                            }}
+                        >
+                            <AIIcon />
+                        </Box>
+                        <Box>
+                            <Typography variant="h3" sx={{ fontSize: '1rem' }}>
+                                AI Insights & Recommendations
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Let Luma analyse your data and surface opportunities.
+                            </Typography>
+                        </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
                         {aiInsights && (
-                            <IconButton size="small" onClick={() => setShowInsights(!showInsights)}>
+                            <IconButton
+                                size="small"
+                                onClick={() => setShowInsights((v) => !v)}
+                                aria-label={showInsights ? 'Collapse insights' : 'Expand insights'}
+                            >
                                 {showInsights ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             </IconButton>
                         )}
-                        <Tooltip title={aiInsights ? "Refresh insights" : "Generate AI insights"}>
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                size="small"
-                                startIcon={aiLoading ? <CircularProgress size={16} color="inherit" /> : (aiInsights ? <RefreshIcon /> : <AIIcon />)}
-                                onClick={loadAIInsights}
-                                disabled={aiLoading}
-                            >
-                                {aiLoading ? 'Analyzing...' : (aiInsights ? 'Refresh' : 'Get AI Insights')}
-                            </Button>
+                        <Tooltip title={aiInsights ? 'Refresh insights' : 'Generate AI insights'}>
+                            <span>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    size="small"
+                                    startIcon={aiLoading
+                                        ? <CircularProgress size={14} color="inherit" thickness={5} />
+                                        : (aiInsights ? <RefreshIcon fontSize="small" /> : <AIIcon fontSize="small" />)
+                                    }
+                                    onClick={loadAIInsights}
+                                    disabled={aiLoading}
+                                >
+                                    {aiLoading ? 'Analysing...' : (aiInsights ? 'Refresh' : 'Get AI insights')}
+                                </Button>
+                            </span>
                         </Tooltip>
-                    </Box>
-                </Box>
+                    </Stack>
+                </Stack>
 
                 {!aiInsights && !aiLoading && (
-                    <Alert severity="info" sx={{ bgcolor: 'transparent' }}>
-                        <AlertTitle>Get personalized recommendations</AlertTitle>
-                        Click "Get AI Insights" to analyze your data and receive actionable recommendations to grow your events.
+                    <Alert severity="info" sx={{ mt: 2, bgcolor: 'transparent', border: '1px dashed', borderColor: 'divider' }}>
+                        <AlertTitle sx={{ fontSize: '0.875rem' }}>Get personalised recommendations</AlertTitle>
+                        Click <b>Get AI insights</b> to analyse your data and receive actionable tips.
                     </Alert>
                 )}
 
-                <Collapse in={showInsights && aiInsights !== null}>
+                <Collapse in={showInsights && Boolean(aiInsights)}>
                     {aiInsights && (
-                        <Box>
+                        <Box sx={{ mt: 2 }}>
                             {aiInsights.summary && (
-                                <Typography variant="body1" sx={{ mb: 2, fontStyle: 'italic', color: 'text.secondary' }}>
-                                    "{aiInsights.summary}"
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        mb: 2,
+                                        fontStyle: 'italic',
+                                        color: 'text.secondary',
+                                        px: 1.5,
+                                        py: 1,
+                                        borderLeft: '3px solid',
+                                        borderColor: 'secondary.300',
+                                        bgcolor: 'rgba(255,255,255,0.5)',
+                                        borderRadius: 1,
+                                    }}
+                                >
+                                    “{aiInsights.summary}”
                                 </Typography>
                             )}
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            <Stack spacing={1.25}>
                                 {aiInsights.insights?.map((insight, index) => (
                                     <Alert
                                         key={index}
-                                        severity={InsightSeverity(insight.type)}
+                                        severity={insightSeverity(insight.type)}
                                         icon={<InsightIcon type={insight.type} />}
                                         sx={{
                                             '& .MuiAlert-message': { width: '100%' },
                                             bgcolor: 'background.paper',
                                         }}
-                                        action={
-                                            insight.actionText && (
-                                                <Button color="inherit" size="small">
-                                                    {insight.actionText}
-                                                </Button>
-                                            )
-                                        }
+                                        action={insight.actionText && (
+                                            <Button color="inherit" size="small">
+                                                {insight.actionText}
+                                            </Button>
+                                        )}
                                     >
-                                        <AlertTitle sx={{ fontWeight: 'bold' }}>{insight.title}</AlertTitle>
+                                        <AlertTitle sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                            {insight.title}
+                                        </AlertTitle>
                                         {insight.description}
                                     </Alert>
                                 ))}
-                            </Box>
+                            </Stack>
                         </Box>
                     )}
                 </Collapse>
             </Paper>
 
-            <div className="charts-grid">
-                <ChartCard
-                    title="Registration Growth"
-                    legend={
-                        <div className="chart-legend-item">
-                            <span className="dot primary"></span>
-                            <span>Registrations</span>
-                        </div>
-                    }
-                >
-                    {stats?.registrationGrowth?.length > 0 ? (
-                        <LineChart
-                            xAxis={[{
-                                scaleType: 'band',
-                                data: stats.registrationGrowth.map(item => item.date || item.month || ''),
-                            }]}
-                            series={[{
-                                data: stats.registrationGrowth.map(item => item.count || 0),
-                                color: chartColors.primary,
-                                curve: 'catmullRom',
-                                area: true,
-                            }]}
-                            height={300}
-                            tooltip={{ trigger: 'axis' }}
-                            sx={{
-                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
-                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
-                                '& .MuiAreaElement-root': {
-                                    fillOpacity: 0.1,
-                                },
-                            }}
-                        />
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No data available</p>
-                        </div>
-                    )}
-                </ChartCard>
+            <Grid container spacing={2}>
+                <Grid item xs={12} lg={7}>
+                    <SectionCard
+                        title="Registration Growth"
+                        subtitle="Registrations over the selected period"
+                    >
+                        {stats?.registrationGrowth?.length > 0 ? (
+                            <LineChart
+                                xAxis={[{
+                                    scaleType: 'band',
+                                    data: stats.registrationGrowth.map(item => item.date || item.month || ''),
+                                }]}
+                                series={[{
+                                    data: stats.registrationGrowth.map(item => item.count || 0),
+                                    color: tokens.palette.primary[500],
+                                    curve: 'catmullRom',
+                                    area: true,
+                                }]}
+                                height={300}
+                                sx={{
+                                    '& .MuiChartsAxis-line': { stroke: tokens.palette.neutral[200] },
+                                    '& .MuiChartsAxis-tick': { stroke: tokens.palette.neutral[200] },
+                                    '& .MuiAreaElement-root': { fillOpacity: 0.12 },
+                                }}
+                            />
+                        ) : (
+                            <EmptyState
+                                icon={<EventIcon sx={{ fontSize: 28 }} />}
+                                title="No registrations yet"
+                                description="Publish an event to start tracking registration growth."
+                                compact
+                            />
+                        )}
+                    </SectionCard>
+                </Grid>
 
-                <ChartCard title="Recent Events">
-                    {stats?.recentEvents?.length > 0 ? (
-                        <ul className="activity-list">
-                            {stats.recentEvents.slice(0, 5).map((event) => (
-                                <li key={event.id} className="activity-item">
-                                    <Avatar
-                                        src={event.imageUrl}
-                                        variant="rounded"
-                                        sx={{
-                                            width: 48,
-                                            height: 48,
-                                            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                                        }}
-                                    >
-                                        <EventIcon />
-                                    </Avatar>
-                                    <div className="activity-content">
-                                        <div className="activity-title">{event.title}</div>
-                                        <div className="activity-meta">
-                                            <span className={`activity-badge ${event.status?.toLowerCase()}`}>
-                                                {event.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="activity-stats">
-                                        <span>{event.currentRegistrations}/{event.capacity}</span>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No events yet</p>
-                        </div>
-                    )}
-                </ChartCard>
-            </div>
-        </div>
+                <Grid item xs={12} lg={5}>
+                    <SectionCard
+                        title="Recent Events"
+                        subtitle="Your most recent events and their capacity"
+                        contentSx={{ px: 0 }}
+                    >
+                        {stats?.recentEvents?.length > 0 ? (
+                            <Stack divider={<Box sx={{ height: 1, bgcolor: 'divider' }} />}>
+                                {stats.recentEvents.slice(0, 5).map((event) => {
+                                    const registered = event.currentRegistrations || 0;
+                                    const capacity = event.capacity || 0;
+                                    const progress = capacity > 0
+                                        ? Math.min(100, (registered / capacity) * 100)
+                                        : 0;
+                                    return (
+                                        <Box
+                                            key={event.id}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1.75,
+                                                px: 2.5,
+                                                py: 1.75,
+                                            }}
+                                        >
+                                            <Avatar
+                                                src={event.imageUrl}
+                                                variant="rounded"
+                                                sx={{
+                                                    width: 44,
+                                                    height: 44,
+                                                    background: tokens.gradient.primary,
+                                                }}
+                                            >
+                                                <EventIcon fontSize="small" />
+                                            </Avatar>
+                                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    noWrap
+                                                    sx={{ fontWeight: 600, mb: 0.5 }}
+                                                >
+                                                    {event.title}
+                                                </Typography>
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <StatusChip
+                                                        label={event.status || 'Draft'}
+                                                        status={eventStatusVariant(event.status)}
+                                                        size="small"
+                                                    />
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {registered}/{capacity || '∞'} seats
+                                                    </Typography>
+                                                </Stack>
+                                                {capacity > 0 && (
+                                                    <LinearProgress
+                                                        variant="determinate"
+                                                        value={progress}
+                                                        sx={{ mt: 1, height: 4 }}
+                                                    />
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        ) : (
+                            <EmptyState
+                                icon={<EventIcon sx={{ fontSize: 28 }} />}
+                                title="No recent events"
+                                description="Once you publish events they will appear here."
+                                compact
+                            />
+                        )}
+                    </SectionCard>
+                </Grid>
+            </Grid>
+        </Box>
     );
 };
 

@@ -1,37 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Box,
-    Typography,
-    Paper,
     Button,
     IconButton,
-    Chip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     TextField,
     FormControlLabel,
     Switch,
+    Stack,
+    Tooltip,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     Refresh as RefreshIcon,
+    Category as CategoryIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatusChip,
+    FormDialog,
+    LoadingButton,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
 
 const Categories = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editCategory, setEditCategory] = useState(null);
     const [formData, setFormData] = useState({ name: '', description: '', active: true });
     const [formErrors, setFormErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
     const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', action: null });
 
     useEffect(() => {
@@ -75,7 +80,6 @@ const Categories = () => {
 
     const validateForm = () => {
         const errors = {};
-
         if (!formData.name.trim()) {
             errors.name = 'Category name is required';
         } else if (formData.name.trim().length < 2) {
@@ -83,18 +87,13 @@ const Categories = () => {
         } else if (formData.name.trim().length > 50) {
             errors.name = 'Category name must be less than 50 characters';
         }
-
         const duplicate = categories.find(
             cat => cat.name.toLowerCase() === formData.name.trim().toLowerCase() && cat.id !== editCategory?.id
         );
-        if (duplicate) {
-            errors.name = 'A category with this name already exists';
-        }
-
+        if (duplicate) errors.name = 'A category with this name already exists';
         if (formData.description && formData.description.length > 200) {
             errors.description = 'Description must be less than 200 characters';
         }
-
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -104,7 +103,7 @@ const Categories = () => {
             toast.error('Please fix the errors in the form');
             return;
         }
-
+        setSubmitting(true);
         try {
             if (editCategory) {
                 await adminApi.updateCategory(editCategory.id, formData);
@@ -117,6 +116,8 @@ const Categories = () => {
             loadCategories();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save category');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -138,28 +139,26 @@ const Categories = () => {
         });
     };
 
+    const filteredRows = useMemo(() => {
+        if (!search.trim()) return categories;
+        const q = search.trim().toLowerCase();
+        return categories.filter((c) =>
+            c.name?.toLowerCase().includes(q)
+            || c.description?.toLowerCase().includes(q),
+        );
+    }, [categories, search]);
+
     const columns = [
-        {
-            field: 'name',
-            headerName: 'Name',
-            flex: 1,
-            minWidth: 150,
-        },
-        {
-            field: 'description',
-            headerName: 'Description',
-            flex: 2,
-            minWidth: 200,
-        },
+        { field: 'name', headerName: 'Name', flex: 1, minWidth: 180 },
+        { field: 'description', headerName: 'Description', flex: 2, minWidth: 220 },
         {
             field: 'active',
             headerName: 'Status',
             width: 120,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value ? 'Active' : 'Inactive'}
-                    size="small"
-                    color={params.value ? 'success' : 'default'}
+                    status={params.value ? 'success' : 'neutral'}
                 />
             ),
         },
@@ -168,104 +167,141 @@ const Categories = () => {
             headerName: 'Actions',
             width: 120,
             sortable: false,
+            align: 'right',
+            headerAlign: 'right',
             renderCell: (params) => (
-                <Box>
-                    <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(params.row)}
-                    >
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(params.row)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Box>
+                <Stack direction="row" spacing={0.5}>
+                    <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => handleOpenDialog(params.row)}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(params.row)}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
             ),
         },
     ];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Category Management
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<RefreshIcon />} onClick={loadCategories}>
-                        Refresh
-                    </Button>
+            <PageHeader
+                title="Categories"
+                subtitle="Organise events into discoverable categories."
+                icon={<CategoryIcon />}
+                actions={[
                     <Button
+                        key="refresh"
+                        variant="outlined"
+                        startIcon={<RefreshIcon fontSize="small" />}
+                        onClick={loadCategories}
+                    >
+                        Refresh
+                    </Button>,
+                    <Button
+                        key="add"
                         variant="contained"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon fontSize="small" />}
                         onClick={() => handleOpenDialog()}
                     >
-                        Add Category
+                        Add category
+                    </Button>,
+                ]}
+            />
+
+            <DataTableCard
+                rows={filteredRows}
+                columns={columns}
+                loading={loading}
+                emptyTitle={search ? 'No categories match your search' : 'No categories yet'}
+                emptyDescription={search
+                    ? 'Try a different keyword or clear the search.'
+                    : 'Create your first category to classify events.'}
+                emptyIcon={<CategoryIcon sx={{ fontSize: 28 }} />}
+                emptyAction={!search && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon fontSize="small" />}
+                        onClick={() => handleOpenDialog()}
+                    >
+                        Add category
                     </Button>
-                </Box>
-            </Box>
-
-            <Paper>
-                <DataGrid
-                    rows={categories}
-                    columns={columns}
-                    loading={loading}
-                    pageSizeOptions={[10, 25, 50]}
-                    disableRowSelectionOnClick
-                    autoHeight
-                    initialState={{
+                )}
+                toolbar={
+                    <PageToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Search categories..."
+                    />
+                }
+                dataGridProps={{
+                    initialState: {
                         pagination: { paginationModel: { pageSize: 10 } },
-                    }}
-                />
-            </Paper>
+                    },
+                }}
+            />
 
-            <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editCategory ? 'Edit Category' : 'Add Category'}
-                </DialogTitle>
-                <DialogContent>
+            <FormDialog
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                title={editCategory ? 'Edit category' : 'Add category'}
+                subtitle={editCategory
+                    ? 'Update the details for this category.'
+                    : 'Create a new category to organise events.'}
+                icon={<CategoryIcon />}
+                actions={(
+                    <>
+                        <Button onClick={handleCloseDialog} disabled={submitting}>
+                            Cancel
+                        </Button>
+                        <LoadingButton
+                            variant="contained"
+                            onClick={handleSubmit}
+                            loading={submitting}
+                        >
+                            {editCategory ? 'Save changes' : 'Create category'}
+                        </LoadingButton>
+                    </>
+                )}
+            >
+                <Stack spacing={2.25}>
                     <TextField
                         fullWidth
                         label="Name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        margin="normal"
                         required
                         error={!!formErrors.name}
-                        helperText={formErrors.name || 'Between 2-50 characters'}
+                        helperText={formErrors.name || 'Between 2 and 50 characters'}
                     />
                     <TextField
                         fullWidth
                         label="Description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        margin="normal"
                         multiline
-                        rows={3}
+                        minRows={3}
                         error={!!formErrors.description}
                         helperText={formErrors.description || 'Optional, max 200 characters'}
                     />
                     <FormControlLabel
-                        control={
+                        control={(
                             <Switch
                                 checked={formData.active}
                                 onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                             />
-                        }
-                        label="Active"
-                        sx={{ mt: 2 }}
+                        )}
+                        label={formData.active ? 'Active' : 'Inactive'}
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">
-                        {editCategory ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </Stack>
+            </FormDialog>
 
             <ConfirmDialog
                 open={confirmDialog.open}

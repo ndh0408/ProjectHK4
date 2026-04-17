@@ -1,15 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Box,
-    Typography,
-    Paper,
     Button,
     IconButton,
-    Chip,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     TextField,
     FormControlLabel,
     Switch,
@@ -17,16 +10,28 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    FormHelperText,
+    Stack,
+    Tooltip,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
     Refresh as RefreshIcon,
+    LocationCity as CityIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
 import { ConfirmDialog, ImageUpload } from '../../components/common';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatusChip,
+    FormDialog,
+    FormSection,
+    LoadingButton,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
 
 const CONTINENTS = ['Asia', 'Europe', 'North America', 'South America', 'Africa', 'Australia', 'Antarctica'];
@@ -34,6 +39,7 @@ const CONTINENTS = ['Asia', 'Europe', 'North America', 'South America', 'Africa'
 const Cities = () => {
     const [cities, setCities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editCity, setEditCity] = useState(null);
     const [formData, setFormData] = useState({
@@ -44,11 +50,10 @@ const Cities = () => {
         active: true,
     });
     const [formErrors, setFormErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
     const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', action: null });
 
-    useEffect(() => {
-        loadCities();
-    }, []);
+    useEffect(() => { loadCities(); }, []);
 
     const loadCities = async () => {
         setLoading(true);
@@ -89,33 +94,21 @@ const Cities = () => {
 
     const validateForm = () => {
         const errors = {};
-
-        if (!formData.name.trim()) {
-            errors.name = 'City name is required';
-        } else if (formData.name.trim().length < 2) {
-            errors.name = 'City name must be at least 2 characters';
-        } else if (formData.name.trim().length > 100) {
-            errors.name = 'City name must be less than 100 characters';
-        }
+        if (!formData.name.trim()) errors.name = 'City name is required';
+        else if (formData.name.trim().length < 2) errors.name = 'City name must be at least 2 characters';
+        else if (formData.name.trim().length > 100) errors.name = 'City name must be less than 100 characters';
 
         const duplicate = cities.find(
             city => city.name.toLowerCase() === formData.name.trim().toLowerCase()
                 && city.country?.toLowerCase() === formData.country?.trim().toLowerCase()
                 && city.id !== editCity?.id
         );
-        if (duplicate) {
-            errors.name = 'This city already exists in the selected country';
-        }
+        if (duplicate) errors.name = 'This city already exists in the selected country';
 
-        if (!formData.country.trim()) {
-            errors.country = 'Country is required';
-        } else if (formData.country.trim().length < 2) {
-            errors.country = 'Country name must be at least 2 characters';
-        }
+        if (!formData.country.trim()) errors.country = 'Country is required';
+        else if (formData.country.trim().length < 2) errors.country = 'Country name must be at least 2 characters';
 
-        if (!formData.continent) {
-            errors.continent = 'Continent is required';
-        }
+        if (!formData.continent) errors.continent = 'Continent is required';
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -126,7 +119,7 @@ const Cities = () => {
             toast.error('Please fix the errors in the form');
             return;
         }
-
+        setSubmitting(true);
         try {
             if (editCity) {
                 await adminApi.updateCity(editCity.id, formData);
@@ -139,13 +132,15 @@ const Cities = () => {
             loadCities();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to save city');
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleDelete = (city) => {
         setConfirmDialog({
             open: true,
-            title: 'Delete City',
+            title: 'Delete city',
             message: `Are you sure you want to delete "${city.name}"? This action cannot be undone.`,
             confirmColor: 'error',
             action: async () => {
@@ -160,33 +155,28 @@ const Cities = () => {
         });
     };
 
+    const filteredRows = useMemo(() => {
+        if (!search.trim()) return cities;
+        const q = search.trim().toLowerCase();
+        return cities.filter((c) =>
+            c.name?.toLowerCase().includes(q)
+            || c.country?.toLowerCase().includes(q)
+            || c.continent?.toLowerCase().includes(q),
+        );
+    }, [cities, search]);
+
     const columns = [
-        {
-            field: 'name',
-            headerName: 'City',
-            flex: 1,
-            minWidth: 150,
-        },
-        {
-            field: 'country',
-            headerName: 'Country',
-            flex: 1,
-            minWidth: 150,
-        },
-        {
-            field: 'continent',
-            headerName: 'Continent',
-            width: 150,
-        },
+        { field: 'name', headerName: 'City', flex: 1, minWidth: 160 },
+        { field: 'country', headerName: 'Country', flex: 1, minWidth: 150 },
+        { field: 'continent', headerName: 'Continent', width: 160 },
         {
             field: 'active',
             headerName: 'Status',
             width: 120,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value ? 'Active' : 'Inactive'}
-                    size="small"
-                    color={params.value ? 'success' : 'default'}
+                    status={params.value ? 'success' : 'neutral'}
                 />
             ),
         },
@@ -195,135 +185,172 @@ const Cities = () => {
             headerName: 'Actions',
             width: 120,
             sortable: false,
+            align: 'right',
+            headerAlign: 'right',
             renderCell: (params) => (
-                <Box>
-                    <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(params.row)}
-                    >
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDelete(params.row)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </Box>
+                <Stack direction="row" spacing={0.5}>
+                    <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => handleOpenDialog(params.row)}>
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDelete(params.row)}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
             ),
         },
     ];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    City Management
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button startIcon={<RefreshIcon />} onClick={loadCities}>
-                        Refresh
-                    </Button>
+            <PageHeader
+                title="Cities"
+                subtitle="Maintain the list of cities where events can take place."
+                icon={<CityIcon />}
+                actions={[
                     <Button
+                        key="refresh"
+                        variant="outlined"
+                        startIcon={<RefreshIcon fontSize="small" />}
+                        onClick={loadCities}
+                    >
+                        Refresh
+                    </Button>,
+                    <Button
+                        key="add"
                         variant="contained"
-                        startIcon={<AddIcon />}
+                        startIcon={<AddIcon fontSize="small" />}
                         onClick={() => handleOpenDialog()}
                     >
-                        Add City
+                        Add city
+                    </Button>,
+                ]}
+            />
+
+            <DataTableCard
+                rows={filteredRows}
+                columns={columns}
+                loading={loading}
+                emptyTitle={search ? 'No cities match your search' : 'No cities yet'}
+                emptyDescription={search
+                    ? 'Try a different keyword or clear the search.'
+                    : 'Add the first city to start listing events here.'}
+                emptyIcon={<CityIcon sx={{ fontSize: 28 }} />}
+                emptyAction={!search && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon fontSize="small" />}
+                        onClick={() => handleOpenDialog()}
+                    >
+                        Add city
                     </Button>
-                </Box>
-            </Box>
+                )}
+                toolbar={
+                    <PageToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Search cities, countries..."
+                    />
+                }
+                dataGridProps={{
+                    initialState: {
+                        pagination: { paginationModel: { pageSize: 10 } },
+                    },
+                }}
+            />
 
-            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                    <DataGrid
-                        rows={cities}
-                        columns={columns}
-                        loading={loading}
-                        pageSizeOptions={[10, 25, 50]}
-                        disableRowSelectionOnClick
-                        autoHeight
-                        initialState={{
-                            pagination: { paginationModel: { pageSize: 10 } },
-                        }}
-                        sx={{ minWidth: 600 }}
-                    />
-                </Box>
-            </Paper>
-
-            <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editCity ? 'Edit City' : 'Add City'}
-                </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        label="City Name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        margin="normal"
-                        required
-                        error={!!formErrors.name}
-                        helperText={formErrors.name}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Country"
-                        value={formData.country}
-                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        margin="normal"
-                        required
-                        error={!!formErrors.country}
-                        helperText={formErrors.country}
-                    />
-                    <FormControl fullWidth margin="normal" required error={!!formErrors.continent}>
-                        <InputLabel>Continent</InputLabel>
-                        <Select
-                            value={formData.continent}
-                            onChange={(e) => setFormData({ ...formData, continent: e.target.value })}
-                            label="Continent"
+            <FormDialog
+                open={dialogOpen}
+                onClose={handleCloseDialog}
+                title={editCity ? 'Edit city' : 'Add city'}
+                subtitle={editCity ? 'Update city information.' : 'Create a new location entry.'}
+                icon={<CityIcon />}
+                maxWidth="sm"
+                actions={(
+                    <>
+                        <Button onClick={handleCloseDialog} disabled={submitting}>
+                            Cancel
+                        </Button>
+                        <LoadingButton
+                            variant="contained"
+                            onClick={handleSubmit}
+                            loading={submitting}
                         >
-                            {CONTINENTS.map((continent) => (
-                                <MenuItem key={continent} value={continent}>
-                                    {continent}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                        {formErrors.continent && (
-                            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                                {formErrors.continent}
-                            </Typography>
-                        )}
-                    </FormControl>
-                    <Box sx={{ mt: 2 }}>
-                        <ImageUpload
-                            value={formData.imageUrl}
-                            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
-                            label="City Image"
-                            folder="luma/cities"
-                            error={!!formErrors.imageUrl}
-                            helperText={formErrors.imageUrl}
+                            {editCity ? 'Save changes' : 'Create city'}
+                        </LoadingButton>
+                    </>
+                )}
+            >
+                <FormSection title="Location">
+                    <Stack spacing={2.25}>
+                        <TextField
+                            fullWidth
+                            label="City name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                            error={!!formErrors.name}
+                            helperText={formErrors.name || ' '}
                         />
-                    </Box>
+                        <TextField
+                            fullWidth
+                            label="Country"
+                            value={formData.country}
+                            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                            required
+                            error={!!formErrors.country}
+                            helperText={formErrors.country || ' '}
+                        />
+                        <FormControl fullWidth required error={!!formErrors.continent} size="small">
+                            <InputLabel>Continent</InputLabel>
+                            <Select
+                                value={formData.continent}
+                                onChange={(e) => setFormData({ ...formData, continent: e.target.value })}
+                                label="Continent"
+                            >
+                                {CONTINENTS.map((continent) => (
+                                    <MenuItem key={continent} value={continent}>
+                                        {continent}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                            {formErrors.continent && (
+                                <FormHelperText>{formErrors.continent}</FormHelperText>
+                            )}
+                        </FormControl>
+                    </Stack>
+                </FormSection>
+
+                <FormSection title="Appearance" description="Optional hero image shown on discovery pages." topDivider>
+                    <ImageUpload
+                        value={formData.imageUrl}
+                        onChange={(url) => setFormData({ ...formData, imageUrl: url })}
+                        label="City image"
+                        folder="luma/cities"
+                        error={!!formErrors.imageUrl}
+                        helperText={formErrors.imageUrl}
+                    />
+                </FormSection>
+
+                <FormSection title="Availability" topDivider>
                     <FormControlLabel
-                        control={
+                        control={(
                             <Switch
                                 checked={formData.active}
                                 onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
                             />
-                        }
-                        label="Active"
-                        sx={{ mt: 2 }}
+                        )}
+                        label={formData.active ? 'Active — visible to users' : 'Inactive — hidden from users'}
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleSubmit} variant="contained">
-                        {editCity ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                </FormSection>
+            </FormDialog>
 
             <ConfirmDialog
                 open={confirmDialog.open}

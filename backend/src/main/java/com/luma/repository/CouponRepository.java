@@ -49,4 +49,29 @@ public interface CouponRepository extends JpaRepository<Coupon, UUID> {
            "AND (c.maxUsageCount = 0 OR c.usedCount < c.maxUsageCount) " +
            "ORDER BY c.discountValue DESC")
     List<Coupon> findAvailableCouponsByEvent(@Param("eventId") UUID eventId);
+
+    /**
+     * Organiser-wide coupons (c.event IS NULL) authored by the same organiser
+     * that owns the target event. Used to surface "shop coupons" on checkout.
+     */
+    @Query("SELECT c FROM Coupon c WHERE c.event IS NULL AND c.status = 'ACTIVE' " +
+           "AND c.createdBy.id = (SELECT e.organiser.id FROM Event e WHERE e.id = :eventId) " +
+           "AND (c.validFrom IS NULL OR c.validFrom <= CURRENT_TIMESTAMP) " +
+           "AND (c.validUntil IS NULL OR c.validUntil >= CURRENT_TIMESTAMP) " +
+           "AND (c.maxUsageCount = 0 OR c.usedCount < c.maxUsageCount) " +
+           "ORDER BY c.discountValue DESC")
+    List<Coupon> findOrganiserWideCouponsForEvent(@Param("eventId") UUID eventId);
+
+    /**
+     * All organiser-wide coupons a given user (organiser) has authored — used
+     * by the user-facing "My Coupons" browse screen when no event context is
+     * provided. Filters out expired / used-up / disabled rows.
+     */
+    @Query("SELECT c FROM Coupon c WHERE c.event IS NULL AND c.status = 'ACTIVE' " +
+           "AND c.createdBy.id = :organiserId " +
+           "AND (c.validFrom IS NULL OR c.validFrom <= CURRENT_TIMESTAMP) " +
+           "AND (c.validUntil IS NULL OR c.validUntil >= CURRENT_TIMESTAMP) " +
+           "AND (c.maxUsageCount = 0 OR c.usedCount < c.maxUsageCount) " +
+           "ORDER BY c.createdAt DESC")
+    List<Coupon> findActiveOrganiserWideCouponsByOrganiser(@Param("organiserId") UUID organiserId);
 }

@@ -11,29 +11,27 @@ import {
     Box,
     Divider,
     ListItemIcon,
+    Tooltip,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
     Logout as LogoutIcon,
     Person as PersonIcon,
+    KeyboardArrowDown as ArrowDownIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import NotificationBell from '../common/NotificationBell';
+import { tokens } from '../../theme';
 
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = tokens.layout.sidebarWidth;
 
 const Header = ({ onMenuClick }) => {
     const navigate = useNavigate();
     const { user, logout, isAdmin } = useAuth();
     const [anchorEl, setAnchorEl] = useState(null);
 
-    const handleMenu = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+    const handleMenu = (event) => setAnchorEl(event.currentTarget);
+    const handleClose = () => setAnchorEl(null);
 
     const handleProfile = () => {
         handleClose();
@@ -50,66 +48,82 @@ const Header = ({ onMenuClick }) => {
     return (
         <AppBar
             position="fixed"
+            color="default"
             elevation={0}
             sx={{
-                width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
-                ml: { sm: `${DRAWER_WIDTH}px` },
+                width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+                ml: { md: `${DRAWER_WIDTH}px` },
                 bgcolor: 'background.paper',
                 color: 'text.primary',
                 borderBottom: '1px solid',
-                borderColor: 'grey.200',
+                borderColor: 'divider',
             }}
         >
-            <Toolbar sx={{ minHeight: '70px !important' }}>
-                <IconButton
-                    color="inherit"
-                    edge="start"
-                    onClick={onMenuClick}
-                    sx={{ mr: 2, display: { sm: 'none' } }}
-                >
-                    <MenuIcon />
-                </IconButton>
+            <Toolbar sx={{ minHeight: `${tokens.layout.headerHeight}px !important`, px: { xs: 2, md: 3 } }}>
+                <Tooltip title="Toggle menu">
+                    <IconButton
+                        edge="start"
+                        onClick={onMenuClick}
+                        sx={{ mr: 1.5, display: { md: 'none' } }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                </Tooltip>
 
-                <Box sx={{ flexGrow: 1 }} />
+                <Box sx={{ flex: 1 }} />
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <NotificationBell />
 
                     <Box
                         onClick={handleMenu}
+                        role="button"
+                        aria-label="Account menu"
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
-                            ml: 1,
-                            px: 1.5,
+                            gap: 1.25,
+                            ml: 0.5,
+                            px: { xs: 0.75, md: 1.25 },
                             py: 0.75,
                             borderRadius: 2,
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': { bgcolor: 'grey.100' },
+                            border: '1px solid transparent',
+                            transition: 'all 150ms ease',
+                            '&:hover': {
+                                bgcolor: 'grey.50',
+                                borderColor: 'divider',
+                            },
                         }}
                     >
                         <Avatar
                             src={user?.avatarUrl}
                             alt={user?.fullName}
                             sx={{
-                                width: 40,
-                                height: 40,
-                                background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
+                                width: 34,
+                                height: 34,
+                                background: tokens.gradient.primary,
+                                fontSize: 14,
                                 fontWeight: 600,
                             }}
                         >
                             {user?.fullName?.charAt(0)}
                         </Avatar>
-                        <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left' }}>
-                            <Typography variant="subtitle2" fontWeight="600" sx={{ lineHeight: 1.3 }}>
+                        <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'left', minWidth: 0 }}>
+                            <Typography variant="subtitle2" sx={{ lineHeight: 1.25, fontWeight: 600 }} noWrap>
                                 {user?.fullName}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                {user?.role}
+                            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                                {user?.role === 'ADMIN' ? 'Administrator' : 'Organiser'}
                             </Typography>
                         </Box>
+                        <ArrowDownIcon
+                            sx={{
+                                fontSize: 16,
+                                color: 'text.secondary',
+                                display: { xs: 'none', md: 'block' },
+                            }}
+                        />
                     </Box>
 
                     <Menu
@@ -119,25 +133,20 @@ const Header = ({ onMenuClick }) => {
                         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         PaperProps={{
-                            sx: {
-                                mt: 1,
-                                minWidth: 220,
-                                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                                borderRadius: 3,
-                            },
+                            sx: { mt: 1, minWidth: 240 },
                         }}
                     >
-                        <Box sx={{ px: 2, py: 1.5 }}>
-                            <Typography variant="subtitle2" fontWeight="600">
+                        <Box sx={{ px: 2, py: 1.25 }}>
+                            <Typography variant="subtitle2" fontWeight={600}>
                                 {user?.fullName}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
                                 {user?.email}
                             </Typography>
                         </Box>
                         <Divider />
                         {!isAdmin() && (
-                            <MenuItem onClick={handleProfile} sx={{ py: 1.5 }}>
+                            <MenuItem onClick={handleProfile}>
                                 <ListItemIcon>
                                     <PersonIcon fontSize="small" />
                                 </ListItemIcon>
@@ -147,7 +156,6 @@ const Header = ({ onMenuClick }) => {
                         <MenuItem
                             onClick={handleLogout}
                             sx={{
-                                py: 1.5,
                                 color: 'error.main',
                                 '&:hover': { bgcolor: 'error.50' },
                             }}
@@ -155,7 +163,7 @@ const Header = ({ onMenuClick }) => {
                             <ListItemIcon>
                                 <LogoutIcon fontSize="small" color="error" />
                             </ListItemIcon>
-                            Logout
+                            Sign out
                         </MenuItem>
                     </Menu>
                 </Box>

@@ -2,26 +2,33 @@ import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     TextField,
     Button,
     Avatar,
     Grid,
-    Card,
-    CardContent,
     Divider,
     Alert,
     CircularProgress,
+    Stack,
 } from '@mui/material';
 import {
     Save as SaveIcon,
     PhotoCamera as CameraIcon,
     Verified as VerifiedIcon,
     AutoAwesome as AIIcon,
+    AccountCircle as ProfileIcon,
 } from '@mui/icons-material';
 import MDEditor from '@uiw/react-md-editor';
 import { organiserApi } from '../../api';
 import { LoadingSpinner } from '../../components/common';
+import {
+    PageHeader,
+    SectionCard,
+    FormSection,
+    LoadingButton,
+    StatusChip,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
 const OrganiserProfile = () => {
@@ -64,7 +71,7 @@ const OrganiserProfile = () => {
 
     const isValidUrl = (url) => {
         if (!url) return true;
-        const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+        const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
         return urlPattern.test(url);
     };
 
@@ -172,201 +179,234 @@ const OrganiserProfile = () => {
 
     return (
         <Box>
-            <Typography variant="h5" fontWeight="bold" mb={3}>
-                Organiser Profile
-            </Typography>
+            <PageHeader
+                title="Organiser Profile"
+                subtitle="Manage your public organisation identity, contact details and bio"
+                icon={<ProfileIcon />}
+            />
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
-                    <Card>
-                        <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                            <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                                <Avatar
-                                    src={profile?.logoUrl || profile?.avatarUrl}
-                                    sx={{ width: 120, height: 120, mx: 'auto' }}
-                                >
-                                    {(profile?.displayName || profile?.organizationName)?.charAt(0)}
-                                </Avatar>
-                                <input
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                    id="avatar-upload"
-                                    type="file"
-                                    onChange={handleAvatarUpload}
+                    <SectionCard contentSx={{ textAlign: 'center', py: 4 }}>
+                        <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Avatar
+                                src={profile?.logoUrl || profile?.avatarUrl}
+                                sx={{
+                                    width: 120,
+                                    height: 120,
+                                    mx: 'auto',
+                                    bgcolor: tokens.palette.primary[500],
+                                    fontSize: 40,
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {(profile?.displayName || profile?.organizationName)?.charAt(0)}
+                            </Avatar>
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="avatar-upload"
+                                type="file"
+                                onChange={handleAvatarUpload}
+                                disabled={uploadingAvatar}
+                            />
+                            <label htmlFor="avatar-upload">
+                                <Button
+                                    component="span"
+                                    size="small"
                                     disabled={uploadingAvatar}
-                                />
-                                <label htmlFor="avatar-upload">
-                                    <Button
-                                        component="span"
-                                        size="small"
-                                        disabled={uploadingAvatar}
-                                        sx={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            right: 0,
-                                            minWidth: 'auto',
-                                            p: 1,
-                                            bgcolor: 'primary.main',
-                                            color: 'white',
-                                            borderRadius: '50%',
-                                            '&:hover': { bgcolor: 'primary.dark' },
-                                            '&.Mui-disabled': { bgcolor: 'grey.400' },
-                                        }}
-                                    >
-                                        {uploadingAvatar ? (
-                                            <CircularProgress size={20} color="inherit" />
-                                        ) : (
-                                            <CameraIcon fontSize="small" />
-                                        )}
-                                    </Button>
-                                </label>
-                            </Box>
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        minWidth: 'auto',
+                                        p: 1,
+                                        bgcolor: tokens.palette.primary[500],
+                                        color: tokens.palette.neutral[0],
+                                        borderRadius: '50%',
+                                        '&:hover': { bgcolor: tokens.palette.primary[600] },
+                                        '&.Mui-disabled': { bgcolor: tokens.palette.neutral[300] },
+                                    }}
+                                >
+                                    {uploadingAvatar ? (
+                                        <CircularProgress size={20} color="inherit" />
+                                    ) : (
+                                        <CameraIcon fontSize="small" />
+                                    )}
+                                </Button>
+                            </label>
+                        </Box>
 
-                            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                                <Typography variant="h6" fontWeight="bold">
-                                    {profile?.displayName || profile?.organizationName}
-                                </Typography>
-                                {profile?.verified && (
-                                    <VerifiedIcon sx={{ color: 'primary.main' }} />
-                                )}
-                            </Box>
-
-                            <Typography color="text.secondary">
-                                {profile?.email}
+                        <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ mt: 2 }}>
+                            <Typography variant="h6" fontWeight={700}>
+                                {profile?.displayName || profile?.organizationName}
                             </Typography>
-
-                            <Divider sx={{ my: 2 }} />
-
-                            <Grid container spacing={2}>
-                                <Grid item xs={4}>
-                                    <Typography variant="h5" fontWeight="bold">
-                                        {profile?.totalEvents || 0}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Events
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <Typography variant="h5" fontWeight="bold">
-                                        {profile?.totalFollowers || profile?.followersCount || 0}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Followers
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <Typography variant="h5" fontWeight="bold">
-                                        {profile?.totalRegistrations || 0}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Registrations
-                                    </Typography>
-                                </Grid>
-                            </Grid>
-
-                            {!profile?.verified && (
-                                <Alert severity="info" sx={{ mt: 2, textAlign: 'left' }}>
-                                    Your profile is not verified yet. Contact admin for verification.
-                                </Alert>
+                            {profile?.verified && (
+                                <VerifiedIcon sx={{ color: tokens.palette.primary[500] }} />
                             )}
+                        </Stack>
 
-                        </CardContent>
-                    </Card>
+                        <Typography color="text.secondary" sx={{ mb: 1 }}>
+                            {profile?.email}
+                        </Typography>
+
+                        {profile?.verified ? (
+                            <StatusChip label="Verified" status="success" />
+                        ) : (
+                            <StatusChip label="Not verified" status="warning" />
+                        )}
+
+                        <Divider sx={{ my: 2.5 }} />
+
+                        <Grid container spacing={2}>
+                            <Grid item xs={4}>
+                                <Typography variant="h5" fontWeight={700} sx={{ color: tokens.palette.primary[600] }}>
+                                    {profile?.totalEvents || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Events
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                                <Typography variant="h5" fontWeight={700} sx={{ color: tokens.palette.primary[600] }}>
+                                    {profile?.totalFollowers || profile?.followersCount || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Followers
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                                <Typography variant="h5" fontWeight={700} sx={{ color: tokens.palette.primary[600] }}>
+                                    {profile?.totalRegistrations || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Registrations
+                                </Typography>
+                            </Grid>
+                        </Grid>
+
+                        {!profile?.verified && (
+                            <Alert severity="info" sx={{ mt: 2.5, textAlign: 'left' }}>
+                                Your profile is not verified yet. Contact admin for verification.
+                            </Alert>
+                        )}
+                    </SectionCard>
                 </Grid>
 
                 <Grid item xs={12} md={8}>
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" mb={3}>
-                            Edit Profile
-                        </Typography>
-
+                    <SectionCard
+                        title="Edit Profile"
+                        subtitle="Update the details shown on your public organiser page"
+                    >
                         <form onSubmit={handleSubmit}>
-                            <TextField
-                                fullWidth
-                                label="Organization Name"
-                                value={formData.displayName}
-                                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                                margin="normal"
-                                required
-                                error={!!formErrors.displayName}
-                                helperText={formErrors.displayName || 'Between 2-100 characters'}
-                            />
+                            <FormSection
+                                title="Organisation"
+                                description="The main identity shown to attendees across Luma"
+                            >
+                                <TextField
+                                    fullWidth
+                                    label="Organization Name"
+                                    value={formData.displayName}
+                                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                                    required
+                                    error={!!formErrors.displayName}
+                                    helperText={formErrors.displayName || 'Between 2-100 characters'}
+                                />
 
-                            <Box sx={{ mt: 2, mb: 1 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Bio (supports Markdown)
-                                    </Typography>
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        color="secondary"
-                                        startIcon={generatingBio ? <CircularProgress size={16} color="inherit" /> : <AIIcon />}
-                                        onClick={handleGenerateBio}
-                                        disabled={generatingBio || !formData.displayName}
-                                    >
-                                        {generatingBio ? 'Generating...' : 'AI Generate'}
-                                    </Button>
-                                </Box>
-                                <div data-color-mode="light">
-                                    <MDEditor
-                                        value={formData.bio}
-                                        onChange={(value) => setFormData({ ...formData, bio: value || '' })}
-                                        height={200}
-                                        preview="edit"
-                                        textareaProps={{
-                                            placeholder: 'Tell people about your organization... (supports **bold**, *italic*, [links](url), etc.)',
+                                <Box sx={{ mt: 2.5 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Bio (supports Markdown)
+                                        </Typography>
+                                        <LoadingButton
+                                            size="small"
+                                            variant="outlined"
+                                            color="secondary"
+                                            startIcon={<AIIcon />}
+                                            onClick={handleGenerateBio}
+                                            loading={generatingBio}
+                                            disabled={!formData.displayName}
+                                        >
+                                            {generatingBio ? 'Generating...' : 'AI Generate'}
+                                        </LoadingButton>
+                                    </Box>
+                                    <Box
+                                        data-color-mode="light"
+                                        sx={{
+                                            border: `1px solid ${tokens.palette.neutral[200]}`,
+                                            borderRadius: 2,
+                                            overflow: 'hidden',
+                                            '& .w-md-editor': {
+                                                boxShadow: 'none !important',
+                                            },
                                         }}
-                                    />
-                                </div>
-                                <Typography variant="caption" color="text.secondary">
-                                    {formData.bio?.length || 0}/500 characters
-                                </Typography>
-                            </Box>
+                                    >
+                                        <MDEditor
+                                            value={formData.bio}
+                                            onChange={(value) => setFormData({ ...formData, bio: value || '' })}
+                                            height={200}
+                                            preview="edit"
+                                            textareaProps={{
+                                                placeholder: 'Tell people about your organization... (supports **bold**, *italic*, [links](url), etc.)',
+                                            }}
+                                        />
+                                    </Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                                        {formData.bio?.length || 0}/500 characters
+                                    </Typography>
+                                </Box>
+                            </FormSection>
 
-                            <TextField
-                                fullWidth
-                                label="Website"
-                                value={formData.website}
-                                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                margin="normal"
-                                placeholder="https://example.com"
-                                error={!!formErrors.website}
-                                helperText={formErrors.website}
-                            />
+                            <FormSection
+                                title="Contact"
+                                description="How attendees and partners can reach you"
+                                topDivider
+                            >
+                                <TextField
+                                    fullWidth
+                                    label="Website"
+                                    value={formData.website}
+                                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                    margin="normal"
+                                    placeholder="https://example.com"
+                                    error={!!formErrors.website}
+                                    helperText={formErrors.website}
+                                />
 
-                            <TextField
-                                fullWidth
-                                label="Contact Email"
-                                value={formData.contactEmail}
-                                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                                margin="normal"
-                                placeholder="contact@example.com"
-                                error={!!formErrors.contactEmail}
-                                helperText={formErrors.contactEmail}
-                            />
+                                <TextField
+                                    fullWidth
+                                    label="Contact Email"
+                                    value={formData.contactEmail}
+                                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                                    margin="normal"
+                                    placeholder="contact@example.com"
+                                    error={!!formErrors.contactEmail}
+                                    helperText={formErrors.contactEmail}
+                                />
 
-                            <TextField
-                                fullWidth
-                                label="Contact Phone"
-                                value={formData.contactPhone}
-                                onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                                margin="normal"
-                                placeholder="+84 123 456 789"
-                            />
+                                <TextField
+                                    fullWidth
+                                    label="Contact Phone"
+                                    value={formData.contactPhone}
+                                    onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                                    margin="normal"
+                                    placeholder="+84 123 456 789"
+                                />
+                            </FormSection>
 
-                            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <LoadingButton
                                     type="submit"
                                     variant="contained"
                                     startIcon={<SaveIcon />}
-                                    disabled={saving}
+                                    loading={saving}
+                                    size="large"
                                 >
                                     {saving ? 'Saving...' : 'Save Changes'}
-                                </Button>
+                                </LoadingButton>
                             </Box>
                         </form>
-                    </Paper>
+                    </SectionCard>
                 </Grid>
             </Grid>
         </Box>

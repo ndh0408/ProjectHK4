@@ -346,10 +346,13 @@ class ApiService {
     return response.data!['data'] as Map<String, dynamic>? ?? {};
   }
 
-  Future<List<Coupon>> getUserCoupons({String? eventId}) async {
+  Future<List<Coupon>> getUserCoupons({String? eventId, String? registrationId}) async {
+    final params = <String, dynamic>{};
+    if (eventId != null) params['eventId'] = eventId;
+    if (registrationId != null) params['registrationId'] = registrationId;
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/coupons',
-      queryParameters: eventId != null ? {'eventId': eventId} : null,
+      queryParameters: params.isEmpty ? null : params,
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
     return data.map((json) => Coupon.fromJson(json as Map<String, dynamic>)).toList();
