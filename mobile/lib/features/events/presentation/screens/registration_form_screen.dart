@@ -16,12 +16,18 @@ class RegistrationFormScreen extends ConsumerStatefulWidget {
     required this.eventTitle,
     required this.isFree,
     this.ticketPrice,
+    this.ticketTypeId,
+    this.ticketTypeName,
+    this.quantity = 1,
   });
 
   final String eventId;
   final String eventTitle;
   final bool isFree;
   final double? ticketPrice;
+  final String? ticketTypeId;
+  final String? ticketTypeName;
+  final int quantity;
 
   @override
   ConsumerState<RegistrationFormScreen> createState() =>
@@ -192,19 +198,25 @@ class _RegistrationFormScreenState
       final registration = await api.registerForEventWithAnswers(
         widget.eventId,
         answersList,
+        ticketTypeId: widget.ticketTypeId,
+        quantity: widget.quantity,
       );
       debugPrint('=== Registration created: ${registration.id} ===');
 
       if (!widget.isFree && widget.ticketPrice != null && widget.ticketPrice! > 0) {
         debugPrint('=== Navigating to PaymentScreen (new registration) ===');
         if (!mounted) return;
+        final total = widget.ticketPrice! * widget.quantity;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => PaymentScreen(
               registrationId: registration.id,
               eventTitle: widget.eventTitle,
-              amount: widget.ticketPrice!,
+              amount: total,
+              tierName: widget.ticketTypeName,
+              unitPrice: widget.ticketPrice,
+              quantity: widget.quantity,
             ),
           ),
         );

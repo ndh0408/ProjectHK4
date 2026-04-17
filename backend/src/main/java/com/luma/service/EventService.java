@@ -3,12 +3,14 @@ package com.luma.service;
 import com.luma.dto.request.EventCreateRequest;
 import com.luma.dto.request.EventUpdateRequest;
 import com.luma.dto.request.SpeakerRequest;
+import com.luma.dto.request.TicketTypeRequest;
 import com.luma.dto.response.EventResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.Category;
 import com.luma.entity.City;
 import com.luma.entity.Event;
 import com.luma.entity.Speaker;
+import com.luma.entity.TicketType;
 import com.luma.entity.User;
 import com.luma.entity.enums.EventStatus;
 import com.luma.entity.enums.RecurrenceType;
@@ -21,6 +23,7 @@ import com.luma.repository.EventSessionRepository;
 import com.luma.repository.OrganiserProfileRepository;
 import com.luma.repository.ReviewRepository;
 import com.luma.repository.SeatZoneRepository;
+import com.luma.repository.TicketTypeRepository;
 import com.luma.entity.enums.BoostPackage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,7 @@ public class EventService {
     private final EventBoostRepository eventBoostRepository;
     private final SeatZoneRepository seatZoneRepository;
     private final EventSessionRepository eventSessionRepository;
+    private final TicketTypeRepository ticketTypeRepository;
     private final CategoryService categoryService;
     private final CityService cityService;
     private final NotificationService notificationService;
@@ -262,6 +266,11 @@ public class EventService {
             savedEvent = eventRepository.save(savedEvent);
         }
 
+        if (request.getTicketTypes() != null && !request.getTicketTypes().isEmpty()) {
+            persistTicketTypes(savedEvent, request.getTicketTypes());
+            savedEvent = syncEventFreeFromTiers(savedEvent);
+        }
+
         if (request.getRecurrenceType() != null && request.getRecurrenceType() != RecurrenceType.NONE) {
             createRecurringEventInstances(savedEvent, request);
         }
@@ -473,6 +482,11 @@ public class EventService {
                         .build();
                 event.getSpeakers().add(speaker);
             }
+        }
+
+        if (request.getTicketTypes() != null) {
+            syncTicketTypes(event, request.getTicketTypes());
+            event = syncEventFreeFromTiers(event);
         }
 
         if (request.getRecurrenceType() != null) {
@@ -911,6 +925,113 @@ public class EventService {
     public PageResponse<EventResponse> getEventsBySpeaker(String speakerName, Pageable pageable) {
         Page<Event> events = eventRepository.findEventsBySpeakerName(speakerName, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
+    }
+
+    private void persistTicketTypes(Event event, List<TicketTypeRequest> requests) {
+        int order = 0;
+        for (TicketTypeRequest req : requests) {
+            validateTicketTypeAgainstEvent(req, event);
+            TicketType tier = TicketType.builder()
+                    .event(event)
+                    .name(req.getName())
+                    .description(req.getDescription())
+                    .price(req.getPrice() != null ? req.getPrice() : BigDecimal.ZERO)
+                    .quantity(req.getQuantity())
+                    .soldCount(0)
+                    .maxPerOrder(req.getMaxPerOrder() != null ? req.getMaxPerOrder() : 10)
+                    .saleStartDate(req.getSaleStartDate())
+                    .saleEndDate(req.getSaleEndDate())
+                    .isVisible(req.getIsVisible() != null ? req.getIsVisible() : true)
+                    .displayOrder(req.getDisplayOrder() != null ? req.getDisplayOrder() : order)
+                    .build();
+            ticketTypeRepository.save(tier);
+            order++;
+        }
+    }
+
+    private void syncTicketTypes(Event event, List<TicketTypeRequest> requests) {
+        List<TicketType> existing = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(event.getId());
+        java.util.Map<UUID, TicketType> existingById = new java.util.HashMap<>();
+        for (TicketType tt : existing) existingById.put(tt.getId(), tt);
+
+        java.util.Set<UUID> keepIds = new java.util.HashSet<>();
+        int order = 0;
+        for (TicketTypeRequest req : requests) {
+            validateTicketTypeAgainstEvent(req, event);
+            if (req.getId() != null && existingById.containsKey(req.getId())) {
+                TicketType tier = existingById.get(req.getId());
+                if (req.getQuantity() != null && req.getQuantity() < tier.getSoldCount()) {
+                    throw new BadRequestException("Ticket type '" + tier.getName() +
+                            "': cannot reduce quantity below sold count (" + tier.getSoldCount() + ")");
+                }
+                tier.setName(req.getName());
+                tier.setDescription(req.getDescription());
+                tier.setPrice(req.getPrice() != null ? req.getPrice() : BigDecimal.ZERO);
+                tier.setQuantity(req.getQuantity());
+                tier.setMaxPerOrder(req.getMaxPerOrder() != null ? req.getMaxPerOrder() : tier.getMaxPerOrder());
+                tier.setSaleStartDate(req.getSaleStartDate());
+                tier.setSaleEndDate(req.getSaleEndDate());
+                if (req.getIsVisible() != null) tier.setIsVisible(req.getIsVisible());
+                tier.setDisplayOrder(req.getDisplayOrder() != null ? req.getDisplayOrder() : order);
+                ticketTypeRepository.save(tier);
+                keepIds.add(tier.getId());
+            } else {
+                TicketType tier = TicketType.builder()
+                        .event(event)
+                        .name(req.getName())
+                        .description(req.getDescription())
+                        .price(req.getPrice() != null ? req.getPrice() : BigDecimal.ZERO)
+                        .quantity(req.getQuantity())
+                        .soldCount(0)
+                        .maxPerOrder(req.getMaxPerOrder() != null ? req.getMaxPerOrder() : 10)
+                        .saleStartDate(req.getSaleStartDate())
+                        .saleEndDate(req.getSaleEndDate())
+                        .isVisible(req.getIsVisible() != null ? req.getIsVisible() : true)
+                        .displayOrder(req.getDisplayOrder() != null ? req.getDisplayOrder() : order)
+                        .build();
+                TicketType saved = ticketTypeRepository.save(tier);
+                keepIds.add(saved.getId());
+            }
+            order++;
+        }
+
+        for (TicketType tier : existing) {
+            if (!keepIds.contains(tier.getId())) {
+                if (tier.getSoldCount() != null && tier.getSoldCount() > 0) {
+                    throw new BadRequestException("Cannot delete ticket type '" + tier.getName() +
+                            "' with " + tier.getSoldCount() + " sold tickets. Hide it instead.");
+                }
+                ticketTypeRepository.delete(tier);
+            }
+        }
+    }
+
+    private void validateTicketTypeAgainstEvent(TicketTypeRequest req, Event event) {
+        if (req.getSaleStartDate() != null && req.getSaleEndDate() != null
+                && req.getSaleStartDate().isAfter(req.getSaleEndDate())) {
+            throw new BadRequestException("Ticket '" + req.getName() + "': sale start must be before sale end");
+        }
+        if (req.getSaleEndDate() != null && event.getEndTime() != null
+                && req.getSaleEndDate().isAfter(event.getEndTime())) {
+            throw new BadRequestException("Ticket '" + req.getName() + "': sale end cannot be after event end time");
+        }
+    }
+
+    private Event syncEventFreeFromTiers(Event event) {
+        List<TicketType> tiers = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(event.getId());
+        if (tiers.isEmpty()) return event;
+        boolean allFree = tiers.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getIsVisible()))
+                .allMatch(t -> t.getPrice() == null || t.getPrice().compareTo(BigDecimal.ZERO) == 0);
+        event.setFree(allFree);
+        BigDecimal minPrice = tiers.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getIsVisible()))
+                .map(TicketType::getPrice)
+                .filter(java.util.Objects::nonNull)
+                .min(BigDecimal::compareTo)
+                .orElse(event.getTicketPrice() != null ? event.getTicketPrice() : BigDecimal.ZERO);
+        event.setTicketPrice(minPrice);
+        return eventRepository.save(event);
     }
 
     private void ensureOrganiserProfile(User user) {

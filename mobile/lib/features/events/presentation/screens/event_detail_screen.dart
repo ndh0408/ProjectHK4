@@ -27,6 +27,8 @@ import 'payment_screen.dart';
 import 'registration_form_screen.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/models/review.dart';
+import '../../../../shared/models/ticket_type.dart';
+import '../widgets/ticket_tier_picker.dart';
 import '../../../home/presentation/widgets/similar_events_section.dart';
 
 final eventDetailProvider =
@@ -75,15 +77,37 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
   }
 
   Future<void> _register(Event event) async {
+    TicketType? selectedTier;
+    int selectedQty = 1;
+
+    final visibleTiers = event.visibleTicketTypes;
+    if (visibleTiers.isNotEmpty) {
+      final result = await showTicketTierPicker(
+        context: context,
+        tiers: visibleTiers,
+      );
+      if (result == null) return;
+      selectedTier = result.tier;
+      selectedQty = result.quantity;
+    }
+
     if (event.hasRegistrationQuestions) {
+      final isFree = selectedTier != null
+          ? selectedTier.isFree
+          : (event.ticketPrice ?? 0) <= 0;
+      final unitPrice = selectedTier?.price ?? event.ticketPrice;
+
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
           builder: (_) => RegistrationFormScreen(
             eventId: widget.eventId,
             eventTitle: event.title,
-            isFree: (event.ticketPrice ?? 0) <= 0,
-            ticketPrice: event.ticketPrice,
+            isFree: isFree,
+            ticketPrice: unitPrice,
+            ticketTypeId: selectedTier?.id,
+            ticketTypeName: selectedTier?.name,
+            quantity: selectedQty,
           ),
         ),
       );
@@ -92,20 +116,58 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
         _refreshData();
       }
     } else {
-      _showConfirmRegistrationDialog(event);
+      _showConfirmRegistrationDialog(event, tier: selectedTier, quantity: selectedQty);
     }
   }
 
-  void _showConfirmRegistrationDialog(Event event) {
+  void _showConfirmRegistrationDialog(Event event, {TicketType? tier, int quantity = 1}) {
     final l10n = AppLocalizations.of(context)!;
+    final money = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    final unit = tier?.price ?? event.ticketPrice ?? 0;
+    final total = unit * quantity;
+    final isFree = tier?.isFree ?? ((event.ticketPrice ?? 0) <= 0);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.confirmRegistration),
-        content: Text(
-          event.isFull
-              ? 'This event is full. Do you want to join the waitlist for "${event.title}"?'
-              : 'Do you want to register for "${event.title}"?',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.isFull
+                  ? 'This event is full. Do you want to join the waitlist for "${event.title}"?'
+                  : 'Do you want to register for "${event.title}"?',
+            ),
+            if (tier != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Ticket', style: TextStyle(color: Colors.grey)),
+                  Text(tier.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Quantity', style: TextStyle(color: Colors.grey)),
+                  Text('$quantity'),
+                ],
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Total', style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    isFree ? 'FREE' : money.format(total),
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
@@ -115,7 +177,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _performRegistration(event);
+              _performRegistration(event, tier: tier, quantity: quantity);
             },
             child: Text(event.isFull ? l10n.joinWaitlist : l10n.register),
           ),
@@ -124,14 +186,20 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     );
   }
 
-  Future<void> _performRegistration(Event event) async {
+  Future<void> _performRegistration(Event event, {TicketType? tier, int quantity = 1}) async {
     setState(() => _isRegistering = true);
 
     try {
       final api = ref.read(apiServiceProvider);
-      final registration = await api.registerForEvent(widget.eventId);
+      final registration = await api.registerForEvent(
+        widget.eventId,
+        ticketTypeId: tier?.id,
+        quantity: quantity,
+      );
 
-      final isFree = (event.ticketPrice ?? 0) <= 0;
+      final unitPrice = tier?.price ?? event.ticketPrice ?? 0;
+      final totalAmount = unitPrice * quantity;
+      final isFree = tier != null ? tier.isFree : unitPrice <= 0;
       if (!isFree) {
         if (!mounted) return;
         final result = await Navigator.push<bool>(
@@ -140,7 +208,10 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
             builder: (_) => PaymentScreen(
               registrationId: registration.id,
               eventTitle: event.title,
-              amount: event.ticketPrice ?? 0,
+              amount: totalAmount,
+              tierName: tier?.name,
+              unitPrice: unitPrice,
+              quantity: quantity,
             ),
           ),
         );
@@ -1080,6 +1151,24 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                       }
                     },
                   ),
+
+                  if (event.visibleTicketTypes.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        const Icon(Icons.confirmation_number_outlined, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ticket Types',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...event.visibleTicketTypes.map((tier) => _TierSummaryCard(tier: tier)),
+                  ],
 
                   if (event.speakers != null && event.speakers!.isNotEmpty) ...[
                     const SizedBox(height: 24),
@@ -2068,6 +2157,89 @@ class _AllReviewsSheetState extends ConsumerState<_AllReviewsSheet> {
                     ),
         ),
       ],
+    );
+  }
+}
+
+class _TierSummaryCard extends StatelessWidget {
+  const _TierSummaryCard({required this.tier});
+  final TicketType tier;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    final enabled = !tier.isSoldOut && tier.availableQuantity > 0;
+
+    final Color statusColor = enabled ? AppColors.success : AppColors.error;
+    final String? statusLabel = enabled ? null : 'Sold out';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(
+          color: enabled ? AppColors.primary.withValues(alpha: 0.3) : Colors.grey.shade300,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  tier.name,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                tier.isFree ? 'FREE' : money.format(tier.price),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: tier.isFree ? AppColors.success : AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          if ((tier.description ?? '').isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              tier.description!,
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey.shade600),
+              const SizedBox(width: 4),
+              Text(
+                tier.isSoldOut
+                    ? 'Sold out'
+                    : '${tier.availableQuantity} / ${tier.quantity} left',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+              const SizedBox(width: 12),
+              Icon(Icons.shopping_bag_outlined, size: 14, color: Colors.grey.shade600),
+              const SizedBox(width: 4),
+              Text(
+                'Max ${tier.maxPerOrder}/order',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+            ],
+          ),
+          if (statusLabel != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              statusLabel,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: statusColor),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

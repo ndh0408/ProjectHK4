@@ -80,22 +80,11 @@ public class TicketType {
     }
 
     public boolean isSaleActive() {
-        LocalDateTime now = LocalDateTime.now();
-
-        if (saleStartDate != null && now.isBefore(saleStartDate)) {
-            return false;
-        }
-
-        if (saleEndDate != null && now.isAfter(saleEndDate)) {
-            return false;
-        }
-
         return true;
     }
 
     public boolean canPurchase(int requestedQuantity) {
         if (!isVisible) return false;
-        if (!isSaleActive()) return false;
         if (requestedQuantity > maxPerOrder) return false;
         if (requestedQuantity > getAvailableQuantity()) return false;
         return true;
@@ -103,13 +92,6 @@ public class TicketType {
 
     public String getStatus() {
         if (!isVisible) return "HIDDEN";
-        if (!isSaleActive()) {
-            LocalDateTime now = LocalDateTime.now();
-            if (saleStartDate != null && now.isBefore(saleStartDate)) {
-                return "NOT_STARTED";
-            }
-            return "ENDED";
-        }
         if (getAvailableQuantity() <= 0) return "SOLD_OUT";
         return "AVAILABLE";
     }

@@ -87,7 +87,10 @@ public class RegistrationService {
                             requiresPayment,
                             ticketPrice != null ? ticketPrice.doubleValue() : null,
                             event.getTitle(),
-                            reg.getWaitingListPosition()
+                            reg.getWaitingListPosition(),
+                            reg.getTicketType() != null ? reg.getTicketType().getId() : null,
+                            reg.getTicketType() != null ? reg.getTicketType().getName() : null,
+                            reg.getQuantity() != null ? reg.getQuantity() : 1
                     );
                 })
                 .orElse(RegistrationStatusResponse.notRegistered());
@@ -452,6 +455,22 @@ public class RegistrationService {
 
         registration.setCheckedInAt(LocalDateTime.now());
         return RegistrationResponse.fromEntity(registrationRepository.save(registration));
+    }
+
+    @Transactional
+    public RegistrationResponse checkInByTicketCode(UUID eventId, String ticketCode, User organiser) {
+        String code = ticketCode == null ? "" : ticketCode.trim();
+        if (code.isEmpty()) {
+            throw new BadRequestException("Ticket code is required");
+        }
+        Registration registration = registrationRepository.findByTicketCode(code)
+                .orElseThrow(() -> new ResourceNotFoundException("No registration found for ticket code: " + code));
+
+        if (!registration.getEvent().getId().equals(eventId)) {
+            throw new BadRequestException("This ticket does not belong to the selected event");
+        }
+
+        return checkInRegistration(registration.getId(), organiser);
     }
 
     private void validateCheckInTime(Event event) {
