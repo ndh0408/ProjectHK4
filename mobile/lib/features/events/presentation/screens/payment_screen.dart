@@ -800,13 +800,20 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           const Icon(Icons.open_in_new, size: 20),
                           const SizedBox(width: 8),
                         ],
-                        Text(
-                          '${AppLocalizations.of(context)!.pay} \$${widget.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Builder(builder: (context) {
+                          // Show the discounted total on the CTA when a coupon
+                          // is active so the label matches the Total row above.
+                          final effectiveAmount = _appliedCoupon != null
+                              ? ((_appliedCoupon!['finalAmount'] as num?)?.toDouble() ?? widget.amount)
+                              : widget.amount;
+                          return Text(
+                            '${AppLocalizations.of(context)!.pay} \$${effectiveAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        }),
                       ],
                     ),
                   ),
