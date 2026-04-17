@@ -1269,7 +1269,7 @@
             <h4>❓ Câu Hỏi Từ Ban Giám Khảo</h4>
             <div class="qa-item">
                 <div class="question">RAG khác gì với việc gọi AI thông thường?</div>
-                <div class="answer">RAG (Retrieval-Augmented Generation) gồm 3 bước: <strong>Retrieve</strong> — query DB tìm dữ liệu liên quan; <strong>Augment</strong> — nhúng dữ liệu vào prompt làm reference; <strong>Generate</strong> — gọi LLM với context phong phú. Đây là pattern chuẩn để AI dựa trên kiến thức nội bộ thay vì chỉ kiến thức training. Tương tự với cách ChatGPT plugins hay Claude tools hoạt động.</div>
+                <div class="answer">RAG (Retrieval-Augmented Generation) gồm 3 bước: <strong>Retrieve</strong> — query DB tìm dữ liệu liên quan; <strong>Augment</strong> — nhúng dữ liệu vào prompt làm reference; <strong>Generate</strong> — gọi LLM với context phong phú. Đây là pattern chuẩn để AI dựa trên kiến thức nội bộ thay vì chỉ kiến thức training. Tương tự với cách ChatGPT plugins hay các AI tools hoạt động.</div>
             </div>
             <div class="qa-item">
                 <div class="question">Có lo AI plagiarize description từ event reference không?</div>
@@ -1685,7 +1685,7 @@
             <li><strong>RAG Event Moderation</strong> (TRINH) — So sánh với cả approved + rejected events để ra quyết định có evidence</li>
         </ol>
 
-        <p>Đây không phải là những chức năng "gọi ChatGPT API thuần". Mỗi chức năng đều có <strong>data integration sâu</strong> vào database, query và phân tích dữ liệu thực, sau đó mới gửi context cho LLM để generate output chất lượng cao. Đây là pattern chuẩn của các AI agents hiện đại như ChatGPT plugins, Claude tools.</p>
+        <p>Đây không phải là những chức năng "gọi ChatGPT API thuần". Mỗi chức năng đều có <strong>data integration sâu</strong> vào database, query và phân tích dữ liệu thực, sau đó mới gửi context cho LLM để generate output chất lượng cao. Đây là pattern chuẩn của các AI agents hiện đại như ChatGPT plugins, function-calling tools.</p>
 
         <h3>5.3. Hạn Chế &amp; Hướng Phát Triển</h3>
 
