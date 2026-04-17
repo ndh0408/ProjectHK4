@@ -22,6 +22,9 @@ public class RegistrationStatusResponse {
     private Double ticketPrice;
     private String eventTitle;
     private Integer waitingListPosition;
+    private UUID ticketTypeId;
+    private String ticketTypeName;
+    private Integer quantity;
 
     public static RegistrationStatusResponse notRegistered() {
         return RegistrationStatusResponse.builder()
@@ -33,11 +36,19 @@ public class RegistrationStatusResponse {
                 .ticketPrice(null)
                 .eventTitle(null)
                 .waitingListPosition(null)
+                .quantity(1)
                 .build();
     }
 
     public static RegistrationStatusResponse registered(UUID registrationId, RegistrationStatus status,
             boolean requiresPayment, Double ticketPrice, String eventTitle, Integer waitingListPosition) {
+        return registered(registrationId, status, requiresPayment, ticketPrice, eventTitle,
+                waitingListPosition, null, null, 1);
+    }
+
+    public static RegistrationStatusResponse registered(UUID registrationId, RegistrationStatus status,
+            boolean requiresPayment, Double ticketPrice, String eventTitle, Integer waitingListPosition,
+            UUID ticketTypeId, String ticketTypeName, Integer quantity) {
         String message = switch (status) {
             case PENDING -> requiresPayment ? "Awaiting payment" : "Registration pending approval";
             case APPROVED -> "Registration approved";
@@ -57,6 +68,9 @@ public class RegistrationStatusResponse {
                 .ticketPrice(ticketPrice)
                 .eventTitle(eventTitle)
                 .waitingListPosition(waitingListPosition)
+                .ticketTypeId(ticketTypeId)
+                .ticketTypeName(ticketTypeName)
+                .quantity(quantity != null ? quantity : 1)
                 .build();
     }
 }

@@ -121,9 +121,11 @@ public class UserEventController {
     @Operation(summary = "Register for an event (without questions)")
     public ResponseEntity<ApiResponse<RegistrationResponse>> registerForEvent(
             @PathVariable UUID eventId,
+            @RequestParam(required = false) UUID ticketTypeId,
+            @RequestParam(required = false, defaultValue = "1") Integer quantity,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        RegistrationResponse response = registrationService.registerForEvent(user, eventId);
+        RegistrationResponse response = registrationService.registerForEvent(user, eventId, ticketTypeId, quantity);
         return ResponseEntity.ok(ApiResponse.success("Registration successful", response));
     }
 
@@ -132,9 +134,12 @@ public class UserEventController {
     public ResponseEntity<ApiResponse<RegistrationResponse>> registerForEventWithAnswers(
             @PathVariable UUID eventId,
             @RequestBody RegistrationWithAnswersRequest request,
+            @RequestParam(required = false) UUID ticketTypeId,
+            @RequestParam(required = false, defaultValue = "1") Integer quantity,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
-        RegistrationResponse response = registrationService.registerForEventWithAnswers(user, eventId, request.getAnswers());
+        RegistrationResponse response = registrationService.registerForEventWithAnswers(
+                user, eventId, request.getAnswers(), ticketTypeId, quantity);
         return ResponseEntity.ok(ApiResponse.success("Registration successful", response));
     }
 

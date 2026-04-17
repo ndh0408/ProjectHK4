@@ -207,22 +207,59 @@ public class PaymentService {
         }
 
         try {
-            PaymentIntent paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+            String paymentIntentId = payment.getStripePaymentIntentId();
+            String checkoutStatus = null;
 
-            if ("succeeded".equals(paymentIntent.getStatus())) {
+            String sessionId = payment.getStripeClientSecret();
+            if (sessionId != null && sessionId.startsWith("cs_")) {
+                com.stripe.model.checkout.Session session = com.stripe.model.checkout.Session.retrieve(sessionId);
+                checkoutStatus = session.getPaymentStatus();
+                if (session.getPaymentIntent() != null) {
+                    paymentIntentId = session.getPaymentIntent();
+                    if (!paymentIntentId.equals(payment.getStripePaymentIntentId())) {
+                        payment.setStripePaymentIntentId(paymentIntentId);
+                    }
+                }
+            }
+
+            if (paymentIntentId == null) {
+                if ("paid".equals(checkoutStatus)) {
+                    payment.setStatus(PaymentStatus.SUCCEEDED);
+                    payment.setPaidAt(LocalDateTime.now());
+                    paymentRepository.save(payment);
+
+                    Registration registration = payment.getRegistration();
+                    if (registration.getStatus() != RegistrationStatus.APPROVED) {
+                        registration.setStatus(RegistrationStatus.APPROVED);
+                        registration.setApprovedAt(LocalDateTime.now());
+                        registrationRepository.save(registration);
+                        eventService.incrementApprovedCount(payment.getEvent());
+                        commissionService.createCommissionTransaction(payment);
+                    }
+                    return PaymentResponse.fromEntity(payment);
+                }
+                log.warn("Payment {} has no paymentIntentId yet, checkout status: {}", payment.getId(), checkoutStatus);
+                return PaymentResponse.fromEntity(payment);
+            }
+
+            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+
+            if ("succeeded".equals(paymentIntent.getStatus()) || "paid".equals(checkoutStatus)) {
                 payment.setStatus(PaymentStatus.SUCCEEDED);
                 payment.setPaidAt(LocalDateTime.now());
                 payment.setPaymentMethod(paymentIntent.getPaymentMethod());
                 paymentRepository.save(payment);
 
                 Registration registration = payment.getRegistration();
-                registration.setStatus(RegistrationStatus.APPROVED);
-                registration.setApprovedAt(LocalDateTime.now());
-                registrationRepository.save(registration);
+                if (registration.getStatus() != RegistrationStatus.APPROVED) {
+                    registration.setStatus(RegistrationStatus.APPROVED);
+                    registration.setApprovedAt(LocalDateTime.now());
+                    registrationRepository.save(registration);
 
-                eventService.incrementApprovedCount(payment.getEvent());
+                    eventService.incrementApprovedCount(payment.getEvent());
 
-                commissionService.createCommissionTransaction(payment);
+                    commissionService.createCommissionTransaction(payment);
+                }
 
                 log.info("Payment confirmed and registration approved for registration {}", registrationId);
 

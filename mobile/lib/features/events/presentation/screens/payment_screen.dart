@@ -15,11 +15,17 @@ class PaymentScreen extends ConsumerStatefulWidget {
     required this.registrationId,
     required this.eventTitle,
     required this.amount,
+    this.tierName,
+    this.unitPrice,
+    this.quantity = 1,
   });
 
   final String registrationId;
   final String eventTitle;
   final double amount;
+  final String? tierName;
+  final double? unitPrice;
+  final int quantity;
 
   @override
   ConsumerState<PaymentScreen> createState() => _PaymentScreenState();
@@ -475,6 +481,27 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                           const SizedBox(height: 8),
                           const Divider(),
                           const SizedBox(height: 8),
+                          if (widget.tierName != null) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Ticket', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                                Text(widget.tierName!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Unit price × Qty', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                                Text(
+                                  '\$${(widget.unitPrice ?? widget.amount).toStringAsFixed(2)} × ${widget.quantity}',
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

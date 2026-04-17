@@ -2,6 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 import 'category.dart';
 import 'city.dart';
+import 'ticket_type.dart';
 
 part 'event.g.dart';
 
@@ -120,6 +121,8 @@ class Event {
     this.isRecurring = false,
     this.isBoosted = false,
     this.boostPackage,
+    this.ticketTypes = const [],
+    this.hasTicketTypes = false,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -195,6 +198,11 @@ class Event {
       isRecurring: json['isRecurring'] as bool? ?? json['recurring'] as bool? ?? false,
       isBoosted: json['isBoosted'] as bool? ?? json['boosted'] as bool? ?? false,
       boostPackage: json['boostPackage'] as String?,
+      ticketTypes: (json['ticketTypes'] as List<dynamic>?)
+              ?.map((e) => TicketType.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      hasTicketTypes: json['hasTicketTypes'] as bool? ?? ((json['ticketTypes'] as List<dynamic>?)?.isNotEmpty ?? false),
     );
   }
 
@@ -266,7 +274,16 @@ class Event {
   final bool isBoosted;
   final String? boostPackage;
 
+  @JsonKey(defaultValue: [])
+  final List<TicketType> ticketTypes;
+  @JsonKey(defaultValue: false)
+  final bool hasTicketTypes;
+
   Map<String, dynamic> toJson() => _$EventToJson(this);
+
+  List<TicketType> get visibleTicketTypes =>
+      ticketTypes.where((t) => t.isVisible).toList()
+        ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
   String get location => venue ?? address ?? 'TBD';
   String get organiserId => organiser?.id ?? '';

@@ -111,6 +111,17 @@ public class OrganiserRegistrationController {
         return ResponseEntity.ok(ApiResponse.success("Check-in successful", response));
     }
 
+    @PostMapping("/registrations/event/{eventId}/check-in-by-code")
+    @Operation(summary = "Check in a registration by scanning ticket code")
+    public ResponseEntity<ApiResponse<RegistrationResponse>> checkInByCode(
+            @PathVariable UUID eventId,
+            @RequestParam String ticketCode,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        RegistrationResponse response = registrationService.checkInByTicketCode(eventId, ticketCode, user);
+        return ResponseEntity.ok(ApiResponse.success("Check-in successful", response));
+    }
+
     @GetMapping("/registrations/event/{eventId}/export")
     @Operation(summary = "Export attendees to Excel")
     public ResponseEntity<byte[]> exportAttendees(

@@ -28,6 +28,15 @@ const organiserApi = {
     deleteEvent: (id) => api.delete(`/organiser/events/${id}`),
     publishEvent: (id) => api.post(`/organiser/events/${id}/publish`),
     cancelEvent: (id) => api.post(`/organiser/events/${id}/cancel`),
+
+    getTicketTypes: (eventId) => api.get(`/organiser/events/${eventId}/ticket-types`),
+    getTicketType: (eventId, ticketTypeId) => api.get(`/organiser/events/${eventId}/ticket-types/${ticketTypeId}`),
+    createTicketType: (eventId, data) => api.post(`/organiser/events/${eventId}/ticket-types`, data),
+    updateTicketType: (eventId, ticketTypeId, data) => api.put(`/organiser/events/${eventId}/ticket-types/${ticketTypeId}`, data),
+    deleteTicketType: (eventId, ticketTypeId) => api.delete(`/organiser/events/${eventId}/ticket-types/${ticketTypeId}`),
+    toggleTicketTypeVisibility: (eventId, ticketTypeId) => api.patch(`/organiser/events/${eventId}/ticket-types/${ticketTypeId}/toggle-visibility`),
+    reorderTicketTypes: (eventId, ticketTypeIds) => api.put(`/organiser/events/${eventId}/ticket-types/reorder`, ticketTypeIds),
+    getTicketTypeStats: (eventId) => api.get(`/organiser/events/${eventId}/ticket-types/stats`),
     uploadEventImage: (id, file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -42,6 +51,7 @@ const organiserApi = {
     approveRegistration: (id) => api.put(`/organiser/registrations/${id}/approve`),
     rejectRegistration: (id) => api.put(`/organiser/registrations/${id}/reject`),
     checkInRegistration: (id) => api.put(`/organiser/registrations/${id}/check-in`),
+    checkInByCode: (eventId, ticketCode) => api.post(`/organiser/registrations/event/${eventId}/check-in-by-code`, null, { params: { ticketCode } }),
     exportAttendees: (eventId) => api.get(`/organiser/registrations/event/${eventId}/export`, {
         responseType: 'blob',
     }),
