@@ -11,13 +11,16 @@ import {
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
 import { toast } from 'react-toastify';
+import { ConfirmDialog } from '../../components/common';
 
 const OrganiserCoupons = () => {
     const [coupons, setCoupons] = useState([]);
     const [loading, setLoading] = useState(false);
     const [createDialog, setCreateDialog] = useState(false);
+    const [createSubmitting, setCreateSubmitting] = useState(false);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [totalRows, setTotalRows] = useState(0);
+    const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', action: null });
     const [form, setForm] = useState({
         code: '', description: '', discountType: 'PERCENTAGE', discountValue: '',
         maxDiscountAmount: '', minOrderAmount: '', maxUsageCount: 0, maxUsagePerUser: '',
@@ -46,6 +49,7 @@ const OrganiserCoupons = () => {
     useEffect(() => { loadCoupons(); }, [paginationModel]);
 
     const handleCreate = async () => {
+        if (createSubmitting) return;
         if (!form.code.trim()) { toast.error('Coupon code is required'); return; }
         const dv = parseFloat(form.discountValue);
         if (!dv || dv <= 0) { toast.error('Discount value must be greater than 0'); return; }
@@ -53,6 +57,7 @@ const OrganiserCoupons = () => {
         if (form.validFrom && form.validUntil && new Date(form.validFrom) >= new Date(form.validUntil)) {
             toast.error('Valid From must be before Valid Until'); return;
         }
+        setCreateSubmitting(true);
         try {
             const data = { ...form, discountValue: dv };
             if (form.maxDiscountAmount) data.maxDiscountAmount = parseFloat(form.maxDiscountAmount);
@@ -66,9 +71,19 @@ const OrganiserCoupons = () => {
             setForm({ code: '', description: '', discountType: 'PERCENTAGE', discountValue: '', maxDiscountAmount: '', minOrderAmount: '', maxUsageCount: 0, maxUsagePerUser: '', validFrom: '', validUntil: '' });
             loadCoupons();
         } catch (e) { toast.error(e.response?.data?.message || 'Failed to create coupon'); }
+        finally { setCreateSubmitting(false); }
     };
 
-    const handleDisable = async (id) => {
+    const requestDisable = (id, code) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Disable coupon?',
+            message: `Coupon "${code}" will no longer be usable. This cannot be undone.`,
+            action: () => doDisable(id),
+        });
+    };
+
+    const doDisable = async (id) => {
         try { await organiserApi.disableCoupon(id); toast.success('Coupon disabled'); loadCoupons(); }
         catch { toast.error('Failed'); }
     };
@@ -76,7 +91,6 @@ const OrganiserCoupons = () => {
     const handleAIGenerate = async () => {
         setAiLoading(true);
         try {
-            console.log('🚀 Starting AI coupon generation...');
             const data = { ...aiForm };
             if (aiForm.discountValue) data.discountValue = parseFloat(aiForm.discountValue);
             if (aiForm.maxDiscountAmount) data.maxDiscountAmount = parseFloat(aiForm.maxDiscountAmount);
@@ -86,29 +100,14 @@ const OrganiserCoupons = () => {
             if (aiForm.validFrom) data.validFrom = new Date(aiForm.validFrom).toISOString();
             if (aiForm.validUntil) data.validUntil = new Date(aiForm.validUntil).toISOString();
 
-            console.log('📤 Sending to backend:', JSON.stringify(data, null, 2));
-
             const res = await organiserApi.generateCouponAI(data);
-            console.log('✅ Response from backend:', res);
-            console.log('📦 AI Result:', res.data.data);
-            
             setAiResult(res.data.data);
             toast.success('AI generated coupon suggestions!');
         } catch (e) {
-            console.error('❌ ERROR in handleAIGenerate:');
-            console.error('Error object:', e);
-            console.error('Error message:', e.message);
-            console.error('Response status:', e.response?.status);
-            console.error('Response data:', e.response?.data);
-            console.error('Response headers:', e.response?.headers);
-            console.error('Full URL:', e.config?.url);
-            
-            const errorMsg = e.response?.data?.message 
+            const errorMsg = e.response?.data?.message
                 || e.response?.data?.error
-                || e.message 
+                || e.message
                 || 'Failed to generate coupon with AI';
-            
-            console.error('Final error message:', errorMsg);
             toast.error(errorMsg);
         } finally {
             setAiLoading(false);
@@ -177,7 +176,7 @@ const OrganiserCoupons = () => {
         { field: 'usedCount', headerName: 'Used', width: 80, renderCell: (p) => `${p.value}${p.row.maxUsageCount > 0 ? '/' + p.row.maxUsageCount : ''}` },
         { field: 'validUntil', headerName: 'Expires', width: 150, valueFormatter: (p) => p.value ? new Date(p.value).toLocaleDateString() : 'No expiry' },
         { field: 'actions', headerName: '', width: 80, sortable: false, renderCell: (p) => p.row.status === 'ACTIVE' ? (
-            <Tooltip title="Disable"><IconButton size="small" color="error" onClick={() => handleDisable(p.row.id)}><DisableIcon /></IconButton></Tooltip>
+            <Tooltip title="Disable"><IconButton size="small" color="error" onClick={() => requestDisable(p.row.id, p.row.code)}><DisableIcon /></IconButton></Tooltip>
         ) : null },
     ];
 
@@ -231,8 +230,15 @@ const OrganiserCoupons = () => {
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setCreateDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleCreate}>Create</Button>
+                    <Button onClick={() => setCreateDialog(false)} disabled={createSubmitting}>Cancel</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleCreate}
+                        disabled={createSubmitting}
+                        startIcon={createSubmitting ? <CircularProgress size={18} /> : null}
+                    >
+                        {createSubmitting ? 'Creating...' : 'Create'}
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -314,7 +320,7 @@ const OrganiserCoupons = () => {
                     </Collapse>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setAiDialog(false)}>Cancel</Button>
+                    <Button onClick={() => setAiDialog(false)} disabled={aiLoading}>Cancel</Button>
                     <Button
                         variant="contained"
                         onClick={aiResult ? applyAIGenerated : handleAIGenerate}
@@ -325,6 +331,19 @@ const OrganiserCoupons = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                confirmText="Disable"
+                confirmColor="error"
+                onConfirm={() => {
+                    if (confirmDialog.action) confirmDialog.action();
+                    setConfirmDialog({ ...confirmDialog, open: false });
+                }}
+                onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            />
         </Box>
     );
 };

@@ -9,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute, ErrorBoundary } from "./components/common";
 import { MainLayout } from "./components/layout";
 import Login from "./pages/shared/Login";
+import NotFound from "./pages/shared/NotFound";
 
 import {
     AdminDashboard,
@@ -209,7 +210,7 @@ function App() {
                                 <Route path="/organiser/notifications" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserNotifications /></ProtectedRoute>} />
                             </Route>
                             <Route path="/" element={<Navigate to="/login" replace />} />
-                            <Route path="*" element={<Navigate to="/login" replace />} />
+                            <Route path="*" element={<NotFound />} />
                         </Routes>
                     </BrowserRouter>
                 </AuthProvider>

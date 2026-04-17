@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         let cancelled = false;
-        const controller = new AbortController();
 
         const loadUser = async () => {
             const token = localStorage.getItem('accessToken');
@@ -50,7 +49,6 @@ export const AuthProvider = ({ children }) => {
                     }
                 } catch (error) {
                     if (!cancelled) {
-                        console.error('Failed to load user:', error);
                         logout();
                     }
                 }
@@ -62,7 +60,6 @@ export const AuthProvider = ({ children }) => {
 
         return () => {
             cancelled = true;
-            controller.abort();
         };
     }, [logout]);
 

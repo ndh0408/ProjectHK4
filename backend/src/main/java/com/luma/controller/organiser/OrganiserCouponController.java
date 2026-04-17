@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/organiser/coupons")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Organiser Coupons", description = "APIs for managing coupons")
 public class OrganiserCouponController {
 
@@ -70,9 +72,8 @@ public class OrganiserCouponController {
             @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            System.out.println("=== generateCouponAI endpoint called ===");
-            System.out.println("Request data: " + request);
-            
+            log.debug("generateCouponAI called for user {}", userDetails.getUsername());
+
             User user = userService.getEntityByEmail(userDetails.getUsername());
 
             String description = (String) request.get("description");
@@ -94,15 +95,10 @@ public class OrganiserCouponController {
             String eventName = (String) request.get("eventName");
             String language = (String) request.getOrDefault("language", "vi");
 
-            System.out.println("Parsed parameters successfully");
-            System.out.println("Calling aiService.generateCoupon...");
-            
             String result = aiService.generateCoupon(description, discountType, discountValue,
                     maxDiscountAmount, minOrderAmount, maxUsageCount, maxUsagePerUser,
                     validFrom, validUntil, eventName, language);
 
-            System.out.println("✅ AI Service returned result: " + result.substring(0, Math.min(100, result.length())));
-            
             try {
                 com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
                 Map<String, Object> jsonResult = mapper.readValue(result, Map.class);
@@ -111,24 +107,22 @@ public class OrganiserCouponController {
                 return ResponseEntity.ok(ApiResponse.success("Coupon generated", Map.of("rawResponse", result)));
             }
         } catch (RuntimeException e) {
-            System.out.println("❌ RuntimeException: " + e.getMessage());
-            e.printStackTrace();
+            log.error("AI coupon generation failed", e);
             String errorMsg = e.getMessage();
             if (errorMsg == null || errorMsg.isBlank()) {
                 errorMsg = "Unknown error: " + e.getClass().getName();
             }
-            
+
             if (errorMsg.contains("API key") || errorMsg.contains("authentication failed")) {
                 return ResponseEntity
                         .status(500)
-                        .body(ApiResponse.error("⚠️ GROQ API not configured: " + errorMsg));
+                        .body(ApiResponse.error("GROQ API not configured: " + errorMsg));
             }
             return ResponseEntity
                     .status(500)
                     .body(ApiResponse.error("Failed to generate coupon: " + errorMsg));
         } catch (Exception e) {
-            System.out.println("❌ Exception: " + e.getClass().getName() + " - " + e.getMessage());
-            e.printStackTrace();
+            log.error("AI coupon generation unexpected error", e);
             String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             return ResponseEntity
                     .status(500)
