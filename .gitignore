@@ -1,12 +1,59 @@
+# ===================================
+# Java / Spring Boot (Backend)
+# ===================================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===================================
+# Node.js / React (Admin Frontend)
+# ===================================
+node_modules/
+
+# ===================================
+# Flutter / Dart (Mobile)
+# ===================================
+.dart_tool/
+.pub-cache/
+.pub/
+
+# ===================================
+# Environment variables - NEVER commit
+# ===================================
+.env
+.env.local
+.env.*.local
+local.properties
+
+# ===================================
+# IDE
+# ===================================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# ===================================
+# OS generated files
+# ===================================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ===================================
 # Claude Code
+# ===================================
 .claude/
 tmpclaude-*
 .remember/
 
-# IDE
-.idea/
-.vscode/
-
-# OS
-Thumbs.db
-.DS_Store
+# ===================================
+# Build outputs
+# ===================================
+mobile/build/
+admin/build/
+backend/target/
