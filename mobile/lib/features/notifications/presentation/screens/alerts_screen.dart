@@ -466,6 +466,9 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
                 controller: _tabController,
                 indicatorColor: AppColors.textOnPrimary,
                 indicatorWeight: 3,
+                labelColor: AppColors.textOnPrimary,
+                unselectedLabelColor:
+                    AppColors.textOnPrimary.withValues(alpha: 0.6),
                 labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                 tabs: [
                   Tab(

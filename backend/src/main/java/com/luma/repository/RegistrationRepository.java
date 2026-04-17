@@ -26,6 +26,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     Optional<Registration> findByUserAndEvent(User user, Event event);
 
+    Optional<Registration> findByTicketCode(String ticketCode);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Registration r WHERE r.user = :user AND r.event = :event")
     Optional<Registration> findByUserAndEventWithLock(@Param("user") User user, @Param("event") Event event);

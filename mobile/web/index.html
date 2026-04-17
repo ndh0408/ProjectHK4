@@ -44,6 +44,18 @@
   <!-- Stripe.js for payment processing -->
   <script src="https://js.stripe.com/v3/"></script>
 
+  <!-- Force unregister old service workers that cache stale files -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (var reg of registrations) { reg.unregister(); }
+      });
+      caches.keys().then(function(names) {
+        for (var name of names) { caches.delete(name); }
+      });
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

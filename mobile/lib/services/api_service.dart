@@ -204,9 +204,16 @@ class ApiService {
     return PaginatedResponse.fromJson(data, Registration.fromJson);
   }
 
-  Future<Registration> registerForEvent(String eventId) async {
+  Future<Registration> registerForEvent(
+    String eventId, {
+    String? ticketTypeId,
+    int quantity = 1,
+  }) async {
+    final qp = <String, dynamic>{'quantity': quantity};
+    if (ticketTypeId != null) qp['ticketTypeId'] = ticketTypeId;
     final response = await _client.post<Map<String, dynamic>>(
       '/user/events/$eventId/register',
+      queryParameters: qp,
     );
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return Registration.fromJson(data);
@@ -230,13 +237,18 @@ class ApiService {
 
   Future<Registration> registerForEventWithAnswers(
     String eventId,
-    List<RegistrationAnswer> answers,
-  ) async {
+    List<RegistrationAnswer> answers, {
+    String? ticketTypeId,
+    int quantity = 1,
+  }) async {
+    final qp = <String, dynamic>{'quantity': quantity};
+    if (ticketTypeId != null) qp['ticketTypeId'] = ticketTypeId;
     final response = await _client.post<Map<String, dynamic>>(
       '/user/events/$eventId/register-with-answers',
       data: {
         'answers': answers.map((a) => a.toJson()).toList(),
       },
+      queryParameters: qp,
     );
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return Registration.fromJson(data);
