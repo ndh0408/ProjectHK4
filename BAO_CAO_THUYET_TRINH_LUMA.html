@@ -482,7 +482,7 @@
         <p>Trong những năm gần đây, ngành tổ chức sự kiện ở Việt Nam phát triển mạnh mẽ với sự xuất hiện của hàng nghìn workshop, hội thảo, concert và lễ hội mỗi tháng. Tuy nhiên, người tham dự thường gặp khó khăn trong việc tìm kiếm sự kiện phù hợp, đăng ký phức tạp, không có công cụ kết nối với những người tham dự khác. Phía nhà tổ chức cũng đối mặt với việc phải dùng nhiều công cụ rời rạc — gây mất thời gian và dễ sai sót. Nhận thấy khoảng trống đó, nhóm chúng em quyết định xây dựng <strong>LUMA</strong> — một nền tảng "tất cả trong một".</p>
 
         <h3>1.2. Mục Tiêu Dự Án</h3>
-        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động Flutter cho người tham dự, web portal React cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe SDK), trí tuệ nhân tạo (Groq LLM — model llama-3.3-70b) và các công nghệ real-time (WebSocket STOMP). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Seat Map, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
+        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động Flutter cho người tham dự, web portal React cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe SDK), trí tuệ nhân tạo (Groq LLM — model llama-3.3-70b) và các công nghệ real-time (WebSocket STOMP). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Multi-Tier Ticket Types &amp; QR Check-in, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
 
         <h3>1.3. Công Nghệ Sử Dụng</h3>
 
@@ -631,7 +631,7 @@
                     <td><strong>2</strong></td>
                     <td><strong>DUY</strong> <span class="role-badge organiser">Backend</span></td>
                     <td>Đăng Ký &amp; Tham Dự</td>
-                    <td>6 chức năng (Registration, Waitlist, Seat Map, Schedule, Ticket Transfer, Certificate)</td>
+                    <td>6 chức năng (Registration, Waitlist, Multi-Tier Tickets + QR Check-in, Schedule, Ticket Transfer, Certificate)</td>
                     <td>~8 phút</td>
                 </tr>
                 <tr>
@@ -684,7 +684,7 @@
         <p>Stripe Payment, Real-time Chat, Google Calendar Sync, Email Marketing, Notification System, Subscription Plans, Boost Event, AI Insights cơ bản.</p>
 
         <h3>Nhóm 3 — Chức Năng Nâng Cao (6 chức năng)</h3>
-        <p>Smart Waitlist, Live Poll, Funnel Analytics, Networking &amp; Matchmaking (4 nâng cấp); Coupon Engine, Ticket Transfer, Event Comparison, Seat Map, Schedule Builder (5 mới).</p>
+        <p>Smart Waitlist, Live Poll, Funnel Analytics, Networking &amp; Matchmaking (4 nâng cấp); Coupon Engine, Ticket Transfer, Event Comparison, Multi-Tier Ticket Types + QR Check-in, Schedule Builder (5 mới).</p>
 
         <h3>Nhóm 4 — Chức Năng AI Smart <span class="ai-tag">5 AI RAG</span></h3>
         <p>Đây là điểm nhấn AI của dự án — 5 chức năng AI thực sự áp dụng RAG pattern thay vì chỉ wrapper LLM:</p>
@@ -985,8 +985,8 @@
                     <strong>Chức năng 2 — Smart Waitlist:</strong><br>
                     "Khác với waitlist thông thường theo thứ tự 'ai đến trước', em xây dựng hệ thống priority scoring. Điểm được tính từ: role (+20 cho organiser), subscription tier (VIP +40), lịch sử tham dự (max +20), penalty cancel (max -20). Khi có chỗ trống, người có điểm cao nhất nhận offer với countdown 30 phút. Hệ thống đảm bảo chỉ có 1 offer pending tại 1 thời điểm bằng pessimistic write lock."<br><br>
 
-                    <strong>Chức năng 3 — Seat Map:</strong><br>
-                    "Cho các sự kiện có chỗ ngồi cố định, organiser tạo sơ đồ với nhiều zone khác nhau. User tap vào ghế để chọn, ghế bị lock 5 phút để hoàn tất thanh toán. Pessimistic locking ở database đảm bảo 100% không có 2 người mua cùng 1 ghế."<br><br>
+                    <strong>Chức năng 3 — Multi-Tier Ticket Types &amp; QR Check-in:</strong><br>
+                    "Mỗi event cho phép định nghĩa nhiều loại vé (Early Bird, Standard, VIP...) với giá và số lượng riêng. Khi user đăng ký, bottom-sheet picker cho chọn tier + số lượng, Stripe Checkout tính đúng <code>tier.price × qty</code>. Mỗi vé có mã QR — lúc check-in, organiser quét bằng camera hoặc máy USB, hệ thống hiện ngay đầy đủ thông tin khách (tên, email, tier, số lượng) và lưu lịch sử 10 scan gần nhất. Atomic SQL counter đảm bảo không oversell khi nhiều người mua đồng thời."<br><br>
 
                     <strong>Chức năng 4 — Schedule Builder:</strong><br>
                     "Dành cho sự kiện lớn có nhiều session song song. Organiser tạo session với title, giờ, phòng, speaker. Hệ thống tự động kiểm tra conflict: speaker trùng giờ hoặc phòng trùng giờ sẽ báo lỗi. User có thể đăng ký session vào lịch cá nhân."<br><br>
@@ -1133,75 +1133,81 @@
         </div>
     </div>
 
-    <!-- DUY 3 - Seat Map -->
+    <!-- DUY 3 - Multi-Tier Ticket Types -->
     <div class="feature-card new-feature">
         <span class="feature-number">DUY - Chức năng 3/6 - MỚI</span>
-        <div class="feature-title">💺 Interactive Seat Map<span class="new-tag">Mới</span></div>
+        <div class="feature-title">🎟️ Multi-Tier Ticket Types &amp; QR Check-in<span class="new-tag">Mới</span></div>
 
         <div class="why-block">
             <h5>💡 Tại sao chúng em xây dựng chức năng này?</h5>
-            <p>Khi một sự kiện có nhiều hạng vé với giá khác nhau (ví dụ: VIP $50, Standard $30, Economy $10), người dùng cần biết rõ mình sẽ ngồi ở <strong>vùng nào</strong> và <strong>vị trí cụ thể nào</strong> trước khi trả tiền. Trên nhiều nền tảng hiện tại, người dùng chỉ chọn loại vé rồi hệ thống tự gán chỗ ngẫu nhiên — họ không có quyền chọn.</p>
-            <p style="margin-top: 8px;">Chức năng này <strong>không phải</strong> vẽ lại bản đồ vật lý venue. Thay vào đó, nhà tổ chức chia thành các <strong>zone (vùng chỗ ngồi)</strong> — mỗi zone có tên, giá, số hàng, số ghế/hàng — và hệ thống tự tạo ra một sơ đồ grid dạng hàng-cột (A1, A2, B1, B2...). Người dùng nhìn vào grid này để chọn chỗ mình muốn trong zone đã chọn.</p>
+            <p>Nhiều sự kiện trong thực tế không chỉ có <strong>một giá vé duy nhất</strong>. Một buổi hội thảo công nghệ có thể có VIP ($100, kèm meet-and-greet), Standard ($50), Early Bird ($30, bán giới hạn trong tuần đầu), Student ($15, cần xác thực). Thiết kế "event có 1 giá phẳng" ở phiên bản trước không đủ linh hoạt — organiser muốn chạy chiến lược giá theo phân khúc khách hàng. Chúng em xây dựng <strong>Multi-Tier Ticket Types</strong> để mỗi event có thể định nghĩa nhiều loại vé, mỗi loại có tên, giá, số lượng, giới hạn mua/đơn riêng.</p>
+            <p style="margin-top: 8px;">Ngoài ra, lúc sự kiện diễn ra, ban tổ chức cần <strong>check-in khách nhanh</strong> — không thể dò tên trong danh sách 500 người. Vì thế mỗi vé được gán một mã <code>ticketCode</code> unique + render QR. Ban tổ chức quét QR ở cửa bằng camera trên laptop/điện thoại (hoặc máy quét USB) để check-in chỉ trong 1-2 giây/khách.</p>
         </div>
 
         <div class="how-block">
             <h5>📱 Cách sử dụng</h5>
-            <p><strong>Phía nhà tổ chức (Organiser):</strong> Khi tạo event, organiser thiết lập các zone chỗ ngồi. Ví dụ:</p>
+            <p><strong>Phía nhà tổ chức (Organiser):</strong> Khi tạo event, trong modal "Create Event" có section <strong>Ticket Tiers</strong>. Organiser nhấn "Add Tier" để thêm các loại vé. Ví dụ:</p>
             <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
-                <li><strong>Zone "VIP"</strong> — màu vàng, giá $50, 3 hàng × 10 ghế = 30 chỗ</li>
-                <li><strong>Zone "Standard"</strong> — màu xanh, giá $30, 5 hàng × 15 ghế = 75 chỗ</li>
-                <li><strong>Zone "Economy"</strong> — màu xám, giá $10, 4 hàng × 20 ghế = 80 chỗ</li>
+                <li><strong>Early Bird</strong> — $30, số lượng 50, tối đa 2 vé/đơn</li>
+                <li><strong>Standard</strong> — $50, số lượng 200, tối đa 5 vé/đơn</li>
+                <li><strong>VIP</strong> — $100, số lượng 30, tối đa 2 vé/đơn</li>
             </ul>
-            <p>Hệ thống tự generate grid ghế cho mỗi zone (A1–A10, B1–B10... tương ứng số hàng và số ghế). Organiser <strong>không cần biết</strong> bố trí vật lý chính xác của venue — họ chỉ cần quy định có bao nhiêu zone, mỗi zone bao nhiêu chỗ và giá bao nhiêu.</p>
+            <p>Khi có ít nhất 1 tier, field "Price" đơn lẻ tự ẩn đi — giá sẽ đến từ các tier. Hệ thống cảnh báo nếu tổng số vé các tier vượt capacity event. Tier đã có người mua (<code>soldCount &gt; 0</code>) không thể bị xóa — chỉ có thể ẩn (toggle visibility) để tránh bán thêm.</p>
 
-            <p style="margin-top: 12px;"><strong>Phía người dùng (User):</strong> Khi đăng ký event có seat map, màn hình hiển thị grid trực quan:</p>
+            <p style="margin-top: 12px;"><strong>Phía người dùng (User):</strong> Trong trang chi tiết event, danh sách tier hiển thị rõ "còn X/Y vé". Khi nhấn Register, bottom-sheet mở ra cho phép chọn tier + điều chỉnh số lượng (stepper − 1 +). Subtotal cập nhật realtime <code>tier.price × quantity</code>. Nhấn "Continue" → chuyển sang Stripe Checkout → thanh toán → redirect về app → registration APPROVED + <code>soldCount</code> của tier tăng lên.</p>
+
+            <p style="margin-top: 12px;"><strong>Quick Check-in bằng QR:</strong> Ở trang Registrations của organiser, có nút <strong>"Scan QR / Check-in"</strong>. Dialog mở ra gồm 2 cột:</p>
             <ul style="margin: 8px 0 8px 20px; font-size: 14px;">
-                <li>🟢 <strong>Xanh</strong> = available (chưa ai chọn)</li>
-                <li>⬜ <strong>Xám</strong> = sold (đã bán)</li>
-                <li>🟠 <strong>Cam</strong> = locked (ai đó đang giữ, chờ thanh toán)</li>
-                <li>🟣 <strong>Tím</strong> = ghế bạn vừa chọn</li>
+                <li>📷 Camera scan (dùng <code>html5-qrcode</code>) — tự động detect QR + check-in ngay</li>
+                <li>⌨️ Manual / USB scanner input — paste mã vé + Enter để check-in</li>
+                <li>🎫 Last scan panel — hiển thị avatar + tên + email + SĐT + tier + timestamp khi thành công; hiển thị lý do lỗi khi thất bại</li>
+                <li>📋 Scan history — 10 lượt quét gần nhất với counter "✓ ok · ✗ failed"</li>
+                <li>🔁 Anti-duplicate — cùng mã quét 2 lần trong 2.5s sẽ bỏ qua</li>
             </ul>
-            <p>Người dùng tap vào ghế → ghế bị <strong>lock 5 phút</strong> (không ai khác chọn được) → nhấn "Confirm &amp; Pay" → chuyển sang Stripe thanh toán. Nếu quá 5 phút không thanh toán, lock tự động giải phóng bởi scheduler chạy mỗi 60 giây.</p>
+            <p>Ngoài ra có ô <strong>quick search</strong> ở đầu list để lọc theo tên / email / SĐT / mã vé / tên tier ngay tức thì.</p>
         </div>
 
         <div class="result-block">
             <h5>✅ Kết quả đạt được</h5>
-            <p>Người dùng có toàn quyền chọn vị trí cụ thể trong zone mình muốn. Họ biết rõ mình sẽ ngồi ghế nào (ví dụ: VIP-A3) trước khi trả tiền. Hệ thống lock 5 phút cho phép user suy nghĩ và hoàn tất thanh toán mà không sợ mất ghế. Nhờ <strong>pessimistic write lock</strong> ở database, hệ thống đảm bảo 100% không có chuyện hai người cùng mua một ghế dù có hàng trăm người tap đồng thời.</p>
+            <p>Organiser có thể chạy chiến lược giá phức tạp (Early Bird, VIP, Student) trong 1 event duy nhất mà không cần tạo nhiều event rời rạc. User thấy rõ các lựa chọn giá + còn bao nhiêu vé từng loại trước khi quyết định. Payment flow tính đúng theo <code>tier.price × quantity</code>, có breakdown chi tiết trên PaymentScreen. Khi hết vé ở 1 tier, tier đó tự chuyển status SOLD_OUT và bị disable trong picker — không cần organiser can thiệp.</p>
+            <p style="margin-top: 8px;">Quét QR check-in hoạt động end-to-end: hỗ trợ cả camera trình duyệt và máy quét USB. Mỗi lần quét hiện đầy đủ thông tin khách + tier đã mua, giúp ban tổ chức xác nhận đúng người mà không cần tra cứu thêm. Lịch sử quét lưu 10 mục gần nhất để đối chiếu nhanh nếu có tranh chấp.</p>
         </div>
 
         <div class="note" style="background: #fff3cd; border-left-color: #f59e0b;">
             <h5 style="margin-bottom: 8px;">⚠️ Giới hạn hiện tại &amp; Hướng phát triển</h5>
-            <p style="font-size: 14px;">Hiện tại seat map dạng <strong>grid đơn giản</strong> (hàng × cột), chưa hỗ trợ vẽ bản đồ venue thực tế (ví dụ: hình bán nguyệt, balcony, lối đi giữa). Tuy nhiên, mô hình zone-based phù hợp với phần lớn sự kiện (hội thảo, workshop, conference) vì organiser chỉ cần phân vùng chỗ ngồi theo hạng vé, không cần bản đồ chính xác 100%.</p>
-            <p style="font-size: 14px; margin-top: 6px;"><strong>Hướng phát triển:</strong> Tích hợp drag-and-drop seat editor để organiser có thể tùy chỉnh bố cục ghế (xóa ghế ở lối đi, thêm khoảng trống, đánh dấu ghế khuyết tật), thay vì chỉ dùng grid cố định.</p>
+            <p style="font-size: 14px;">Hiện tại mỗi tier chỉ là một hạng vé (không có vị trí ghế cụ thể). Nếu muốn chọn ghế chính xác (A1, B5...), cần thêm seat map editor ở admin — hệ thống backend đã có entity <code>SeatZone</code> / <code>Seat</code> với logic pessimistic lock 5 phút sẵn sàng (<code>SeatMapService.lockSeats/confirmSeats</code>), chưa build UI vẽ grid ở frontend.</p>
+            <p style="font-size: 14px; margin-top: 6px;"><strong>Hướng phát triển:</strong> Xây drag-and-drop seat map editor cho admin (tận dụng backend có sẵn), in QR trực tiếp ra email xác nhận vé, hỗ trợ NFC wristband cho các event lớn.</p>
         </div>
 
         <div class="note" style="background: #ede9fe; border-left-color: #8b5cf6;">
             <strong>📁 Đường dẫn Code:</strong><br>
-            <strong>Backend:</strong> <code>backend\src\main\java\com\luma\controller\user\UserSeatMapController.java</code><br>
-            <strong>Organiser:</strong> <code>backend\src\main\java\com\luma\controller\organiser\OrganiserSeatMapController.java</code><br>
-            <strong>Service:</strong> <code>backend\src\main\java\com\luma\service\SeatMapService.java</code><br>
-            <strong>Entity:</strong> <code>backend\src\main\java\com\luma\entity\Seat.java</code>, <code>SeatZone.java</code><br><br>
-            <strong>🌐 Đường dẫn UI:</strong><br>
-            <strong>API Endpoints:</strong><br>
-            &nbsp;&nbsp;• <code>GET /api/user/seat-map/event/{eventId}</code> — Xem sơ đồ ghế<br>
-            &nbsp;&nbsp;• <code>POST /api/user/seat-map/lock</code> — Lock ghế 5 phút<br>
-            &nbsp;&nbsp;• <code>POST /api/user/seat-map/confirm</code> — Xác nhận ghế sau thanh toán<br>
-            &nbsp;&nbsp;• <code>POST /api/organiser/seat-map/event/{eventId}</code> — Tạo sơ đồ ghế
+            <strong>Backend entity:</strong> <code>backend\src\main\java\com\luma\entity\TicketType.java</code><br>
+            <strong>Backend DTO:</strong> <code>backend\src\main\java\com\luma\dto\request\TicketTypeRequest.java</code>, <code>EventCreateRequest.java</code> (nested)<br>
+            <strong>Backend service:</strong> <code>backend\src\main\java\com\luma\service\TicketTypeService.java</code>, <code>EventService.persistTicketTypes/syncTicketTypes</code>, <code>RegistrationService.checkInByTicketCode</code><br>
+            <strong>Backend controller:</strong> <code>OrganiserTicketTypeController.java</code>, <code>OrganiserRegistrationController</code> (check-in-by-code), <code>UserEventController.registerForEvent(ticketTypeId, quantity)</code><br>
+            <strong>Admin UI:</strong> <code>admin\src\pages\organiser\Events.js</code> (Ticket Tiers section), <code>Registrations.js</code> (quick search + QR scan dialog)<br>
+            <strong>Mobile:</strong> <code>mobile\lib\shared\models\ticket_type.dart</code>, <code>ticket_tier_picker.dart</code>, <code>event_detail_screen.dart</code>, <code>payment_screen.dart</code><br><br>
+            <strong>🌐 API Endpoints:</strong><br>
+            &nbsp;&nbsp;• <code>POST /api/organiser/events</code> — Create event kèm nested <code>ticketTypes[]</code><br>
+            &nbsp;&nbsp;• <code>GET/POST/PUT/DELETE /api/organiser/events/{id}/ticket-types</code> — CRUD tier<br>
+            &nbsp;&nbsp;• <code>PATCH /api/organiser/events/{id}/ticket-types/{tid}/toggle-visibility</code><br>
+            &nbsp;&nbsp;• <code>POST /api/user/events/{id}/register?ticketTypeId=X&amp;quantity=N</code> — Đăng ký kèm tier<br>
+            &nbsp;&nbsp;• <code>POST /api/organiser/registrations/event/{eventId}/check-in-by-code?ticketCode=X</code> — Quét QR check-in
         </div>
 
         <div class="qa-section">
             <h4>❓ Câu Hỏi Từ Ban Giám Khảo</h4>
             <div class="qa-item">
-                <div class="question">Organiser không biết bố trí venue thì tạo seat map thế nào?</div>
-                <div class="answer">Organiser không cần biết bố trí vật lý chính xác. Họ chỉ cần quyết định: event có mấy hạng vé (zone), mỗi hạng bao nhiêu chỗ, giá bao nhiêu. Hệ thống tự generate grid ghế (hàng A, B, C... × số ghế mỗi hàng). Đây là <strong>zone-based assignment</strong> — giống cách các rạp phim hoặc nền tảng Eventbrite phân chia General Admission, VIP, Balcony mà không cần bản đồ venue chi tiết.</div>
+                <div class="question">Làm sao đảm bảo không bán vượt số vé của 1 tier khi nhiều người mua đồng thời?</div>
+                <div class="answer">Dùng <strong>atomic SQL update</strong> với điều kiện WHERE <code>soldCount + qty &lt;= quantity</code>: <code>ticketTypeRepository.incrementSoldCount(id, qty)</code> chỉ tăng nếu đủ slot, return số row affected. Nếu = 0 thì báo "sold out". Đây là pattern optimistic stock counter, nhanh hơn pessimistic lock nhưng vẫn đảm bảo không oversell. Khi registration bị cancel / reject / refund, <code>decrementSoldCount</code> tự trả vé về pool.</div>
             </div>
             <div class="qa-item">
-                <div class="question">Vì sao chọn 5 phút lock?</div>
-                <div class="answer">5 phút đủ để user xem ghế, suy nghĩ và hoàn tất thanh toán Stripe. Quá ngắn (1-2 phút) sẽ gây áp lực, quá dài (15-30 phút) sẽ giữ ghế lãng phí. Lock được tự động giải phóng bởi scheduler chạy mỗi 60 giây. Khi 2 user cùng tap một ghế cùng lúc, chỉ 1 user thắng nhờ <strong>pessimistic write lock</strong> ở database.</div>
+                <div class="question">Nếu event chỉ có 1 loại vé hoặc miễn phí thì sao?</div>
+                <div class="answer">Ticket tiers là <strong>optional</strong>. Nếu organiser không add tier nào, event dùng flat price (field <code>ticketPrice</code>) hoặc free. Backend <code>PaymentService.getActualPrice()</code> fallback: dùng <code>tier.price × qty</code> nếu có tier, else dùng <code>event.ticketPrice</code>. UI cũng tự ẩn tier picker khi <code>visibleTicketTypes</code> rỗng. Flag <code>hasTicketTypes</code> trong <code>EventResponse</code> giúp client biết cần render tier list hay không.</div>
             </div>
             <div class="qa-item">
-                <div class="question">Chức năng này có nhất thiết phải có không?</div>
-                <div class="answer">Không phải mọi event đều cần seat map. Hệ thống thiết kế <strong>optional</strong> — organiser có thể tạo event có hoặc không có seat map (flag <code>hasSeatMap</code> trong EventResponse). Các event nhỏ (meetup, workshop) không cần, nhưng event có nhiều hạng vé giá khác nhau (concert, hội thảo lớn) thì cần để người dùng chọn được vị trí tương ứng với số tiền họ trả.</div>
+                <div class="question">QR check-in có bảo mật không? Người khác có copy QR để vào event giả không?</div>
+                <div class="answer">Mã <code>ticketCode</code> được generate ngẫu nhiên (UUID-based) unique per registration. Check-in endpoint yêu cầu 2 điều kiện: (1) <code>ticketCode</code> phải trùng với 1 registration đã APPROVED và thuộc đúng event đang check-in, (2) chưa bị check-in trước đó (<code>checkedInAt == null</code>). Nếu ai cố quét 1 QR 2 lần, lần 2 sẽ báo "already checked in". Ngoài ra endpoint yêu cầu JWT của organiser, nên chỉ người tổ chức event mới có quyền gọi — khách không thể self check-in.</div>
             </div>
         </div>
     </div>
@@ -2013,8 +2019,8 @@
         <h3>Bước 1: Organiser tạo sự kiện (Admin Portal — port 3000)</h3>
         <div class="how-block">
             <h5>Thao tác</h5>
-            <p>Organiser đăng nhập → vào trang Events → nhấn "Create Event" → nhập title, chọn category, city, ngày giờ, capacity, giá vé → nhấn "AI Generate Description" (RAG query 5 events thành công cùng category) → thêm Registration Questions bằng "AI Suggest" (RAG query 30 câu hỏi) → tạo Seat Map với 3 zones (VIP/Standard/Economy) → nhấn Publish.</p>
-            <p><strong>Dữ liệu đi:</strong> React frontend → POST /api/organiser/events → EventService → JPA save vào bảng Event, TicketType, SeatZone, Seat, RegistrationQuestion trong SQL Server.</p>
+            <p>Organiser đăng nhập → vào trang Events → nhấn "Create Event" → nhập title, chọn category, city, ngày giờ, capacity → nhấn "AI Generate Description" (RAG query 5 events thành công cùng category) → thêm Registration Questions bằng "AI Suggest" (RAG query 30 câu hỏi) → thêm 3 Ticket Tiers (Early Bird $30 × 50, Standard $50 × 200, VIP $100 × 30) → nhấn Publish.</p>
+            <p><strong>Dữ liệu đi:</strong> React frontend → POST /api/organiser/events (kèm nested <code>ticketTypes[]</code>) → EventService.createEvent + persistTicketTypes → JPA save vào bảng Event, TicketType, RegistrationQuestion trong SQL Server.</p>
         </div>
 
         <h3>Bước 2: Admin duyệt sự kiện (Admin Portal — port 3000)</h3>
@@ -2027,7 +2033,7 @@
         <h3>Bước 3: User tìm và đăng ký sự kiện (Mobile App — port 5000)</h3>
         <div class="how-block">
             <h5>Thao tác</h5>
-            <p>User mở app Flutter → trang Home hiển thị sự kiện mới → hoặc hỏi AI Chatbot "có gì hay cuối tuần này?" (2-pass: intent classify → query DB → generate response) → tap vào event → xem chi tiết → nhấn "Register" → điền form đăng ký → chọn ghế trên Seat Map (ghế bị lock 5 phút) → áp dụng Coupon code → nhấn "Pay".</p>
+            <p>User mở app Flutter → trang Home hiển thị sự kiện mới → hoặc hỏi AI Chatbot "có gì hay cuối tuần này?" (2-pass: intent classify → query DB → generate response) → tap vào event → xem chi tiết + danh sách tier → nhấn "Register" → bottom-sheet ticket picker hiện ra → chọn tier (ví dụ VIP) + số lượng (1-2) → điền form đăng ký nếu có questions → áp dụng Coupon code → nhấn "Continue — $X" → Stripe Checkout → Pay.</p>
             <p><strong>Dữ liệu đi:</strong> Flutter (Dio) → POST /api/user/events/{id}/register-with-answers → RegistrationService validate + tạo Registration (PENDING) → POST /api/user/payments/.../payment-intent → PaymentService tạo Stripe PaymentIntent → Flutter hiển thị Stripe Payment Sheet → user nhập thẻ → Stripe xử lý → Webhook POST /api/webhooks/stripe → PaymentService update Payment (COMPLETED) + Registration (APPROVED) + tạo ticket code + QR.</p>
         </div>
 
@@ -2070,7 +2076,7 @@
             </div>
             <div class="qa-item">
                 <div class="question">Tại sao chọn SQL Server mà không phải MySQL hay PostgreSQL?</div>
-                <div class="answer">SQL Server được chọn vì đây là database mà nhóm đã học trong chương trình, có hỗ trợ tốt cho JPA/Hibernate, và có tính năng enterprise như row-level locking (pessimistic lock) mà em cần cho seat map và waitlist. Ngoài ra, SQL Server có công cụ quản trị SSMS rất trực quan.</div>
+                <div class="answer">SQL Server được chọn vì đây là database mà nhóm đã học trong chương trình, có hỗ trợ tốt cho JPA/Hibernate, và có tính năng enterprise như row-level locking (pessimistic lock) mà em cần cho waitlist và atomic counter cho stock ticket tier. Ngoài ra, SQL Server có công cụ quản trị SSMS rất trực quan.</div>
             </div>
             <div class="qa-item">
                 <div class="question">Làm sao 3 services giao tiếp với nhau?</div>

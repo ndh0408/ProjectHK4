@@ -59,6 +59,9 @@ public class EventCreateRequest {
     @Valid
     private List<SpeakerRequest> speakers = new ArrayList<>();
 
+    @Valid
+    private List<TicketTypeRequest> ticketTypes = new ArrayList<>();
+
     private RecurrenceType recurrenceType = RecurrenceType.NONE;
 
     @Min(value = 1, message = "Recurrence interval must be at least 1")

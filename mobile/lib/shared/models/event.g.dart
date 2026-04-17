@@ -92,6 +92,11 @@ Event _$EventFromJson(Map<String, dynamic> json) => Event(
       isRecurring: json['isRecurring'] as bool? ?? false,
       isBoosted: json['isBoosted'] as bool? ?? false,
       boostPackage: json['boostPackage'] as String?,
+      ticketTypes: (json['ticketTypes'] as List<dynamic>?)
+              ?.map((e) => TicketType.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      hasTicketTypes: json['hasTicketTypes'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$EventToJson(Event instance) => <String, dynamic>{
@@ -133,6 +138,8 @@ Map<String, dynamic> _$EventToJson(Event instance) => <String, dynamic>{
       'isRecurring': instance.isRecurring,
       'isBoosted': instance.isBoosted,
       'boostPackage': instance.boostPackage,
+      'ticketTypes': instance.ticketTypes,
+      'hasTicketTypes': instance.hasTicketTypes,
     };
 
 const _$EventStatusEnumMap = {

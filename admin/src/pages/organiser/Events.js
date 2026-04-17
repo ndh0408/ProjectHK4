@@ -40,6 +40,12 @@ import {
     Repeat as RepeatIcon,
     Cancel as CancelIcon,
     Edit as EditIcon,
+    ConfirmationNumber as TicketIcon,
+    Delete as DeleteIcon,
+    Visibility as VisibilityIcon,
+    VisibilityOff as VisibilityOffIcon,
+    ArrowUpward as ArrowUpIcon,
+    ArrowDownward as ArrowDownIcon,
 } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -122,6 +128,7 @@ const OrganiserEvents = () => {
         visibility: 'PUBLIC',
         requiresApproval: true,
         speakers: [],
+        ticketTypes: [],
         recurrenceType: 'NONE',
         recurrenceInterval: 1,
         recurrenceDaysOfWeek: [],
@@ -249,6 +256,27 @@ const OrganiserEvents = () => {
                 const response = await organiserApi.getEventById(event.id);
                 const eventData = response.data.data;
 
+                let tiers = eventData.ticketTypes || [];
+                if (!tiers.length) {
+                    try {
+                        const tierRes = await organiserApi.getTicketTypes(event.id);
+                        tiers = tierRes.data.data || [];
+                    } catch (_) { tiers = []; }
+                }
+                const normalizedTiers = tiers.map((t) => ({
+                    id: t.id || null,
+                    name: t.name || '',
+                    description: t.description || '',
+                    price: t.price ?? 0,
+                    quantity: t.quantity ?? 1,
+                    soldCount: t.soldCount ?? 0,
+                    maxPerOrder: t.maxPerOrder ?? 10,
+                    saleStartDate: t.saleStartDate ? new Date(t.saleStartDate) : null,
+                    saleEndDate: t.saleEndDate ? new Date(t.saleEndDate) : null,
+                    isVisible: t.isVisible !== false,
+                    displayOrder: t.displayOrder ?? 0,
+                }));
+
                 setEditEvent(eventData);
                 setFormData({
                     title: eventData.title || '',
@@ -269,6 +297,7 @@ const OrganiserEvents = () => {
                     visibility: eventData.visibility || 'PUBLIC',
                     requiresApproval: eventData.requiresApproval || false,
                     speakers: eventData.speakers || [],
+                    ticketTypes: normalizedTiers,
                     recurrenceType: eventData.recurrenceType || 'NONE',
                     recurrenceInterval: eventData.recurrenceInterval || 1,
                     recurrenceDaysOfWeek: eventData.recurrenceDaysOfWeek || [],
@@ -303,6 +332,7 @@ const OrganiserEvents = () => {
                 visibility: 'PUBLIC',
                 requiresApproval: true,
                 speakers: [],
+                ticketTypes: [],
                 recurrenceType: 'NONE',
                 recurrenceInterval: 1,
                 recurrenceDaysOfWeek: [],
@@ -430,6 +460,45 @@ const OrganiserEvents = () => {
             errors.speakers = speakerErrors;
         }
 
+        const tierErrors = [];
+        let hasTierErrors = false;
+        formData.ticketTypes.forEach((tier, index) => {
+            const te = {};
+            if (!tier.name || !tier.name.trim()) {
+                te.name = 'Tier name is required';
+                hasTierErrors = true;
+            } else if (tier.name.length > 100) {
+                te.name = 'Max 100 characters';
+                hasTierErrors = true;
+            }
+            const price = parseFloat(tier.price);
+            if (isNaN(price) || price < 0) {
+                te.price = 'Price must be ≥ 0';
+                hasTierErrors = true;
+            }
+            const qty = parseInt(tier.quantity);
+            if (isNaN(qty) || qty < 1 || qty > 100000) {
+                te.quantity = 'Quantity 1-100,000';
+                hasTierErrors = true;
+            } else if (tier.soldCount && qty < tier.soldCount) {
+                te.quantity = `Cannot be below sold (${tier.soldCount})`;
+                hasTierErrors = true;
+            }
+            const mpo = parseInt(tier.maxPerOrder);
+            if (isNaN(mpo) || mpo < 1 || mpo > 100) {
+                te.maxPerOrder = '1-100';
+                hasTierErrors = true;
+            }
+            tierErrors[index] = te;
+        });
+        if (hasTierErrors) {
+            errors.ticketTypes = tierErrors;
+        }
+        const sumTierQty = formData.ticketTypes.reduce((s, t) => s + (parseInt(t.quantity) || 0), 0);
+        if (formData.ticketTypes.length > 0 && sumTierQty > formData.capacity) {
+            errors.capacity = `Capacity (${formData.capacity}) is less than sum of tier quantities (${sumTierQty})`;
+        }
+
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -443,6 +512,19 @@ const OrganiserEvents = () => {
         }
 
         try {
+            const serializedTiers = formData.ticketTypes.map((t, idx) => ({
+                id: t.id || null,
+                name: t.name.trim(),
+                description: t.description || null,
+                price: parseFloat(t.price) || 0,
+                quantity: parseInt(t.quantity),
+                maxPerOrder: parseInt(t.maxPerOrder) || 10,
+                saleStartDate: null,
+                saleEndDate: null,
+                isVisible: t.isVisible !== false,
+                displayOrder: idx,
+            }));
+
             const data = {
                 ...formData,
                 startTime: toLocalISOString(formData.startTime),
@@ -451,6 +533,7 @@ const OrganiserEvents = () => {
                 latitude: formData.latitude !== '' ? formData.latitude : null,
                 longitude: formData.longitude !== '' ? formData.longitude : null,
                 recurrenceEndDate: formData.recurrenceEndDate ? toLocalISOString(formData.recurrenceEndDate) : null,
+                ticketTypes: serializedTiers,
             };
 
             if (editEvent) {
@@ -933,35 +1016,46 @@ const OrganiserEvents = () => {
                                     isOptionEqualToValue={(option, value) => option.id === value?.id}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4}>
-                                <TextField
-                                    fullWidth
-                                    label="Capacity"
-                                    type="number"
-                                    value={formData.capacity}
-                                    onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
-                                    required
-                                    error={!!formErrors.capacity}
-                                    helperText={formErrors.capacity}
-                                    inputProps={{ min: 1, max: 100000 }}
-                                />
+                            <Grid item xs={12} md={formData.ticketTypes.length > 0 ? 6 : 4}>
+                                {(() => {
+                                    const sumTierQty = formData.ticketTypes.reduce((s, t) => s + (parseInt(t.quantity) || 0), 0);
+                                    const hasTiers = formData.ticketTypes.length > 0;
+                                    return (
+                                        <TextField
+                                            fullWidth
+                                            label="Capacity"
+                                            type="number"
+                                            value={formData.capacity}
+                                            onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
+                                            required
+                                            error={!!formErrors.capacity}
+                                            helperText={
+                                                formErrors.capacity ||
+                                                (hasTiers ? `Tier total: ${sumTierQty}${sumTierQty > formData.capacity ? ' (exceeds!)' : ''}` : '')
+                                            }
+                                            inputProps={{ min: 1, max: 100000 }}
+                                        />
+                                    );
+                                })()}
                             </Grid>
-                            <Grid item xs={12} md={4}>
-                                <TextField
-                                    fullWidth
-                                    label="Price (USD)"
-                                    type="number"
-                                    value={formData.ticketPrice}
-                                    onChange={(e) => {
-                                        const price = parseFloat(e.target.value) || 0;
-                                        setFormData({ ...formData, ticketPrice: price, isFree: price === 0 });
-                                    }}
-                                    error={!!formErrors.ticketPrice}
-                                    helperText={formErrors.ticketPrice || '0 for free event'}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={4}>
+                            {formData.ticketTypes.length === 0 && (
+                                <Grid item xs={12} md={4}>
+                                    <TextField
+                                        fullWidth
+                                        label="Price (USD)"
+                                        type="number"
+                                        value={formData.ticketPrice}
+                                        onChange={(e) => {
+                                            const price = parseFloat(e.target.value) || 0;
+                                            setFormData({ ...formData, ticketPrice: price, isFree: price === 0 });
+                                        }}
+                                        error={!!formErrors.ticketPrice}
+                                        helperText={formErrors.ticketPrice || '0 for free event · add tiers below for multi-price'}
+                                        inputProps={{ min: 0 }}
+                                    />
+                                </Grid>
+                            )}
+                            <Grid item xs={12} md={formData.ticketTypes.length > 0 ? 6 : 4}>
                                 <FormControl fullWidth>
                                     <InputLabel>Visibility</InputLabel>
                                     <Select
@@ -985,6 +1079,178 @@ const OrganiserEvents = () => {
                                         onAIUsed={loadMasterData}
                                         onUpgradeNeeded={(data) => setUpgradeDialog({ open: true, ...data })}
                                     />
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <TicketIcon color="action" />
+                                            <Typography variant="subtitle1" fontWeight="bold">
+                                                Ticket Tiers ({formData.ticketTypes.length})
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<AddIcon />}
+                                            onClick={() => {
+                                                setFormData({
+                                                    ...formData,
+                                                    ticketTypes: [
+                                                        ...formData.ticketTypes,
+                                                        {
+                                                            id: null,
+                                                            name: '',
+                                                            description: '',
+                                                            price: 0,
+                                                            quantity: 50,
+                                                            soldCount: 0,
+                                                            maxPerOrder: 10,
+                                                            saleStartDate: null,
+                                                            saleEndDate: null,
+                                                            isVisible: true,
+                                                            displayOrder: formData.ticketTypes.length,
+                                                        },
+                                                    ],
+                                                });
+                                            }}
+                                        >
+                                            Add Tier
+                                        </Button>
+                                    </Box>
+
+                                    {formData.ticketTypes.length === 0 && (
+                                        <Alert severity="info" sx={{ mb: 1 }}>
+                                            No ticket tiers — a single flat price ({formData.isFree ? 'FREE' : `$${formData.ticketPrice}`}) will be used. Add tiers (e.g. Early Bird / Standard / VIP) to offer multiple pricing options.
+                                        </Alert>
+                                    )}
+
+                                    {formErrors.ticketTypes && typeof formErrors.ticketTypes === 'string' && (
+                                        <Alert severity="error" sx={{ mb: 1 }}>{formErrors.ticketTypes}</Alert>
+                                    )}
+
+                                    {formData.ticketTypes.map((tier, idx) => {
+                                        const te = (formErrors.ticketTypes && formErrors.ticketTypes[idx]) || {};
+                                        const updateTier = (patch) => {
+                                            const next = [...formData.ticketTypes];
+                                            next[idx] = { ...next[idx], ...patch };
+                                            setFormData({ ...formData, ticketTypes: next });
+                                        };
+                                        const removeTier = () => {
+                                            if (tier.soldCount > 0) {
+                                                toast.error(`Cannot delete tier with ${tier.soldCount} sold tickets. Hide it instead.`);
+                                                return;
+                                            }
+                                            const next = formData.ticketTypes.filter((_, i) => i !== idx);
+                                            setFormData({ ...formData, ticketTypes: next });
+                                        };
+                                        const moveTier = (dir) => {
+                                            const newIdx = idx + dir;
+                                            if (newIdx < 0 || newIdx >= formData.ticketTypes.length) return;
+                                            const next = [...formData.ticketTypes];
+                                            [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+                                            setFormData({ ...formData, ticketTypes: next });
+                                        };
+                                        return (
+                                            <Paper key={idx} variant="outlined" sx={{ p: 2, mb: 1.5, borderLeft: tier.isVisible ? '3px solid' : '3px dashed', borderLeftColor: tier.isVisible ? 'primary.main' : 'grey.400' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chip size="small" label={`#${idx + 1}`} />
+                                                        <Typography variant="body2" fontWeight="bold">
+                                                            {tier.name || '(untitled)'}
+                                                        </Typography>
+                                                        {tier.id && (
+                                                            <Chip size="small" label={`${tier.soldCount}/${tier.quantity} sold`} color={tier.soldCount >= tier.quantity ? 'error' : 'default'} />
+                                                        )}
+                                                    </Box>
+                                                    <Box>
+                                                        <Tooltip title="Move up">
+                                                            <span><IconButton size="small" onClick={() => moveTier(-1)} disabled={idx === 0}><ArrowUpIcon fontSize="small" /></IconButton></span>
+                                                        </Tooltip>
+                                                        <Tooltip title="Move down">
+                                                            <span><IconButton size="small" onClick={() => moveTier(1)} disabled={idx === formData.ticketTypes.length - 1}><ArrowDownIcon fontSize="small" /></IconButton></span>
+                                                        </Tooltip>
+                                                        <Tooltip title={tier.isVisible ? 'Hide from buyers' : 'Show to buyers'}>
+                                                            <IconButton size="small" onClick={() => updateTier({ isVisible: !tier.isVisible })}>
+                                                                {tier.isVisible ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Remove tier">
+                                                            <IconButton size="small" color="error" onClick={removeTier}><DeleteIcon fontSize="small" /></IconButton>
+                                                        </Tooltip>
+                                                    </Box>
+                                                </Box>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={12} md={6}>
+                                                        <TextField
+                                                            fullWidth size="small"
+                                                            label="Tier Name"
+                                                            value={tier.name}
+                                                            onChange={(e) => updateTier({ name: e.target.value })}
+                                                            placeholder="e.g. Early Bird, VIP, Standard"
+                                                            required
+                                                            error={!!te.name}
+                                                            helperText={te.name}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={6} md={3}>
+                                                        <TextField
+                                                            fullWidth size="small"
+                                                            label="Price (USD)"
+                                                            type="number"
+                                                            value={tier.price}
+                                                            onChange={(e) => updateTier({ price: e.target.value })}
+                                                            inputProps={{ min: 0, step: 0.01 }}
+                                                            error={!!te.price}
+                                                            helperText={te.price}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={6} md={3}>
+                                                        <TextField
+                                                            fullWidth size="small"
+                                                            label="Quantity"
+                                                            type="number"
+                                                            value={tier.quantity}
+                                                            onChange={(e) => updateTier({ quantity: e.target.value })}
+                                                            inputProps={{ min: tier.soldCount || 1, max: 100000 }}
+                                                            error={!!te.quantity}
+                                                            helperText={te.quantity || (tier.soldCount > 0 ? `Min: ${tier.soldCount}` : '')}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={12}>
+                                                        <TextField
+                                                            fullWidth size="small"
+                                                            label="Description (optional)"
+                                                            value={tier.description}
+                                                            onChange={(e) => updateTier({ description: e.target.value })}
+                                                            placeholder="What's included in this tier?"
+                                                            multiline maxRows={3}
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={12} md={6}>
+                                                        <TextField
+                                                            fullWidth size="small"
+                                                            label="Max per order"
+                                                            type="number"
+                                                            value={tier.maxPerOrder}
+                                                            onChange={(e) => updateTier({ maxPerOrder: e.target.value })}
+                                                            inputProps={{ min: 1, max: 100 }}
+                                                            error={!!te.maxPerOrder}
+                                                            helperText={te.maxPerOrder}
+                                                        />
+                                                    </Grid>
+                                                </Grid>
+                                            </Paper>
+                                        );
+                                    })}
+
+                                    {formData.ticketTypes.length > 0 && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                            Total tier quantity: {formData.ticketTypes.reduce((s, t) => s + (parseInt(t.quantity) || 0), 0)} / Event capacity: {formData.capacity}
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Grid>
 
@@ -1197,10 +1463,63 @@ const OrganiserEvents = () => {
                                         <Typography variant="caption" color="text.secondary">Price</Typography>
                                         <Typography variant="body2">
                                             {quickViewEvent.isFree ? 'Free' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(quickViewEvent.ticketPrice)}
+                                            {quickViewEvent.hasTicketTypes && quickViewEvent.ticketTypes?.length > 0 && (
+                                                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 0.5 }}>
+                                                    (from)
+                                                </Typography>
+                                            )}
                                         </Typography>
                                     </Box>
                                 </Box>
                             </Box>
+
+                            {quickViewEvent.ticketTypes && quickViewEvent.ticketTypes.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                        <TicketIcon fontSize="small" color="action" />
+                                        <Typography variant="subtitle2" fontWeight="bold">
+                                            Ticket Tiers ({quickViewEvent.ticketTypes.length})
+                                        </Typography>
+                                    </Box>
+                                    {quickViewEvent.ticketTypes.map((tier) => {
+                                        const soldPct = tier.quantity > 0 ? Math.round((tier.soldCount / tier.quantity) * 100) : 0;
+                                        const statusColor = tier.status === 'SOLD_OUT' ? 'error.main'
+                                            : tier.status === 'AVAILABLE' ? 'success.main'
+                                            : 'text.secondary';
+                                        return (
+                                            <Paper key={tier.id} variant="outlined" sx={{ p: 1.5, mb: 1, opacity: tier.isVisible ? 1 : 0.6 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Typography variant="body2" fontWeight="bold">
+                                                        {tier.name}{!tier.isVisible && ' (hidden)'}
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight="bold" color="primary">
+                                                        {tier.isFree ? 'FREE' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tier.price)}
+                                                    </Typography>
+                                                </Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {tier.soldCount}/{tier.quantity} sold ({soldPct}%)
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: statusColor, fontWeight: 600 }}>
+                                                        {tier.status}
+                                                    </Typography>
+                                                </Box>
+                                                <Box sx={{ mt: 0.5, height: 4, bgcolor: 'grey.200', borderRadius: 2, overflow: 'hidden' }}>
+                                                    <Box sx={{ width: `${Math.min(soldPct, 100)}%`, height: '100%', bgcolor: soldPct >= 100 ? 'error.main' : 'primary.main' }} />
+                                                </Box>
+                                            </Paper>
+                                        );
+                                    })}
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                        Revenue potential: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                                            quickViewEvent.ticketTypes.reduce((s, t) => s + (parseFloat(t.price) || 0) * (parseInt(t.quantity) || 0), 0)
+                                        )}
+                                        {' · '}Sold: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                                            quickViewEvent.ticketTypes.reduce((s, t) => s + (parseFloat(t.price) || 0) * (parseInt(t.soldCount) || 0), 0)
+                                        )}
+                                    </Typography>
+                                </Box>
+                            )}
 
                             <Divider sx={{ my: 2 }} />
 

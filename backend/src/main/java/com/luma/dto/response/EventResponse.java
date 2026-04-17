@@ -78,6 +78,9 @@ public class EventResponse {
     private boolean hasSeatMap;
     private boolean hasSchedule;
 
+    private List<TicketTypeResponse> ticketTypes;
+    private boolean hasTicketTypes;
+
     public static EventResponse fromEntity(Event event) {
         EventResponse response = EventResponse.builder()
                 .id(event.getId())
@@ -178,6 +181,21 @@ public class EventResponse {
             }
         } catch (Exception e) {
             response.setTotalOccurrences(1);
+        }
+
+        try {
+            if (event.getTicketTypes() != null && !event.getTicketTypes().isEmpty()) {
+                response.setTicketTypes(event.getTicketTypes().stream()
+                        .map(TicketTypeResponse::fromEntity)
+                        .toList());
+                response.setHasTicketTypes(true);
+            } else {
+                response.setTicketTypes(new ArrayList<>());
+                response.setHasTicketTypes(false);
+            }
+        } catch (Exception e) {
+            response.setTicketTypes(new ArrayList<>());
+            response.setHasTicketTypes(false);
         }
 
         return response;

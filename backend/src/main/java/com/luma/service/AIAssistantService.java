@@ -381,7 +381,7 @@ public class AIAssistantService {
                             .stream()
                             .findFirst()
                             .map(c -> eventRepository.findUpcomingEventsByCategory(
-                                    c, LocalDateTime.now(), LocalDateTime.now().plusMonths(3),
+                                    c, LocalDateTime.now(),
                                     PageRequest.of(0, limit)).getContent())
                             .orElse(List.of());
                 } else {

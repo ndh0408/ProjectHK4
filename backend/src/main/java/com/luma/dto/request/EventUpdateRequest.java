@@ -56,6 +56,9 @@ public class EventUpdateRequest {
     @Valid
     private List<SpeakerRequest> speakers;
 
+    @Valid
+    private List<TicketTypeRequest> ticketTypes;
+
     private RecurrenceType recurrenceType;
 
     @Min(value = 1, message = "Recurrence interval must be at least 1")

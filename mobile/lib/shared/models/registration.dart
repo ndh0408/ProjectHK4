@@ -28,6 +28,9 @@ class RegistrationStatus {
     this.ticketPrice,
     this.eventTitle,
     this.waitingListPosition,
+    this.ticketTypeId,
+    this.ticketTypeName,
+    this.quantity = 1,
   });
 
   factory RegistrationStatus.fromJson(Map<String, dynamic> json) {
@@ -58,6 +61,9 @@ class RegistrationStatus {
       ticketPrice: (json['ticketPrice'] as num?)?.toDouble(),
       eventTitle: json['eventTitle'] as String?,
       waitingListPosition: json['waitingListPosition'] as int?,
+      ticketTypeId: json['ticketTypeId']?.toString(),
+      ticketTypeName: json['ticketTypeName'] as String?,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
   }
 
@@ -69,6 +75,11 @@ class RegistrationStatus {
   final double? ticketPrice;
   final String? eventTitle;
   final int? waitingListPosition;
+  final String? ticketTypeId;
+  final String? ticketTypeName;
+  final int quantity;
+
+  double get totalAmount => (ticketPrice ?? 0) * quantity;
 
   bool get isOnWaitingList => status == RegistrationStatusEnum.waitingList;
 }
@@ -98,6 +109,10 @@ class Registration {
     this.checkedInAt,
     this.eligibleForCertificate = false,
     this.certificate,
+    this.ticketTypeId,
+    this.ticketTypeName,
+    this.ticketTypePrice,
+    this.quantity = 1,
   });
 
   factory Registration.fromJson(Map<String, dynamic> json) {
@@ -157,6 +172,10 @@ class Registration {
       certificate: json['certificate'] != null
           ? Certificate.fromJson(json['certificate'] as Map<String, dynamic>)
           : null,
+      ticketTypeId: json['ticketTypeId']?.toString(),
+      ticketTypeName: json['ticketTypeName'] as String?,
+      ticketTypePrice: (json['ticketTypePrice'] as num?)?.toDouble(),
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
     );
   }
 
@@ -184,6 +203,13 @@ class Registration {
   @JsonKey(defaultValue: false)
   final bool eligibleForCertificate;
   final Certificate? certificate;
+  final String? ticketTypeId;
+  final String? ticketTypeName;
+  final double? ticketTypePrice;
+  @JsonKey(defaultValue: 1)
+  final int quantity;
+
+  double get totalAmount => (ticketTypePrice ?? ticketPrice ?? 0) * quantity;
 
   Map<String, dynamic> toJson() => _$RegistrationToJson(this);
 
