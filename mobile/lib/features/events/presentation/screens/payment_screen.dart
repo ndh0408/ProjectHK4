@@ -8,6 +8,7 @@ import '../../../../core/config/theme.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/models/coupon.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({
@@ -41,10 +42,100 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   Map<String, dynamic>? _appliedCoupon;
   bool _validatingCoupon = false;
 
+  // Coupons that the backend says the current user can use for this
+  // registration (global + event-specific, sorted by discount).
+  List<Coupon> _availableCoupons = [];
+  bool _loadingAvailableCoupons = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initiatePayment());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initiatePayment();
+      _loadAvailableCoupons();
+    });
+  }
+
+  Future<void> _loadAvailableCoupons() async {
+    if (!mounted) return;
+    setState(() => _loadingAvailableCoupons = true);
+    try {
+      final api = ref.read(apiServiceProvider);
+      final coupons = await api.getUserCoupons(
+        registrationId: widget.registrationId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _availableCoupons = coupons
+            .where((c) => c.isValid)
+            .toList()
+          ..sort((a, b) {
+            // Put higher-value discounts first. Percentage vs fixed amounts
+            // are roughly comparable enough for this UX hint.
+            final byValue = b.discountValue.compareTo(a.discountValue);
+            return byValue;
+          });
+        _loadingAvailableCoupons = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableCoupons = [];
+        _loadingAvailableCoupons = false;
+      });
+    }
+  }
+
+  Future<void> _applyCouponFromChip(Coupon coupon) async {
+    if (_appliedCoupon != null || _validatingCoupon) return;
+    _couponController.text = coupon.code;
+    await _applyCoupon();
+  }
+
+  Widget _buildAvailableCouponsSection() {
+    if (_loadingAvailableCoupons) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 16),
+        child: SizedBox(
+          height: 16,
+          child: LinearProgressIndicator(minHeight: 2),
+        ),
+      );
+    }
+    if (_availableCoupons.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_offer, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Coupons available for you (${_availableCoupons.length})',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Column(
+            children: _availableCoupons
+                .map((c) => _CouponSuggestionTile(
+                      coupon: c,
+                      disabled: _appliedCoupon != null || _validatingCoupon,
+                      onApply: () => _applyCouponFromChip(c),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _applyCoupon() async {
@@ -594,6 +685,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                               ),
                             ],
                           ),
+                          _buildAvailableCouponsSection(),
                         ],
                       ),
                     ),
@@ -774,6 +866,155 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _CouponSuggestionTile extends StatelessWidget {
+  const _CouponSuggestionTile({
+    required this.coupon,
+    required this.onApply,
+    required this.disabled,
+  });
+
+  final Coupon coupon;
+  final VoidCallback onApply;
+  final bool disabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final discount = coupon.discountDisplay;
+    final description = coupon.description?.trim().isNotEmpty == true
+        ? coupon.description!.trim()
+        : (coupon.discountType == 'PERCENTAGE'
+            ? 'Save $discount on this order'
+            : 'Save $discount off');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: disabled ? null : onApply,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        discount,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          height: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'OFF',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        coupon.code,
+                        style: const TextStyle(
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          letterSpacing: 0.6,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.35,
+                        ),
+                      ),
+                      if (coupon.minOrderAmount != null &&
+                          coupon.minOrderAmount! > 0) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'Min order \$${coupon.minOrderAmount!.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        coupon.formattedValidity,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textLight,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: disabled ? AppColors.neutral200 : AppColors.primary,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    disabled ? 'Applied' : 'Apply',
+                    style: TextStyle(
+                      color: disabled ? AppColors.textMuted : Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

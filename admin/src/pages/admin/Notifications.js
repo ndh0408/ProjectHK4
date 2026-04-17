@@ -4,14 +4,12 @@ import {
     Typography,
     Paper,
     TextField,
-    Button,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
     Alert,
     Card,
-    CardContent,
     Grid,
     List,
     ListItem,
@@ -22,10 +20,10 @@ import {
     Chip,
     Tabs,
     Tab,
-    CircularProgress,
     Pagination,
     Divider,
     Tooltip,
+    Stack,
 } from '@mui/material';
 import {
     Send as SendIcon,
@@ -44,6 +42,14 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { adminApi } from '../../api';
 import { toast } from 'react-toastify';
+import {
+    PageHeader,
+    SectionCard,
+    EmptyState,
+    LoadingButton,
+    SkeletonCard,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 
 const Notifications = () => {
     const [tabValue, setTabValue] = useState(0);
@@ -128,7 +134,7 @@ const Notifications = () => {
             case 'BROADCAST':
                 return <BroadcastIcon sx={{ color: 'primary.main' }} />;
             default:
-                return <InfoIcon sx={{ color: 'grey.500' }} />;
+                return <InfoIcon sx={{ color: 'text.disabled' }} />;
         }
     };
 
@@ -225,15 +231,17 @@ const Notifications = () => {
 
     return (
         <Box>
-            <Typography variant="h5" fontWeight="bold" mb={3}>
-                Notification Management
-            </Typography>
+            <PageHeader
+                title="Notification Management"
+                subtitle="Review unread notifications and broadcast messages to your users."
+                icon={<NotificationsIcon />}
+            />
 
-            <Paper sx={{ mb: 3 }}>
+            <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
                 <Tabs
                     value={tabValue}
                     onChange={(e, newValue) => setTabValue(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
+                    sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
                 >
                     <Tab
                         label={
@@ -255,50 +263,49 @@ const Notifications = () => {
             </Paper>
 
             {tabValue === 0 && (
-                <Paper sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">
-                            Unread ({notifications.length})
-                        </Typography>
-                        {unreadCount > 0 && (
-                            <Button
+                <SectionCard
+                    title={`Unread (${notifications.length})`}
+                    subtitle="Click an item to mark it as read"
+                    action={
+                        unreadCount > 0 ? (
+                            <LoadingButton
                                 startIcon={<MarkReadIcon />}
                                 onClick={handleMarkAllAsRead}
                                 size="small"
+                                variant="outlined"
                             >
                                 Mark all as read
-                            </Button>
-                        )}
-                    </Box>
-
+                            </LoadingButton>
+                        ) : null
+                    }
+                    noPadding
+                >
                     {loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <CircularProgress />
+                        <Box sx={{ p: 3 }}>
+                            <SkeletonCard rows={4} />
                         </Box>
                     ) : notifications.length === 0 ? (
-                        <Box sx={{ py: 4, textAlign: 'center' }}>
-                            <NotificationsIcon sx={{ fontSize: 64, color: 'grey.300', mb: 2 }} />
-                            <Typography color="text.secondary">
-                                No unread notifications
-                            </Typography>
-                            <Typography variant="body2" color="text.disabled">
-                                You're all caught up!
-                            </Typography>
-                        </Box>
+                        <EmptyState
+                            icon={<NotificationsIcon sx={{ fontSize: 32 }} />}
+                            title="No unread notifications"
+                            description="You're all caught up! New notifications will appear here."
+                        />
                     ) : (
-                        <>
-                            <List>
+                        <Box sx={{ px: 1, pb: 2 }}>
+                            <List disablePadding>
                                 {notifications.map((notification, index) => (
                                     <React.Fragment key={notification.id}>
                                         <ListItem
                                             onClick={() => handleMarkAsRead(notification.id)}
                                             sx={{
                                                 py: 2,
-                                                bgcolor: 'action.hover',
-                                                borderRadius: 1,
+                                                px: 2,
+                                                my: 0.5,
+                                                borderRadius: 1.5,
                                                 cursor: 'pointer',
+                                                transition: tokens.motion.fast,
                                                 '&:hover': {
-                                                    bgcolor: 'action.selected',
+                                                    bgcolor: tokens.palette.primary[50],
                                                 },
                                             }}
                                         >
@@ -343,6 +350,7 @@ const Notifications = () => {
                                                 <Tooltip title="Mark as read">
                                                     <IconButton
                                                         edge="end"
+                                                        aria-label="mark as read"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleMarkAsRead(notification.id);
@@ -354,7 +362,7 @@ const Notifications = () => {
                                                 </Tooltip>
                                             </ListItemSecondaryAction>
                                         </ListItem>
-                                        {index < notifications.length - 1 && <Divider />}
+                                        {index < notifications.length - 1 && <Divider sx={{ mx: 2 }} />}
                                     </React.Fragment>
                                 ))}
                             </List>
@@ -369,67 +377,98 @@ const Notifications = () => {
                                     />
                                 </Box>
                             )}
-                        </>
+                        </Box>
                     )}
-                </Paper>
+                </SectionCard>
             )}
 
             {tabValue === 1 && (
-                <>
-                    <Grid container spacing={3} mb={3}>
+                <Box>
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
                         <Grid item xs={12} md={6}>
                             <Card
                                 sx={{
                                     cursor: 'pointer',
-                                    border: notificationType === 'broadcast' ? 2 : 1,
+                                    p: 2.5,
+                                    border: 2,
                                     borderColor: notificationType === 'broadcast' ? 'primary.main' : 'divider',
+                                    bgcolor: notificationType === 'broadcast' ? tokens.palette.primary[50] : 'background.paper',
+                                    transition: tokens.motion.fast,
+                                    '&:hover': { borderColor: 'primary.light' },
                                 }}
                                 onClick={() => setNotificationType('broadcast')}
                             >
-                                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <GroupIcon
+                                <Stack direction="row" alignItems="center" spacing={2}>
+                                    <Box
                                         sx={{
-                                            fontSize: 40,
-                                            color: notificationType === 'broadcast' ? 'primary.main' : 'text.secondary',
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            bgcolor: notificationType === 'broadcast' ? 'primary.main' : tokens.palette.neutral[100],
+                                            color: notificationType === 'broadcast' ? 'primary.contrastText' : 'text.secondary',
                                         }}
-                                    />
+                                    >
+                                        <GroupIcon />
+                                    </Box>
                                     <Box>
-                                        <Typography variant="h6">Broadcast</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            Broadcast
+                                        </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             Send notification to all users
                                         </Typography>
                                     </Box>
-                                </CardContent>
+                                </Stack>
                             </Card>
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <Card
                                 sx={{
                                     cursor: 'pointer',
-                                    border: notificationType === 'role' ? 2 : 1,
+                                    p: 2.5,
+                                    border: 2,
                                     borderColor: notificationType === 'role' ? 'primary.main' : 'divider',
+                                    bgcolor: notificationType === 'role' ? tokens.palette.primary[50] : 'background.paper',
+                                    transition: tokens.motion.fast,
+                                    '&:hover': { borderColor: 'primary.light' },
                                 }}
                                 onClick={() => setNotificationType('role')}
                             >
-                                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <NotificationsIcon
+                                <Stack direction="row" alignItems="center" spacing={2}>
+                                    <Box
                                         sx={{
-                                            fontSize: 40,
-                                            color: notificationType === 'role' ? 'primary.main' : 'text.secondary',
+                                            width: 48,
+                                            height: 48,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            bgcolor: notificationType === 'role' ? 'primary.main' : tokens.palette.neutral[100],
+                                            color: notificationType === 'role' ? 'primary.contrastText' : 'text.secondary',
                                         }}
-                                    />
+                                    >
+                                        <NotificationsIcon />
+                                    </Box>
                                     <Box>
-                                        <Typography variant="h6">By Role</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            By Role
+                                        </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             Send notification to users by role
                                         </Typography>
                                     </Box>
-                                </CardContent>
+                                </Stack>
                             </Card>
                         </Grid>
                     </Grid>
 
-                    <Paper sx={{ p: 3 }}>
+                    <SectionCard
+                        title="Compose Notification"
+                        subtitle="Fill in the details below and send when ready"
+                    >
                         <form onSubmit={handleSubmit}>
                             {notificationType === 'role' && (
                                 <FormControl fullWidth margin="normal">
@@ -458,30 +497,44 @@ const Notifications = () => {
                                 helperText={formErrors.title || '3-100 characters'}
                             />
 
-                            <Paper sx={{ p: 2, mt: 2, mb: 2, bgcolor: 'grey.50', border: '1px dashed', borderColor: 'grey.300' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <AIIcon color="secondary" />
-                                    <Typography variant="subtitle2">AI Compose Assistant</Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    p: 2,
+                                    mt: 2,
+                                    mb: 2,
+                                    background: tokens.gradient.primarySoft,
+                                    borderStyle: 'dashed',
+                                    borderColor: tokens.palette.primary[200],
+                                }}
+                            >
+                                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                                    <AIIcon sx={{ color: tokens.palette.secondary[600] }} />
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                        AI Compose Assistant
+                                    </Typography>
+                                </Stack>
+                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                                     <TextField
                                         fullWidth
                                         size="small"
-                                        placeholder="Describe the purpose (e.g., 'System maintenance tomorrow', 'New feature announcement')"
+                                        placeholder="Describe the purpose (e.g., 'System maintenance tomorrow')"
                                         value={aiPurpose}
                                         onChange={(e) => setAiPurpose(e.target.value)}
                                         disabled={aiLoading}
+                                        sx={{ bgcolor: 'background.paper' }}
                                     />
-                                    <Button
+                                    <LoadingButton
                                         variant="contained"
                                         color="secondary"
                                         onClick={handleAICompose}
-                                        disabled={aiLoading || !aiPurpose.trim()}
-                                        startIcon={aiLoading ? <CircularProgress size={16} color="inherit" /> : <AIIcon />}
+                                        loading={aiLoading}
+                                        disabled={!aiPurpose.trim()}
+                                        startIcon={<AIIcon />}
                                     >
-                                        {aiLoading ? 'Generating...' : 'Generate'}
-                                    </Button>
-                                </Box>
+                                        Generate
+                                    </LoadingButton>
+                                </Stack>
                             </Paper>
 
                             <TextField
@@ -507,19 +560,19 @@ const Notifications = () => {
                             </Alert>
 
                             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button
+                                <LoadingButton
                                     type="submit"
                                     variant="contained"
                                     startIcon={<SendIcon />}
-                                    disabled={sendLoading}
+                                    loading={sendLoading}
                                     size="large"
                                 >
-                                    {sendLoading ? 'Sending...' : 'Send Notification'}
-                                </Button>
+                                    Send Notification
+                                </LoadingButton>
                             </Box>
                         </form>
-                    </Paper>
-                </>
+                    </SectionCard>
+                </Box>
             )}
         </Box>
     );

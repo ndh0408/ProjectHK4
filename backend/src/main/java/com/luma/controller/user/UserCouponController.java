@@ -54,13 +54,23 @@ public class UserCouponController {
     }
 
     @GetMapping
-    @Operation(summary = "Get available coupons for user")
+    @Operation(summary = "Get available coupons for user",
+            description = "Accepts either eventId or registrationId. If registrationId is " +
+                    "provided the event is resolved automatically. When neither is provided " +
+                    "only global coupons are returned.")
     public ResponseEntity<ApiResponse<List<CouponResponse>>> getAvailableCoupons(
             @RequestParam(required = false) UUID eventId,
+            @RequestParam(required = false) UUID registrationId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // Just validate user is authenticated
         userService.getEntityByEmail(userDetails.getUsername());
-        List<CouponResponse> coupons = couponService.getAvailableCouponsForUser(eventId);
+
+        UUID resolvedEventId = eventId;
+        if (resolvedEventId == null && registrationId != null) {
+            Registration reg = registrationService.getEntityById(registrationId);
+            resolvedEventId = reg.getEvent().getId();
+        }
+
+        List<CouponResponse> coupons = couponService.getAvailableCouponsForUser(resolvedEventId);
         return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Chip,
+    Grid,
     FormControl,
     InputLabel,
     Select,
@@ -14,13 +14,13 @@ import {
     Collapse,
     IconButton,
     Paper,
+    Stack,
+    Tooltip,
 } from '@mui/material';
 import {
     People as PeopleIcon,
     Event as EventIcon,
     Business as BusinessIcon,
-    ArrowUpward as ArrowUpIcon,
-    ArrowDownward as ArrowDownIcon,
     AutoAwesome as AIIcon,
     Refresh as RefreshIcon,
     CheckCircle as SuccessIcon,
@@ -36,76 +36,45 @@ import { PieChart } from '@mui/x-charts/PieChart';
 import { LineChart } from '@mui/x-charts/LineChart';
 import { adminApi } from '../../api';
 import { LoadingSpinner } from '../../components/common';
+import {
+    PageHeader,
+    StatCard,
+    SectionCard,
+    EmptyState,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
-
-const StatCard = ({ title, value, icon, variant, change }) => {
-    const isPositive = change >= 0;
-
-    return (
-        <div className={`stat-card ${variant}`}>
-            <div className="stat-card-content">
-                <div className="stat-card-info">
-                    <h3>{title}</h3>
-                    <div className="stat-card-value">{value?.toLocaleString() || 0}</div>
-                    {change !== undefined && (
-                        <Chip
-                            size="small"
-                            icon={isPositive ? <ArrowUpIcon sx={{ fontSize: 14 }} /> : <ArrowDownIcon sx={{ fontSize: 14 }} />}
-                            label={`${isPositive ? '+' : ''}${change}%`}
-                            className={`stat-card-change ${isPositive ? 'positive' : 'negative'}`}
-                            sx={{
-                                height: 24,
-                                '& .MuiChip-icon': { ml: 0.5 },
-                                '& .MuiChip-label': { px: 0.5 }
-                            }}
-                        />
-                    )}
-                </div>
-                <div className="stat-card-icon">
-                    {icon}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ChartCard = ({ title, children, legend }) => (
-    <div className="chart-card">
-        <div className="chart-card-header">
-            <h3>{title}</h3>
-            {legend && <div className="chart-legend">{legend}</div>}
-        </div>
-        {children}
-    </div>
-);
 
 const InsightIcon = ({ type }) => {
     switch (type) {
-        case 'success':
-            return <SuccessIcon sx={{ color: 'success.main' }} />;
-        case 'warning':
-            return <WarningIcon sx={{ color: 'warning.main' }} />;
-        case 'tip':
-            return <TipIcon sx={{ color: 'secondary.main' }} />;
-        case 'info':
-        default:
-            return <InfoIcon sx={{ color: 'info.main' }} />;
+        case 'success': return <SuccessIcon sx={{ color: 'success.main' }} />;
+        case 'warning': return <WarningIcon sx={{ color: 'warning.main' }} />;
+        case 'tip': return <TipIcon sx={{ color: 'secondary.main' }} />;
+        default: return <InfoIcon sx={{ color: 'info.main' }} />;
     }
 };
 
-const InsightSeverity = (type) => {
-    switch (type) {
-        case 'success':
-            return 'success';
-        case 'warning':
-            return 'warning';
-        case 'tip':
-            return 'info';
-        case 'info':
-        default:
-            return 'info';
-    }
+const insightSeverity = (type) =>
+    type === 'success' ? 'success'
+        : type === 'warning' ? 'warning'
+            : type === 'tip' ? 'info'
+                : 'info';
+
+const CHART_AXIS_SX = {
+    '& .MuiChartsAxis-line': { stroke: tokens.palette.neutral[200] },
+    '& .MuiChartsAxis-tick': { stroke: tokens.palette.neutral[200] },
 };
+
+const PIE_COLORS = [
+    tokens.palette.primary[500],
+    tokens.palette.secondary[500],
+    tokens.palette.success[500],
+    tokens.palette.warning[500],
+    tokens.palette.info[500],
+    tokens.palette.primary[400],
+    '#14b8a6',
+    '#f97316',
+];
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -118,9 +87,8 @@ const AdminDashboard = () => {
     const [aiLoading, setAiLoading] = useState(false);
     const [showInsights, setShowInsights] = useState(true);
 
-    useEffect(() => {
-        loadData();
-    }, [timeRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { loadData(); }, [timeRange]);
 
     const loadData = async () => {
         setLoading(true);
@@ -131,7 +99,6 @@ const AdminDashboard = () => {
                 adminApi.getEventsByCity(),
                 adminApi.getEventsByCategory(),
             ]);
-
             setStats(statsRes.data.data);
             setUserGrowth(growthRes.data.data || []);
             setEventsByCity(cityRes.data.data || []);
@@ -147,7 +114,6 @@ const AdminDashboard = () => {
         setAiLoading(true);
         try {
             const response = await adminApi.getAIInsights();
-
             if (response.data?.data) {
                 setAiInsights(response.data.data);
                 if (response.data.message === 'Basic insights') {
@@ -163,296 +129,286 @@ const AdminDashboard = () => {
         }
     };
 
-    if (loading) {
-        return <LoadingSpinner message="Loading dashboard..." />;
-    }
+    if (loading) return <LoadingSpinner message="Loading dashboard..." fullPage />;
 
-    const chartColors = {
-        primary: '#6366f1',
-        secondary: '#ec4899',
-        success: '#10b981',
-        warning: '#f59e0b',
-        info: '#3b82f6',
-    };
-
-    const pieColors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#14b8a6', '#f97316'];
+    const hasUserGrowth = userGrowth.length > 0 && userGrowth.some(i => i.count != null);
+    const hasEventsByMonth = stats?.newEventsPerMonth?.length > 0 && stats.newEventsPerMonth.some(i => i.count != null);
+    const hasEventsByCity = eventsByCity.length > 0 && eventsByCity.some(i => i.cityName && i.eventCount != null);
+    const hasEventsByCategory = eventsByCategory.length > 0 && eventsByCategory.some(i => i.categoryName && i.eventCount > 0);
 
     return (
-        <div className="dashboard">
-            <div className="dashboard-header">
-                <Box>
-                    <h1>Dashboard</h1>
-                    <p>Welcome back! Here's what's happening with your platform.</p>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <InputLabel>Time Range</InputLabel>
+        <Box>
+            <PageHeader
+                title="Platform Overview"
+                subtitle="Monitor growth, performance and health of the Luma network."
+                actions={[
+                    <FormControl key="range" size="small" sx={{ minWidth: 160 }}>
+                        <InputLabel>Time range</InputLabel>
                         <Select
                             value={timeRange}
                             onChange={(e) => setTimeRange(e.target.value)}
-                            label="Time Range"
+                            label="Time range"
                         >
                             <MenuItem value={3}>Last 3 months</MenuItem>
                             <MenuItem value={6}>Last 6 months</MenuItem>
                             <MenuItem value={12}>Last 12 months</MenuItem>
                         </Select>
-                    </FormControl>
+                    </FormControl>,
                     <Button
-                        startIcon={<RefreshIcon />}
+                        key="refresh"
+                        startIcon={<RefreshIcon fontSize="small" />}
                         onClick={loadData}
                         variant="outlined"
-                        size="small"
                     >
                         Refresh
-                    </Button>
-                </Box>
-            </div>
+                    </Button>,
+                ]}
+            />
 
-            <div className="stats-grid">
-                <StatCard
-                    title="Total Users"
-                    value={stats?.totalUsers}
-                    icon={<PeopleIcon />}
-                    variant="primary"
-                    change={stats?.userGrowthPercent}
-                />
-                <StatCard
-                    title="Organisers"
-                    value={stats?.totalOrganisers}
-                    icon={<BusinessIcon />}
-                    variant="success"
-                    change={stats?.organiserGrowthPercent}
-                />
-                <StatCard
-                    title="Total Events"
-                    value={stats?.totalEvents}
-                    icon={<EventIcon />}
-                    variant="warning"
-                    change={stats?.eventGrowthPercent}
-                />
-                <StatCard
-                    title="Registrations"
-                    value={stats?.totalRegistrations}
-                    icon={<RegistrationIcon />}
-                    variant="info"
-                    change={stats?.registrationGrowthPercent}
-                />
-            </div>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Total users"
+                        value={stats?.totalUsers?.toLocaleString() || 0}
+                        icon={<PeopleIcon />}
+                        iconColor="primary"
+                        change={stats?.userGrowthPercent}
+                        changeLabel="vs. previous period"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Organisers"
+                        value={stats?.totalOrganisers?.toLocaleString() || 0}
+                        icon={<BusinessIcon />}
+                        iconColor="success"
+                        change={stats?.organiserGrowthPercent}
+                        changeLabel="vs. previous period"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Total events"
+                        value={stats?.totalEvents?.toLocaleString() || 0}
+                        icon={<EventIcon />}
+                        iconColor="warning"
+                        change={stats?.eventGrowthPercent}
+                        changeLabel="vs. previous period"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                    <StatCard
+                        label="Registrations"
+                        value={stats?.totalRegistrations?.toLocaleString() || 0}
+                        icon={<RegistrationIcon />}
+                        iconColor="info"
+                        change={stats?.registrationGrowthPercent}
+                        changeLabel="vs. previous period"
+                    />
+                </Grid>
+            </Grid>
 
-            <Paper sx={{ p: 2, mb: 3, background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AIIcon sx={{ color: 'secondary.main' }} />
-                        <Typography variant="h6" fontWeight="bold">
-                            AI Insights & Recommendations
-                        </Typography>
+            <Paper
+                variant="outlined"
+                sx={{
+                    mb: 3,
+                    p: { xs: 2, md: 2.5 },
+                    background: `linear-gradient(135deg, ${tokens.palette.primary[50]} 0%, ${tokens.palette.secondary[50]} 100%)`,
+                    borderColor: tokens.palette.primary[100],
+                }}
+            >
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flex: 1 }}>
+                        <Box
+                            sx={{
+                                width: 38, height: 38, borderRadius: 2,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                bgcolor: 'secondary.100', color: 'secondary.700',
+                            }}
+                        >
+                            <AIIcon />
+                        </Box>
+                        <Box>
+                            <Typography variant="h3" sx={{ fontSize: '1rem' }}>
+                                AI Platform Insights
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Spot trends and opportunities across the platform.
+                            </Typography>
+                        </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
                         {aiInsights && (
-                            <IconButton size="small" onClick={() => setShowInsights(!showInsights)}>
-                                {showInsights ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
+                            <Tooltip title={showInsights ? 'Collapse' : 'Expand'}>
+                                <IconButton size="small" onClick={() => setShowInsights((v) => !v)}>
+                                    {showInsights ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                </IconButton>
+                            </Tooltip>
                         )}
                         <Button
                             variant="contained"
                             color="secondary"
                             size="small"
-                            startIcon={aiLoading ? <CircularProgress size={16} color="inherit" /> : (aiInsights ? <RefreshIcon /> : <AIIcon />)}
+                            startIcon={aiLoading
+                                ? <CircularProgress size={14} color="inherit" thickness={5} />
+                                : (aiInsights ? <RefreshIcon fontSize="small" /> : <AIIcon fontSize="small" />)
+                            }
                             onClick={loadAIInsights}
                             disabled={aiLoading}
                         >
-                            {aiLoading ? 'Analyzing...' : (aiInsights ? 'Refresh' : 'Get AI Insights')}
+                            {aiLoading ? 'Analysing...' : (aiInsights ? 'Refresh' : 'Get AI insights')}
                         </Button>
-                    </Box>
-                </Box>
+                    </Stack>
+                </Stack>
 
                 {!aiInsights && !aiLoading && (
-                    <Alert severity="info" sx={{ bgcolor: 'transparent' }}>
-                        <AlertTitle>Get platform analytics</AlertTitle>
-                        Click "Get AI Insights" to analyze platform data and receive actionable recommendations.
+                    <Alert severity="info" sx={{ mt: 2, bgcolor: 'transparent', border: '1px dashed', borderColor: 'divider' }}>
+                        <AlertTitle sx={{ fontSize: '0.875rem' }}>Get platform analytics</AlertTitle>
+                        Click <b>Get AI insights</b> to analyse platform data and receive recommendations.
                     </Alert>
                 )}
 
-                <Collapse in={showInsights && aiInsights !== null}>
+                <Collapse in={showInsights && Boolean(aiInsights)}>
                     {aiInsights && (
-                        <Box>
+                        <Box sx={{ mt: 2 }}>
                             {aiInsights.summary && (
-                                <Typography variant="body1" sx={{ mb: 2, fontStyle: 'italic', color: 'text.secondary' }}>
-                                    "{aiInsights.summary}"
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        mb: 2, fontStyle: 'italic', color: 'text.secondary',
+                                        px: 1.5, py: 1,
+                                        borderLeft: '3px solid',
+                                        borderColor: 'secondary.300',
+                                        bgcolor: 'rgba(255,255,255,0.5)',
+                                        borderRadius: 1,
+                                    }}
+                                >
+                                    “{aiInsights.summary}”
                                 </Typography>
                             )}
-
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            <Stack spacing={1.25}>
                                 {aiInsights.insights?.map((insight, index) => (
                                     <Alert
                                         key={index}
-                                        severity={InsightSeverity(insight.type)}
+                                        severity={insightSeverity(insight.type)}
                                         icon={<InsightIcon type={insight.type} />}
                                         sx={{
                                             '& .MuiAlert-message': { width: '100%' },
                                             bgcolor: 'background.paper',
                                         }}
-                                        action={
-                                            insight.actionText && (
-                                                <Button color="inherit" size="small">
-                                                    {insight.actionText}
-                                                </Button>
-                                            )
-                                        }
+                                        action={insight.actionText && (
+                                            <Button color="inherit" size="small">
+                                                {insight.actionText}
+                                            </Button>
+                                        )}
                                     >
-                                        <AlertTitle sx={{ fontWeight: 'bold' }}>{insight.title}</AlertTitle>
+                                        <AlertTitle sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                            {insight.title}
+                                        </AlertTitle>
                                         {insight.description}
                                     </Alert>
                                 ))}
-                            </Box>
+                            </Stack>
                         </Box>
                     )}
                 </Collapse>
             </Paper>
 
-            <div className="charts-grid">
-                <ChartCard
-                    title="User Growth"
-                    legend={
-                        <div className="chart-legend-item">
-                            <span className="dot primary"></span>
-                            <span>New Users</span>
-                        </div>
-                    }
-                >
-                    {userGrowth.length > 0 && userGrowth.some(item => item.count != null) ? (
-                        <LineChart
-                            xAxis={[{
-                                scaleType: 'band',
-                                data: userGrowth.map(item => `${item.month}/${item.year}`),
-                            }]}
-                            series={[{
-                                data: userGrowth.map(item => item.count || 0),
-                                color: chartColors.primary,
-                                area: true,
-                            }]}
-                            height={300}
-                            slotProps={{
-                                noDataOverlay: { message: 'No data available' },
-                            }}
-                            sx={{
-                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
-                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
-                            }}
-                        />
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No data available</p>
-                        </div>
-                    )}
-                </ChartCard>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid item xs={12} lg={6}>
+                    <SectionCard title="User growth" subtitle="New users per period">
+                        {hasUserGrowth ? (
+                            <LineChart
+                                xAxis={[{
+                                    scaleType: 'band',
+                                    data: userGrowth.map(item => `${item.month}/${item.year}`),
+                                }]}
+                                series={[{
+                                    data: userGrowth.map(item => item.count || 0),
+                                    color: tokens.palette.primary[500],
+                                    area: true,
+                                }]}
+                                height={300}
+                                sx={{
+                                    ...CHART_AXIS_SX,
+                                    '& .MuiAreaElement-root': { fillOpacity: 0.12 },
+                                }}
+                            />
+                        ) : (
+                            <EmptyState icon={<PeopleIcon sx={{ fontSize: 28 }} />} title="No data available" compact />
+                        )}
+                    </SectionCard>
+                </Grid>
+                <Grid item xs={12} lg={6}>
+                    <SectionCard title="Events growth" subtitle="New events per period">
+                        {hasEventsByMonth ? (
+                            <BarChart
+                                xAxis={[{
+                                    scaleType: 'band',
+                                    data: stats.newEventsPerMonth.map(item => `${item.month}/${item.year}`),
+                                }]}
+                                series={[{
+                                    data: stats.newEventsPerMonth.map(item => item.count || 0),
+                                    color: tokens.palette.success[500],
+                                }]}
+                                height={300}
+                                sx={CHART_AXIS_SX}
+                            />
+                        ) : (
+                            <EmptyState icon={<EventIcon sx={{ fontSize: 28 }} />} title="No data available" compact />
+                        )}
+                    </SectionCard>
+                </Grid>
+            </Grid>
 
-                <ChartCard
-                    title="Events Growth"
-                    legend={
-                        <div className="chart-legend-item">
-                            <span className="dot success"></span>
-                            <span>New Events</span>
-                        </div>
-                    }
-                >
-                    {stats?.newEventsPerMonth?.length > 0 && stats.newEventsPerMonth.some(item => item.count != null) ? (
-                        <BarChart
-                            xAxis={[{
-                                scaleType: 'band',
-                                data: stats.newEventsPerMonth.map(item => `${item.month}/${item.year}`),
-                            }]}
-                            series={[{
-                                data: stats.newEventsPerMonth.map(item => item.count || 0),
-                                color: chartColors.success,
-                            }]}
-                            height={300}
-                            slotProps={{
-                                noDataOverlay: { message: 'No data available' },
-                            }}
-                            sx={{
-                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
-                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
-                            }}
-                        />
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No data available</p>
-                        </div>
-                    )}
-                </ChartCard>
-            </div>
-
-            <div className="charts-grid">
-                <ChartCard
-                    title="Events by City"
-                    legend={
-                        <div className="chart-legend-item">
-                            <span className="dot warning"></span>
-                            <span>Events</span>
-                        </div>
-                    }
-                >
-                    {eventsByCity.length > 0 && eventsByCity.some(item => item.cityName && item.eventCount != null) ? (
-                        <BarChart
-                            xAxis={[{
-                                scaleType: 'band',
-                                data: eventsByCity.filter(item => item.cityName).map(item => item.cityName),
-                            }]}
-                            series={[{
-                                data: eventsByCity.filter(item => item.cityName).map(item => item.eventCount || 0),
-                                color: chartColors.warning,
-                            }]}
-                            height={300}
-                            slotProps={{
-                                noDataOverlay: { message: 'No data available' },
-                            }}
-                            sx={{
-                                '& .MuiChartsAxis-line': { stroke: '#e5e7eb' },
-                                '& .MuiChartsAxis-tick': { stroke: '#e5e7eb' },
-                            }}
-                        />
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No data available</p>
-                        </div>
-                    )}
-                </ChartCard>
-
-                <ChartCard title="Events by Category">
-                    {eventsByCategory.length > 0 && eventsByCategory.some(item => item.categoryName && item.eventCount > 0) ? (
-                        <PieChart
-                            series={[{
-                                data: eventsByCategory
-                                    .filter(item => item.categoryName && item.eventCount > 0)
-                                    .map((item, index) => ({
-                                        id: index,
-                                        value: item.eventCount,
-                                        label: item.categoryName,
-                                        color: pieColors[index % pieColors.length],
-                                    })),
-                                highlightScope: { faded: 'global', highlighted: 'item' },
-                                innerRadius: 40,
-                                paddingAngle: 2,
-                                cornerRadius: 4,
-                            }]}
-                            height={300}
-                            slotProps={{
-                                noDataOverlay: { message: 'No data available' },
-                            }}
-                        />
-                    ) : (
-                        <div className="empty-state">
-                            <EventIcon />
-                            <p>No data available</p>
-                        </div>
-                    )}
-                </ChartCard>
-            </div>
-        </div>
+            <Grid container spacing={2}>
+                <Grid item xs={12} lg={6}>
+                    <SectionCard title="Events by city" subtitle="Where events are being hosted">
+                        {hasEventsByCity ? (
+                            <BarChart
+                                xAxis={[{
+                                    scaleType: 'band',
+                                    data: eventsByCity.filter(item => item.cityName).map(item => item.cityName),
+                                }]}
+                                series={[{
+                                    data: eventsByCity.filter(item => item.cityName).map(item => item.eventCount || 0),
+                                    color: tokens.palette.warning[500],
+                                }]}
+                                height={300}
+                                sx={CHART_AXIS_SX}
+                            />
+                        ) : (
+                            <EmptyState icon={<EventIcon sx={{ fontSize: 28 }} />} title="No data available" compact />
+                        )}
+                    </SectionCard>
+                </Grid>
+                <Grid item xs={12} lg={6}>
+                    <SectionCard title="Events by category" subtitle="Distribution across categories">
+                        {hasEventsByCategory ? (
+                            <PieChart
+                                series={[{
+                                    data: eventsByCategory
+                                        .filter(item => item.categoryName && item.eventCount > 0)
+                                        .map((item, index) => ({
+                                            id: index,
+                                            value: item.eventCount,
+                                            label: item.categoryName,
+                                            color: PIE_COLORS[index % PIE_COLORS.length],
+                                        })),
+                                    highlightScope: { faded: 'global', highlighted: 'item' },
+                                    innerRadius: 48,
+                                    paddingAngle: 2,
+                                    cornerRadius: 6,
+                                }]}
+                                height={300}
+                            />
+                        ) : (
+                            <EmptyState icon={<EventIcon sx={{ fontSize: 28 }} />} title="No data available" compact />
+                        )}
+                    </SectionCard>
+                </Grid>
+            </Grid>
+        </Box>
     );
 };
 

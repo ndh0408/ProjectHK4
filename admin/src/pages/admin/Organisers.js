@@ -2,28 +2,31 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
-    TextField,
-    InputAdornment,
-    Chip,
     Button,
     Avatar,
     Menu,
     MenuItem,
     ListItemIcon,
     ListItemText,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
-    Search as SearchIcon,
     Refresh as RefreshIcon,
     Verified as VerifiedIcon,
     MoreVert as MoreVertIcon,
     CheckCircle as ActiveIcon,
     Block as LockIcon,
+    Business as BusinessIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatusChip,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
 
 const Organisers = () => {
@@ -141,57 +144,66 @@ const Organisers = () => {
 
     const columns = [
         {
-            field: 'avatar',
-            headerName: '',
-            width: 60,
-            sortable: false,
-            renderCell: (params) => (
-                <Avatar src={params.row.avatarUrl || params.row.logoUrl} alt={params.row.displayName}>
-                    {(params.row.displayName || params.row.fullName)?.charAt(0)}
-                </Avatar>
-            ),
-        },
-        {
             field: 'displayName',
-            headerName: 'Organization',
-            flex: 1,
-            minWidth: 200,
-            renderCell: (params) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography>{params.row.displayName || params.row.fullName}</Typography>
-                    {params.row.verified && (
-                        <VerifiedIcon sx={{ color: 'primary.main', fontSize: 18 }} />
-                    )}
-                </Box>
-            ),
+            headerName: 'Organisation',
+            flex: 1.3,
+            minWidth: 240,
+            renderCell: (params) => {
+                const name = params.row.displayName || params.row.fullName;
+                return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                        <Avatar
+                            src={params.row.avatarUrl || params.row.logoUrl}
+                            alt={name}
+                            sx={{ width: 38, height: 38, fontSize: '0.9rem', fontWeight: 600 }}
+                        >
+                            {name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight={600} noWrap>
+                                {name}
+                            </Typography>
+                            {params.row.verified && (
+                                <VerifiedIcon sx={{ color: 'primary.main', fontSize: 16, flexShrink: 0 }} />
+                            )}
+                        </Box>
+                    </Box>
+                );
+            },
         },
         {
             field: 'email',
             headerName: 'Email',
             flex: 1,
             minWidth: 200,
+            renderCell: (params) => (
+                <Typography variant="body2" color="text.secondary" noWrap>
+                    {params.value}
+                </Typography>
+            ),
         },
         {
             field: 'totalEvents',
             headerName: 'Events',
-            width: 100,
+            width: 90,
             align: 'center',
+            headerAlign: 'center',
         },
         {
             field: 'totalFollowers',
             headerName: 'Followers',
             width: 100,
             align: 'center',
+            headerAlign: 'center',
         },
         {
             field: 'status',
             headerName: 'Account',
             width: 120,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value === 'ACTIVE' ? 'Active' : 'Locked'}
-                    size="small"
-                    color={params.value === 'ACTIVE' ? 'success' : 'error'}
+                    status={params.value === 'ACTIVE' ? 'success' : 'danger'}
                 />
             ),
         },
@@ -200,77 +212,78 @@ const Organisers = () => {
             headerName: 'Verified',
             width: 120,
             renderCell: (params) => (
-                <Chip
+                <StatusChip
                     label={params.value ? 'Verified' : 'Unverified'}
-                    size="small"
-                    color={params.value ? 'info' : 'default'}
-                    variant={params.value ? 'filled' : 'outlined'}
+                    status={params.value ? 'info' : 'neutral'}
                 />
             ),
         },
         {
             field: 'actions',
-            headerName: 'Actions',
-            width: 100,
+            headerName: '',
+            width: 70,
             sortable: false,
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => (
-                <Button
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, params.row)}
-                >
-                    <MoreVertIcon />
-                </Button>
+                <Tooltip title="More actions">
+                    <IconButton
+                        size="small"
+                        aria-label="organiser actions"
+                        onClick={(e) => handleMenuOpen(e, params.row)}
+                    >
+                        <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
             ),
         },
     ];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Organiser Management
-                </Typography>
-                <Button startIcon={<RefreshIcon />} onClick={loadOrganisers}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="Organiser Management"
+                subtitle="Review, verify and moderate event organiser accounts"
+                icon={<BusinessIcon />}
+                actions={
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={loadOrganisers}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <TextField
-                    placeholder="Search organisers..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    size="small"
-                    sx={{ width: 300 }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-            </Paper>
-
-            <Paper>
-                <DataGrid
-                    rows={organisers}
-                    columns={columns}
-                    loading={loading}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    pageSizeOptions={[10, 25, 50]}
-                    rowCount={totalRows}
-                    paginationMode="server"
-                    disableRowSelectionOnClick
-                    autoHeight
-                />
-            </Paper>
+            <DataTableCard
+                toolbar={
+                    <PageToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Search organisers by name or email..."
+                    />
+                }
+                rows={organisers}
+                columns={columns}
+                loading={loading}
+                emptyTitle="No organisers found"
+                emptyDescription="No organisers match your current search."
+                emptyIcon={<BusinessIcon sx={{ fontSize: 40 }} />}
+                dataGridProps={{
+                    paginationModel,
+                    onPaginationModelChange: setPaginationModel,
+                    pageSizeOptions: [10, 25, 50],
+                    rowCount: totalRows,
+                    paginationMode: 'server',
+                }}
+            />
 
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
+                slotProps={{ paper: { sx: { minWidth: 210, borderRadius: 2 } } }}
             >
                 {selectedOrganiser?.status === 'ACTIVE' ? (
                     <MenuItem onClick={() => handleLock(selectedOrganiser)}>

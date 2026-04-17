@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
@@ -129,40 +130,110 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchProvider);
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _controller,
-          autofocus: widget.query.isEmpty,
-          decoration: InputDecoration(
-            hintText: 'Search events...',
-            hintStyle: TextStyle(color: AppColors.textOnPrimary.withValues(alpha: 0.7)),
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
           ),
-          style: const TextStyle(color: AppColors.textOnPrimary),
-          cursorColor: AppColors.textOnPrimary,
-          onChanged: (value) {
-            ref.read(searchProvider.notifier).updateQuery(value);
-          },
-          onSubmitted: (value) {
-            if (value.isNotEmpty) {
-              unawaited(ref.read(searchProvider.notifier).search(value));
-            }
-          },
-        ),
-        actions: [
-          if (_controller.text.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _controller.clear();
-                ref.read(searchProvider.notifier).updateQuery('');
-              },
+          // Pill-style search input: opaque surface + subtle border so the
+          // typed text stays readable regardless of the surrounding AppBar
+          // color. Built with a Theme override so the app-wide
+          // InputDecorationTheme does not bleed into this one.
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              inputDecorationTheme: const InputDecorationTheme(
+                filled: false,
+                fillColor: Colors.transparent,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
             ),
-        ],
+            child: Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.allPill,
+                border: Border.all(
+                  color: AppColors.neutral300,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    size: 20,
+                    color: AppColors.textMuted,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      autofocus: widget.query.isEmpty,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: 'Search events...',
+                        hintStyle: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        fillColor: Colors.transparent,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                      ),
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                      ),
+                      cursorColor: scheme.primary,
+                      onChanged: (value) {
+                        ref.read(searchProvider.notifier).updateQuery(value);
+                      },
+                      onSubmitted: (value) {
+                        if (value.isNotEmpty) {
+                          unawaited(
+                            ref.read(searchProvider.notifier).search(value),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                  if (_controller.text.isNotEmpty)
+                    InkWell(
+                      onTap: () {
+                        _controller.clear();
+                        ref.read(searchProvider.notifier).updateQuery('');
+                        setState(() {});
+                      },
+                      borderRadius: AppRadius.allPill,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: const [SizedBox(width: AppSpacing.xs)],
       ),
       body: _buildBody(context, searchState),
     );

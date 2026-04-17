@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     List,
     ListItem,
     ListItemText,
@@ -20,6 +19,7 @@ import {
     TextField,
     Autocomplete,
     Alert,
+    Paper,
 } from '@mui/material';
 import {
     Notifications as NotificationsIcon,
@@ -36,6 +36,14 @@ import {
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
 import { organiserApi } from '../../api/organiserApi';
+import {
+    PageHeader,
+    SectionCard,
+    FormSection,
+    EmptyState,
+    LoadingButton,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
 const NOTIFICATION_TYPES = [
@@ -150,15 +158,15 @@ const Notifications = () => {
     const getNotificationIcon = (type) => {
         switch (type) {
             case 'EVENT_CREATED':
-                return <EventIcon sx={{ color: 'info.main' }} />;
+                return <EventIcon sx={{ color: tokens.palette.info[500] }} />;
             case 'EVENT_APPROVED':
-                return <ApprovedIcon sx={{ color: 'success.main' }} />;
+                return <ApprovedIcon sx={{ color: tokens.palette.success[500] }} />;
             case 'EVENT_REJECTED':
-                return <RejectedIcon sx={{ color: 'error.main' }} />;
+                return <RejectedIcon sx={{ color: tokens.palette.danger[500] }} />;
             case 'BROADCAST':
-                return <BroadcastIcon sx={{ color: 'primary.main' }} />;
+                return <BroadcastIcon sx={{ color: tokens.palette.primary[500] }} />;
             default:
-                return <InfoIcon sx={{ color: 'grey.500' }} />;
+                return <InfoIcon sx={{ color: tokens.palette.neutral[400] }} />;
         }
     };
 
@@ -268,15 +276,17 @@ const Notifications = () => {
 
     return (
         <Box>
-            <Typography variant="h5" fontWeight="bold" mb={3}>
-                Notification Management
-            </Typography>
+            <PageHeader
+                title="Notification Management"
+                subtitle="Review your inbox and broadcast updates to event attendees"
+                icon={<NotificationsIcon />}
+            />
 
             <Paper sx={{ mb: 3 }}>
                 <Tabs
                     value={tabValue}
                     onChange={(e, newValue) => setTabValue(newValue)}
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
+                    sx={{ borderBottom: `1px solid ${tokens.palette.neutral[200]}`, px: 2 }}
                 >
                     <Tab
                         label={
@@ -286,8 +296,13 @@ const Notifications = () => {
                                     <Chip
                                         label={unreadCount}
                                         size="small"
-                                        color="error"
-                                        sx={{ height: 20, minWidth: 20 }}
+                                        sx={{
+                                            height: 20,
+                                            minWidth: 20,
+                                            bgcolor: tokens.palette.danger[500],
+                                            color: tokens.palette.neutral[0],
+                                            fontWeight: 600,
+                                        }}
                                     />
                                 )}
                             </Box>
@@ -298,12 +313,10 @@ const Notifications = () => {
             </Paper>
 
             {tabValue === 0 && (
-                <Paper sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">
-                            Unread ({notifications.length})
-                        </Typography>
-                        {unreadCount > 0 && (
+                <SectionCard
+                    title={`Unread (${notifications.length})`}
+                    action={
+                        unreadCount > 0 ? (
                             <Button
                                 startIcon={<MarkReadIcon />}
                                 onClick={handleMarkAllAsRead}
@@ -311,38 +324,40 @@ const Notifications = () => {
                             >
                                 Mark all as read
                             </Button>
-                        )}
-                    </Box>
-
+                        ) : null
+                    }
+                    contentSx={{ p: 0, '&:last-child': { pb: 0 } }}
+                >
                     {loading ? (
                         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                             <CircularProgress />
                         </Box>
                     ) : notifications.length === 0 ? (
-                        <Box sx={{ py: 6, textAlign: 'center' }}>
-                            <NotificationsIcon sx={{ fontSize: 80, color: 'grey.300', mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary">
-                                No unread notifications
-                            </Typography>
-                            <Typography color="text.disabled">
-                                You're all caught up!
-                            </Typography>
-                        </Box>
+                        <EmptyState
+                            icon={<NotificationsIcon sx={{ fontSize: 32 }} />}
+                            title="No unread notifications"
+                            description="You're all caught up!"
+                        />
                     ) : (
                         <>
-                            <List>
+                            <List sx={{ p: 1.5 }}>
                                 {notifications.map((notification, index) => (
                                     <React.Fragment key={notification.id}>
                                         <ListItem
                                             onClick={() => handleMarkAsRead(notification.id)}
                                             sx={{
                                                 py: 2,
-                                                bgcolor: 'action.hover',
-                                                borderRadius: 1,
+                                                px: 2,
+                                                bgcolor: tokens.palette.primary[50],
+                                                border: `1px solid ${tokens.palette.primary[100]}`,
+                                                borderRadius: 2,
                                                 cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
                                                 '&:hover': {
-                                                    bgcolor: 'action.selected',
+                                                    bgcolor: tokens.palette.primary[100],
+                                                    transform: 'translateY(-1px)',
                                                 },
+                                                mb: index < notifications.length - 1 ? 1 : 0,
                                             }}
                                         >
                                             <ListItemIcon>
@@ -358,7 +373,7 @@ const Notifications = () => {
                                                         >
                                                             {notification.title}
                                                         </Typography>
-                                                        <UnreadIcon sx={{ fontSize: 10, color: 'primary.main' }} />
+                                                        <UnreadIcon sx={{ fontSize: 10, color: tokens.palette.primary[500] }} />
                                                     </Box>
                                                 }
                                                 secondary={
@@ -397,171 +412,179 @@ const Notifications = () => {
                                                 </Tooltip>
                                             </ListItemSecondaryAction>
                                         </ListItem>
-                                        {index < notifications.length - 1 && <Divider />}
                                     </React.Fragment>
                                 ))}
                             </List>
 
                             {totalPages > 1 && (
-                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                                    <Pagination
-                                        count={totalPages}
-                                        page={page + 1}
-                                        onChange={(e, value) => setPage(value - 1)}
-                                        color="primary"
-                                    />
-                                </Box>
+                                <>
+                                    <Divider />
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                        <Pagination
+                                            count={totalPages}
+                                            page={page + 1}
+                                            onChange={(e, value) => setPage(value - 1)}
+                                            color="primary"
+                                        />
+                                    </Box>
+                                </>
                             )}
                         </>
                     )}
-                </Paper>
+                </SectionCard>
             )}
 
             {tabValue === 1 && (
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>
-                        Send Notification to Event Attendees
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Send a notification to all approved attendees of your event.
-                    </Typography>
-
+                <SectionCard
+                    title="Send Notification to Event Attendees"
+                    subtitle="Send a notification to attendees based on registration status"
+                >
                     <form onSubmit={handleSubmit}>
-                        <Autocomplete
-                            options={events}
-                            getOptionLabel={(option) => option.title || ''}
-                            value={selectedEvent}
-                            onChange={(_, newValue) => setSelectedEvent(newValue)}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Select Event"
-                                    placeholder="Search your events..."
-                                    error={!!formErrors.event}
-                                    helperText={formErrors.event}
-                                    required
-                                />
-                            )}
-                            renderOption={(props, option) => (
-                                <li {...props} key={option.id}>
-                                    <Box sx={{ width: '100%' }}>
-                                        <Typography variant="body1" noWrap>{option.title}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {option.startTime ? new Date(option.startTime).toLocaleDateString() : ''} - {option.currentRegistrations || 0} attendees
-                                        </Typography>
-                                    </Box>
-                                </li>
-                            )}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            sx={{ mb: 2 }}
-                        />
-
-                        <Autocomplete
-                            options={NOTIFICATION_TYPES}
-                            getOptionLabel={(option) => option.label}
-                            value={notificationType}
-                            onChange={(_, newValue) => setNotificationType(newValue)}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Notification Type"
-                                    placeholder="Select notification type..."
-                                    required
-                                    error={!!formErrors.notificationType}
-                                    helperText={formErrors.notificationType}
-                                />
-                            )}
-                            renderOption={(props, option) => (
-                                <li {...props} key={option.value}>
-                                    <Box sx={{ width: '100%' }}>
-                                        <Typography variant="body1">{option.label}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {option.description}
-                                        </Typography>
-                                    </Box>
-                                </li>
-                            )}
-                            sx={{ mb: 2 }}
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Title"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            margin="normal"
-                            required
-                            error={!!formErrors.title}
-                            helperText={formErrors.title || '3-100 characters'}
-                        />
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Message *
-                            </Typography>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="secondary"
-                                startIcon={<AIIcon />}
-                                onClick={handleGenerateAI}
-                                disabled={aiLoading || !selectedEvent || !notificationType}
-                            >
-                                {aiLoading ? 'Generating...' : 'AI Compose'}
-                            </Button>
-                        </Box>
-
-                        <TextField
-                            fullWidth
-                            value={formData.message}
-                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                            required
-                            multiline
-                            rows={4}
-                            error={!!formErrors.message}
-                            helperText={formErrors.message || '10-500 characters'}
-                            placeholder="Write your message or use AI Compose to generate..."
-                        />
-
-                        {selectedEvent && notificationType && (
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    {recipientLoading ? (
-                                        <>
-                                            <CircularProgress size={16} />
-                                            <span>Calculating recipients...</span>
-                                        </>
-                                    ) : (
-                                        <span>
-                                            This notification will be sent to <strong>{recipientCount ?? 0}</strong> recipient(s).
-                                            <br />
+                        <FormSection
+                            title="Target"
+                            description="Choose which event and notification type to dispatch"
+                        >
+                            <Autocomplete
+                                options={events}
+                                getOptionLabel={(option) => option.title || ''}
+                                value={selectedEvent}
+                                onChange={(_, newValue) => setSelectedEvent(newValue)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Select Event"
+                                        placeholder="Search your events..."
+                                        error={!!formErrors.event}
+                                        helperText={formErrors.event}
+                                        required
+                                    />
+                                )}
+                                renderOption={(props, option) => (
+                                    <li {...props} key={option.id}>
+                                        <Box sx={{ width: '100%' }}>
+                                            <Typography variant="body1" noWrap>{option.title}</Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                Type: {notificationType.label} - {notificationType.description}
+                                                {option.startTime ? new Date(option.startTime).toLocaleDateString() : ''} - {option.currentRegistrations || 0} attendees
                                             </Typography>
-                                        </span>
-                                    )}
-                                </Box>
-                            </Alert>
-                        )}
-                        {selectedEvent && !notificationType && (
-                            <Alert severity="warning" sx={{ mt: 2 }}>
-                                Please select a notification type to see recipient count.
-                            </Alert>
-                        )}
+                                        </Box>
+                                    </li>
+                                )}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                sx={{ mb: 2 }}
+                            />
 
-                        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
+                            <Autocomplete
+                                options={NOTIFICATION_TYPES}
+                                getOptionLabel={(option) => option.label}
+                                value={notificationType}
+                                onChange={(_, newValue) => setNotificationType(newValue)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Notification Type"
+                                        placeholder="Select notification type..."
+                                        required
+                                        error={!!formErrors.notificationType}
+                                        helperText={formErrors.notificationType}
+                                    />
+                                )}
+                                renderOption={(props, option) => (
+                                    <li {...props} key={option.value}>
+                                        <Box sx={{ width: '100%' }}>
+                                            <Typography variant="body1">{option.label}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {option.description}
+                                            </Typography>
+                                        </Box>
+                                    </li>
+                                )}
+                            />
+                        </FormSection>
+
+                        <FormSection
+                            title="Content"
+                            description="Craft the title and message — use AI Compose to draft quickly"
+                            topDivider
+                        >
+                            <TextField
+                                fullWidth
+                                label="Title"
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                required
+                                error={!!formErrors.title}
+                                helperText={formErrors.title || '3-100 characters'}
+                            />
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2.5, mb: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Message *
+                                </Typography>
+                                <LoadingButton
+                                    size="small"
+                                    variant="outlined"
+                                    color="secondary"
+                                    startIcon={<AIIcon />}
+                                    onClick={handleGenerateAI}
+                                    loading={aiLoading}
+                                    disabled={!selectedEvent || !notificationType}
+                                >
+                                    {aiLoading ? 'Generating...' : 'AI Compose'}
+                                </LoadingButton>
+                            </Box>
+
+                            <TextField
+                                fullWidth
+                                value={formData.message}
+                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                required
+                                multiline
+                                rows={4}
+                                error={!!formErrors.message}
+                                helperText={formErrors.message || '10-500 characters'}
+                                placeholder="Write your message or use AI Compose to generate..."
+                            />
+
+                            {selectedEvent && notificationType && (
+                                <Alert severity="info" sx={{ mt: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {recipientLoading ? (
+                                            <>
+                                                <CircularProgress size={16} />
+                                                <span>Calculating recipients...</span>
+                                            </>
+                                        ) : (
+                                            <span>
+                                                This notification will be sent to <strong>{recipientCount ?? 0}</strong> recipient(s).
+                                                <br />
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Type: {notificationType.label} - {notificationType.description}
+                                                </Typography>
+                                            </span>
+                                        )}
+                                    </Box>
+                                </Alert>
+                            )}
+                            {selectedEvent && !notificationType && (
+                                <Alert severity="warning" sx={{ mt: 2 }}>
+                                    Please select a notification type to see recipient count.
+                                </Alert>
+                            )}
+                        </FormSection>
+
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <LoadingButton
                                 type="submit"
                                 variant="contained"
                                 startIcon={<SendIcon />}
-                                disabled={sendLoading}
+                                loading={sendLoading}
                                 size="large"
                             >
                                 {sendLoading ? 'Sending...' : 'Send Notification'}
-                            </Button>
+                            </LoadingButton>
                         </Box>
                     </form>
-                </Paper>
+                </SectionCard>
             )}
         </Box>
     );

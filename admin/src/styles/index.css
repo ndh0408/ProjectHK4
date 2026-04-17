@@ -1,13 +1,10 @@
-/* ========================================
-   LUMA Admin - Main Styles Entry Point
-   ======================================== */
+/* Luma Admin — global stylesheet.
+ * Design tokens (colors, spacing, radius, shadow) live in `src/theme/tokens.js`
+ * and are applied through the MUI theme. This file only brings in the font and
+ * legacy stylesheets that specific pages still reference.
+ */
 
-/* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* Import all style modules */
 @import './variables.css';
-@import './Sidebar.css';
-@import './Header.css';
-@import './Login.css';
 @import './Dashboard.css';

@@ -2,27 +2,20 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     Autocomplete,
-    Button,
-    Chip,
     Card,
     CardContent,
     TextField,
     Avatar,
-    Divider,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogContentText,
-    DialogActions,
     Tabs,
     Tab,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
+    Grid,
+    Button,
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
@@ -34,7 +27,16 @@ import {
     HelpOutline as UnansweredIcon,
 } from '@mui/icons-material';
 import { organiserApi } from '../../api';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    SectionCard,
+    StatCard,
+    StatusChip,
+    EmptyState,
+    LoadingButton,
+} from '../../components/ui';
+import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
 const OrganiserQuestions = () => {
@@ -43,6 +45,7 @@ const OrganiserQuestions = () => {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 20 });
+    // eslint-disable-next-line no-unused-vars
     const [totalRows, setTotalRows] = useState(0);
     const [answers, setAnswers] = useState({});
     const [aiLoading, setAiLoading] = useState({});
@@ -131,6 +134,7 @@ const OrganiserQuestions = () => {
     };
 
     const [answerErrors, setAnswerErrors] = useState({});
+    const [submittingAnswer, setSubmittingAnswer] = useState({});
 
     const validateAnswer = (questionId, answer) => {
         const errors = {};
@@ -154,6 +158,7 @@ const OrganiserQuestions = () => {
             return;
         }
 
+        setSubmittingAnswer({ ...submittingAnswer, [questionId]: true });
         try {
             await organiserApi.answerQuestion(questionId, answer);
             toast.success('Answer submitted successfully');
@@ -163,6 +168,8 @@ const OrganiserQuestions = () => {
             loadStats();
         } catch (error) {
             toast.error('Failed to submit answer');
+        } finally {
+            setSubmittingAnswer({ ...submittingAnswer, [questionId]: false });
         }
     };
 
@@ -219,45 +226,55 @@ const OrganiserQuestions = () => {
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Questions
-                </Typography>
-                <Button startIcon={<RefreshIcon />} onClick={handleRefresh}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="Questions"
+                subtitle="Answer attendee questions across your events"
+                icon={<QuestionIcon />}
+                actions={[
+                    <Button
+                        key="refresh"
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={handleRefresh}
+                    >
+                        Refresh
+                    </Button>,
+                ]}
+            />
 
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <Paper sx={{ p: 2, flex: 1, textAlign: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" color="primary">
-                        {stats.total}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Total Questions
-                    </Typography>
-                </Paper>
-                <Paper sx={{ p: 2, flex: 1, textAlign: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" color="warning.main">
-                        {stats.unanswered}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Unanswered
-                    </Typography>
-                </Paper>
-                <Paper sx={{ p: 2, flex: 1, textAlign: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" color="success.main">
-                        {stats.answered}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Answered
-                    </Typography>
-                </Paper>
-            </Box>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={4}>
+                    <StatCard
+                        label="Total Questions"
+                        value={stats.total}
+                        icon={<QuestionIcon />}
+                        iconColor="primary"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <StatCard
+                        label="Unanswered"
+                        value={stats.unanswered}
+                        icon={<UnansweredIcon />}
+                        iconColor="warning"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <StatCard
+                        label="Answered"
+                        value={stats.answered}
+                        icon={<AnsweredIcon />}
+                        iconColor="success"
+                    />
+                </Grid>
+            </Grid>
 
-            <Paper sx={{ mb: 2 }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={activeTab} onChange={handleTabChange}>
+            <SectionCard
+                contentSx={{ p: 0, '&:last-child': { pb: 0 } }}
+                sx={{ mb: 2 }}
+            >
+                <Box sx={{ borderBottom: `1px solid ${tokens.palette.neutral[200]}` }}>
+                    <Tabs value={activeTab} onChange={handleTabChange} sx={{ px: 2 }}>
                         <Tab
                             icon={<QuestionIcon />}
                             iconPosition="start"
@@ -267,7 +284,7 @@ const OrganiserQuestions = () => {
                             icon={<UnansweredIcon />}
                             iconPosition="start"
                             label={`Unanswered (${stats.unanswered})`}
-                            sx={{ color: stats.unanswered > 0 ? 'warning.main' : 'inherit' }}
+                            sx={{ color: stats.unanswered > 0 ? tokens.palette.warning[600] : 'inherit' }}
                         />
                         <Tab
                             icon={<AnsweredIcon />}
@@ -276,7 +293,7 @@ const OrganiserQuestions = () => {
                         />
                     </Tabs>
                 </Box>
-                <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <Autocomplete
                         options={[{ id: 'all', title: 'All Events' }, ...events]}
                         getOptionLabel={(option) => option.title || ''}
@@ -306,7 +323,7 @@ const OrganiserQuestions = () => {
                         sx={{ minWidth: 350 }}
                         noOptionsText="No events found"
                     />
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <FormControl size="small" sx={{ minWidth: 180 }}>
                         <InputLabel>Sort by</InputLabel>
                         <Select
                             value={sortBy}
@@ -319,159 +336,317 @@ const OrganiserQuestions = () => {
                         </Select>
                     </FormControl>
                 </Box>
-            </Paper>
+            </SectionCard>
 
             {loading ? (
                 <LoadingSpinner message="Loading questions..." />
             ) : questions.length === 0 ? (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                    <QuestionIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-                    <Typography color="text.secondary">
-                        {activeTab === 1 ? 'No unanswered questions' :
-                         activeTab === 2 ? 'No answered questions yet' :
-                         'No questions yet'}
-                    </Typography>
-                </Paper>
+                <SectionCard>
+                    <EmptyState
+                        icon={<QuestionIcon sx={{ fontSize: 32 }} />}
+                        title={
+                            activeTab === 1 ? 'No unanswered questions' :
+                            activeTab === 2 ? 'No answered questions yet' :
+                            'No questions yet'
+                        }
+                        description="Questions from attendees will appear here as they come in."
+                    />
+                </SectionCard>
             ) : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {questions.map((question) => (
-                        <Card key={question.id}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                                    <Avatar src={question.userAvatarUrl}>
-                                        {question.userName?.charAt(0)}
-                                    </Avatar>
-                                    <Box sx={{ flex: 1 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Typography fontWeight="bold">
-                                                    {question.userName}
-                                                </Typography>
-                                                {question.answer ? (
-                                                    <Chip size="small" label="Answered" color="success" />
-                                                ) : (
-                                                    <Chip size="small" label="Pending" color="warning" />
-                                                )}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    {questions.map((question) => {
+                        const answerValue = answers[question.id] || '';
+                        const answerLength = answerValue.length;
+                        const isAnswered = Boolean(question.answer);
+                        return (
+                            <Card
+                                key={question.id}
+                                sx={{
+                                    borderLeft: `4px solid ${isAnswered
+                                        ? tokens.palette.success[500]
+                                        : tokens.palette.warning[500]}`,
+                                    transition: 'box-shadow 200ms ease, transform 200ms ease',
+                                    '&:hover': {
+                                        boxShadow: tokens.shadow.md,
+                                    },
+                                }}
+                            >
+                                <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
+                                    {/* ─── Header row: avatar + name + status + date ─── */}
+                                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mb: 2 }}>
+                                        <Avatar
+                                            src={question.userAvatarUrl}
+                                            sx={{
+                                                bgcolor: tokens.palette.primary[500],
+                                                width: 48,
+                                                height: 48,
+                                                fontSize: '1rem',
+                                                fontWeight: 600,
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            {question.userName?.charAt(0)?.toUpperCase()}
+                                        </Avatar>
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-start',
+                                                    gap: 1.5,
+                                                    flexWrap: 'wrap',
+                                                }}
+                                            >
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', minWidth: 0 }}>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: '1.0625rem',
+                                                            fontWeight: 700,
+                                                            color: 'text.primary',
+                                                            lineHeight: 1.3,
+                                                            letterSpacing: '-0.01em',
+                                                        }}
+                                                    >
+                                                        {question.userName}
+                                                    </Typography>
+                                                    <StatusChip
+                                                        label={isAnswered ? 'Answered' : 'Pending'}
+                                                        status={isAnswered ? 'success' : 'warning'}
+                                                    />
+                                                </Box>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            fontVariantNumeric: 'tabular-nums',
+                                                            fontSize: '0.8125rem',
+                                                        }}
+                                                    >
+                                                        {new Date(question.createdAt).toLocaleString()}
+                                                    </Typography>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleDeleteClick(question)}
+                                                        aria-label="Delete question"
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
                                             </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {new Date(question.createdAt).toLocaleString()}
-                                                </Typography>
-                                                <IconButton
-                                                    size="small"
-                                                    color="error"
-                                                    onClick={() => handleDeleteClick(question)}
-                                                    title="Delete question"
+                                            {selectedEvent === 'all' && question.eventTitle && (
+                                                <Box
+                                                    sx={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 0.75,
+                                                        mt: 0.75,
+                                                        px: 1.25,
+                                                        py: 0.375,
+                                                        borderRadius: tokens.radius.pill,
+                                                        bgcolor: 'primary.50',
+                                                        border: `1px solid ${tokens.palette.primary[100]}`,
+                                                    }}
                                                 >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 600,
+                                                            color: 'primary.700',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.04em',
+                                                        }}
+                                                    >
+                                                        Event
+                                                    </Typography>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: '0.8125rem',
+                                                            fontWeight: 500,
+                                                            color: 'primary.800',
+                                                        }}
+                                                    >
+                                                        {question.eventTitle}
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                         </Box>
-                                        {selectedEvent === 'all' && question.eventTitle && (
-                                            <Typography variant="caption" color="primary" sx={{ display: 'block', mb: 0.5 }}>
-                                                Event: {question.eventTitle}
-                                            </Typography>
-                                        )}
-                                        <Typography sx={{ mt: 1 }}>
+                                    </Box>
+
+                                    {/* ─── Question body (prominent) ─── */}
+                                    <Box
+                                        sx={{
+                                            ml: { xs: 0, sm: 8 },
+                                            mb: 2.5,
+                                            pl: 2,
+                                            borderLeft: `3px solid ${tokens.palette.neutral[200]}`,
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: '1rem',
+                                                lineHeight: 1.6,
+                                                color: 'text.primary',
+                                                fontWeight: 500,
+                                                whiteSpace: 'pre-wrap',
+                                                wordBreak: 'break-word',
+                                            }}
+                                        >
                                             {question.question}
                                         </Typography>
                                     </Box>
-                                </Box>
 
-                                {question.answer ? (
-                                    <>
-                                        <Divider sx={{ my: 2 }} />
-                                        <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1 }}>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Your answer:
-                                            </Typography>
-                                            <Typography sx={{ mt: 0.5 }}>
+                                    {/* ─── Answer section ─── */}
+                                    {isAnswered ? (
+                                        <Box
+                                            sx={{
+                                                bgcolor: tokens.palette.success[50],
+                                                border: `1px solid ${tokens.palette.success[100]}`,
+                                                p: 2.25,
+                                                borderRadius: 2,
+                                                ml: { xs: 0, sm: 8 },
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                <AnsweredIcon
+                                                    sx={{
+                                                        fontSize: 18,
+                                                        color: tokens.palette.success[600],
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: '0.75rem',
+                                                        color: tokens.palette.success[700],
+                                                        fontWeight: 700,
+                                                        letterSpacing: '0.06em',
+                                                        textTransform: 'uppercase',
+                                                    }}
+                                                >
+                                                    Your answer
+                                                </Typography>
+                                            </Box>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: '0.9375rem',
+                                                    lineHeight: 1.6,
+                                                    color: 'text.primary',
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word',
+                                                }}
+                                            >
                                                 {question.answer}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{ display: 'block', mt: 1.25, fontSize: '0.75rem' }}
+                                            >
                                                 Answered on {new Date(question.answeredAt).toLocaleString()}
                                             </Typography>
                                         </Box>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Divider sx={{ my: 2 }} />
-                                        <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
-                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                                                <TextField
-                                                    fullWidth
-                                                    placeholder="Type your answer (min 10 characters)..."
-                                                    value={answers[question.id] || ''}
-                                                    onChange={(e) => {
-                                                        handleAnswerChange(question.id, e.target.value);
-                                                        if (answerErrors[question.id]) {
-                                                            setAnswerErrors({ ...answerErrors, [question.id]: '' });
-                                                        }
+                                    ) : (
+                                        <Box sx={{ ml: { xs: 0, sm: 8 } }}>
+                                            <TextField
+                                                fullWidth
+                                                placeholder="Type your answer (minimum 10 characters)..."
+                                                value={answerValue}
+                                                onChange={(e) => {
+                                                    handleAnswerChange(question.id, e.target.value);
+                                                    if (answerErrors[question.id]) {
+                                                        setAnswerErrors({ ...answerErrors, [question.id]: '' });
+                                                    }
+                                                }}
+                                                multiline
+                                                minRows={3}
+                                                maxRows={8}
+                                                error={!!answerErrors[question.id]}
+                                                helperText={answerErrors[question.id] || ' '}
+                                                inputProps={{ maxLength: 1000 }}
+                                                sx={{
+                                                    '& .MuiInputBase-input': {
+                                                        fontSize: '0.9375rem',
+                                                        lineHeight: 1.55,
+                                                    },
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    gap: 1.5,
+                                                    flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    sx={{
+                                                        fontVariantNumeric: 'tabular-nums',
+                                                        fontSize: '0.8125rem',
                                                     }}
-                                                    size="small"
-                                                    multiline
-                                                    rows={2}
-                                                    error={!!answerErrors[question.id]}
-                                                />
-                                                <Button
-                                                    variant="outlined"
-                                                    color="secondary"
-                                                    onClick={() => handleAISuggest(question.id)}
-                                                    disabled={aiLoading[question.id]}
-                                                    sx={{ minWidth: 120 }}
-                                                    startIcon={<AIIcon />}
                                                 >
-                                                    {aiLoading[question.id] ? 'Loading...' : 'AI Suggest'}
-                                                </Button>
-                                                <Button
-                                                    variant="contained"
-                                                    onClick={() => handleSubmitAnswer(question.id)}
-                                                    sx={{ minWidth: 100 }}
-                                                >
-                                                    <SendIcon />
-                                                </Button>
-                                            </Box>
-                                            {answerErrors[question.id] && (
-                                                <Typography variant="caption" color="error">
-                                                    {answerErrors[question.id]}
+                                                    {answerLength}/1000 characters
                                                 </Typography>
-                                            )}
-                                            <Typography variant="caption" color="text.secondary">
-                                                {(answers[question.id] || '').length}/1000 characters
-                                            </Typography>
+                                                <Box
+                                                    sx={{
+                                                        display: 'flex',
+                                                        gap: 1,
+                                                        width: { xs: '100%', sm: 'auto' },
+                                                        '& > *': {
+                                                            flex: { xs: 1, sm: 'initial' },
+                                                            minWidth: { sm: 140 },
+                                                            height: 42,
+                                                            fontSize: '0.875rem',
+                                                            fontWeight: 600,
+                                                        },
+                                                    }}
+                                                >
+                                                    <LoadingButton
+                                                        variant="outlined"
+                                                        color="secondary"
+                                                        onClick={() => handleAISuggest(question.id)}
+                                                        loading={aiLoading[question.id]}
+                                                        startIcon={<AIIcon sx={{ fontSize: 18 }} />}
+                                                    >
+                                                        AI Suggest
+                                                    </LoadingButton>
+                                                    <LoadingButton
+                                                        variant="contained"
+                                                        onClick={() => handleSubmitAnswer(question.id)}
+                                                        loading={submittingAnswer[question.id]}
+                                                        startIcon={<SendIcon sx={{ fontSize: 18 }} />}
+                                                    >
+                                                        Send
+                                                    </LoadingButton>
+                                                </Box>
+                                            </Box>
                                         </Box>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </Box>
             )}
 
-            <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-                <DialogTitle>Delete Question</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete this question? This action cannot be undone.
-                    </DialogContentText>
-                    {questionToDelete && (
-                        <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                Question from {questionToDelete.userName}:
-                            </Typography>
-                            <Typography variant="body1" sx={{ mt: 1 }}>
-                                "{questionToDelete.question}"
-                            </Typography>
-                        </Box>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDeleteCancel}>Cancel</Button>
-                    <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <ConfirmDialog
+                open={deleteDialogOpen}
+                onCancel={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Question"
+                message={
+                    questionToDelete
+                        ? `Are you sure you want to delete this question from ${questionToDelete.userName}? "${questionToDelete.question}" — this action cannot be undone.`
+                        : 'Are you sure you want to delete this question? This action cannot be undone.'
+                }
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmColor="error"
+            />
         </Box>
     );
 };

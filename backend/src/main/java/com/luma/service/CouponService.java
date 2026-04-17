@@ -82,11 +82,33 @@ public class CouponService {
                     .build();
         }
 
-        if (coupon.getEvent() != null && !coupon.getEvent().getId().equals(eventId)) {
-            return CouponValidationResponse.builder()
-                    .valid(false)
-                    .message("This coupon is not valid for this event")
-                    .build();
+        // Scope check: event-specific coupons must target this exact event;
+        // organiser-wide coupons (coupon.event == null) must be authored by
+        // the organiser that owns this event. This prevents an organiser's
+        // promo code from being redeemed against another organiser's events.
+        if (coupon.getEvent() != null) {
+            if (!coupon.getEvent().getId().equals(eventId)) {
+                return CouponValidationResponse.builder()
+                        .valid(false)
+                        .message("This coupon is not valid for this event")
+                        .build();
+            }
+        } else {
+            Event targetEvent = eventService.getEntityById(eventId);
+            UUID targetOrganiserId = targetEvent.getOrganiser() != null
+                    ? targetEvent.getOrganiser().getId()
+                    : null;
+            UUID creatorId = coupon.getCreatedBy() != null
+                    ? coupon.getCreatedBy().getId()
+                    : null;
+            if (targetOrganiserId == null
+                    || creatorId == null
+                    || !creatorId.equals(targetOrganiserId)) {
+                return CouponValidationResponse.builder()
+                        .valid(false)
+                        .message("This coupon is not valid for this event")
+                        .build();
+            }
         }
 
         if (coupon.getMinOrderAmount() != null && orderAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
@@ -184,8 +206,16 @@ public class CouponService {
     public List<CouponResponse> getAvailableCouponsForUser(UUID eventId) {
         List<Coupon> coupons;
         if (eventId != null) {
-            coupons = couponRepository.findAvailableCouponsByEvent(eventId);
+            // Merge event-specific + organiser-wide coupons authored by the
+            // event owner so the checkout screen surfaces every coupon the
+            // attendee is eligible for, with biggest savings on top.
+            coupons = new java.util.ArrayList<>(couponRepository.findAvailableCouponsByEvent(eventId));
+            coupons.addAll(couponRepository.findOrganiserWideCouponsForEvent(eventId));
         } else {
+            // No event context → show all active, non-event coupons so the user
+            // can browse the catalogue. These only redeem against events of the
+            // same organiser who authored the coupon; enforcement happens in
+            // validateCoupon().
             coupons = couponRepository.findAvailableGlobalCoupons();
         }
         return coupons.stream()

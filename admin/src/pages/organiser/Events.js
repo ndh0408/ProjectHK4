@@ -25,7 +25,6 @@ import {
     Checkbox,
     FormGroup,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
     Add as AddIcon,
     Refresh as RefreshIcon,
@@ -53,13 +52,15 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MDEditor from '@uiw/react-md-editor';
 import { organiserApi, publicApi } from '../../api';
 import { ConfirmDialog, ImageUpload, SpeakerForm, UpgradeDialog } from '../../components/common';
+import { PageHeader, DataTableCard, StatusChip, FormDialog, LoadingButton } from '../../components/ui';
+import EventIcon from '@mui/icons-material/Event';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-const statusColors = {
-    DRAFT: 'default',
+const statusMap = {
+    DRAFT: 'neutral',
     PUBLISHED: 'success',
-    CANCELLED: 'error',
+    CANCELLED: 'danger',
     COMPLETED: 'info',
     REJECTED: 'warning',
 };
@@ -672,10 +673,9 @@ const OrganiserEvents = () => {
             width: 120,
             renderCell: (params) => {
                 const chip = (
-                    <Chip
+                    <StatusChip
                         label={params.value}
-                        size="small"
-                        color={statusColors[params.value] || 'default'}
+                        status={statusMap[params.value] || 'neutral'}
                     />
                 );
                 if (params.value === 'REJECTED' && params.row.rejectionReason) {
@@ -734,56 +734,76 @@ const OrganiserEvents = () => {
                     </Alert>
                 )}
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h5" fontWeight="bold">
-                        My Events
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button startIcon={<RefreshIcon />} onClick={loadEvents}>
+                <PageHeader
+                    title="My Events"
+                    subtitle="Create, edit and manage your events. AI tools help you draft content faster."
+                    icon={<EventIcon />}
+                    actions={[
+                        <Button key="refresh" startIcon={<RefreshIcon />} onClick={loadEvents}>
                             Refresh
-                        </Button>
+                        </Button>,
                         <Button
+                            key="ai"
                             variant="outlined"
                             startIcon={<AIIcon />}
                             onClick={() => setAiEventDialog(true)}
                             color="secondary"
                         >
                             AI Generate
-                        </Button>
+                        </Button>,
                         <Button
+                            key="create"
                             variant="contained"
                             startIcon={<AddIcon />}
                             onClick={() => handleOpenDialog()}
                         >
                             Create Event
+                        </Button>,
+                    ]}
+                />
+
+
+                <DataTableCard
+                    rows={events}
+                    columns={columns}
+                    loading={loading}
+                    emptyTitle="No events yet"
+                    emptyDescription="Create your first event to start collecting registrations."
+                    emptyIcon={<EventIcon sx={{ fontSize: 40 }} />}
+                    emptyAction={
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+                            Create Event
                         </Button>
-                    </Box>
-                </Box>
+                    }
+                    dataGridProps={{
+                        paginationModel,
+                        onPaginationModelChange: setPaginationModel,
+                        pageSizeOptions: [10, 25, 50],
+                        rowCount: totalRows,
+                        paginationMode: 'server',
+                        onRowClick: handleRowClick,
+                        sx: {
+                            '& .MuiDataGrid-row': { cursor: 'pointer' },
+                        },
+                    }}
+                />
 
-                <Paper>
-                    <DataGrid
-                        rows={events}
-                        columns={columns}
-                        loading={loading}
-                        paginationModel={paginationModel}
-                        onPaginationModelChange={setPaginationModel}
-                        pageSizeOptions={[10, 25, 50]}
-                        rowCount={totalRows}
-                        paginationMode="server"
-                        onRowClick={handleRowClick}
-                        disableRowSelectionOnClick
-                        autoHeight
-                        sx={{
-                            '& .MuiDataGrid-row': {
-                                cursor: 'pointer',
-                            },
-                        }}
-                    />
-                </Paper>
-
-                <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                    <DialogTitle>{editEvent ? 'Edit Event' : 'Create Event'}</DialogTitle>
-                    <DialogContent>
+                <FormDialog
+                    open={dialogOpen}
+                    onClose={handleCloseDialog}
+                    title={editEvent ? 'Edit Event' : 'Create Event'}
+                    subtitle={editEvent ? 'Update event details and publish changes.' : 'Fill in the details to create a new event.'}
+                    icon={<EventIcon />}
+                    maxWidth="md"
+                    actions={
+                        <>
+                            <Button onClick={handleCloseDialog}>Cancel</Button>
+                            <LoadingButton variant="contained" onClick={handleSubmit}>
+                                {editEvent ? 'Update' : 'Create'}
+                            </LoadingButton>
+                        </>
+                    }
+                >
                         {editEvent?.status === 'REJECTED' && (
                             <Alert severity="warning" sx={{ mb: 2, mt: 1 }}>
                                 <Typography variant="subtitle2" fontWeight="bold">
@@ -1376,14 +1396,7 @@ const OrganiserEvents = () => {
                                 </Box>
                             </Grid>
                         </Grid>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseDialog}>Cancel</Button>
-                        <Button onClick={handleSubmit} variant="contained">
-                            {editEvent ? 'Update' : 'Create'}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                </FormDialog>
 
                 <Drawer
                     anchor="right"
@@ -1412,12 +1425,12 @@ const OrganiserEvents = () => {
                             )}
 
                             <Typography variant="h6" gutterBottom>{quickViewEvent.title}</Typography>
-                            <Chip
-                                label={quickViewEvent.status}
-                                color={statusColors[quickViewEvent.status] || 'default'}
-                                size="small"
-                                sx={{ mb: 2 }}
-                            />
+                            <Box sx={{ mb: 2 }}>
+                                <StatusChip
+                                    label={quickViewEvent.status}
+                                    status={statusMap[quickViewEvent.status] || 'neutral'}
+                                />
+                            </Box>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

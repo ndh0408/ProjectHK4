@@ -2,29 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
-    Paper,
     TextField,
-    InputAdornment,
     IconButton,
-    Chip,
     Menu,
     MenuItem,
     Button,
     FormControl,
     InputLabel,
     Select,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Grid,
     Divider,
     Avatar,
     CircularProgress,
+    Chip,
+    Tooltip,
+    Paper,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import {
-    Search as SearchIcon,
     MoreVert as MoreVertIcon,
     Refresh as RefreshIcon,
     Event as EventIcon,
@@ -39,18 +33,27 @@ import {
     Warning as WarningIcon,
     Lightbulb as TipIcon,
     Repeat as RepeatIcon,
+    EventNote as EventNoteIcon,
 } from '@mui/icons-material';
 import MDEditor from '@uiw/react-md-editor';
 import { adminApi } from '../../api';
 import { ConfirmDialog } from '../../components/common';
+import {
+    PageHeader,
+    PageToolbar,
+    DataTableCard,
+    StatusChip,
+    FormDialog,
+    LoadingButton,
+} from '../../components/ui';
 import { toast } from 'react-toastify';
 
-const statusColors = {
-    DRAFT: 'default',
-    PUBLISHED: 'success',
-    CANCELLED: 'error',
-    COMPLETED: 'info',
-    REJECTED: 'warning',
+const statusMap = {
+    DRAFT: { status: 'neutral', label: 'Draft' },
+    PUBLISHED: { status: 'success', label: 'Published' },
+    CANCELLED: { status: 'danger', label: 'Cancelled' },
+    COMPLETED: { status: 'info', label: 'Completed' },
+    REJECTED: { status: 'warning', label: 'Rejected' },
 };
 
 const Events = () => {
@@ -217,13 +220,13 @@ const Events = () => {
             field: 'title',
             headerName: 'Event',
             flex: 1,
-            minWidth: 250,
+            minWidth: 260,
             renderCell: (params) => (
-                <Box>
-                    <Typography variant="body2" fontWeight="medium" noWrap>
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="body2" fontWeight={600} noWrap>
                         {params.row.title}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
                         {params.row.organiser?.fullName ||
                          params.row.organiser?.email?.split('@')[0] || 'N/A'}
                     </Typography>
@@ -233,7 +236,7 @@ const Events = () => {
         {
             field: 'startTime',
             headerName: 'Date',
-            width: 110,
+            width: 120,
             valueGetter: (params) => {
                 if (!params.row?.startTime) return '';
                 return new Date(params.row.startTime).toLocaleDateString();
@@ -242,20 +245,18 @@ const Events = () => {
         {
             field: 'status',
             headerName: 'Status',
-            width: 110,
-            renderCell: (params) => (
-                <Chip
-                    label={params.value}
-                    size="small"
-                    color={statusColors[params.value] || 'default'}
-                />
-            ),
+            width: 130,
+            renderCell: (params) => {
+                const cfg = statusMap[params.value] || { status: 'neutral', label: params.value };
+                return <StatusChip label={cfg.label} status={cfg.status} />;
+            },
         },
         {
             field: 'registrations',
             headerName: 'Regs',
-            width: 80,
+            width: 90,
             align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => {
                 if (!params.row) return <Typography variant="body2">0</Typography>;
                 const current = params.row.approvedCount || params.row.currentRegistrations || 0;
@@ -277,82 +278,89 @@ const Events = () => {
         {
             field: 'actions',
             headerName: '',
-            width: 50,
+            width: 60,
             sortable: false,
+            align: 'center',
+            headerAlign: 'center',
             renderCell: (params) => (
-                <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, params.row)}
-                >
-                    <MoreVertIcon />
-                </IconButton>
+                <Tooltip title="More actions">
+                    <IconButton
+                        size="small"
+                        aria-label="event actions"
+                        onClick={(e) => handleMenuOpen(e, params.row)}
+                    >
+                        <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
             ),
         },
     ];
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight="bold">
-                    Event Management
-                </Typography>
-                <Button startIcon={<RefreshIcon />} onClick={loadEvents}>
-                    Refresh
-                </Button>
-            </Box>
+            <PageHeader
+                title="Event Management"
+                subtitle="Review, approve and moderate all events on the platform"
+                icon={<EventNoteIcon />}
+                actions={
+                    <Button
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={loadEvents}
+                    >
+                        Refresh
+                    </Button>
+                }
+            />
 
-            <Paper sx={{ p: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                        placeholder="Search events..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        size="small"
-                        sx={{ width: 300 }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchIcon />
-                                </InputAdornment>
-                            ),
-                        }}
+            <DataTableCard
+                toolbar={
+                    <PageToolbar
+                        search={search}
+                        onSearchChange={setSearch}
+                        searchPlaceholder="Search events by title..."
+                        filters={
+                            <FormControl size="small" sx={{ minWidth: 180 }}>
+                                <InputLabel>Status</InputLabel>
+                                <Select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    label="Status"
+                                >
+                                    <MenuItem value="">All statuses</MenuItem>
+                                    <MenuItem value="DRAFT">Draft (Pending)</MenuItem>
+                                    <MenuItem value="PUBLISHED">Published</MenuItem>
+                                    <MenuItem value="REJECTED">Rejected</MenuItem>
+                                    <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                                    <MenuItem value="COMPLETED">Completed</MenuItem>
+                                </Select>
+                            </FormControl>
+                        }
                     />
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            label="Status"
-                        >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="DRAFT">Draft (Pending)</MenuItem>
-                            <MenuItem value="PUBLISHED">Published</MenuItem>
-                            <MenuItem value="REJECTED">Rejected</MenuItem>
-                            <MenuItem value="CANCELLED">Cancelled</MenuItem>
-                            <MenuItem value="COMPLETED">Completed</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Box>
-            </Paper>
+                }
+                rows={events}
+                columns={columns}
+                loading={loading}
+                emptyTitle="No events found"
+                emptyDescription="No events match your current search or filter."
+                emptyIcon={<EventNoteIcon sx={{ fontSize: 40 }} />}
+                dataGridProps={{
+                    paginationModel,
+                    onPaginationModelChange: setPaginationModel,
+                    pageSizeOptions: [10, 25, 50],
+                    rowCount: totalRows,
+                    paginationMode: 'server',
+                }}
+            />
 
-            <Paper>
-                <DataGrid
-                    rows={events}
-                    columns={columns}
-                    loading={loading}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    pageSizeOptions={[10, 25, 50]}
-                    rowCount={totalRows}
-                    paginationMode="server"
-                    disableRowSelectionOnClick
-                    autoHeight
-                />
-            </Paper>
-
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                <MenuItem onClick={handleViewDetails}>View Details</MenuItem>
-                <Divider />
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2 } } }}
+            >
+                <MenuItem onClick={handleViewDetails}>View details</MenuItem>
+                <Divider sx={{ my: 0.5 }} />
                 {selectedEvent?.status === 'DRAFT' && (
                     <>
                         <MenuItem onClick={handleApprove} sx={{ color: 'success.main' }}>
@@ -361,388 +369,389 @@ const Events = () => {
                         <MenuItem onClick={handleReject} sx={{ color: 'warning.main' }}>
                             Reject
                         </MenuItem>
-                        <Divider />
+                        <Divider sx={{ my: 0.5 }} />
                     </>
                 )}
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Delete</MenuItem>
+                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                    Delete
+                </MenuItem>
             </Menu>
 
-            <Dialog
+            <FormDialog
                 open={detailDialog.open}
                 onClose={() => setDetailDialog({ open: false, event: null, loading: false })}
+                title="Event Details"
+                subtitle={detailDialog.event?.title}
+                icon={<EventNoteIcon />}
                 maxWidth="md"
-                fullWidth
+                actions={
+                    <>
+                        {detailDialog.event?.status === 'DRAFT' && (
+                            <>
+                                <Button
+                                    color="success"
+                                    variant="contained"
+                                    onClick={() => {
+                                        setDetailDialog({ open: false, event: null, loading: false });
+                                        setSelectedEvent(detailDialog.event);
+                                        handleApprove();
+                                    }}
+                                >
+                                    Approve
+                                </Button>
+                                <Button
+                                    color="warning"
+                                    variant="outlined"
+                                    onClick={() => {
+                                        setDetailDialog({ open: false, event: null, loading: false });
+                                        setSelectedEvent(detailDialog.event);
+                                        handleReject();
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                            </>
+                        )}
+                        <Button onClick={() => setDetailDialog({ open: false, event: null, loading: false })}>
+                            Close
+                        </Button>
+                    </>
+                }
             >
-                <DialogTitle>
-                    Event Details
-                </DialogTitle>
-                <DialogContent dividers>
-                    {detailDialog.loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : detailDialog.event ? (
-                        <Grid container spacing={3}>
-                            {detailDialog.event.imageUrl && (
-                                <Grid item xs={12}>
-                                    <Box
-                                        component="img"
-                                        src={detailDialog.event.imageUrl}
-                                        alt={detailDialog.event.title}
-                                        sx={{
-                                            width: '100%',
-                                            maxHeight: 300,
-                                            objectFit: 'cover',
-                                            borderRadius: 2,
-                                        }}
-                                    />
-                                </Grid>
-                            )}
-
+                {detailDialog.loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : detailDialog.event ? (
+                    <Grid container spacing={3}>
+                        {detailDialog.event.imageUrl && (
                             <Grid item xs={12}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Typography variant="h5" fontWeight="bold">
-                                        {detailDialog.event.title}
-                                    </Typography>
-                                    <Chip
-                                        label={detailDialog.event.status}
-                                        color={statusColors[detailDialog.event.status] || 'default'}
-                                    />
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                    Description
-                                </Typography>
-                                <Box data-color-mode="light" sx={{
-                                    '& .wmde-markdown': {
-                                        backgroundColor: 'transparent',
-                                        fontSize: '14px',
-                                    }
-                                }}>
-                                    <MDEditor.Markdown
-                                        source={detailDialog.event.description || 'No description'}
-                                        style={{ backgroundColor: 'transparent' }}
-                                    />
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <Divider />
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <EventIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Date & Time</Typography>
-                                        <Typography variant="body2">
-                                            {formatDateTime(detailDialog.event.startTime)} - {formatDateTime(detailDialog.event.endTime)}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <LocationIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Location</Typography>
-                                        <Typography variant="body2">
-                                            {detailDialog.event.venue}, {detailDialog.event.address}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {detailDialog.event.city?.name}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <CategoryIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Category</Typography>
-                                        <Typography variant="body2">
-                                            {detailDialog.event.category?.name}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <MoneyIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Price</Typography>
-                                        <Typography variant="body2">
-                                            {formatPrice(detailDialog.event.ticketPrice, detailDialog.event.isFree)}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <PeopleIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Capacity</Typography>
-                                        <Typography variant="body2">
-                                            {detailDialog.event.approvedCount || 0} / {detailDialog.event.capacity || 'Unlimited'}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            <Grid item xs={12} md={6}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <PersonIcon color="primary" />
-                                    <Box>
-                                        <Typography variant="caption" color="text.secondary">Organiser</Typography>
-                                        <Typography variant="body2">
-                                            {detailDialog.event.organiser?.fullName ||
-                                             detailDialog.event.organiser?.organizationName ||
-                                             (detailDialog.event.organiser?.email &&
-                                                detailDialog.event.organiser.email.split('@')[0]
-                                                    .split(/[._-]/)
-                                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                                                    .join(' ')
-                                             ) || 'N/A'}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Grid>
-
-                            {detailDialog.event.isRecurring && (
-                                <Grid item xs={12}>
-                                    <Divider sx={{ my: 2 }} />
-                                    <Box sx={{
-                                        p: 2,
-                                        bgcolor: 'primary.50',
+                                <Box
+                                    component="img"
+                                    src={detailDialog.event.imageUrl}
+                                    alt={detailDialog.event.title}
+                                    sx={{
+                                        width: '100%',
+                                        maxHeight: 300,
+                                        objectFit: 'cover',
                                         borderRadius: 2,
-                                        border: '1px solid',
-                                        borderColor: 'primary.200'
-                                    }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                            <RepeatIcon color="primary" />
-                                            <Typography variant="h6" color="primary">
-                                                Recurring Event
+                                    }}
+                                />
+                            </Grid>
+                        )}
+
+                        <Grid item xs={12}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                <Typography variant="h5" fontWeight={700}>
+                                    {detailDialog.event.title}
+                                </Typography>
+                                {(() => {
+                                    const cfg = statusMap[detailDialog.event.status] || { status: 'neutral', label: detailDialog.event.status };
+                                    return <StatusChip label={cfg.label} status={cfg.status} />;
+                                })()}
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Description
+                            </Typography>
+                            <Box data-color-mode="light" sx={{
+                                '& .wmde-markdown': {
+                                    backgroundColor: 'transparent',
+                                    fontSize: '14px',
+                                }
+                            }}>
+                                <MDEditor.Markdown
+                                    source={detailDialog.event.description || 'No description'}
+                                    style={{ backgroundColor: 'transparent' }}
+                                />
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <Divider />
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <EventIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Date & Time</Typography>
+                                    <Typography variant="body2">
+                                        {formatDateTime(detailDialog.event.startTime)} — {formatDateTime(detailDialog.event.endTime)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <LocationIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Location</Typography>
+                                    <Typography variant="body2">
+                                        {detailDialog.event.venue}, {detailDialog.event.address}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {detailDialog.event.city?.name}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <CategoryIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Category</Typography>
+                                    <Typography variant="body2">
+                                        {detailDialog.event.category?.name}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <MoneyIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Price</Typography>
+                                    <Typography variant="body2">
+                                        {formatPrice(detailDialog.event.ticketPrice, detailDialog.event.isFree)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <PeopleIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Capacity</Typography>
+                                    <Typography variant="body2">
+                                        {detailDialog.event.approvedCount || 0} / {detailDialog.event.capacity || 'Unlimited'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <PersonIcon color="primary" fontSize="small" sx={{ mt: 0.5 }} />
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">Organiser</Typography>
+                                    <Typography variant="body2">
+                                        {detailDialog.event.organiser?.fullName ||
+                                         detailDialog.event.organiser?.organizationName ||
+                                         (detailDialog.event.organiser?.email &&
+                                            detailDialog.event.organiser.email.split('@')[0]
+                                                .split(/[._-]/)
+                                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                                .join(' ')
+                                         ) || 'N/A'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        {detailDialog.event.isRecurring && (
+                            <Grid item xs={12}>
+                                <Divider sx={{ my: 2 }} />
+                                <Box sx={{
+                                    p: 2.5,
+                                    bgcolor: 'primary.50',
+                                    borderRadius: 2,
+                                    border: '1px solid',
+                                    borderColor: 'primary.200'
+                                }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                        <RepeatIcon color="primary" />
+                                        <Typography variant="h6" color="primary">
+                                            Recurring Event
+                                        </Typography>
+                                        <StatusChip
+                                            label={`${detailDialog.event.occurrenceIndex || 1}/${detailDialog.event.totalOccurrences || 1}`}
+                                            status="primary"
+                                        />
+                                    </Box>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={6} md={3}>
+                                            <Typography variant="caption" color="text.secondary">Recurrence Type</Typography>
+                                            <Typography variant="body2" fontWeight="medium">
+                                                {{
+                                                    DAILY: 'Daily',
+                                                    WEEKLY: 'Weekly',
+                                                    BIWEEKLY: 'Biweekly',
+                                                    MONTHLY: 'Monthly',
+                                                }[detailDialog.event.recurrenceType] || detailDialog.event.recurrenceType}
                                             </Typography>
-                                            <Chip
-                                                label={`${detailDialog.event.occurrenceIndex || 1}/${detailDialog.event.totalOccurrences || 1}`}
-                                                size="small"
-                                                color="primary"
+                                        </Grid>
+                                        <Grid item xs={6} md={3}>
+                                            <Typography variant="caption" color="text.secondary">Interval</Typography>
+                                            <Typography variant="body2" fontWeight="medium">
+                                                {detailDialog.event.recurrenceInterval || 1}
+                                            </Typography>
+                                        </Grid>
+                                        {detailDialog.event.recurrenceCount && (
+                                            <Grid item xs={6} md={3}>
+                                                <Typography variant="caption" color="text.secondary">Total Occurrences</Typography>
+                                                <Typography variant="body2" fontWeight="medium">
+                                                    {detailDialog.event.recurrenceCount} times
+                                                </Typography>
+                                            </Grid>
+                                        )}
+                                        {detailDialog.event.recurrenceEndDate && (
+                                            <Grid item xs={6} md={3}>
+                                                <Typography variant="caption" color="text.secondary">End Date</Typography>
+                                                <Typography variant="body2" fontWeight="medium">
+                                                    {new Date(detailDialog.event.recurrenceEndDate).toLocaleDateString('en-US')}
+                                                </Typography>
+                                            </Grid>
+                                        )}
+                                        {detailDialog.event.recurrenceDaysOfWeek && detailDialog.event.recurrenceDaysOfWeek.length > 0 && (
+                                            <Grid item xs={12}>
+                                                <Typography variant="caption" color="text.secondary">Days of Week</Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+                                                    {detailDialog.event.recurrenceDaysOfWeek.map((day, idx) => {
+                                                        const dayLabels = {
+                                                            MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu',
+                                                            FRI: 'Fri', SAT: 'Sat', SUN: 'Sun',
+                                                            MONDAY: 'Mon', TUESDAY: 'Tue', WEDNESDAY: 'Wed', THURSDAY: 'Thu',
+                                                            FRIDAY: 'Fri', SATURDAY: 'Sat', SUNDAY: 'Sun'
+                                                        };
+                                                        return (
+                                                            <Chip
+                                                                key={idx}
+                                                                label={dayLabels[day.toUpperCase()] || day}
+                                                                size="small"
+                                                                variant="outlined"
+                                                                color="primary"
+                                                            />
+                                                        );
+                                                    })}
+                                                </Box>
+                                            </Grid>
+                                        )}
+                                        {detailDialog.event.parentEventId && (
+                                            <Grid item xs={12}>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    This is a child occurrence of the parent event
+                                                </Typography>
+                                            </Grid>
+                                        )}
+                                    </Grid>
+                                </Box>
+                            </Grid>
+                        )}
+
+                        {detailDialog.event.speakers && detailDialog.event.speakers.length > 0 && (
+                            <Grid item xs={12}>
+                                <Divider sx={{ my: 2 }} />
+                                <Typography variant="h6" gutterBottom>Speakers</Typography>
+                                <Grid container spacing={2}>
+                                    {detailDialog.event.speakers.map((speaker, index) => (
+                                        <Grid item xs={12} sm={6} md={4} key={index}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <Avatar src={speaker.imageUrl} sx={{ width: 48, height: 48 }}>
+                                                    {speaker.name?.charAt(0)}
+                                                </Avatar>
+                                                <Box>
+                                                    <Typography variant="subtitle2">{speaker.name}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {speaker.title}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Grid>
+                        )}
+
+                        {detailDialog.event?.status === 'DRAFT' && (
+                            <Grid item xs={12}>
+                                <Divider sx={{ my: 2 }} />
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <AIIcon color="secondary" />
+                                        <Typography variant="h6">AI Moderation</Typography>
+                                    </Box>
+                                    <LoadingButton
+                                        variant="outlined"
+                                        color="secondary"
+                                        startIcon={<AIIcon />}
+                                        onClick={handleAIAnalyze}
+                                        loading={aiLoading}
+                                    >
+                                        {aiAnalysis ? 'Re-analyze' : 'Analyze Event'}
+                                    </LoadingButton>
+                                </Box>
+
+                                {aiAnalysis && (
+                                    <Paper variant="outlined" sx={{ p: 2.5, bgcolor: 'grey.50', borderRadius: 2 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+                                            <StatusChip
+                                                label={aiAnalysis.recommendation}
+                                                status={
+                                                    aiAnalysis.recommendation === 'APPROVE' ? 'success' :
+                                                    aiAnalysis.recommendation === 'REJECT' ? 'danger' : 'warning'
+                                                }
+                                                icon={
+                                                    aiAnalysis.recommendation === 'APPROVE' ? <ApproveIcon /> :
+                                                    aiAnalysis.recommendation === 'REJECT' ? <RejectIcon /> : <WarningIcon />
+                                                }
+                                            />
+                                            <StatusChip
+                                                label={`Quality Score: ${aiAnalysis.qualityScore}/100`}
+                                                status={
+                                                    aiAnalysis.qualityScore >= 70 ? 'success' :
+                                                    aiAnalysis.qualityScore >= 40 ? 'warning' : 'danger'
+                                                }
                                             />
                                         </Box>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={6} md={3}>
-                                                <Typography variant="caption" color="text.secondary">Recurrence Type</Typography>
-                                                <Typography variant="body2" fontWeight="medium">
-                                                    {{
-                                                        DAILY: 'Daily',
-                                                        WEEKLY: 'Weekly',
-                                                        BIWEEKLY: 'Biweekly',
-                                                        MONTHLY: 'Monthly',
-                                                    }[detailDialog.event.recurrenceType] || detailDialog.event.recurrenceType}
+
+                                        <Typography variant="body2" sx={{ mb: 2 }}>
+                                            {aiAnalysis.summary}
+                                        </Typography>
+
+                                        {aiAnalysis.strengths?.length > 0 && (
+                                            <Box sx={{ mb: 1 }}>
+                                                <Typography variant="subtitle2" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <ApproveIcon fontSize="small" /> Strengths:
                                                 </Typography>
-                                            </Grid>
-                                            <Grid item xs={6} md={3}>
-                                                <Typography variant="caption" color="text.secondary">Interval</Typography>
-                                                <Typography variant="body2" fontWeight="medium">
-                                                    {detailDialog.event.recurrenceInterval || 1}
-                                                </Typography>
-                                            </Grid>
-                                            {detailDialog.event.recurrenceCount && (
-                                                <Grid item xs={6} md={3}>
-                                                    <Typography variant="caption" color="text.secondary">Total Occurrences</Typography>
-                                                    <Typography variant="body2" fontWeight="medium">
-                                                        {detailDialog.event.recurrenceCount} times
-                                                    </Typography>
-                                                </Grid>
-                                            )}
-                                            {detailDialog.event.recurrenceEndDate && (
-                                                <Grid item xs={6} md={3}>
-                                                    <Typography variant="caption" color="text.secondary">End Date</Typography>
-                                                    <Typography variant="body2" fontWeight="medium">
-                                                        {new Date(detailDialog.event.recurrenceEndDate).toLocaleDateString('en-US')}
-                                                    </Typography>
-                                                </Grid>
-                                            )}
-                                            {detailDialog.event.recurrenceDaysOfWeek && detailDialog.event.recurrenceDaysOfWeek.length > 0 && (
-                                                <Grid item xs={12}>
-                                                    <Typography variant="caption" color="text.secondary">Days of Week</Typography>
-                                                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-                                                        {detailDialog.event.recurrenceDaysOfWeek.map((day, idx) => {
-                                                            const dayLabels = {
-                                                                MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu',
-                                                                FRI: 'Fri', SAT: 'Sat', SUN: 'Sun',
-                                                                MONDAY: 'Mon', TUESDAY: 'Tue', WEDNESDAY: 'Wed', THURSDAY: 'Thu',
-                                                                FRIDAY: 'Fri', SATURDAY: 'Sat', SUNDAY: 'Sun'
-                                                            };
-                                                            return (
-                                                                <Chip
-                                                                    key={idx}
-                                                                    label={dayLabels[day.toUpperCase()] || day}
-                                                                    size="small"
-                                                                    variant="outlined"
-                                                                    color="primary"
-                                                                />
-                                                            );
-                                                        })}
-                                                    </Box>
-                                                </Grid>
-                                            )}
-                                            {detailDialog.event.parentEventId && (
-                                                <Grid item xs={12}>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        This is a child occurrence of the parent event
-                                                    </Typography>
-                                                </Grid>
-                                            )}
-                                        </Grid>
-                                    </Box>
-                                </Grid>
-                            )}
-
-                            {detailDialog.event.speakers && detailDialog.event.speakers.length > 0 && (
-                                <Grid item xs={12}>
-                                    <Divider sx={{ my: 2 }} />
-                                    <Typography variant="h6" gutterBottom>Speakers</Typography>
-                                    <Grid container spacing={2}>
-                                        {detailDialog.event.speakers.map((speaker, index) => (
-                                            <Grid item xs={12} sm={6} md={4} key={index}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar src={speaker.imageUrl} sx={{ width: 48, height: 48 }}>
-                                                        {speaker.name?.charAt(0)}
-                                                    </Avatar>
-                                                    <Box>
-                                                        <Typography variant="subtitle2">{speaker.name}</Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {speaker.title}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                </Grid>
-                            )}
-
-                            {detailDialog.event?.status === 'DRAFT' && (
-                                <Grid item xs={12}>
-                                    <Divider sx={{ my: 2 }} />
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <AIIcon color="secondary" />
-                                            <Typography variant="h6">AI Moderation</Typography>
-                                        </Box>
-                                        <Button
-                                            variant="outlined"
-                                            color="secondary"
-                                            startIcon={aiLoading ? <CircularProgress size={16} /> : <AIIcon />}
-                                            onClick={handleAIAnalyze}
-                                            disabled={aiLoading}
-                                        >
-                                            {aiLoading ? 'Analyzing...' : (aiAnalysis ? 'Re-analyze' : 'Analyze Event')}
-                                        </Button>
-                                    </Box>
-
-                                    {aiAnalysis && (
-                                        <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                                <Chip
-                                                    label={aiAnalysis.recommendation}
-                                                    color={
-                                                        aiAnalysis.recommendation === 'APPROVE' ? 'success' :
-                                                        aiAnalysis.recommendation === 'REJECT' ? 'error' : 'warning'
-                                                    }
-                                                    icon={
-                                                        aiAnalysis.recommendation === 'APPROVE' ? <ApproveIcon /> :
-                                                        aiAnalysis.recommendation === 'REJECT' ? <RejectIcon /> : <WarningIcon />
-                                                    }
-                                                />
-                                                <Chip
-                                                    label={`Quality Score: ${aiAnalysis.qualityScore}/100`}
-                                                    variant="outlined"
-                                                    color={
-                                                        aiAnalysis.qualityScore >= 70 ? 'success' :
-                                                        aiAnalysis.qualityScore >= 40 ? 'warning' : 'error'
-                                                    }
-                                                />
+                                                <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                                                    {aiAnalysis.strengths.map((s, i) => (
+                                                        <li key={i}><Typography variant="body2">{s}</Typography></li>
+                                                    ))}
+                                                </ul>
                                             </Box>
+                                        )}
 
-                                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                                {aiAnalysis.summary}
-                                            </Typography>
+                                        {aiAnalysis.concerns?.length > 0 && (
+                                            <Box sx={{ mb: 1 }}>
+                                                <Typography variant="subtitle2" color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <WarningIcon fontSize="small" /> Concerns:
+                                                </Typography>
+                                                <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                                                    {aiAnalysis.concerns.map((c, i) => (
+                                                        <li key={i}><Typography variant="body2">{c}</Typography></li>
+                                                    ))}
+                                                </ul>
+                                            </Box>
+                                        )}
 
-                                            {aiAnalysis.strengths?.length > 0 && (
-                                                <Box sx={{ mb: 1 }}>
-                                                    <Typography variant="subtitle2" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                        <ApproveIcon fontSize="small" /> Strengths:
-                                                    </Typography>
-                                                    <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
-                                                        {aiAnalysis.strengths.map((s, i) => (
-                                                            <li key={i}><Typography variant="body2">{s}</Typography></li>
-                                                        ))}
-                                                    </ul>
-                                                </Box>
-                                            )}
-
-                                            {aiAnalysis.concerns?.length > 0 && (
-                                                <Box sx={{ mb: 1 }}>
-                                                    <Typography variant="subtitle2" color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                        <WarningIcon fontSize="small" /> Concerns:
-                                                    </Typography>
-                                                    <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
-                                                        {aiAnalysis.concerns.map((c, i) => (
-                                                            <li key={i}><Typography variant="body2">{c}</Typography></li>
-                                                        ))}
-                                                    </ul>
-                                                </Box>
-                                            )}
-
-                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                                                <TipIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                                                {aiAnalysis.suggestedAction}
-                                            </Typography>
-                                        </Paper>
-                                    )}
-                                </Grid>
-                            )}
-                        </Grid>
-                    ) : null}
-                </DialogContent>
-                <DialogActions>
-                    {detailDialog.event?.status === 'DRAFT' && (
-                        <>
-                            <Button
-                                color="success"
-                                onClick={() => {
-                                    setDetailDialog({ open: false, event: null, loading: false });
-                                    setSelectedEvent(detailDialog.event);
-                                    handleApprove();
-                                }}
-                            >
-                                Approve
-                            </Button>
-                            <Button
-                                color="warning"
-                                onClick={() => {
-                                    setDetailDialog({ open: false, event: null, loading: false });
-                                    setSelectedEvent(detailDialog.event);
-                                    handleReject();
-                                }}
-                            >
-                                Reject
-                            </Button>
-                        </>
-                    )}
-                    <Button onClick={() => setDetailDialog({ open: false, event: null, loading: false })}>
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                                            <TipIcon fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                                            {aiAnalysis.suggestedAction}
+                                        </Typography>
+                                    </Paper>
+                                )}
+                            </Grid>
+                        )}
+                    </Grid>
+                ) : null}
+            </FormDialog>
 
             <ConfirmDialog
                 open={confirmDialog.open}
@@ -756,61 +765,58 @@ const Events = () => {
                 onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
             />
 
-            <Dialog
+            <FormDialog
                 open={rejectDialog.open}
                 onClose={() => !rejectDialog.loading && setRejectDialog({ open: false, reason: '', loading: false })}
+                title="Reject Event"
+                subtitle="The organiser will be notified of the rejection."
+                icon={<RejectIcon />}
                 maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle sx={{ pb: 1 }}>
-                    Reject Event
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Are you sure you want to reject this event? The organiser will be notified.
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                            Reason for Rejection
-                        </Typography>
+                actions={
+                    <>
                         <Button
-                            size="small"
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={aiReasonLoading ? <CircularProgress size={14} /> : <AIIcon />}
-                            onClick={handleAIGenerateReason}
-                            disabled={aiReasonLoading || rejectDialog.loading}
+                            onClick={() => setRejectDialog({ open: false, reason: '', loading: false })}
+                            disabled={rejectDialog.loading}
                         >
-                            {aiReasonLoading ? 'Generating...' : 'AI Generate'}
+                            Cancel
                         </Button>
-                    </Box>
-                    <TextField
-                        fullWidth
-                        placeholder="Please provide a reason for rejection (optional but recommended)"
-                        value={rejectDialog.reason}
-                        onChange={(e) => setRejectDialog(prev => ({ ...prev, reason: e.target.value }))}
-                        multiline
-                        rows={3}
-                        disabled={rejectDialog.loading}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button
-                        onClick={() => setRejectDialog({ open: false, reason: '', loading: false })}
+                        <LoadingButton
+                            variant="contained"
+                            color="warning"
+                            onClick={handleRejectSubmit}
+                            loading={rejectDialog.loading}
+                        >
+                            Reject Event
+                        </LoadingButton>
+                    </>
+                }
+            >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                        Reason for rejection
+                    </Typography>
+                    <LoadingButton
+                        size="small"
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<AIIcon />}
+                        onClick={handleAIGenerateReason}
+                        loading={aiReasonLoading}
                         disabled={rejectDialog.loading}
                     >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="warning"
-                        onClick={handleRejectSubmit}
-                        disabled={rejectDialog.loading}
-                    >
-                        {rejectDialog.loading ? 'Rejecting...' : 'Reject Event'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                        AI Generate
+                    </LoadingButton>
+                </Box>
+                <TextField
+                    fullWidth
+                    placeholder="Please provide a reason for rejection (optional but recommended)"
+                    value={rejectDialog.reason}
+                    onChange={(e) => setRejectDialog(prev => ({ ...prev, reason: e.target.value }))}
+                    multiline
+                    rows={4}
+                    disabled={rejectDialog.loading}
+                />
+            </FormDialog>
         </Box>
     );
 };
