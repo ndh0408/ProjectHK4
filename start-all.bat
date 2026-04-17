@@ -28,6 +28,22 @@ if "%FLUTTER_PATH%"=="" (
 echo [OK] Flutter found at: %FLUTTER_PATH%
 echo.
 
+echo [0/4] Clearing stale caches to force fresh build...
+echo.
+if exist "%PROJECT_DIR%\admin\node_modules\.cache" (
+    echo      - Removing admin React dev-server cache
+    rmdir /s /q "%PROJECT_DIR%\admin\node_modules\.cache" 2>nul
+)
+if exist "%PROJECT_DIR%\admin\build" (
+    echo      - Removing stale admin production build
+    rmdir /s /q "%PROJECT_DIR%\admin\build" 2>nul
+)
+if exist "%PROJECT_DIR%\mobile\build\web" (
+    echo      - Removing stale mobile web build
+    rmdir /s /q "%PROJECT_DIR%\mobile\build\web" 2>nul
+)
+echo.
+
 echo [1/4] Starting Backend (Spring Boot - Maven)...
 echo      Note: Backend requires MANUAL RESTART when Java code changes
 echo.
@@ -35,17 +51,17 @@ start "LUMA Backend" cmd /k "cd /d "%PROJECT_DIR%\backend" && mvnw spring-boot:r
 
 timeout /t 5 /nobreak > nul
 
-echo [2/4] Starting Admin Frontend (React)...
+echo [2/4] Starting Admin Frontend (React) - fresh dev server...
 echo      Note: Frontend has HOT RELOAD - changes auto-refresh in browser
 echo.
-start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && npm start"
+start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && set BROWSER=none && set FAST_REFRESH=true && npm start"
 
 timeout /t 2 /nobreak > nul
 
-echo [3/4] Building Mobile App (Flutter Web)...
-echo      Building fresh web bundle...
+echo [3/4] Building Mobile App (Flutter Web) - no service worker cache...
+echo      Building fresh web bundle with PWA disabled to avoid stale cache...
 echo.
-start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" clean && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
+start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" clean && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn --pwa-strategy=none && (if exist build\web\flutter_service_worker.js del /f /q build\web\flutter_service_worker.js) && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
 
 echo.
 echo ============================================
@@ -61,10 +77,10 @@ echo.
 echo ============================================
 echo                 IMPORTANT
 echo ============================================
-echo - Admin (React):     Auto-reload on file save
-echo - Mobile (Flutter):  Rebuild required: flutter build web
-echo                      Then refresh browser (Ctrl+Shift+R)
-echo                      Or visit /clear-cache.html to force refresh
+echo - Admin (React):     Auto-reload on file save (dev cache auto-cleared at startup)
+echo - Mobile (Flutter):  Fresh build every startup, service worker DISABLED
+echo                      If UI still looks old: Ctrl+Shift+R or hard refresh
+echo                      Or DevTools (F12) > Application > Clear storage
 echo - Backend (Java):    RESTART REQUIRED on code change
 echo ============================================
 echo.
