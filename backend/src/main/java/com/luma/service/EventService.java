@@ -19,6 +19,7 @@ import com.luma.exception.ResourceNotFoundException;
 import com.luma.entity.OrganiserProfile;
 import com.luma.repository.EventRepository;
 import com.luma.repository.EventBoostRepository;
+import com.luma.entity.EventSession;
 import com.luma.repository.EventSessionRepository;
 import com.luma.repository.OrganiserProfileRepository;
 import com.luma.repository.ReviewRepository;
@@ -448,14 +449,37 @@ public class EventService {
         boolean wasNotRecurring = (originalRecurrenceType == null || originalRecurrenceType == RecurrenceType.NONE)
                 && event.getParentEvent() == null;
 
-        if (request.getTitle() != null) event.setTitle(request.getTitle());
+        // Track which attendee-visible fields actually changed to fire an update notification later
+        java.util.List<String> changedFields = new java.util.ArrayList<>();
+        String originalTitle = event.getTitle();
+        java.time.LocalDateTime originalStart = event.getStartTime();
+        java.time.LocalDateTime originalEnd = event.getEndTime();
+        String originalVenue = event.getVenue();
+        String originalAddress = event.getAddress();
+
+        if (request.getTitle() != null) {
+            if (!java.util.Objects.equals(originalTitle, request.getTitle())) changedFields.add("title");
+            event.setTitle(request.getTitle());
+        }
         if (request.getDescription() != null) event.setDescription(request.getDescription());
         if (request.getImageUrl() != null) event.setImageUrl(request.getImageUrl());
-        if (request.getStartTime() != null) event.setStartTime(request.getStartTime());
-        if (request.getEndTime() != null) event.setEndTime(request.getEndTime());
+        if (request.getStartTime() != null) {
+            if (!java.util.Objects.equals(originalStart, request.getStartTime())) changedFields.add("start time");
+            event.setStartTime(request.getStartTime());
+        }
+        if (request.getEndTime() != null) {
+            if (!java.util.Objects.equals(originalEnd, request.getEndTime())) changedFields.add("end time");
+            event.setEndTime(request.getEndTime());
+        }
         if (request.getRegistrationDeadline() != null) event.setRegistrationDeadline(request.getRegistrationDeadline());
-        if (request.getVenue() != null) event.setVenue(request.getVenue());
-        if (request.getAddress() != null) event.setAddress(request.getAddress());
+        if (request.getVenue() != null) {
+            if (!java.util.Objects.equals(originalVenue, request.getVenue())) changedFields.add("venue");
+            event.setVenue(request.getVenue());
+        }
+        if (request.getAddress() != null) {
+            if (!java.util.Objects.equals(originalAddress, request.getAddress())) changedFields.add("address");
+            event.setAddress(request.getAddress());
+        }
         if (request.getLatitude() != null) event.setLatitude(request.getLatitude());
         if (request.getLongitude() != null) event.setLongitude(request.getLongitude());
         if (request.getIsFree() != null && request.getIsFree()) {
@@ -471,6 +495,12 @@ public class EventService {
         if (request.getCategoryId() != null) event.setCategory(categoryService.getEntityById(request.getCategoryId()));
 
         if (request.getSpeakers() != null) {
+            // Detach sessions from their speakers to avoid FK violation during speaker replacement
+            for (EventSession session : event.getSessions()) {
+                if (session.getSpeaker() != null) {
+                    session.setSpeaker(null);
+                }
+            }
             event.getSpeakers().clear();
             for (SpeakerRequest speakerRequest : request.getSpeakers()) {
                 Speaker speaker = Speaker.builder()
@@ -511,6 +541,17 @@ public class EventService {
         }
 
         Event savedEvent = eventRepository.save(event);
+
+        // Notify attendees if any user-visible field changed on a published event
+        if (!changedFields.isEmpty()
+                && savedEvent.getStatus() != EventStatus.DRAFT
+                && savedEvent.getStatus() != EventStatus.CANCELLED) {
+            try {
+                notificationService.notifyAttendeesEventUpdated(savedEvent, changedFields);
+            } catch (Exception ex) {
+                log.warn("Failed to send update notification for event {}: {}", savedEvent.getId(), ex.getMessage());
+            }
+        }
 
         boolean isNowRecurring = request.getRecurrenceType() != null
                 && request.getRecurrenceType() != RecurrenceType.NONE;

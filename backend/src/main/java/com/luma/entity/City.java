@@ -19,13 +19,16 @@ public class City {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(100)")
     private String name;
 
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String country;
 
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String continent;
 
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String imageUrl;
 
     private Double latitude;

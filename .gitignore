@@ -68,3 +68,11 @@ admin/build/
 backend/target/
 mobile/android/.kotlin/
 mobile/android/.gradle/
+
+# ===================================
+# Playwright MCP traces & QA screenshots
+# ===================================
+.playwright-mcp/
+test-*.png
+test-*.jpg
+

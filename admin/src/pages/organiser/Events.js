@@ -410,8 +410,8 @@ const OrganiserEvents = () => {
                 errors.registrationDeadline = 'Registration deadline must be in the future';
             }
 
-            if (formData.registrationDeadline >= formData.startTime) {
-                errors.registrationDeadline = 'Registration deadline must be before start time';
+            if (formData.registrationDeadline > formData.startTime) {
+                errors.registrationDeadline = 'Registration deadline cannot be after start time';
             }
         }
 
@@ -993,7 +993,7 @@ const OrganiserEvents = () => {
                                             fullWidth: true,
                                             required: true,
                                             error: !!formErrors.registrationDeadline,
-                                            helperText: formErrors.registrationDeadline || 'Must be before start time'
+                                            helperText: formErrors.registrationDeadline || 'Must be on or before start time'
                                         }
                                     }}
                                     minDateTime={new Date()}

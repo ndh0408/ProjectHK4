@@ -16,14 +16,16 @@ public class Speaker {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
     private String name;
 
+    @Column(columnDefinition = "NVARCHAR(300)")
     private String title;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String bio;
 
+    @Column(columnDefinition = "NVARCHAR(1000)")
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)

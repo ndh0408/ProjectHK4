@@ -2068,11 +2068,14 @@ class _BookmarkButton extends ConsumerWidget {
       onPressed: () async {
         final result = await ref.read(bookmarkNotifierProvider.notifier).toggle(eventId);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          final messenger = ScaffoldMessenger.of(context);
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
             SnackBar(
               content: Text(result ? l10n.addedToSaved : l10n.removedFromSaved),
               backgroundColor: result ? AppColors.success : AppColors.textSecondary,
-              duration: const Duration(seconds: 2),
+              duration: const Duration(milliseconds: 1500),
+              behavior: SnackBarBehavior.floating,
               action: result
                   ? SnackBarAction(
                       label: l10n.viewAll,
