@@ -7,6 +7,7 @@ class ChatbotMessage {
   final Map<String, dynamic>? data;
   final int? dataPointsUsed;
   final List<ChatbotEvent>? events;
+  final List<String>? suggestions;
   final bool isLoading;
 
   ChatbotMessage({
@@ -18,6 +19,7 @@ class ChatbotMessage {
     this.data,
     this.dataPointsUsed,
     this.events,
+    this.suggestions,
     this.isLoading = false,
   });
 
@@ -40,6 +42,7 @@ class ChatbotMessage {
     required int dataPointsUsed,
     DateTime? timestamp,
     List<ChatbotEvent>? events,
+    List<String>? suggestions,
   }) {
     return ChatbotMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -50,6 +53,7 @@ class ChatbotMessage {
       data: data,
       dataPointsUsed: dataPointsUsed,
       events: events,
+      suggestions: suggestions,
     );
   }
 
