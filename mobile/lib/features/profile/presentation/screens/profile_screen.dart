@@ -541,8 +541,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               _SettingsTile(
                 icon: Icons.local_offer_outlined,
-                title: 'My Coupons',
+                title: l10n.myCoupons,
                 onTap: () => context.push('/my-coupons'),
+              ),
+              _SettingsTile(
+                icon: Icons.help_outline,
+                title: l10n.myQuestions,
+                onTap: () => context.push('/my-questions'),
+              ),
+              _SettingsTile(
+                icon: Icons.hourglass_bottom_outlined,
+                title: l10n.waitlistOffers,
+                onTap: () => context.push('/waitlist-offers'),
               ),
               _LanguageSettingsTile(),
               _SettingsTile(

@@ -163,6 +163,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get askQuestion => 'Đặt câu hỏi';
 
   @override
+  String get askLuma => 'Hỏi LUMA';
+
+  @override
   String get editProfile => 'Chỉnh sửa hồ sơ';
 
   @override
@@ -324,6 +327,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get waitlist => 'Danh sách chờ';
+
+  @override
+  String get waitlistOffers => 'Đề xuất từ danh sách chờ';
 
   @override
   String get almostFull => 'Sắp hết chỗ';

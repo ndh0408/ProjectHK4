@@ -102,7 +102,6 @@ const organiserGroups = [
         items: [
             { text: 'Certificates', icon: <CertificateIcon />, path: '/organiser/certificates' },
             { text: 'Subscription', icon: <SubscriptionIcon />, path: '/organiser/subscription' },
-            { text: 'Notifications', icon: <NotificationsIcon />, path: '/organiser/notifications' },
             { text: 'Profile', icon: <ProfileIcon />, path: '/organiser/profile' },
         ],
     },

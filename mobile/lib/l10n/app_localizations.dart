@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Ask a Question'**
   String get askQuestion;
 
+  /// Ask LUMA AI assistant FAB label
+  ///
+  /// In en, this message translates to:
+  /// **'Ask LUMA'**
+  String get askLuma;
+
   /// Edit profile button
   ///
   /// In en, this message translates to:
@@ -727,6 +733,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waitlist'**
   String get waitlist;
+
+  /// No description provided for @waitlistOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist Offers'**
+  String get waitlistOffers;
 
   /// No description provided for @almostFull.
   ///

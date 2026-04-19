@@ -79,6 +79,7 @@ const Users = () => {
     };
 
     const handleStatusChange = async (status) => {
+        const target = selectedUser;
         handleMenuClose();
         const isActivate = status === 'ACTIVE';
         setConfirmDialog({
@@ -87,6 +88,7 @@ const Users = () => {
             message: isActivate
                 ? 'Are you sure you want to activate this user?'
                 : 'Are you sure you want to lock this user account?',
+            entityName: target?.fullName || target?.email,
             action: async () => {
                 try {
                     await adminApi.updateUserStatus(selectedUser.id, status);
@@ -100,11 +102,13 @@ const Users = () => {
     };
 
     const handleDelete = () => {
+        const target = selectedUser;
         handleMenuClose();
         setConfirmDialog({
             open: true,
             title: 'Delete User',
             message: 'Are you sure you want to delete this user? This action cannot be undone.',
+            entityName: target?.fullName || target?.email,
             confirmColor: 'error',
             action: async () => {
                 try {
@@ -258,6 +262,7 @@ const Users = () => {
                 open={confirmDialog.open}
                 title={confirmDialog.title}
                 message={confirmDialog.message}
+                entityName={confirmDialog.entityName}
                 confirmColor={confirmDialog.confirmColor}
                 onConfirm={() => {
                     confirmDialog.action?.();
