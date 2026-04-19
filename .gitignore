@@ -29,6 +29,15 @@ node_modules/
 local.properties
 
 # ===================================
+# Secret share packages - NEVER commit
+# ===================================
+LUMA-secrets.zip
+*-secrets.zip
+secrets/
+*.keystore
+!mobile/android/**/debug.keystore.example
+
+# ===================================
 # IDE
 # ===================================
 .idea/
@@ -57,3 +66,5 @@ tmpclaude-*
 mobile/build/
 admin/build/
 backend/target/
+mobile/android/.kotlin/
+mobile/android/.gradle/
