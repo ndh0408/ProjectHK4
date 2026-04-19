@@ -1620,7 +1620,7 @@ const OrganiserEvents = () => {
                                         <TextField
                                             fullWidth
                                             label="Event Idea *"
-                                            placeholder="e.g., Workshop về ReactJS cho người mới bắt đầu"
+                                            placeholder="e.g., ReactJS workshop for beginners"
                                             value={aiEventForm.eventIdea}
                                             onChange={(e) => setAiEventForm({ ...aiEventForm, eventIdea: e.target.value })}
                                             multiline
