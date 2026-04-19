@@ -10,6 +10,7 @@ import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/luma_logo.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/recommendations_provider.dart';
@@ -97,27 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.event, color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'LUMA',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
+        title: const LumaLogo(size: 30, showWordmark: true),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../shared/widgets/luma_logo.dart';
 import '../models/chatbot_message.dart';
 import '../providers/chatbot_provider.dart';
 
@@ -68,19 +69,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.auto_awesome, size: 18),
-            ),
-            const SizedBox(width: 10),
-            const Column(
+            LumaLogo(size: 32),
+            SizedBox(width: 10),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('LUMA Assistant', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -177,19 +170,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 24),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(Icons.auto_awesome, size: 40, color: Colors.white),
-              ),
+              const LumaLogo(size: 80),
               const SizedBox(height: 24),
               const Text(
                 'LUMA Assistant',
