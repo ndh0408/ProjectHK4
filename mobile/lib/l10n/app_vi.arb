@@ -61,6 +61,7 @@
   "host": "Người tổ chức",
   "guests": "Khách mời",
   "askQuestion": "Đặt câu hỏi",
+  "askLuma": "Hỏi LUMA",
 
   "editProfile": "Chỉnh sửa hồ sơ",
   "fullName": "Họ và tên",
@@ -121,6 +122,7 @@
   "descriptionEditor": "Mô tả",
   "organiserProfile": "Hồ sơ người tổ chức",
   "waitlist": "Danh sách chờ",
+  "waitlistOffers": "Đề xuất từ danh sách chờ",
   "almostFull": "Sắp hết chỗ",
   "noNotifications": "Không có thông báo",
   "noMessages": "Không có tin nhắn",

@@ -32,16 +32,18 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(unique = true)
+    @Column(unique = true, columnDefinition = "NVARCHAR(50)")
     private String phone;
 
     private String password;
 
+    @Column(columnDefinition = "NVARCHAR(200)")
     private String fullName;
 
+    @Column(columnDefinition = "NVARCHAR(1000)")
     private String avatarUrl;
 
-    @Column(name = "signature_url")
+    @Column(name = "signature_url", columnDefinition = "NVARCHAR(1000)")
     private String signatureUrl;
 
     @Column(columnDefinition = "NVARCHAR(1000)")

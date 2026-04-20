@@ -163,6 +163,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get askQuestion => 'Ask a Question';
 
   @override
+  String get askLuma => 'Ask LUMA';
+
+  @override
   String get editProfile => 'Edit Profile';
 
   @override
@@ -324,6 +327,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get waitlist => 'Waitlist';
+
+  @override
+  String get waitlistOffers => 'Waitlist Offers';
 
   @override
   String get almostFull => 'Almost Full';

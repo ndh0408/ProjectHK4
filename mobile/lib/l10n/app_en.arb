@@ -256,6 +256,11 @@
     "description": "Ask question button"
   },
 
+  "askLuma": "Ask LUMA",
+  "@askLuma": {
+    "description": "Ask LUMA AI assistant FAB label"
+  },
+
   "editProfile": "Edit Profile",
   "@editProfile": {
     "description": "Edit profile button"
@@ -450,6 +455,7 @@
   "descriptionEditor": "Description",
   "organiserProfile": "Organiser Profile",
   "waitlist": "Waitlist",
+  "waitlistOffers": "Waitlist Offers",
   "almostFull": "Almost Full",
   "noNotifications": "No Notifications",
   "noMessages": "No Messages",

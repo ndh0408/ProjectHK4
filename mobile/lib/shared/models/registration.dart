@@ -53,7 +53,7 @@ class RegistrationStatus {
     }
 
     return RegistrationStatus(
-      isRegistered: json['isRegistered'] as bool? ?? false,
+      isRegistered: (json['registered'] as bool?) ?? (json['isRegistered'] as bool?) ?? false,
       registrationId: json['registrationId'] as String?,
       status: parseStatus(json['status'] as String?),
       statusMessage: json['statusMessage'] as String?,

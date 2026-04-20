@@ -81,11 +81,13 @@ class ApiClient {
     Object? data,
     Map<String, dynamic>? queryParameters,
     T Function(Map<String, dynamic>)? fromJson,
+    CancelToken? cancelToken,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       path,
       data: data,
       queryParameters: queryParameters,
+      cancelToken: cancelToken,
     );
     if (fromJson != null && response.data != null) {
       return fromJson(response.data!);

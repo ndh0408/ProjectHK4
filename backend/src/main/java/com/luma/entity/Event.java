@@ -31,12 +31,13 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(300)")
     private String title;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
+    @Column(columnDefinition = "NVARCHAR(1000)")
     private String imageUrl;
 
     @Column(nullable = false)
@@ -47,8 +48,10 @@ public class Event {
 
     private LocalDateTime registrationDeadline;
 
+    @Column(columnDefinition = "NVARCHAR(300)")
     private String venue;
 
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String address;
 
     private Double latitude;

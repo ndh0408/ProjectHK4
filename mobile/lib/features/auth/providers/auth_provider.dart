@@ -9,6 +9,8 @@ import '../domain/auth_state.dart';
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
   return GoogleSignIn(
     scopes: ['email', 'profile', 'openid'],
+    serverClientId:
+        '749860554682-561q7d9r0rqihph1jkb7jhrsdlv9t72u.apps.googleusercontent.com',
   );
 });
 

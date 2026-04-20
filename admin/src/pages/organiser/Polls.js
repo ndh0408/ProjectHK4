@@ -145,7 +145,7 @@ const OrganiserPolls = () => {
             console.log('[Polls] Loaded polls count:', pollsData.length);
             console.log('[Polls] Polls data array:', pollsData);
 
-            // Log từng poll chi tiết
+            // Log each poll in detail
             pollsData.forEach((poll, index) => {
                 console.log(`[Polls] Poll #${index + 1}:`, {
                     id: poll.id,
@@ -712,7 +712,7 @@ const OrganiserPolls = () => {
     const canReopenPoll = (poll) => poll.status === 'CLOSED';
     const canCancelPoll = (poll) => poll.status === 'DRAFT' || poll.status === 'SCHEDULED';
 
-    // Format thời gian còn lại cho SCHEDULED poll
+    // Format remaining time for SCHEDULED poll
     const getScheduledTimeRemaining = (scheduledOpenAt) => {
         if (!scheduledOpenAt) return null;
         const scheduled = new Date(scheduledOpenAt);
@@ -1003,7 +1003,7 @@ const OrganiserPolls = () => {
                                                     </Tooltip>
                                                 )}
 
-                                                {/* Extend (ACTIVE với closesAt) */}
+                                                {/* Extend (ACTIVE with closesAt) */}
                                                 {poll.status === 'ACTIVE' && poll.closesAt && (
                                                     <Tooltip title="Extend Time">
                                                         <IconButton
@@ -1448,7 +1448,7 @@ const OrganiserPolls = () => {
                                             setNewPoll({
                                                 ...newPoll,
                                                 autoCloseEventEnd: checked,
-                                                // Nếu chọn autoCloseEventEnd thì bỏ chọn autoCloseTenDaysAfterEventEnd
+                                                // When autoCloseEventEnd is picked, clear autoCloseTenDaysAfterEventEnd
                                                 autoCloseTenDaysAfterEventEnd: checked ? false : newPoll.autoCloseTenDaysAfterEventEnd
                                             });
                                         }}
@@ -1465,9 +1465,9 @@ const OrganiserPolls = () => {
                                             setNewPoll({
                                                 ...newPoll,
                                                 autoCloseTenDaysAfterEventEnd: checked,
-                                                // Nếu chọn autoCloseTenDaysAfterEventEnd thì bỏ chọn autoCloseEventEnd
+                                                // When autoCloseTenDaysAfterEventEnd is picked, clear autoCloseEventEnd
                                                 autoCloseEventEnd: checked ? false : newPoll.autoCloseEventEnd,
-                                                // Tự động set closesAt nếu chọn option này
+                                                // Auto-clear closesAt when this option is picked
                                                 closesAt: checked ? '' : newPoll.closesAt
                                             });
                                         }}

@@ -27,7 +27,6 @@ import {
     LocalOffer as CouponIcon,
     CalendarMonth as ScheduleIcon,
     Person as ProfileIcon,
-    AutoAwesome as SparkleIcon,
     WorkspacePremium as CertificateIcon,
     Rocket as BoostIcon,
     CardMembership as SubscriptionIcon,
@@ -36,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { tokens } from '../../theme';
+import LumaLogo from '../brand/LumaLogo';
 
 const DRAWER_WIDTH = tokens.layout.sidebarWidth;
 
@@ -102,7 +102,6 @@ const organiserGroups = [
         items: [
             { text: 'Certificates', icon: <CertificateIcon />, path: '/organiser/certificates' },
             { text: 'Subscription', icon: <SubscriptionIcon />, path: '/organiser/subscription' },
-            { text: 'Notifications', icon: <NotificationsIcon />, path: '/organiser/notifications' },
             { text: 'Profile', icon: <ProfileIcon />, path: '/organiser/profile' },
         ],
     },
@@ -146,20 +145,7 @@ const Sidebar = ({ open, onClose }) => {
                     flexShrink: 0,
                 }}
             >
-                <Box
-                    sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: tokens.gradient.primary,
-                        color: '#fff',
-                    }}
-                >
-                    <SparkleIcon sx={{ fontSize: 18 }} />
-                </Box>
+                <LumaLogo size={36} />
                 <Box sx={{ minWidth: 0 }}>
                     <Typography variant="h4" sx={{ letterSpacing: '-0.01em', lineHeight: 1.1 }}>
                         LUMA

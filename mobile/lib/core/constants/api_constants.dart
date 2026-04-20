@@ -1,6 +1,15 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 abstract final class ApiConstants {
-  static const String baseUrl = 'http://localhost:8080/api';
-  static const String wsBaseUrl = 'http://localhost:8080/ws';
+  static String get _host {
+    if (kIsWeb) return 'localhost';
+    if (Platform.isAndroid) return '10.0.2.2';
+    return 'localhost';
+  }
+
+  static String get baseUrl => 'http://${_host}:8080/api';
+  static String get wsBaseUrl => 'http://${_host}:8080/ws';
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 

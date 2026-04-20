@@ -86,9 +86,10 @@ function App() {
                     hideProgressBar={false}
                     newestOnTop
                     closeOnClick
-                    pauseOnFocusLoss
+                    pauseOnFocusLoss={false}
                     draggable
-                    pauseOnHover
+                    pauseOnHover={false}
+                    limit={3}
                     theme="colored"
                 />
             </ThemeProvider>

@@ -30,8 +30,8 @@ const adminApi = {
 
     getOrganisers: (params) => api.get('/admin/organisers', { params }),
     getOrganiserById: (id) => api.get(`/admin/organisers/${id}`),
-    verifyOrganiser: (id) => api.put(`/admin/organisers/${id}/verify`),
-    unverifyOrganiser: (id) => api.put(`/admin/organisers/${id}/unverify`),
+    verifyOrganiser: (id) => api.post(`/admin/organisers/${id}/verify`),
+    unverifyOrganiser: (id) => api.post(`/admin/organisers/${id}/unverify`),
     updateOrganiserStatus: (id, status) => api.put(`/admin/organisers/${id}/status`, null, { params: { status } }),
 
     getNotifications: (params) => api.get('/admin/notifications', { params }),

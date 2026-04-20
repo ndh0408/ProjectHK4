@@ -19,7 +19,6 @@ import {
     VisibilityOff,
     Email as EmailIcon,
     Lock as LockIcon,
-    AutoAwesome as SparkleIcon,
     Event as EventIcon,
     People as PeopleIcon,
     TrendingUp as AnalyticsIcon,
@@ -28,6 +27,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { LoadingButton } from '../../components/ui';
 import { tokens } from '../../theme';
+import LumaLogo from '../../components/brand/LumaLogo';
 
 const DEMO_ACCOUNTS = [
     { role: 'Admin', color: 'primary', email: 'admin@luma.com', password: 'admin123' },
@@ -161,20 +161,7 @@ const Login = () => {
                     />
                     <Box sx={{ position: 'relative', maxWidth: 480 }}>
                         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 6 }}>
-                            <Box
-                                sx={{
-                                    width: 44,
-                                    height: 44,
-                                    borderRadius: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    bgcolor: 'rgba(255,255,255,0.2)',
-                                    backdropFilter: 'blur(8px)',
-                                }}
-                            >
-                                <SparkleIcon />
-                            </Box>
+                            <LumaLogo size={48} />
                             <Typography variant="h2" sx={{ fontWeight: 700, letterSpacing: '-0.02em' }}>
                                 LUMA
                             </Typography>
@@ -248,20 +235,7 @@ const Login = () => {
                             spacing={1}
                             sx={{ mb: 3 }}
                         >
-                            <Box
-                                sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#fff',
-                                    background: tokens.gradient.primary,
-                                }}
-                            >
-                                <SparkleIcon sx={{ fontSize: 20 }} />
-                            </Box>
+                            <LumaLogo size={36} />
                             <Typography variant="h3">LUMA</Typography>
                         </Stack>
                     )}

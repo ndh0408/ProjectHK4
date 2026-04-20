@@ -1,40 +1,67 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+
 import '../../../../services/api_service.dart';
 import '../models/chatbot_message.dart';
 
+/// State notifier that talks to the LUMA AI Assistant backend
+/// (`POST /user/assistant/chat`). The backend itself is a real Groq-powered
+/// LLM with RAG over the events DB and a hard scope limiter — this provider
+/// only manages local message state, history persistence, and cancellation.
 class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
-  final ApiService _api;
   ChatbotNotifier(this._api) : super(const AsyncValue.data([])) {
     _loadHistory();
   }
 
+  final ApiService _api;
+  CancelToken? _activeRequest;
+
+  static const _historyKey = 'chatbot_history';
+  static const _maxStored = 50;
+  static const _historyContextWindow = 10;
+
+  /// True while the backend is processing a message. UI should block
+  /// the send button to prevent duplicate requests.
+  bool get isThinking {
+    final list = state.valueOrNull;
+    if (list == null || list.isEmpty) return false;
+    return list.last.isLoading;
+  }
+
+  List<ChatbotMessage> get _messages =>
+      state.valueOrNull ?? const <ChatbotMessage>[];
+
   Future<void> _loadHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final historyJson = prefs.getString('chatbot_history');
-      if (historyJson != null) {
-        final decoded = jsonDecode(historyJson) as List;
-        final messages = decoded
-            .map((m) => _messageFromJson(m as Map<String, dynamic>))
-            .toList();
-        state = AsyncValue.data(messages);
-      }
-    } catch (e) {
-      // Silently fail, use empty state
+      final raw = prefs.getString(_historyKey);
+      if (raw == null) return;
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      final messages = decoded
+          .map((m) => _messageFromJson(m as Map<String, dynamic>))
+          .toList();
+      state = AsyncValue.data(messages);
+    } catch (_) {
+      // Corrupt cache — ignore and start fresh.
     }
   }
 
   Future<void> _saveHistory(List<ChatbotMessage> messages) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Only save last 50 messages to prevent storage bloat
-      final toSave = messages.length > 50 ? messages.sublist(messages.length - 50) : messages;
-      final jsonList = toSave.map((m) => _messageToJson(m)).toList();
-      await prefs.setString('chatbot_history', jsonEncode(jsonList));
-    } catch (e) {
-      // Silently fail
+      final toSave = messages.length > _maxStored
+          ? messages.sublist(messages.length - _maxStored)
+          : messages;
+      final jsonList = toSave
+          .where((m) => !m.isLoading)
+          .map(_messageToJson)
+          .toList();
+      await prefs.setString(_historyKey, jsonEncode(jsonList));
+    } catch (_) {
+      // Non-critical — user will simply lose persistence for this turn.
     }
   }
 
@@ -46,28 +73,36 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       'timestamp': m.timestamp.toIso8601String(),
       'intent': m.intent,
       'dataPointsUsed': m.dataPointsUsed,
-      'events': m.events?.map((e) => <String, dynamic>{
-        'id': e.id,
-        'title': e.title,
-        'startTime': e.startTime,
-        'venue': e.venue,
-        'city': e.city,
-        'category': e.category,
-        'price': e.price,
-        'approvedAttendees': e.approvedAttendees,
-        'imageUrl': e.imageUrl,
-      }).toList(),
+      'suggestions': m.suggestions,
+      'events': m.events
+          ?.map((e) => <String, dynamic>{
+                'id': e.id,
+                'title': e.title,
+                'startTime': e.startTime,
+                'venue': e.venue,
+                'city': e.city,
+                'category': e.category,
+                'price': e.price,
+                'approvedAttendees': e.approvedAttendees,
+                'imageUrl': e.imageUrl,
+              })
+          .toList(),
     };
   }
 
   ChatbotMessage _messageFromJson(Map<String, dynamic> json) {
     List<ChatbotEvent>? events;
-    if (json['events'] is List) {
-      events = (json['events'] as List)
+    final rawEvents = json['events'];
+    if (rawEvents is List) {
+      events = rawEvents
           .map((e) => ChatbotEvent.fromJson(e as Map<String, dynamic>))
           .toList();
     }
-
+    List<String>? suggestions;
+    final rawSug = json['suggestions'];
+    if (rawSug is List) {
+      suggestions = rawSug.map((s) => s.toString()).toList();
+    }
     return ChatbotMessage(
       id: json['id'] as String,
       content: json['content'] as String,
@@ -75,109 +110,200 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       timestamp: DateTime.parse(json['timestamp'] as String),
       intent: json['intent'] as String?,
       dataPointsUsed: json['dataPointsUsed'] as int?,
+      suggestions: suggestions,
       events: events,
     );
   }
 
-  /// Build conversation history for AI context
+  /// Last 10 non-loading messages formatted for the backend context window.
   List<Map<String, String>> _buildHistory(List<ChatbotMessage> messages) {
-    // Take last 10 messages (5 pairs) for context
-    final recent = messages.length > 10 ? messages.sublist(messages.length - 10) : messages;
+    final clean =
+        messages.where((m) => !m.isLoading && m.content.isNotEmpty).toList();
+    final recent = clean.length > _historyContextWindow
+        ? clean.sublist(clean.length - _historyContextWindow)
+        : clean;
     return recent
-        .where((m) => !m.isLoading && m.content.isNotEmpty)
-        .map((m) {
-          return <String, String>{
-            'role': m.isUser ? 'user' : 'assistant',
-            'content': m.content,
-          };
-        })
+        .map((m) => <String, String>{
+              'role': m.isUser ? 'user' : 'assistant',
+              'content': m.content,
+            })
         .toList();
   }
 
   Future<void> sendMessage(String message) async {
-    if (message.trim().isEmpty) return;
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+    if (isThinking) return; // Prevent duplicate in-flight requests.
 
-    // Add user message
-    final userMessage = ChatbotMessage.user(content: message);
-    var messages = <ChatbotMessage>[
-      ...?state.maybeWhen(data: (m) => m, orElse: () => null) ?? [],
-      userMessage
-    ];
+    final userMessage = ChatbotMessage.user(content: trimmed);
+    var messages = <ChatbotMessage>[..._messages, userMessage];
     state = AsyncValue.data(messages);
 
-    // Add loading message
-    final loadingMessage = ChatbotMessage.loading();
-    messages = [...messages, loadingMessage];
+    final history = _buildHistory(messages);
+
+    messages = [...messages, ChatbotMessage.loading()];
     state = AsyncValue.data(messages);
 
-    // Build conversation history from previous messages (excluding current user msg and loading)
-    final history = _buildHistory(messages.where((m) => !m.isLoading).toList());
+    await _dispatch(trimmed, history, messages);
+  }
 
-    // Call API
+  /// Remove the last assistant reply (if any) and re-ask the last user turn.
+  Future<void> regenerateLast() async {
+    if (isThinking) return;
+    final list = _messages;
+    if (list.isEmpty) return;
+
+    final lastUserIndex = list.lastIndexWhere((m) => m.isUser);
+    if (lastUserIndex == -1) return;
+    final lastUser = list[lastUserIndex];
+
+    final trimmed = list.sublist(0, lastUserIndex + 1);
+    final history = _buildHistory(trimmed);
+    final withLoading = [...trimmed, ChatbotMessage.loading()];
+    state = AsyncValue.data(withLoading);
+
+    await _dispatch(lastUser.content, history, withLoading);
+  }
+
+  /// Abort the in-flight request and remove the loading bubble.
+  void cancelInFlight() {
+    if (!isThinking) return;
+    _activeRequest?.cancel('user_cancelled');
+    _activeRequest = null;
+    if (!mounted) return;
+    final cleaned = _messages.where((m) => !m.isLoading).toList();
+    state = AsyncValue.data(cleaned);
+  }
+
+  @override
+  void dispose() {
+    // Screen popped while an AI request was mid-flight — cancel the token
+    // so Dio doesn't call back into a disposed notifier (would throw).
+    _activeRequest?.cancel('notifier_disposed');
+    _activeRequest = null;
+    super.dispose();
+  }
+
+  Future<void> _dispatch(
+    String prompt,
+    List<Map<String, String>> history,
+    List<ChatbotMessage> withLoading,
+  ) async {
+    final token = CancelToken();
+    _activeRequest = token;
     try {
-      final response = await _api.askChatbot(message, history: history);
+      final response = await _api.askChatbot(
+        prompt,
+        history: history,
+        cancelToken: token,
+      );
 
-      // Extract events from response data
-      List<ChatbotEvent> events = [];
-      if (response['data'] is Map<String, dynamic>) {
-        final data = response['data'] as Map<String, dynamic>;
-        if (data['events'] is List) {
-          events = (data['events'] as List)
-              .map((e) => ChatbotEvent.fromJson(e as Map<String, dynamic>))
-              .toList();
+      final events = <ChatbotEvent>[];
+      final data = response['data'];
+      if (data is Map<String, dynamic> && data['events'] is List) {
+        for (final e in data['events'] as List) {
+          if (e is Map<String, dynamic>) {
+            events.add(ChatbotEvent.fromJson(e));
+          }
         }
       }
 
-      final assistantMessage = ChatbotMessage.assistant(
-        content: response['response'] as String? ?? 'No response',
-        intent: response['intent'] as String? ?? 'GENERAL_QUERY',
-        data: response['data'] as Map<String, dynamic>? ?? {},
-        dataPointsUsed: response['dataPointsUsed'] as int? ?? 0,
-        events: events.isNotEmpty ? events : null,
-      );
-
-      // Replace loading message with actual response
-      messages = messages.where((m) => !m.isLoading).toList();
-      messages = [...messages, assistantMessage];
-      state = AsyncValue.data(messages);
-
-      await _saveHistory(messages);
-    } catch (e, st) {
-      messages = messages.where((m) => !m.isLoading).toList();
-
-      // Create user-friendly error message
-      String errorContent;
-      if (e.toString().contains('500')) {
-        errorContent = 'The AI service is temporarily unavailable. Please try again in a moment.';
-      } else if (e.toString().contains('timeout') || e.toString().contains('SocketException')) {
-        errorContent = 'Connection timed out. Please check your internet connection and try again.';
-      } else if (e.toString().contains('401') || e.toString().contains('403')) {
-        errorContent = 'Please log in to use the AI assistant.';
-      } else {
-        errorContent = 'Something went wrong. Please try again.';
+      List<String>? suggestions;
+      final rawSug = response['suggestions'];
+      if (rawSug is List) {
+        suggestions = rawSug.map((s) => s.toString()).toList();
       }
 
-      final errorMessage = ChatbotMessage.assistant(
-        content: errorContent,
-        intent: 'ERROR',
-        data: {},
-        dataPointsUsed: 0,
+      final assistant = ChatbotMessage.assistant(
+        content: (response['response'] as String?)?.trim().isNotEmpty == true
+            ? response['response'] as String
+            : 'No response',
+        intent: response['intent'] as String? ?? 'GENERAL_QUERY',
+        data: (response['data'] as Map<String, dynamic>?) ?? const {},
+        dataPointsUsed: response['dataPointsUsed'] as int? ?? 0,
+        events: events.isNotEmpty ? events : null,
+        suggestions: suggestions,
       );
-      messages = [...messages, errorMessage];
-      state = AsyncValue.data(messages);
+
+      if (!mounted) return;
+      final settled = withLoading.where((m) => !m.isLoading).toList()
+        ..add(assistant);
+      state = AsyncValue.data(settled);
+      await _saveHistory(settled);
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        // User cancelled OR notifier disposed — nothing to do.
+        return;
+      }
+      if (!mounted) return;
+      final settled = withLoading.where((m) => !m.isLoading).toList()
+        ..add(_errorMessageFor(e, withLoading));
+      state = AsyncValue.data(settled);
+    } catch (e) {
+      if (!mounted) return;
+      final settled = withLoading.where((m) => !m.isLoading).toList()
+        ..add(_errorMessageFor(e, withLoading));
+      state = AsyncValue.data(settled);
+    } finally {
+      if (identical(_activeRequest, token)) _activeRequest = null;
     }
   }
 
-  void clearMessages() {
+  ChatbotMessage _errorMessageFor(Object e, List<ChatbotMessage> context) {
+    final raw = e.toString();
+    final vi = _lastUserMessageLooksVietnamese(context);
+
+    String content;
+    if (raw.contains('500')) {
+      content = vi
+          ? 'Dịch vụ AI đang tạm thời không khả dụng. Vui lòng thử lại sau ít phút.'
+          : 'The AI service is temporarily unavailable. Please try again in a moment.';
+    } else if (raw.contains('timeout') || raw.contains('SocketException')) {
+      content = vi
+          ? 'Kết nối bị quá thời gian. Kiểm tra mạng và thử lại giúp mình.'
+          : 'Connection timed out. Please check your internet and try again.';
+    } else if (raw.contains('401') || raw.contains('403')) {
+      content = vi
+          ? 'Bạn cần đăng nhập để dùng trợ lý AI.'
+          : 'Please log in to use the AI assistant.';
+    } else {
+      content = vi
+          ? 'Có lỗi xảy ra. Vui lòng thử lại.'
+          : 'Something went wrong. Please try again.';
+    }
+    return ChatbotMessage.assistant(
+      content: content,
+      intent: 'ERROR',
+      data: const {},
+      dataPointsUsed: 0,
+    );
+  }
+
+  /// Heuristic: does the most recent user turn contain Vietnamese diacritics?
+  bool _lastUserMessageLooksVietnamese(List<ChatbotMessage> messages) {
+    for (var i = messages.length - 1; i >= 0; i--) {
+      final m = messages[i];
+      if (!m.isUser) continue;
+      const markers = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ';
+      final lower = m.content.toLowerCase();
+      for (int c = 0; c < markers.length; c++) {
+        if (lower.contains(markers[c])) return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  Future<void> clearMessages() async {
+    cancelInFlight();
     state = const AsyncValue.data([]);
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.remove('chatbot_history');
-    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_historyKey);
   }
 }
 
-final chatbotProvider =
-    StateNotifierProvider.autoDispose<ChatbotNotifier, AsyncValue<List<ChatbotMessage>>>((ref) {
+final chatbotProvider = StateNotifierProvider.autoDispose<ChatbotNotifier,
+    AsyncValue<List<ChatbotMessage>>>((ref) {
   final api = ref.watch(apiServiceProvider);
   return ChatbotNotifier(api);
 });

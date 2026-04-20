@@ -148,11 +148,13 @@ const Events = () => {
     };
 
     const handleApprove = async () => {
+        const target = selectedEvent;
         handleMenuClose();
         setConfirmDialog({
             open: true,
             title: 'Approve Event',
             message: 'Are you sure you want to approve this event? It will be published and visible to users.',
+            entityName: target?.title,
             action: async () => {
                 try {
                     await adminApi.approveEvent(selectedEvent.id);
@@ -184,11 +186,13 @@ const Events = () => {
     };
 
     const handleDelete = () => {
+        const target = selectedEvent;
         handleMenuClose();
         setConfirmDialog({
             open: true,
             title: 'Delete Event',
             message: 'Are you sure you want to delete this event? This action cannot be undone.',
+            entityName: target?.title,
             confirmColor: 'error',
             action: async () => {
                 try {
@@ -757,6 +761,7 @@ const Events = () => {
                 open={confirmDialog.open}
                 title={confirmDialog.title}
                 message={confirmDialog.message}
+                entityName={confirmDialog.entityName}
                 confirmColor={confirmDialog.confirmColor}
                 onConfirm={() => {
                     confirmDialog.action?.();

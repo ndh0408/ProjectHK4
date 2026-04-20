@@ -410,8 +410,8 @@ const OrganiserEvents = () => {
                 errors.registrationDeadline = 'Registration deadline must be in the future';
             }
 
-            if (formData.registrationDeadline >= formData.startTime) {
-                errors.registrationDeadline = 'Registration deadline must be before start time';
+            if (formData.registrationDeadline > formData.startTime) {
+                errors.registrationDeadline = 'Registration deadline cannot be after start time';
             }
         }
 
@@ -993,7 +993,7 @@ const OrganiserEvents = () => {
                                             fullWidth: true,
                                             required: true,
                                             error: !!formErrors.registrationDeadline,
-                                            helperText: formErrors.registrationDeadline || 'Must be before start time'
+                                            helperText: formErrors.registrationDeadline || 'Must be on or before start time'
                                         }
                                     }}
                                     minDateTime={new Date()}
@@ -1620,7 +1620,7 @@ const OrganiserEvents = () => {
                                         <TextField
                                             fullWidth
                                             label="Event Idea *"
-                                            placeholder="e.g., Workshop về ReactJS cho người mới bắt đầu"
+                                            placeholder="e.g., ReactJS workshop for beginners"
                                             value={aiEventForm.eventIdea}
                                             onChange={(e) => setAiEventForm({ ...aiEventForm, eventIdea: e.target.value })}
                                             multiline

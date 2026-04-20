@@ -284,6 +284,39 @@ public class NotificationService {
     }
 
     @Transactional
+    public int notifyAttendeesEventUpdated(Event event, List<String> changedFields) {
+        if (changedFields == null || changedFields.isEmpty()) return 0;
+        List<Registration> registrations = registrationRepository.findByEventAndStatusIn(
+                event,
+                List.of(RegistrationStatus.APPROVED, RegistrationStatus.PENDING, RegistrationStatus.WAITING_LIST)
+        );
+        if (registrations.isEmpty()) return 0;
+
+        String title = "Event Updated";
+        String message = "The event \"" + event.getTitle() + "\" has been updated. Changes: "
+                + String.join(", ", changedFields) + ".";
+
+        List<Notification> notifications = new ArrayList<>(registrations.size());
+        for (Registration registration : registrations) {
+            notifications.add(Notification.builder()
+                    .user(registration.getUser())
+                    .title(title)
+                    .message(message)
+                    .type(NotificationType.EVENT_UPDATE)
+                    .referenceId(event.getId())
+                    .referenceType("EVENT")
+                    .senderId(event.getOrganiser().getId())
+                    .senderName(event.getOrganiser().getFullName())
+                    .build());
+        }
+        notificationRepository.saveAll(notifications);
+        for (int i = 0; i < registrations.size(); i++) {
+            webSocketNotificationService.sendToUser(
+                    registrations.get(i).getUser().getId(), notifications.get(i));
+        }
+        return registrations.size();
+    }
+
     public int notifyAttendeesEventCancelled(Event event, String reason) {
         List<Registration> registrations = registrationRepository.findByEventAndStatusIn(
                 event,

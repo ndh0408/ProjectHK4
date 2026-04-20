@@ -73,13 +73,14 @@ class CalendarUtils {
   }
 
   static String _stripMarkdown(String text) {
+    String first(Match m) => m.group(1) ?? '';
     return text
-        .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
-        .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
-        .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
+        .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), first)
+        .replaceAllMapped(RegExp(r'\*(.+?)\*'), first)
+        .replaceAllMapped(RegExp(r'~~(.+?)~~'), first)
         .replaceAll(RegExp(r'#{1,6}\s*'), '')
-        .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1')
-        .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+        .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), first)
+        .replaceAllMapped(RegExp(r'`(.+?)`'), first)
         .replaceAll(RegExp(r'^[-*+]\s+', multiLine: true), '• ')
         .replaceAll(RegExp(r'^\d+\.\s+', multiLine: true), '')
         .trim();

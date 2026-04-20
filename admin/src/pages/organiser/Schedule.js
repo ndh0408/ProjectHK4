@@ -71,11 +71,17 @@ const OrganiserSchedule = () => {
         if (new Date(form.startTime) >= new Date(form.endTime)) { toast.error('End time must be after start time'); return; }
         setSubmitting(true);
         try {
+            const toLocal = (v) => {
+                const d = new Date(v);
+                const pad = (n) => String(n).padStart(2, '0');
+                return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            };
             const data = {
                 ...form,
+                speakerId: form.speakerId || null,
                 capacity: parseInt(form.capacity) || 0,
-                startTime: new Date(form.startTime).toISOString(),
-                endTime: new Date(form.endTime).toISOString(),
+                startTime: toLocal(form.startTime),
+                endTime: toLocal(form.endTime),
             };
             await organiserApi.createSession(selectedEvent, data);
             toast.success('Session created!');

@@ -717,15 +717,16 @@ class _CityCard extends StatelessWidget {
 }
 
 String _stripMarkdown(String text) {
+  String _first(Match m) => m.group(1) ?? '';
   return text
       .replaceAll(RegExp(r'#{1,6}\s*'), '')
-      .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
-      .replaceAll(RegExp(r'\*(.+?)\*'), r'$1')
-      .replaceAll(RegExp(r'__(.+?)__'), r'$1')
-      .replaceAll(RegExp(r'_(.+?)_'), r'$1')
-      .replaceAll(RegExp(r'~~(.+?)~~'), r'$1')
-      .replaceAll(RegExp(r'\[(.+?)\]\(.+?\)'), r'$1')
-      .replaceAll(RegExp(r'`(.+?)`'), r'$1')
+      .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), _first)
+      .replaceAllMapped(RegExp(r'\*(.+?)\*'), _first)
+      .replaceAllMapped(RegExp(r'__(.+?)__'), _first)
+      .replaceAllMapped(RegExp(r'_(.+?)_'), _first)
+      .replaceAllMapped(RegExp(r'~~(.+?)~~'), _first)
+      .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), _first)
+      .replaceAllMapped(RegExp(r'`(.+?)`'), _first)
       .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')
       .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')
       .replaceAll(RegExp(r'\n{2,}'), '\n')

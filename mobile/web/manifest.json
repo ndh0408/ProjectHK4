@@ -1,11 +1,11 @@
 {
-    "name": "mobile",
-    "short_name": "mobile",
+    "name": "LUMA — Event Management",
+    "short_name": "LUMA",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F172A",
+    "theme_color": "#6366F1",
+    "description": "LUMA — discover, book and manage events in one place.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

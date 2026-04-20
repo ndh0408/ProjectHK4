@@ -117,7 +117,7 @@ const AdminDashboard = () => {
             if (response.data?.data) {
                 setAiInsights(response.data.data);
                 if (response.data.message === 'Basic insights') {
-                    toast.info('Hiển thị phân tích cơ bản (AI đang gặp sự cố)');
+                    toast.info('Showing basic insights (AI is unavailable)');
                 } else {
                     toast.success('AI insights generated!');
                 }

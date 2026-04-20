@@ -1128,9 +1128,14 @@ class ApiService {
     return PaginatedResponse.fromJson(data, EventImage.fromJson);
   }
 
-  /// Chat with AI Assistant
-  /// Returns: {response, intent, data, dataPointsUsed}
-  Future<Map<String, dynamic>> askChatbot(String message, {List<Map<String, String>>? history}) async {
+  /// Chat with AI Assistant.
+  /// Returns: {response, intent, data, dataPointsUsed, suggestions}
+  /// Pass [cancelToken] to abort the in-flight request from the UI.
+  Future<Map<String, dynamic>> askChatbot(
+    String message, {
+    List<Map<String, String>>? history,
+    CancelToken? cancelToken,
+  }) async {
     final requestData = <String, dynamic>{
       'message': message,
     };
@@ -1140,6 +1145,7 @@ class ApiService {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/assistant/chat',
       data: requestData,
+      cancelToken: cancelToken,
     );
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return data;

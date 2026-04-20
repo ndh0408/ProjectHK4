@@ -19,11 +19,13 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(100)")
     private String name;
 
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String description;
 
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String iconUrl;
 
     @Column(nullable = false)
