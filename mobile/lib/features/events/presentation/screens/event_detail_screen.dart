@@ -94,7 +94,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (event.hasRegistrationQuestions) {
       final isFree = selectedTier != null
           ? selectedTier.isFree
-          : (event.ticketPrice ?? 0) <= 0;
+          : event.isFree;
       final unitPrice = selectedTier?.price ?? event.ticketPrice;
 
       final result = await Navigator.push<bool>(
@@ -125,7 +125,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     final money = NumberFormat.currency(locale: 'en_US', symbol: '\$');
     final unit = tier?.price ?? event.ticketPrice ?? 0;
     final total = unit * quantity;
-    final isFree = tier?.isFree ?? ((event.ticketPrice ?? 0) <= 0);
+    final isFree = tier?.isFree ?? event.isFree;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -199,7 +199,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
 
       final unitPrice = tier?.price ?? event.ticketPrice ?? 0;
       final totalAmount = unitPrice * quantity;
-      final isFree = tier != null ? tier.isFree : unitPrice <= 0;
+      final isFree = tier != null ? tier.isFree : event.isFree;
       if (!isFree) {
         if (!mounted) return;
         final result = await Navigator.push<bool>(

@@ -140,6 +140,7 @@ Map<String, dynamic> _$EventToJson(Event instance) => <String, dynamic>{
       'boostPackage': instance.boostPackage,
       'ticketTypes': instance.ticketTypes,
       'hasTicketTypes': instance.hasTicketTypes,
+  'free': instance.free,
     };
 
 const _$EventStatusEnumMap = {

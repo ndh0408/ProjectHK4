@@ -38,7 +38,7 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
     @Query("SELECT b.event.id FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now ORDER BY b.boostPackage DESC")
     List<UUID> findBoostedEventIds(@Param("now") LocalDateTime now);
 
-    @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage IN ('PREMIUM', 'VIP') AND b.startTime <= :now AND b.endTime > :now")
+    @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now ORDER BY b.boostPackage DESC")
     List<EventBoost> findFeaturedBoosts(@Param("now") LocalDateTime now);
 
     @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")

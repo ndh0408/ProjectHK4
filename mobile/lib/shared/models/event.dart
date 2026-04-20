@@ -123,6 +123,7 @@ class Event {
     this.boostPackage,
     this.ticketTypes = const [],
     this.hasTicketTypes = false,
+    this.free = false,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -203,6 +204,7 @@ class Event {
               .toList() ??
           const [],
       hasTicketTypes: json['hasTicketTypes'] as bool? ?? ((json['ticketTypes'] as List<dynamic>?)?.isNotEmpty ?? false),
+      free: json['free'] as bool? ?? json['isFree'] as bool? ?? false,
     );
   }
 
@@ -278,6 +280,7 @@ class Event {
   final List<TicketType> ticketTypes;
   @JsonKey(defaultValue: false)
   final bool hasTicketTypes;
+  final bool free;
 
   Map<String, dynamic> toJson() => _$EventToJson(this);
 
@@ -291,7 +294,7 @@ class Event {
   int? get categoryId => category?.id;
   double get price => ticketPrice ?? 0.0;
 
-  bool get isFree => ticketPrice == null || ticketPrice == 0;
+  bool get isFree => free;
 
   int get availableSpots => remainingSpots;
 

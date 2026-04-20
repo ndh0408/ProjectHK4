@@ -28,19 +28,14 @@ if "%FLUTTER_PATH%"=="" (
 echo [OK] Flutter found at: %FLUTTER_PATH%
 echo.
 
-echo [0/4] Clearing stale caches to force fresh build...
+echo [0/4] Skipping cache clear (use --clean flag to force fresh build)...
 echo.
-if exist "%PROJECT_DIR%\admin\node_modules\.cache" (
-    echo      - Removing admin React dev-server cache
-    rmdir /s /q "%PROJECT_DIR%\admin\node_modules\.cache" 2>nul
-)
-if exist "%PROJECT_DIR%\admin\build" (
-    echo      - Removing stale admin production build
-    rmdir /s /q "%PROJECT_DIR%\admin\build" 2>nul
-)
-if exist "%PROJECT_DIR%\mobile\build\web" (
-    echo      - Removing stale mobile web build
-    rmdir /s /q "%PROJECT_DIR%\mobile\build\web" 2>nul
+if "%1"=="--clean" (
+    echo      Cleaning caches...
+    if exist "%PROJECT_DIR%\admin\node_modules\.cache" rmdir /s /q "%PROJECT_DIR%\admin\node_modules\.cache" 2>nul
+    if exist "%PROJECT_DIR%\admin\build" rmdir /s /q "%PROJECT_DIR%\admin\build" 2>nul
+    if exist "%PROJECT_DIR%\mobile\build\web" rmdir /s /q "%PROJECT_DIR%\mobile\build\web" 2>nul
+    echo      Done.
 )
 echo.
 
@@ -61,7 +56,11 @@ timeout /t 2 /nobreak > nul
 echo [3/4] Building Mobile App (Flutter Web) - no service worker cache...
 echo      Building fresh web bundle with PWA disabled to avoid stale cache...
 echo.
-start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" clean && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn --pwa-strategy=none && (if exist build\web\flutter_service_worker.js del /f /q build\web\flutter_service_worker.js) && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
+if "%1"=="--clean" (
+    start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" clean && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn --pwa-strategy=none && (if exist build\web\flutter_service_worker.js del /f /q build\web\flutter_service_worker.js) && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
+) else (
+    start "LUMA Mobile Build" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" build web --no-web-resources-cdn --pwa-strategy=none && (if exist build\web\flutter_service_worker.js del /f /q build\web\flutter_service_worker.js) && echo. && echo [BUILD COMPLETE] Starting server... && echo. && npx http-server build/web -p 5000 -c-1 --cors --gzip && pause"
+)
 
 echo.
 echo ============================================
@@ -124,15 +123,7 @@ for /d %%d in ("%ProgramFiles%\flutter*" "%ProgramFiles(x86)%\flutter*") do (
     )
 )
 
-:: Method 5: Search entire C: and D: drives (slower, but thorough)
-echo Searching for Flutter installation... This may take a moment.
-for %%d in (C D E) do (
-    if exist "%%d:\" (
-        for /f "delims=" %%i in ('dir /s /b "%%d:\flutter.bat" 2^>nul ^| findstr /i "\\bin\\flutter.bat$"') do (
-            set "FLUTTER_PATH=%%i"
-            goto :eof
-        )
-    )
-)
+:: Method 5: Skipped full disk scan (too slow)
+:: If Flutter not found, please add it to PATH or set FLUTTER_HOME
 
 goto :eof

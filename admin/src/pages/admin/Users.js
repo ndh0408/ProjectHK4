@@ -53,7 +53,8 @@ const Users = () => {
             const response = await adminApi.getUsers({
                 page: paginationModel.page,
                 size: paginationModel.pageSize,
-                search: search || undefined,
+                q: search || undefined,
+                role: 'USER',
             });
             setUsers(response.data.data.content || []);
             setTotalRows(response.data.data.totalElements || 0);
@@ -139,17 +140,6 @@ const Users = () => {
                 <Typography variant="body2" color="text.secondary">
                     {params.value}
                 </Typography>
-            ),
-        },
-        {
-            field: 'role',
-            headerName: 'Role',
-            width: 130,
-            renderCell: (params) => (
-                <StatusChip
-                    label={params.value}
-                    status={roleStatusMap[params.value] || 'neutral'}
-                />
             ),
         },
         {

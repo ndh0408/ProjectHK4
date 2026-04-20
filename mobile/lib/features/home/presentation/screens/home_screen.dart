@@ -15,6 +15,7 @@ import '../../providers/events_provider.dart';
 import '../../providers/recommendations_provider.dart';
 import '../widgets/vip_banner_carousel.dart';
 import '../widgets/trending_events_section.dart';
+import '../widgets/boosted_events_section.dart';
 import '../widgets/ai_recommendations_section.dart';
 
 enum LocationFilter { nearby, allTheWorld }
@@ -131,6 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ref.invalidate(myFutureRegistrationsProvider);
           ref.invalidate(pickedForYouEventsProvider);
           ref.invalidate(vipBannerEventsProvider);
+          ref.invalidate(boostedFeaturedEventsProvider);
           ref.invalidate(trendingEventsProvider);
           ref.invalidate(personalizedRecommendationsProvider);
         },
@@ -147,6 +149,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
 
               const VipBannerCarousel(),
+
+              const SizedBox(height: 24),
+
+              const BoostedEventsSection(),
 
               const SizedBox(height: 24),
 

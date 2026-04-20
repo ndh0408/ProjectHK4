@@ -18,13 +18,8 @@
 html{scroll-behavior:smooth}
 body{font-family:'Inter',sans-serif;line-height:1.7;color:var(--ink-2);background:var(--bg)}
 code,pre{font-family:'JetBrains Mono',monospace}
-
-/* Layout */
 .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-aside.sidebar{
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-  background:#0f172a;color:#cbd5e1;padding:28px 18px;
-}
+aside.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:#0f172a;color:#cbd5e1;padding:28px 18px;}
 aside .brand{display:flex;align-items:center;gap:12px;padding:0 8px 24px;border-bottom:1px solid #1e293b;margin-bottom:20px}
 aside .brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
 aside .brand .title{font-size:18px;font-weight:800;color:#fff;line-height:1.2}
@@ -34,23 +29,14 @@ aside a.nav{display:block;padding:9px 12px;border-radius:8px;color:#cbd5e1;text-
 aside a.nav:hover{background:#1e293b;color:#fff}
 aside a.nav.member{display:flex;align-items:center;gap:10px}
 aside a.nav .dot{width:8px;height:8px;border-radius:50%}
-
 main{padding:40px 48px;max-width:1180px}
-
-/* Hero */
-.hero{
-  background:linear-gradient(135deg,#6366f1 0%,#ec4899 100%);
-  color:#fff;padding:64px 52px;border-radius:24px;box-shadow:var(--shadow-lg);
-  margin-bottom:44px;position:relative;overflow:hidden;
-}
+.hero{background:linear-gradient(135deg,#6366f1 0%,#ec4899 100%);color:#fff;padding:64px 52px;border-radius:24px;box-shadow:var(--shadow-lg);margin-bottom:44px;position:relative;overflow:hidden;}
 .hero::before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 60%);border-radius:50%}
 .hero .eyebrow{display:inline-block;padding:6px 14px;background:rgba(255,255,255,.2);border-radius:50px;font-size:12.5px;font-weight:600;letter-spacing:.5px;margin-bottom:20px}
 .hero h1{font-size:52px;font-weight:800;letter-spacing:-1.5px;margin-bottom:10px;line-height:1.05}
 .hero .tag{font-size:20px;opacity:.95;font-weight:500;margin-bottom:28px}
 .hero .meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
 .hero .pill{background:rgba(255,255,255,.18);padding:9px 16px;border-radius:50px;font-size:13.5px;font-weight:500}
-
-/* Section */
 section{background:var(--surface);border-radius:var(--radius);padding:40px 44px;margin-bottom:28px;box-shadow:var(--shadow)}
 section h2{font-size:30px;color:var(--ink);margin-bottom:6px;letter-spacing:-.5px;font-weight:800}
 section h2 .num{display:inline-block;width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;text-align:center;line-height:42px;font-size:17px;margin-right:12px;vertical-align:middle}
@@ -61,30 +47,16 @@ section .lead{font-size:15.5px;color:var(--muted);margin-bottom:22px;padding-bot
 section ul{margin:8px 0 14px 20px}
 section ul li{margin-bottom:6px}
 section strong{color:var(--ink)}
-
-/* Chips/Badges */
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .chip{background:var(--chip);padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:500;color:var(--ink-2);border:1px solid var(--line)}
-.chip.accent{background:#eef2ff;color:var(--primary-dark);border-color:#c7d2fe}
 .chip.ok{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
-.chip.warn{background:#fffbeb;color:#b45309;border-color:#fde68a}
-.chip.err{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
-.chip code{background:transparent;padding:0;font-size:12px}
-
 code{background:var(--chip);padding:2px 7px;border-radius:5px;font-size:13px;color:#be185d}
 pre{background:#0f172a;color:#e2e8f0;padding:18px 22px;border-radius:10px;overflow-x:auto;font-size:13px;margin:12px 0;line-height:1.65}
-pre .k{color:#93c5fd}
-pre .s{color:#fca5a5}
-pre .c{color:#64748b}
-
-/* Tables */
 .tbl{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .tbl th{background:var(--chip);color:var(--ink);font-weight:700;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px}
 .tbl td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr:nth-child(even) td{background:#fafbfc}
-
-/* Cards grid */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
 .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:12px 0}
 .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
@@ -94,8 +66,6 @@ pre .c{color:#64748b}
 .stat{background:linear-gradient(135deg,#eef2ff,#fce7f3);padding:22px;border-radius:12px;text-align:center;border:1px solid var(--line)}
 .stat .num{font-size:32px;font-weight:800;color:var(--primary-dark);letter-spacing:-1px}
 .stat .lbl{font-size:12.5px;color:var(--muted);font-weight:500;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
-
-/* Member */
 .member-section{border-top:6px solid var(--member);}
 .member-huy{--member:var(--huy)}
 .member-khoa{--member:var(--khoa)}
@@ -107,45 +77,38 @@ pre .c{color:#64748b}
 .member-header .info h3{font-size:26px;color:var(--ink);margin-bottom:4px}
 .member-header .role{color:var(--member);font-weight:600;font-size:14px}
 .member-header .time{margin-left:auto;background:var(--chip);padding:8px 14px;border-radius:50px;font-size:13px;font-weight:600;color:var(--ink)}
-
+.feature-block{background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:24px 28px;margin:18px 0}
+.feature-block h4{font-size:18px;margin:0 0 14px;color:var(--ink)}
+.feature-block .why{background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:8px;margin:10px 0}
+.feature-block .why strong{color:#1e40af}
+.feature-block .how{background:#ecfdf5;border:1px solid #a7f3d0;padding:12px 16px;border-radius:8px;margin:10px 0}
+.feature-block .how strong{color:#047857}
+.feature-block .result{background:#fef3c7;border:1px solid #fde68a;padding:12px 16px;border-radius:8px;margin:10px 0}
+.feature-block .result strong{color:#92400e}
 .script{background:#fafbfc;border-left:4px solid var(--member);padding:20px 24px;border-radius:0 10px 10px 0;margin:12px 0}
 .script h4{color:var(--member);font-size:14px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:700}
 .script .say{background:#fff;border:1px dashed var(--line);padding:16px 18px;border-radius:8px;font-style:italic;color:var(--ink);line-height:1.75;margin-bottom:10px}
 .script .say::before{content:"\201C";color:var(--member);font-size:28px;line-height:0;vertical-align:-8px;margin-right:4px}
-
 .files-box{background:#fff7ed;border:1px solid #fed7aa;padding:14px 18px;border-radius:10px;margin:10px 0;font-size:13.5px}
 .files-box strong{color:#9a3412}
 .files-box code{background:#fff;border:1px solid #fed7aa;color:#9a3412}
-
+.ui-box{background:#eef2ff;border:1px solid #c7d2fe;padding:14px 18px;border-radius:10px;margin:10px 0;font-size:13.5px}
+.ui-box strong{color:#3730a3}
+.ui-box code{background:#fff;border:1px solid #c7d2fe;color:#3730a3}
 .alert{padding:14px 18px;border-radius:10px;margin:14px 0;border-left:4px solid}
-.alert-warn{background:#fffbeb;border-color:var(--warning);color:#78350f}
-.alert-ok{background:#ecfdf5;border-color:var(--success);color:#064e3b}
 .alert-info{background:#eff6ff;border-color:var(--info);color:#1e3a8a}
-
-/* Flow diagram */
 .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 0;padding:16px;background:var(--chip);border-radius:12px;font-size:13.5px}
 .flow .step{background:#fff;padding:10px 14px;border-radius:8px;border:1px solid var(--line);font-weight:500}
 .flow .arr{color:var(--primary);font-weight:800}
-
-/* Timeline */
+.flow-overview{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0;padding:20px;background:linear-gradient(135deg,color-mix(in srgb, var(--member) 8%, #fff),color-mix(in srgb, var(--member) 4%, #fff));border-radius:14px;font-size:13.5px;border:2px solid color-mix(in srgb, var(--member) 25%, transparent)}
+.flow-overview .step{background:#fff;padding:12px 16px;border-radius:10px;border:2px solid color-mix(in srgb, var(--member) 30%, transparent);font-weight:600;color:var(--ink)}
+.flow-overview .step .step-num{display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--member);color:#fff;text-align:center;line-height:24px;font-size:11px;font-weight:700;margin-right:6px}
+.flow-overview .arr{color:var(--member);font-weight:800;font-size:18px}
 .timeline{list-style:none;margin:16px 0;padding-left:0}
 .timeline li{position:relative;padding:12px 14px 12px 40px;background:var(--chip);border-radius:10px;margin-bottom:10px;border:1px solid var(--line)}
 .timeline li::before{content:attr(data-t);position:absolute;left:10px;top:12px;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;min-width:22px;text-align:center}
-
-@media (max-width:980px){
-  .app{grid-template-columns:1fr}
-  aside.sidebar{position:relative;height:auto}
-  main{padding:24px}
-  .hero{padding:40px 28px}
-  .hero h1{font-size:34px}
-  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
-}
-@media print{
-  .app{display:block}
-  aside{display:none}
-  main{max-width:none;padding:0}
-  section{break-inside:avoid;box-shadow:none;border:1px solid var(--line)}
-}
+@media (max-width:980px){.app{grid-template-columns:1fr}aside.sidebar{position:relative;height:auto}main{padding:24px}.hero{padding:40px 28px}.hero h1{font-size:34px}.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+@media print{.app{display:block}aside{display:none}main{max-width:none;padding:0}section{break-inside:avoid;box-shadow:none;border:1px solid var(--line)}}
 </style>
 </head>
 <body>
@@ -154,706 +117,477 @@ pre .c{color:#64748b}
 <aside class="sidebar">
   <div class="brand">
     <div class="logo">L</div>
-    <div>
-      <div class="title">LUMA</div>
-      <div class="sub">Capstone 2026 · Nhóm 5</div>
-    </div>
+    <div><div class="title">LUMA</div><div class="sub">Capstone 2026 &middot; Nhóm 5</div></div>
   </div>
-
   <div class="group-label">Mục lục</div>
-  <a class="nav" href="#overview">1. Tổng quan đề tài</a>
-  <a class="nav" href="#goal">2. Mục tiêu hệ thống</a>
-  <a class="nav" href="#tech">3. Công nghệ sử dụng</a>
-  <a class="nav" href="#architecture">4. Kiến trúc hệ thống</a>
-  <a class="nav" href="#features">5. Danh sách chức năng</a>
-  <a class="nav" href="#db">6. Cơ sở dữ liệu</a>
-  <a class="nav" href="#division">7. Phân công 5 thành viên</a>
-
-  <div class="group-label">Thành viên</div>
-  <a class="nav member" href="#huy"><span class="dot" style="background:var(--huy)"></span>Huy — Mở đầu &amp; Auth</a>
-  <a class="nav member" href="#khoa"><span class="dot" style="background:var(--khoa)"></span>Khoa — Admin &amp; Organiser UI</a>
-  <a class="nav member" href="#khanh"><span class="dot" style="background:var(--khanh)"></span>Khánh — Backend &amp; Payment</a>
-  <a class="nav member" href="#trinh"><span class="dot" style="background:var(--trinh)"></span>Trinh — DB &amp; Mobile</a>
-  <a class="nav member" href="#duy"><span class="dot" style="background:var(--duy)"></span>Duy — Realtime, AI &amp; Demo</a>
-
+  <a class="nav" href="#overview">Tổng quan dự án</a>
+  <a class="nav" href="#division">Phân công nhóm</a>
+  <div class="group-label">Thành viên (5-6 chức năng/người)</div>
+  <a class="nav member" href="#huy"><span class="dot" style="background:var(--huy)"></span>Huy &mdash; Tương tác &amp; Trải nghiệm</a>
+  <a class="nav member" href="#khoa"><span class="dot" style="background:var(--khoa)"></span>Khoa &mdash; Sự kiện</a>
+  <a class="nav member" href="#khanh"><span class="dot" style="background:var(--khanh)"></span>Khánh &mdash; Đăng ký &amp; Thanh toán</a>
+  <a class="nav member" href="#trinh"><span class="dot" style="background:var(--trinh)"></span>Trinh &mdash; Nền tảng hệ thống</a>
+  <a class="nav member" href="#duy"><span class="dot" style="background:var(--duy)"></span>Duy &mdash; Vận hành &amp; Tăng trưởng</a>
   <div class="group-label">Bổ sung</div>
-  <a class="nav" href="#demo-flow">8. Demo flow đề xuất</a>
-  <a class="nav" href="#highlight">9. Điểm nổi bật Full-Stack</a>
-  <a class="nav" href="#risks">10. Hạn chế &amp; Rủi ro</a>
-  <a class="nav" href="#roadmap">11. Hướng phát triển</a>
-  <a class="nav" href="#timeline">12. Timeline trình bày</a>
+  <a class="nav" href="#demo">Kịch bản Demo</a>
+  <a class="nav" href="#timeline">Timeline</a>
 </aside>
 
 <main>
 
-<!-- ============== HERO ============== -->
+<!-- HERO -->
 <div class="hero">
-  <span class="eyebrow">📚 BÁO CÁO BẢO VỆ ĐỒ ÁN FULL-STACK</span>
+  <span class="eyebrow">BÁO CÁO BẢO VỆ ĐỒ ÁN FULL-STACK</span>
   <h1>LUMA</h1>
-  <div class="tag">Nền tảng quản lý &amp; bán vé sự kiện (Event Marketplace)</div>
+  <div class="tag">Nền tảng quản lý và bán vé sự kiện trực tuyến</div>
   <div class="meta">
-    <span class="pill">⚙️ Spring Boot 3.4.1 · Java 21</span>
-    <span class="pill">⚛️ React 18 + MUI</span>
-    <span class="pill">📱 Flutter Web · Riverpod</span>
-    <span class="pill">🗄️ SQL Server</span>
-    <span class="pill">💳 Stripe · 🤖 Groq AI · ☁️ Cloudinary</span>
+    <span class="pill">Spring Boot 3.4 &middot; Java 21</span>
+    <span class="pill">React 18 + MUI</span>
+    <span class="pill">Flutter Web &middot; Riverpod</span>
+    <span class="pill">SQL Server</span>
+    <span class="pill">Stripe &middot; Groq AI &middot; Cloudinary</span>
   </div>
   <div class="meta" style="margin-top:18px">
-    <span class="pill" style="background:rgba(255,255,255,.3)"><strong>Nhóm 5:</strong> Huy · Khoa · Khánh · Trinh · Duy</span>
+    <span class="pill" style="background:rgba(255,255,255,.3)"><strong>Nhóm 5:</strong> Huy &middot; Khoa &middot; Khánh &middot; Trinh &middot; Duy</span>
   </div>
 </div>
 
-<!-- ============== 1. OVERVIEW ============== -->
+<!-- TỔNG QUAN -->
 <section id="overview">
-  <h2><span class="num">1</span>Tổng quan đề tài</h2>
-  <p class="lead">LUMA là một <strong>event marketplace</strong> 3-tier (Backend API + Admin Web + Mobile Web) mô phỏng mô hình kinh doanh thực tế của các nền tảng như Luma, Eventbrite, Meetup. Hệ thống phục vụ đồng thời 3 vai trò người dùng: <strong>Người tham dự (USER)</strong>, <strong>Nhà tổ chức (ORGANISER)</strong> và <strong>Quản trị viên (ADMIN)</strong>.</p>
+  <h2><span class="num">1</span>Tổng quan dự án</h2>
+  <p class="lead">LUMA là một <strong>nền tảng quản lý và bán vé sự kiện trực tuyến</strong> theo kiến trúc 3 tầng, mô phỏng mô hình kinh doanh thực tế của Luma, Eventbrite, Meetup. Hệ thống phục vụ đồng thời 3 vai trò: <strong>Người tham dự (USER)</strong>, <strong>Nhà tổ chức (ORGANISER)</strong> và <strong>Quản trị viên (ADMIN)</strong>.</p>
 
   <div class="grid-4">
-    <div class="stat"><div class="num">423</div><div class="lbl">File Java backend</div></div>
-    <div class="stat"><div class="num">57</div><div class="lbl">Entity / Bảng DB</div></div>
-    <div class="stat"><div class="num">15</div><div class="lbl">Module mobile</div></div>
-    <div class="stat"><div class="num">60+</div><div class="lbl">REST Controller</div></div>
+    <div class="stat"><div class="num">423</div><div class="lbl">File Java</div></div>
+    <div class="stat"><div class="num">57</div><div class="lbl">Bảng DB</div></div>
+    <div class="stat"><div class="num">65</div><div class="lbl">Controller</div></div>
+    <div class="stat"><div class="num">25</div><div class="lbl">Trang Admin</div></div>
   </div>
 
-  <h3>Bài toán giải quyết</h3>
-  <ul>
-    <li><strong>Người tham dự:</strong> tìm kiếm – đăng ký – thanh toán – check-in – đánh giá sự kiện trên một ứng dụng duy nhất.</li>
-    <li><strong>Nhà tổ chức:</strong> tạo sự kiện đa bậc vé (multi-tier ticket), phát hành coupon, thu thập câu hỏi đăng ký, tạo poll khảo sát, xem thống kê funnel, nhận tiền qua Stripe Connect.</li>
-    <li><strong>Quản trị viên:</strong> kiểm duyệt sự kiện, phân quyền, giám sát doanh thu, hoa hồng, xử lý báo cáo review.</li>
-  </ul>
+  <p>LUMA ra đời nhằm giải quyết bài toán phân mảnh công cụ khi tổ chức sự kiện. Hiện nay, một nhà tổ chức phải dùng một ứng dụng để tạo sự kiện, một ứng dụng khác để bán vé, một công cụ riêng để gửi email, và lại một nền tảng khác để khảo sát. LUMA hợp nhất toàn bộ vào một hệ thống duy nhất, giúp nhà tổ chức quản lý mọi thứ từ một nơi và người tham dự có trải nghiệm liền mạch từ đầu đến cuối.</p>
 
-  <h3>Đặc điểm nổi bật của source code</h3>
-  <div class="chips">
-    <span class="chip ok">✅ JWT + Role-based Security</span>
-    <span class="chip ok">✅ Stripe end-to-end (PaymentIntent + Connect + Webhook)</span>
-    <span class="chip ok">✅ WebSocket STOMP (chat + notification)</span>
-    <span class="chip ok">✅ AI Groq (sinh poll, mô tả sự kiện)</span>
-    <span class="chip ok">✅ Coupon 2-scope (event-specific / organiser-wide)</span>
-    <span class="chip ok">✅ Poll lifecycle + auto open/close</span>
-    <span class="chip ok">✅ Cloudinary upload ảnh</span>
-    <span class="chip ok">✅ Google Calendar Sync + Google OAuth</span>
-    <span class="chip ok">✅ Flyway migration + Soft delete</span>
-    <span class="chip ok">✅ Rate limit Bucket4j</span>
-    <span class="chip ok">✅ Email Thymeleaf + campaign</span>
-    <span class="chip ok">✅ QR check-in</span>
-  </div>
+  <p>Về mặt kỹ thuật, tầng Backend sử dụng Spring Boot 3.4.1 chạy trên Java 21, cung cấp RESTful API và WebSocket, tích hợp thanh toán Stripe, lưu trữ hình ảnh trên Cloudinary, và sử dụng Groq AI để sinh nội dung tự động. Tầng Admin Panel được xây dựng bằng React 18 kết hợp Material UI với 25 trang quản trị. Tầng Mobile Web sử dụng Flutter với Riverpod, cung cấp hơn 44 màn hình cho người dùng cuối. Cơ sở dữ liệu là SQL Server với 57 bảng thực thể.</p>
+
+  <p>Thay vì trình bày từng chức năng rời rạc, nhóm em tổ chức thành <strong>15 nhóm chức năng lớn</strong> chia đều cho 5 thành viên, mỗi người 3 nhóm. Mỗi nhóm chức năng bao gồm đầy đủ backend API, giao diện UI, và quy trình sử dụng end-to-end. Cách tiếp cận này giúp người nghe hiểu được luồng vận hành thực tế thay vì chỉ thấy danh sách tính năng.</p>
 </section>
 
-<!-- ============== 2. GOAL ============== -->
-<section id="goal">
-  <h2><span class="num">2</span>Mục tiêu hệ thống</h2>
-  <div class="grid-2">
-    <div class="card">
-      <h4>🎯 Mục tiêu nghiệp vụ</h4>
-      <ul>
-        <li>Xây dựng marketplace 2 phía: Attendee ↔ Organiser.</li>
-        <li>Hỗ trợ <strong>vé đa bậc</strong> (General/VIP/Early-bird) + QR check-in.</li>
-        <li>Quản lý <strong>chiết khấu</strong> theo coupon có kiểm soát phạm vi.</li>
-        <li>Tự động hoá: nhắc lịch, cấp chứng chỉ, đóng poll theo giờ.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h4>⚙️ Mục tiêu kỹ thuật</h4>
-      <ul>
-        <li>Kiến trúc layered rõ ràng (Controller → Service → Repository).</li>
-        <li>API RESTful có <strong>Swagger</strong>, phân quyền bằng <code>@PreAuthorize</code>.</li>
-        <li>Realtime &lt; 1 giây qua WebSocket STOMP.</li>
-        <li>Thanh toán thật bằng Stripe (test mode) + Webhook idempotent.</li>
-        <li>Thiết kế token hoá (design tokens) và i18n Vi/En cho mobile.</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ============== 3. TECH ============== -->
-<section id="tech">
-  <h2><span class="num">3</span>Công nghệ sử dụng</h2>
-
-  <h3>Backend (<code>/backend</code>)</h3>
-  <table class="tbl">
-    <tr><th style="width:26%">Lớp</th><th>Công nghệ / Thư viện thực tế trong <code>pom.xml</code></th></tr>
-    <tr><td>Ngôn ngữ / Runtime</td><td>Java 21, Spring Boot 3.4.1, Maven Wrapper (<code>mvnw</code>)</td></tr>
-    <tr><td>ORM / DB</td><td>Spring Data JPA + Hibernate, <strong>SQL Server</strong> (mssql-jdbc), Flyway migration</td></tr>
-    <tr><td>Security</td><td>Spring Security + <strong>JJWT 0.12.3</strong>, BCrypt, Google OAuth (<code>google-api-client</code>)</td></tr>
-    <tr><td>Thanh toán</td><td><strong>Stripe Java 24.0.0</strong> (PaymentIntent, Checkout, Connect, Webhook)</td></tr>
-    <tr><td>Upload</td><td><strong>Cloudinary</strong> (cloudinary-http44)</td></tr>
-    <tr><td>Email</td><td>Spring Mail + <strong>Thymeleaf templates</strong> (HTML email)</td></tr>
-    <tr><td>Realtime</td><td>Spring WebSocket + <strong>STOMP</strong></td></tr>
-    <tr><td>Tài liệu</td><td>Apache POI (Excel), iText7 (PDF), Google ZXing (QR)</td></tr>
-    <tr><td>AI</td><td><strong>Groq API</strong> — model <code>llama-3.3-70b-versatile</code></td></tr>
-    <tr><td>Chống DDoS</td><td><strong>Bucket4j 8.7.0</strong> (rate limit)</td></tr>
-    <tr><td>Tiện ích</td><td>Lombok 1.18.30, Jakarta Validation, SpringDoc OpenAPI (Swagger UI)</td></tr>
-  </table>
-
-  <h3>Admin Panel (<code>/admin</code>)</h3>
-  <table class="tbl">
-    <tr><th style="width:26%">Lớp</th><th>Công nghệ</th></tr>
-    <tr><td>Framework</td><td>React 18.2 (Create React App) + React Router DOM 6.21</td></tr>
-    <tr><td>UI</td><td><strong>Material-UI 5.15</strong> (DataGrid, x-charts, x-date-pickers, icons)</td></tr>
-    <tr><td>HTTP</td><td>Axios 1.6 (interceptor gắn JWT, auto refresh token, redirect 401)</td></tr>
-    <tr><td>State</td><td>React Context (<code>AuthContext</code>) + useState cục bộ</td></tr>
-    <tr><td>Khác</td><td>@hello-pangea/dnd (drag-drop câu hỏi), react-toastify, @uiw/react-md-editor, date-fns</td></tr>
-  </table>
-
-  <h3>Mobile (<code>/mobile</code>) — Flutter Web</h3>
-  <table class="tbl">
-    <tr><th style="width:26%">Lớp</th><th>Công nghệ</th></tr>
-    <tr><td>Framework</td><td>Flutter 3 (Dart) — biên dịch <strong>web</strong> (không dùng service worker để tránh cache)</td></tr>
-    <tr><td>State</td><td>Riverpod 2.4</td></tr>
-    <tr><td>Routing</td><td>GoRouter 13 (declarative, deep-link)</td></tr>
-    <tr><td>HTTP</td><td>Dio 5.4 (interceptor JWT)</td></tr>
-    <tr><td>Storage</td><td>flutter_secure_storage (token)</td></tr>
-    <tr><td>Thanh toán</td><td>flutter_stripe + flutter_stripe_web</td></tr>
-    <tr><td>Realtime</td><td>stomp_dart_client 2.0 (kết nối <code>/ws</code>)</td></tr>
-    <tr><td>Media</td><td>cached_network_image, flutter_pdfview, qr_flutter, mobile_scanner</td></tr>
-    <tr><td>i18n</td><td>intl + ARB (Tiếng Việt + English)</td></tr>
-  </table>
-
-  <h3>DevOps</h3>
-  <p>Script <code>start-all.bat</code> tự động: clear cache → chạy backend (<code>mvnw spring-boot:run</code>) → chạy admin (<code>npm start</code>) → build mobile Flutter web &amp; serve <code>http-server -p 5000</code>. File <code>stop-all.bat</code> kill toàn bộ <code>java.exe / node.exe</code>.</p>
-</section>
-
-<!-- ============== 4. ARCHITECTURE ============== -->
-<section id="architecture">
-  <h2><span class="num">4</span>Kiến trúc hệ thống</h2>
-  <p class="lead">Mô hình <strong>3-tier client-server</strong>: 2 client (Admin web + Mobile web) gọi cùng 1 REST API backend qua HTTPS, realtime qua WebSocket.</p>
-
-  <pre><span class="c">┌─────────────────┐     ┌─────────────────┐     ┌──────────────────┐</span>
-<span class="c">│  Admin (React)  │     │ Mobile (Flutter)│     │ Stripe / Cloudinary│</span>
-<span class="c">│  :3000          │     │ :5000           │     │ Groq / Google OAuth│</span>
-<span class="c">└────────┬────────┘     └────────┬────────┘     └─────────┬────────┘</span>
-         │  REST + JWT           │ REST + STOMP/WS         │ Webhook + API
-         └───────────┬───────────┘                         │
-                     ▼                                     │
-              <span class="k">┌─────────────────────────────────────────────┐</span>
-              <span class="k">│  Spring Boot 3.4.1  (port 8080)             │</span>
-              <span class="k">│  Controller → Service → Repository          │</span>
-              <span class="k">│  SecurityFilterChain + JwtFilter + RateLimit│</span>
-              <span class="k">│  @Scheduled jobs (reminder, certificate...) │</span>
-              <span class="k">└───────────────┬─────────────────────────────┘</span>
-                              ▼
-                      <span class="s">┌──────────────┐</span>
-                      <span class="s">│ SQL Server   │</span>
-                      <span class="s">│ luma_db.bak  │</span>
-                      <span class="s">│ 57 tables    │</span>
-                      <span class="s">└──────────────┘</span></pre>
-
-  <h3>Luồng request end-to-end (ví dụ mua vé)</h3>
-  <div class="flow">
-    <span class="step">Mobile: chọn vé</span><span class="arr">→</span>
-    <span class="step">POST /register</span><span class="arr">→</span>
-    <span class="step">PaymentIntent (Stripe)</span><span class="arr">→</span>
-    <span class="step">Stripe.js thu thẻ</span><span class="arr">→</span>
-    <span class="step">Webhook charge.succeeded</span><span class="arr">→</span>
-    <span class="step">Registration APPROVED</span><span class="arr">→</span>
-    <span class="step">Email vé + QR</span>
-  </div>
-
-  <h3>Phân tầng backend (layered)</h3>
-  <div class="grid-3">
-    <div class="card"><h4>Controller</h4><p><code>controller/{admin,organiser,user,pub,webhook,websocket}</code> — tách theo role; dùng <code>@PreAuthorize</code>.</p></div>
-    <div class="card"><h4>Service</h4><p>Chứa business logic (EventService, PaymentService, CouponService, PollService…) với <code>@Transactional</code>.</p></div>
-    <div class="card"><h4>Repository</h4><p>53 <code>JpaRepository</code>, dùng derived query + <code>@Query</code> JPQL cho truy vấn phức tạp.</p></div>
-  </div>
-</section>
-
-<!-- ============== 5. FEATURES ============== -->
-<section id="features">
-  <h2><span class="num">5</span>Danh sách chức năng thực tế (bám source)</h2>
-
-  <h3>🔐 Xác thực &amp; Phân quyền</h3>
-  <ul>
-    <li>Đăng ký / đăng nhập email + mật khẩu, <strong>verify mã OTP qua email</strong>, quên mật khẩu.</li>
-    <li>Đăng nhập Google OAuth (<code>POST /api/auth/google</code>).</li>
-    <li>JWT access + refresh token (24h / 7d); interceptor auto-refresh 401.</li>
-    <li>3 vai trò: <code>ADMIN / ORGANISER / USER</code> chia controller riêng.</li>
-    <li>Rate limit: 10 req/phút cho login, 100 req/phút cho API chung (Bucket4j).</li>
-  </ul>
-
-  <h3>🎫 Sự kiện &amp; Vé</h3>
-  <ul>
-    <li>CRUD sự kiện với lifecycle: <code>DRAFT → PUBLISHED</code>, Admin <code>APPROVE/REJECT</code>.</li>
-    <li><strong>Multi-tier tickets</strong>: mỗi event có nhiều <code>TicketType</code> (tên, giá, tồn kho, vị trí hiển thị).</li>
-    <li>Event recurring (NONE/WEEKLY/MONTHLY/CUSTOM), visibility PUBLIC/PRIVATE, <code>requiresApproval</code>.</li>
-    <li>Category, City, Speaker, Event session (đa phiên).</li>
-    <li>Question tuỳ biến cho form đăng ký + answer lưu về <code>RegistrationAnswer</code>.</li>
-    <li>Bookmark, Follow organiser, Event View tracking (analytics funnel).</li>
-    <li>Ticket Transfer (chuyển vé giữa user).</li>
-    <li><strong>QR check-in</strong> (ZXing + mobile_scanner).</li>
-  </ul>
-
-  <h3>💳 Thanh toán &amp; Coupon</h3>
-  <ul>
-    <li>Stripe PaymentIntent + Checkout Session. Flutter Stripe thu thẻ, không chạm backend.</li>
-    <li>Webhook idempotent: <code>ProcessedWebhookEvent</code> chống xử lý trùng <code>stripeEventId</code>.</li>
-    <li>Refund qua Stripe API khi organiser reject registration đã thanh toán.</li>
-    <li>Stripe <strong>Connect</strong> cho organiser: link bank, payout, commission.</li>
-    <li>Coupon 2 scope: <strong>event-specific</strong> (<code>coupon.eventId != null</code>) hoặc <strong>organiser-wide</strong> (áp dụng mọi event của chính organiser đó). Logic validate tại <code>CouponService.validateCoupon</code>.</li>
-    <li>Coupon có <code>maxUsageCount</code>, <code>maxUsagePerUser</code>, <code>validFrom/Until</code>, <code>minOrderAmount</code>, <code>maxDiscountAmount</code>.</li>
-  </ul>
-
-  <h3>📊 Poll &amp; AI</h3>
-  <ul>
-    <li>Poll lifecycle: <code>DRAFT → SCHEDULED → ACTIVE → CLOSED</code> (có thể reopen).</li>
-    <li>3 loại: SINGLE_CHOICE, MULTIPLE_CHOICE, RATING.</li>
-    <li>Auto open khi event bắt đầu / auto close khi event kết thúc / close sau 10 ngày / close khi đủ số vote.</li>
-    <li>Ẩn kết quả tới khi close (<code>hideResultsUntilClosed</code>).</li>
-    <li>Admin Organiser có nút <strong>AI-generate poll</strong> từ chủ đề — gọi Groq API.</li>
-    <li>Flyway migration <code>V1__Fix_Poll_Boolean_Columns.sql</code> sửa nullable → NOT NULL default.</li>
-  </ul>
-
-  <h3>💬 Realtime &amp; Notification</h3>
-  <ul>
-    <li>Chat 1-1 + group qua WebSocket STOMP (<code>/ws</code>, topic <code>/topic/chat/{convId}</code>).</li>
-    <li>Authenticate WebSocket bằng JWT ở CONNECT frame.</li>
-    <li>Notification in-app realtime (<code>/topic/notifications/{userId}</code>) + bảng <code>Notification</code> trong DB.</li>
-    <li>Email reminder 24h trước event qua <code>@Scheduled</code> cron job.</li>
-    <li>Email campaign hàng loạt (<code>EmailCampaign</code> + <code>EmailUnsubscribe</code>).</li>
-  </ul>
-
-  <h3>🏢 Organiser Marketplace</h3>
-  <ul>
-    <li>Profile công khai, logo, website, verification status (admin duyệt).</li>
-    <li>Subscription 3 tier: BASIC/PREMIUM/ENTERPRISE (Stripe subscription).</li>
-    <li>Hoa hồng tự động: <code>OrganiserCommission</code> tính % trên mỗi đơn thành công.</li>
-    <li>Yêu cầu rút tiền (<code>WithdrawalRequest</code>) → admin xử lý.</li>
-    <li>Event Boost 3 gói STARTER/PROFESSIONAL/ELITE → đẩy sự kiện lên feed.</li>
-  </ul>
-
-  <h3>🛡️ Quản trị (Admin)</h3>
-  <ul>
-    <li>Duyệt event, ban/unban user, đổi role, quản lý organiser.</li>
-    <li>Thống kê doanh thu tổng, breakdown theo organiser/event, funnel analytics.</li>
-    <li>CRUD category, city, boost.</li>
-    <li>Broadcast notification, quản lý review report.</li>
-    <li>Export Excel (POI) / PDF (iText7).</li>
-  </ul>
-
-  <h3>📱 Mobile</h3>
-  <ul>
-    <li>15 feature module (auth, home, events, explore, bookmarks, coupons, chat, notifications, profile, calendar, gallery, my_events, questions, create_event, main).</li>
-    <li>Design tokens tách riêng: <code>app_radius</code>, <code>app_shadows</code>, <code>app_spacing</code>, <code>app_typography</code>.</li>
-    <li>Payment screen: chip coupon (ưu đãi cao nhất đầu), hiển thị tổng đã giảm trên nút <em>Pay</em>.</li>
-    <li>i18n Vi/En runtime switch.</li>
-    <li>Map sự kiện (flutter_map), Markdown cho mô tả, PDF viewer cho chứng chỉ.</li>
-  </ul>
-
-  <div class="alert alert-warn">
-    <strong>⚠️ Lưu ý khi thuyết trình:</strong> tính năng <em>SeatMap</em> đã bị thay thế bằng Multi-tier Tickets (commit <code>eff1412</code>) — <strong>không demo</strong> để tránh lỗi. File <code>Events_backup.js</code> ở admin là bản backup khi refactor, không dùng nữa.
-  </div>
-</section>
-
-<!-- ============== 6. DB ============== -->
-<section id="db">
-  <h2><span class="num">6</span>Cơ sở dữ liệu</h2>
-  <p class="lead"><strong>SQL Server</strong> (backup có sẵn trong repo: <code>luma_db.bak</code>, 14.8 MB). ORM Spring Data JPA + Hibernate. Migration bằng Flyway (<code>resources/db/migration</code>). Áp dụng <strong>soft delete</strong> xuyên suốt bằng <code>@SQLDelete</code> + <code>@SQLRestriction("deleted = false")</code>.</p>
-
-  <h3>Nhóm entity chính (57 entity)</h3>
-  <div class="grid-2">
-    <div class="card">
-      <h4>👤 Người dùng &amp; Tổ chức</h4>
-      <p>User, OrganiserProfile, OrganiserBankAccount, OrganiserSubscription, Follow, ConnectionRequest, BlockedUser, CalendarSync, GoogleCalendarToken, ActivityLog, UserBoost</p>
-    </div>
-    <div class="card">
-      <h4>🎫 Sự kiện &amp; Vé</h4>
-      <p>Event, TicketType, EventSession, Speaker, Category, City, EventBoost, EventView, Bookmark, UserEventLimit, WaitlistOffer, Question, RegistrationQuestion, RegistrationAnswer, TicketTransfer</p>
-    </div>
-    <div class="card">
-      <h4>💳 Giao dịch</h4>
-      <p>Registration, Payment, Coupon, CouponUsage, OrganiserCommission, CommissionTransaction, Payout, WithdrawalRequest, ProcessedWebhookEvent</p>
-    </div>
-    <div class="card">
-      <h4>📊 Tương tác</h4>
-      <p>Poll, PollOption, PollVote, Review, ReviewReport, Certificate, Notification, Conversation, ConversationParticipant, Message, EmailCampaign, EmailCampaignRecipient, EmailUnsubscribe, PlatformConfig</p>
-    </div>
-  </div>
-
-  <h3>Quan hệ chính</h3>
-  <pre><span class="k">User</span> 1 ──* <span class="k">Event</span> (organiser) 1 ──* <span class="k">TicketType</span>
-                               1 ──* <span class="k">Registration</span> 1 ──1 <span class="k">Payment</span>
-                               1 ──* <span class="k">Poll</span> 1 ──* <span class="k">PollOption</span>
-                                                  1 ──* <span class="k">PollVote</span> *──1 <span class="k">User</span>
-<span class="k">Coupon</span> *── optional <span class="k">Event</span>    (null = organiser-wide)
-<span class="k">Coupon</span> 1 ──* <span class="k">CouponUsage</span> *── <span class="k">Registration</span>
-<span class="k">Conversation</span> 1 ──* <span class="k">Message</span>, 1 ──* <span class="k">ConversationParticipant</span></pre>
-</section>
-
-<!-- ============== 7. DIVISION ============== -->
+<!-- PHÂN CÔNG -->
 <section id="division">
-  <h2><span class="num">7</span>Phân công 5 thành viên (Full-Stack end-to-end)</h2>
-  <p class="lead">Mỗi người phụ trách một lát cắt dọc (vertical slice) có đủ <strong>nghiệp vụ + UI + backend + DB</strong> để đảm bảo ai cũng "chạm" đủ các tầng. Không trùng nội dung.</p>
+  <h2><span class="num">2</span>Phân công nhóm (5–6 chức năng / người)</h2>
+  <p class="lead">Mỗi thành viên phụ trách <strong>5–6 chức năng cụ thể</strong> có kết quả hiển thị trên giao diện, tổng cộng <strong>27 chức năng</strong> bao phủ toàn bộ hệ thống. Mỗi chức năng đều có đầy đủ backend API và giao diện UI nhìn thấy được.</p>
 
   <table class="tbl">
+    <tr><th style="width:12%">Thành viên</th><th>Các chức năng phụ trách</th></tr>
     <tr>
-      <th style="width:9%">Thành viên</th>
-      <th style="width:21%">Phần phụ trách</th>
-      <th style="width:26%">Chức năng / Code liên quan</th>
-      <th style="width:24%">File/Thư mục cần đọc</th>
-      <th style="width:12%">Lưu ý</th>
-      <th style="width:8%">Thời lượng</th>
-    </tr>
-    <tr>
-      <td><strong style="color:var(--huy)">Huy</strong></td>
-      <td>Mở đầu · Tổng quan · Kiến trúc · Bảo mật &amp; Xác thực</td>
-      <td>Giới thiệu LUMA, bài toán, công nghệ; kiến trúc 3-tier; JWT auth flow end-to-end; role-based access; Google OAuth; rate limit</td>
-      <td><code>backend/…/config/SecurityConfig.java</code>, <code>security/JwtAuthenticationFilter</code>, <code>security/RateLimitFilter</code>, <code>controller/AuthController</code>, <code>admin/src/context/AuthContext.js</code>, <code>mobile/lib/features/auth</code>, <code>start-all.bat</code></td>
-      <td>Giải thích rõ vì sao chọn JWT stateless thay vì session</td>
-      <td>~5 phút</td>
+      <td><strong style="color:var(--huy)">Huy</strong><br><small>Mở đầu</small></td>
+      <td><strong>Tương tác &amp; Trải nghiệm</strong><br>1. Chat thời gian thực (WebSocket 1-1 &amp; nhóm)<br>2. Chatbot trợ lý AI<br>3. Thông báo thời gian thực &amp; Đồng bộ Google Calendar<br>4. Live Poll (3 loại + AI sinh câu hỏi)<br>5. Review &amp; Đánh giá sự kiện<br>6. Chứng chỉ tham dự</td>
     </tr>
     <tr>
       <td><strong style="color:var(--khoa)">Khoa</strong></td>
-      <td>Frontend Admin &amp; Organiser Panel (React + MUI)</td>
-      <td>Dashboard, DataGrid events/users, approve/reject event, Organiser CRUD event &amp; ticket đa bậc, drag-drop question, AI-generate poll, service worker fix, export Excel/PDF</td>
-      <td><code>admin/admin/src/pages/admin/*</code>, <code>pages/organiser/*</code>, <code>api/adminApi.js</code>, <code>api/organiserApi.js</code>, <code>components/common/ProtectedRoute</code>, MUI DataGrid &amp; x-charts</td>
-      <td>Chỉ demo page đã chạy thật; tránh <code>Events_backup.js</code></td>
-      <td>~6 phút</td>
+      <td><strong>Sự kiện</strong><br>1. Tạo sự kiện &amp; Hồ sơ nhà tổ chức<br>2. Upload ảnh &amp; Gallery sự kiện<br>3. Quản lý Speaker &amp; Session/Schedule<br>4. Câu hỏi đăng ký tùy chỉnh (kéo thả)<br>5. Xuất bản &amp; Admin duyệt sự kiện<br>6. AI sinh nội dung sự kiện</td>
     </tr>
     <tr>
       <td><strong style="color:var(--khanh)">Khánh</strong></td>
-      <td>Backend nghiệp vụ: API, Service, Payment, Coupon</td>
-      <td>Layered architecture, @Transactional, Stripe PaymentIntent + Webhook + Refund + Stripe Connect + Subscription, Coupon 2-scope, Commission, Global Exception Handler, Validation</td>
-      <td><code>controller/organiser/*</code>, <code>controller/user/UserPaymentController</code>, <code>controller/webhook/StripeWebhookController</code>, <code>service/PaymentService</code>, <code>service/CouponService</code>, <code>exception/GlobalExceptionHandler</code>, <code>validation/*</code></td>
-      <td>Dẫn bằng sequence diagram mua vé; đọc kỹ webhook idempotency</td>
-      <td>~6 phút</td>
+      <td><strong>Đăng ký &amp; Thanh toán</strong><br>1. Khám phá, tìm kiếm &amp; so sánh sự kiện<br>2. Bookmark, Follow &amp; My Events<br>3. Chọn vé &amp; Đăng ký sự kiện (TicketType, form, waitlist)<br>4. Coupon &amp; Mã giảm giá<br>5. Thanh toán Stripe &amp; Hoàn tiền<br>6. Vé QR, Check-in &amp; Chuyển nhượng vé</td>
     </tr>
     <tr>
       <td><strong style="color:var(--trinh)">Trinh</strong></td>
-      <td>Cơ sở dữ liệu · ORM · Mobile UI/UX</td>
-      <td>57 entity + soft delete, Flyway migration, các repository chính, Mobile 15 module, Riverpod state, GoRouter, design tokens, payment screen hiển thị tổng đã giảm, i18n Vi/En</td>
-      <td><code>backend/entity/*</code>, <code>backend/repository/*</code>, <code>resources/db/migration</code>, <code>luma_db.bak</code>, <code>mobile/lib/core/design_tokens/*</code>, <code>mobile/lib/features/events/presentation/screens/payment_screen.dart</code>, <code>mobile/lib/l10n/app_vi.arb</code></td>
-      <td>Nhấn mạnh soft delete giúp audit &amp; rollback</td>
-      <td>~6 phút</td>
+      <td><strong>Nền tảng hệ thống</strong><br>1. Đăng ký &amp; Đăng nhập (JWT + Google OAuth)<br>2. Quản lý hồ sơ cá nhân<br>3. Admin quản lý người dùng<br>4. Admin quản lý nhà tổ chức<br>5. Quản lý danh mục &amp; thành phố</td>
     </tr>
     <tr>
-      <td><strong style="color:var(--duy)">Duy</strong></td>
-      <td>Realtime · Poll · AI · Scheduler · Demo tổng &amp; Kết luận</td>
-      <td>WebSocket STOMP (chat + notification), Poll lifecycle &amp; auto open/close, Groq AI sinh poll/mô tả, Scheduler (reminder, certificate, waitlist, auto-complete), Email Thymeleaf + campaign, Cloudinary upload, QR check-in, tổng kết điểm mạnh – hạn chế – hướng phát triển</td>
-      <td><code>controller/websocket/ChatWebSocketController</code>, <code>config/WebSocketConfig</code>, <code>service/PollService</code>, <code>service/GroqService</code>, <code>scheduler/*</code>, <code>resources/templates/*.html</code>, <code>mobile/lib/features/chat</code>, <code>mobile/lib/features/notifications</code></td>
-      <td>Demo chat &amp; vote poll live cho giảng viên thấy realtime</td>
-      <td>~7 phút</td>
+      <td><strong style="color:var(--duy)">Duy</strong><br><small>Kết thúc</small></td>
+      <td><strong>Vận hành &amp; Tăng trưởng</strong><br>1. Dashboard Admin &amp; Organiser<br>2. Doanh thu &amp; Hoa hồng<br>3. Event Boost (4 gói quảng bá)<br>4. Subscription nhà tổ chức (3 tier)<br>5. Xuất báo cáo &amp; Funnel Analytics</td>
     </tr>
   </table>
-
-  <div class="alert alert-info">
-    <strong>🎯 Tổng thời lượng:</strong> ~30 phút thuyết trình + 10 phút Q&amp;A. Mỗi thành viên đều có ít nhất 1 đoạn code backend + 1 đoạn code frontend/mobile để chứng minh "full-stack thật sự".
-  </div>
 </section>
 
-<!-- ============== HUY ============== -->
+<!-- ==================== HUY ==================== -->
 <section id="huy" class="member-section member-huy">
   <div class="member-header">
     <div class="avatar">H</div>
-    <div class="info">
-      <h3>Huy</h3>
-      <div class="role">Phần 1 · Tổng quan hệ thống &amp; Bảo mật / Xác thực</div>
-    </div>
-    <span class="time">⏱ 5 phút</span>
+    <div class="info"><h3>Huy</h3><div class="role">Tương tác &amp; Trải nghiệm</div></div>
+    <div class="time">~6 phút</div>
   </div>
 
-  <h3>📌 Nội dung chính</h3>
-  <ul>
-    <li>Giới thiệu dự án LUMA &amp; bài toán event marketplace.</li>
-    <li>Kiến trúc 3-tier: Backend Spring Boot + Admin React + Mobile Flutter Web + SQL Server.</li>
-    <li>Cơ chế JWT + Role (ADMIN/ORGANISER/USER) + Google OAuth + Rate Limit.</li>
-    <li>Luồng đăng nhập end-to-end: Mobile → <code>/api/auth/login</code> → JWT → interceptor Dio/Axios → request có token.</li>
-  </ul>
-
-  <div class="files-box">
-    <strong>📁 Phải mở trước khi nói:</strong> <code>backend/src/main/java/com/luma/config/SecurityConfig.java</code> · <code>security/JwtAuthenticationFilter.java</code> · <code>security/JwtService.java</code> · <code>controller/AuthController.java</code> · <code>admin/admin/src/context/AuthContext.js</code> · <code>mobile/lib/features/auth/presentation/screens/login_screen.dart</code>
+  <div class="flow-overview">
+    <span class="step"><span class="step-num">1</span>Chat realtime</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">2</span>Chatbot AI</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">3</span>Thông báo &amp; Calendar</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">4</span>Live Poll</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">5</span>Review</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">6</span>Chứng chỉ tham dự</span>
   </div>
 
-  <div class="script">
-    <h4>🎤 Câu mở đầu</h4>
-    <div class="say">Chào thầy cô và các bạn. Em là <strong>Huy</strong>, đại diện nhóm 5 bắt đầu phần thuyết trình đồ án <strong>LUMA — nền tảng quản lý và bán vé sự kiện</strong>. Trong 30 phút tới, 5 thành viên nhóm em sẽ lần lượt trình bày hệ thống theo kiến trúc full-stack từ bảo mật, backend, database, cho đến giao diện admin và ứng dụng mobile.</div>
-
-    <h4>🎤 Thân bài (tự nói)</h4>
-    <div class="say"><strong>Về bài toán:</strong> LUMA mô phỏng mô hình của Luma.com, Eventbrite — nơi nhà tổ chức tự đăng sự kiện, phát hành vé đa bậc, chiết khấu bằng coupon; người tham dự tìm – đăng ký – thanh toán – check-in bằng QR; admin kiểm duyệt và quản trị doanh thu. Hệ thống gồm 3 vai trò: USER, ORGANISER, ADMIN — tách hoàn toàn ở tầng API.</div>
-    <div class="say"><strong>Về kiến trúc:</strong> Nhóm em chọn mô hình 3-tier. Backend là Spring Boot 3.4.1 chạy Java 21 trên port 8080, cung cấp REST API và WebSocket. Admin là React 18 + Material UI chạy port 3000. Mobile là Flutter compile sang web chạy port 5000 — lý do dùng Flutter web là để demo nhanh trên laptop mà không cần thiết bị thật nhưng vẫn giữ code base mobile-native nếu muốn build APK sau này.</div>
-    <div class="say"><strong>Về bảo mật:</strong> Em chọn JWT stateless thay vì session vì có 2 client (admin + mobile) cùng gọi một API — session cookie sẽ phức tạp CORS. Mỗi request có <code>Authorization: Bearer</code> được <code>JwtAuthenticationFilter</code> bóc ra, kiểm tra chữ ký HS256, và set vào <code>SecurityContext</code>. Token access sống 24 giờ, refresh token 7 ngày, auto-refresh khi 401.</div>
-    <div class="say"><strong>Về phân quyền:</strong> Mỗi controller endpoint có <code>@PreAuthorize("hasRole('ADMIN')")</code> hoặc <code>hasAnyRole('ORGANISER','ADMIN')</code>. Thư mục <code>controller/</code> chia làm 4 nhóm <code>admin/</code>, <code>organiser/</code>, <code>user/</code>, <code>pub/</code> nên không bao giờ có chuyện 1 user truy cập nhầm API admin.</div>
-    <div class="say"><strong>Chống brute-force:</strong> Em áp dụng <code>Bucket4j</code> — login giới hạn 10 lần/phút, đăng ký 5 lần/phút. Mật khẩu mã hoá BCrypt 12 round. Ngoài ra còn đăng nhập Google OAuth qua <code>google-api-client</code>.</div>
-
-    <h4>🎤 Chuyển ý sang Khoa</h4>
-    <div class="say">Đó là tổng quan kiến trúc và bảo mật. Sau khi user đã có token hợp lệ, họ sẽ bước vào giao diện quản trị. Mời bạn <strong>Khoa</strong> tiếp tục với phần Admin &amp; Organiser Panel.</div>
+  <div class="feature-block">
+    <h4>1. Chat thời gian thực (WebSocket)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Khi người tham dự muốn hỏi nhà tổ chức một câu hỏi nhanh trước sự kiện — ví dụ "có chỗ đậu xe không?" hay "dress code là gì?" — họ không muốn phải gửi email rồi đợi hàng giờ mới có phản hồi. Tương tự, những người cùng tham dự một sự kiện cũng muốn liên lạc với nhau trước để chuẩn bị, hẹn gặp, hoặc chia sẻ thông tin. Chính vì nhu cầu giao tiếp tức thì này, nhóm em xây dựng chức năng chat thời gian thực sử dụng giao thức WebSocket STOMP. Khác với HTTP thông thường phải gửi request rồi đợi response, WebSocket duy trì một kết nối liên tục giữa mobile và server, giúp tin nhắn được truyền đi ngay lập tức mà không cần tải lại trang. Hệ thống hỗ trợ cả nhắn tin 1-1 giữa hai người và tạo nhóm chat cho nhiều người cùng tham gia một sự kiện. Mỗi kết nối WebSocket được xác thực bằng JWT Token ngay từ bước CONNECT frame đầu tiên, đảm bảo chỉ người dùng đã đăng nhập mới có thể sử dụng. Toàn bộ tin nhắn được lưu vào cơ sở dữ liệu thông qua hai bảng Conversation và Message, nên ngay cả khi người dùng offline, họ vẫn xem được toàn bộ lịch sử trò chuyện khi quay lại online.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trên ứng dụng mobile, người dùng chuyển sang tab Chat ở thanh điều hướng phía dưới. Tại đây hiển thị danh sách các cuộc trò chuyện đã có, sắp xếp theo tin nhắn mới nhất. Để bắt đầu cuộc trò chuyện mới, người dùng bấm nút tạo mới, chọn người muốn nhắn tin từ danh sách attendees cùng sự kiện, hoặc tạo nhóm chat bằng cách chọn nhiều người. Khi gõ tin nhắn và bấm gửi, tin nhắn được truyền qua WebSocket topic <code>/topic/chat/{conversationId}</code> và hiển thị trên màn hình người nhận ngay lập tức — thường dưới 1 giây. Phía organiser, trên admin panel tại trang Notifications, organiser có thể xem và phản hồi tin nhắn từ attendees một cách tập trung, không bỏ sót câu hỏi nào.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>ChatWebSocketController.java</code> · <code>WebSocketConfig.java</code> · <code>ChatService.java</code> · <code>ChatWebSocketService.java</code><br><strong>Mobile:</strong> <code>lib/features/chat/presentation/screens/chat_screen.dart</code> · <code>conversations_screen.dart</code> · <code>create_group_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/chat</code></div>
   </div>
+
+  <div class="feature-block">
+    <h4>2. Chatbot trợ lý AI</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trên một nền tảng có hàng trăm sự kiện, việc lướt tìm kiếm thủ công có thể rất mất thời gian, đặc biệt khi người dùng chưa biết chính xác mình muốn gì. Họ có thể có những câu hỏi mơ hồ như "cuối tuần này có gì hay ở Sài Gòn không?", "có workshop nào về lập trình giá dưới 50 đô không?", hoặc "sự kiện nào phù hợp cho người mới bắt đầu học AI?". Những câu hỏi dạng này rất khó xử lý bằng bộ lọc tìm kiếm thông thường. Chính vì vậy nhóm em tích hợp một chatbot trợ lý AI sử dụng mô hình ngôn ngữ lớn Groq (llama-3.3-70b-versatile) để hiểu ý định người dùng từ ngôn ngữ tự nhiên. Chatbot không trả lời dựa trên kiến thức chung mà truy vấn trực tiếp vào database của LUMA để đưa ra gợi ý chính xác dựa trên dữ liệu sự kiện thực tế đang có trên nền tảng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trên trang chủ mobile, ở góc dưới bên phải có nút nổi "Ask LUMA" với biểu tượng robot. Bấm vào sẽ mở màn hình chatbot. Người dùng gõ câu hỏi bất kỳ bằng tiếng Việt hoặc tiếng Anh — ví dụ "có event nào về AI ở Hà Nội không?". Hệ thống gửi câu hỏi đến backend, AIAssistantService phân tích ý định, tạo truy vấn phù hợp vào database, và trả lời kèm danh sách sự kiện gợi ý có link trực tiếp để người dùng bấm vào xem chi tiết ngay. Cuộc hội thoại với chatbot được lưu lại để người dùng có thể quay lại xem sau.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserAIAssistantController.java</code> · <code>AIAssistantService.java</code> · <code>AIQueryService.java</code><br><strong>Mobile:</strong> <code>lib/features/chat/presentation/screens/chatbot_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/chatbot</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>3. Thông báo thời gian thực &amp; Đồng bộ Google Calendar</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trong một nền tảng sự kiện, thông tin thay đổi liên tục — sự kiện được duyệt, lịch trình thay đổi, có người nhắn tin, hoặc sự kiện sắp diễn ra trong 24 giờ tới. Nếu người dùng phải tự vào ứng dụng kiểm tra từng mục một thì rất dễ bỏ lỡ những thông tin quan trọng. Chính vì vậy, nhóm em xây dựng hệ thống thông báo thời gian thực sử dụng WebSocket để đẩy notification về thiết bị người dùng ngay lập tức mà không cần họ phải tải lại trang. Hệ thống hỗ trợ nhiều loại thông báo: đăng ký thành công, thanh toán hoàn tất, event được duyệt hoặc bị từ chối, nhắc nhở 24 giờ trước sự kiện, và tin nhắn chat mới. Ngoài ra, nhóm em còn tích hợp đồng bộ Google Calendar — khi người dùng đăng ký tham dự một sự kiện, sự kiện đó tự động được thêm vào lịch Google cá nhân của họ với đầy đủ thông tin thời gian, địa điểm và link tham gia. Điều này đặc biệt hữu ích vì hầu hết mọi người đều sử dụng Google Calendar hàng ngày, và việc nhìn thấy sự kiện ngay trên lịch cá nhân giúp họ sắp xếp thời gian tốt hơn, tránh trùng lịch với các công việc khác.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Về phía thông báo, khi có sự kiện xảy ra trên hệ thống — ví dụ organiser duyệt đăng ký hoặc có tin nhắn mới — backend tự động tạo một Notification entity và đẩy qua WebSocket topic <code>/topic/notifications/{userId}</code> đến đúng người dùng cần nhận. Trên ứng dụng mobile, biểu tượng chuông ở góc trên sẽ hiện số thông báo chưa đọc, người dùng bấm vào để xem danh sách thông báo đầy đủ với thời gian và nội dung chi tiết. Admin cũng có thể gửi broadcast notification đến toàn bộ người dùng trên hệ thống từ trang <code>/admin/notifications</code> — ví dụ thông báo bảo trì hệ thống hoặc sự kiện nổi bật. Về phía Google Calendar, người dùng vào phần Settings trên mobile và kết nối tài khoản Google của mình. Sau khi kết nối thành công, mỗi khi đăng ký sự kiện mới, hệ thống tự động gọi Google Calendar API để tạo một calendar event với tiêu đề, thời gian bắt đầu và kết thúc, địa điểm, và link chi tiết sự kiện trên LUMA. Nếu người dùng hủy đăng ký, sự kiện trên Google Calendar cũng tự động được xóa để giữ lịch luôn chính xác.</div>
+    <div class="result"><strong>Kết quả:</strong> Không bỏ lỡ sự kiện quan trọng. Google Calendar nhắc nhở tự động tránh trùng lịch. Notification entity lưu lại để xem lịch sử thông báo.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>NotificationService.java</code> · <code>WebSocketNotificationService.java</code> · <code>UserNotificationController.java</code> · <code>AdminNotificationController.java</code> · <code>UserCalendarController.java</code> · <code>GoogleCalendarService.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Notifications.js</code> · <code>src/pages/admin/Notifications.js</code><br><strong>Mobile:</strong> <code>lib/features/notifications/</code> · <code>lib/features/calendar/</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/notifications</code> · <code>http://localhost:3000/admin/notifications</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>4. Live Poll (3 loại + AI sinh câu hỏi)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trong một sự kiện trực tiếp, organiser thường muốn biết ý kiến của khán giả ngay tại chỗ — ví dụ "chủ đề nào các bạn muốn nghe tiếp?", "buổi workshop hôm nay được mấy sao?", hoặc "bạn đến từ lĩnh vực nào?". Nếu dùng cách truyền thống như giơ tay biểu quyết thì không chính xác, khó đếm, và không lưu được dữ liệu. Chính vì vậy nhóm em xây dựng tính năng Live Poll — khảo sát trực tiếp ngay trong ứng dụng. Hệ thống hỗ trợ ba loại poll phổ biến nhất: chọn một đáp án (single choice), chọn nhiều đáp án (multiple choice), và đánh giá theo thang sao (star rating). Mỗi poll có vòng đời tự động quản lý với các trạng thái DRAFT, SCHEDULED, ACTIVE và CLOSED — organiser có thể cài đặt để poll tự mở khi sự kiện bắt đầu và tự đóng khi kết thúc mà không cần can thiệp thủ công. Đặc biệt, tính năng AI Generate sử dụng mô hình Groq để sinh câu hỏi và các lựa chọn từ chủ đề mà organiser nhập vào, giúp tiết kiệm đáng kể thời gian soạn nội dung khảo sát. Kết quả poll có thể được ẩn cho đến khi đóng, tránh hiệu ứng đám đông ảnh hưởng đến câu trả lời của người tham gia.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập vào admin panel và truy cập trang <code>/organiser/polls</code> để quản lý tất cả các poll. Để tạo poll mới, organiser có hai cách: soạn thủ công bằng cách bấm "Tạo Poll" rồi nhập câu hỏi, loại poll, và các lựa chọn; hoặc bấm "AI Generate" rồi nhập chủ đề — hệ thống sẽ gọi Groq API và trả về một bộ câu hỏi hoàn chỉnh dạng JSON mà organiser có thể xem xét, chỉnh sửa, rồi xuất bản. Sau khi publish, poll sẽ xuất hiện trên ứng dụng mobile — người dùng vào trang chi tiết sự kiện, chuyển sang tab Polls, và thấy danh sách các poll đang mở. Họ bấm vào poll, chọn đáp án hoặc cho sao, rồi bấm "Vote". Kết quả được cập nhật realtime trên giao diện nhờ WebSocket, organiser có thể chiếu lên màn hình lớn để cả hội trường cùng theo dõi. Khi poll đóng, organiser xem được thống kê chi tiết với biểu đồ phân bố câu trả lời ngay trên admin panel.</div>
+    <div class="result"><strong>Kết quả:</strong> Organiser có dữ liệu khảo sát ngay lập tức. Poll lifecycle tự quản lý không cần can thiệp. AI tiết kiệm thời gian soạn câu hỏi đáng kể.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>PollService.java</code> · <code>OrganiserPollController.java</code> · <code>UserPollController.java</code> · <code>AIService.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Polls.js</code><br><strong>Mobile:</strong> <code>lib/features/events/presentation/screens/event_polls_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/polls</code> · <code>http://localhost:5000/#/event/{id}/polls</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>5. Review &amp; Đánh giá sự kiện</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Sau mỗi sự kiện, người tham dự luôn có những cảm nhận muốn chia sẻ — sự kiện có tổ chức tốt không, diễn giả có hay không, địa điểm có thuận tiện không. Đồng thời, những người đang cân nhắc đăng ký một sự kiện tương tự trong tương lai cũng rất cần tham khảo đánh giá từ người đã tham dự trước đó. Chính vì nhu cầu hai chiều này, nhóm em xây dựng tính năng Review cho phép người dùng viết nhận xét và cho điểm từ 1 đến 5 sao sau khi sự kiện kết thúc. Điểm đánh giá trung bình và số lượt review sẽ hiển thị trực tiếp trên card sự kiện ở trang Explore, giúp người dùng mới có thêm thông tin để ra quyết định. Organiser cũng nhận được feedback chi tiết để biết điểm mạnh cần phát huy và điểm yếu cần cải thiện cho các sự kiện sau. Ngoài ra, hệ thống còn có cơ chế báo cáo review vi phạm — nếu một review chứa nội dung spam, xúc phạm, hoặc không liên quan, bất kỳ ai cũng có thể bấm Report kèm lý do, và admin sẽ xem xét xử lý trên admin panel để đảm bảo chất lượng nội dung trên nền tảng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Sau khi sự kiện kết thúc và chuyển sang trạng thái COMPLETED, người dùng đã tham dự sẽ thấy nút "Viết đánh giá" xuất hiện trên trang chi tiết sự kiện trong ứng dụng mobile. Bấm vào nút này sẽ mở màn hình write_review_screen, nơi người dùng chọn số sao từ 1 đến 5 bằng cách bấm vào các biểu tượng ngôi sao, sau đó viết nhận xét chi tiết vào ô văn bản phía dưới. Bấm "Gửi đánh giá" để hoàn tất — review được lưu vào database và hiển thị ngay trên trang chi tiết sự kiện cho tất cả mọi người cùng xem. Nếu phát hiện một review vi phạm, người dùng hoặc organiser bấm nút Report bên cạnh review đó, chọn lý do báo cáo từ danh sách có sẵn (spam, ngôn ngữ xúc phạm, nội dung không liên quan), và gửi đi. Admin vào trang quản lý Review Reports trên admin panel để xem danh sách các báo cáo, đọc nội dung review bị báo cáo, và quyết định giữ lại hoặc xóa review. Organiser cũng có thể xem tổng hợp tất cả review của các sự kiện mình tổ chức trên trang quản lý để theo dõi phản hồi từ người tham dự.</div>
+    <div class="result"><strong>Kết quả:</strong> Event có điểm đánh giá trung bình (averageRating) và số lượt review (reviewCount) hiển thị trên card. ReviewReport lưu lý do báo cáo và trạng thái xử lý. Organiser biết điểm mạnh/yếu để cải thiện.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserReviewController.java</code> · <code>ReviewService.java</code> · <code>ReviewReportService.java</code> · <code>OrganiserReviewReportController.java</code><br><strong>Mobile:</strong> <code>lib/features/events/presentation/screens/write_review_screen.dart</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>6. Chứng chỉ tham dự</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Sau mỗi sự kiện đào tạo, workshop, hoặc hội thảo chuyên môn, người tham dự thường cần một bằng chứng chính thức để xác nhận rằng mình đã tham gia. Chứng chỉ này có thể dùng để bổ sung vào CV, hồ sơ LinkedIn, hoặc trình cho công ty để chứng minh hoạt động phát triển nghề nghiệp. Nếu organiser phải tự thiết kế và gửi chứng chỉ cho hàng trăm người tham dự thì sẽ mất rất nhiều thời gian và dễ sai sót. Vì vậy, nhóm em xây dựng hệ thống tự động sinh chứng chỉ PDF bằng thư viện iText7 — mỗi chứng chỉ bao gồm tên đầy đủ của người tham dự, tên sự kiện, ngày tổ chức, logo của nhà tổ chức, và một mã QR xác thực độc nhất. Mã QR này cho phép bất kỳ ai cũng có thể quét để xác minh tính hợp lệ của chứng chỉ, chống giả mạo hiệu quả. Toàn bộ quá trình sinh chứng chỉ được thực hiện tự động bởi CertificateScheduler — một job chạy nền định kỳ, không cần organiser phải thao tác bất cứ điều gì. Chỉ những attendee đã thực sự check-in tại sự kiện mới nhận được chứng chỉ, đảm bảo tính công bằng và chính xác.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Sau khi sự kiện kết thúc và chuyển sang trạng thái COMPLETED, CertificateScheduler tự động quét danh sách tất cả attendee có trạng thái đã check-in. Với mỗi attendee đủ điều kiện, hệ thống gọi CertificateService để sinh một file PDF chuyên nghiệp với layout đẹp mắt, bao gồm tên người nhận, tên sự kiện, ngày tham dự, logo organiser, và mã QR xác thực liên kết đến API verify trên server. File PDF được lưu trữ và hệ thống gửi thông báo đến người dùng trên ứng dụng mobile, đồng thời gửi email kèm link download trực tiếp. Organiser có thể quản lý toàn bộ danh sách chứng chỉ đã sinh tại trang <code>/organiser/certificates</code> trên admin panel, nơi họ có thể xem trước nội dung chứng chỉ, gửi lại cho những người chưa nhận được, hoặc tùy chỉnh thông tin nếu cần. Trên phía người dùng, họ vào phần "Chứng chỉ của tôi" trên ứng dụng mobile để xem danh sách tất cả chứng chỉ đã nhận và tải về thiết bị để sử dụng.</div>
+    <div class="result"><strong>Kết quả:</strong> Chứng chỉ chuyên nghiệp sinh tự động, tiết kiệm thời gian cho organiser. Mã QR trên certificate cho phép bên thứ ba xác minh tính hợp lệ. Người tham dự có bằng chứng tham dự chính thức.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>CertificateService.java</code> · <code>CertificateScheduler.java</code> · <code>OrganiserCertificateController.java</code> · <code>UserCertificateController.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Certificates.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/certificates</code></div>
+  </div>
+
 </section>
 
-<!-- ============== KHOA ============== -->
+<!-- ==================== KHOA ==================== -->
 <section id="khoa" class="member-section member-khoa">
   <div class="member-header">
     <div class="avatar">K</div>
-    <div class="info">
-      <h3>Khoa</h3>
-      <div class="role">Phần 2 · Frontend Admin &amp; Organiser Panel (React + MUI)</div>
+    <div class="info"><h3>Khoa</h3><div class="role">Sự kiện</div></div>
+    <div class="time">~6 phút</div>
+  </div>
+
+  <div class="flow-overview">
+    <span class="step"><span class="step-num">1</span>Tạo sự kiện &amp; Profile</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">2</span>Upload ảnh &amp; Gallery</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">3</span>Speaker &amp; Schedule</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">4</span>Câu hỏi đăng ký</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">5</span>Xuất bản &amp; Duyệt</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">6</span>AI sinh nội dung</span>
+  </div>
+
+  <div class="feature-block">
+    <h4>1. Tạo sự kiện &amp; Hồ sơ nhà tổ chức</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Sự kiện chính là "hàng hóa" cốt lõi của nền tảng LUMA — không có sự kiện thì không có gì để người dùng tìm kiếm, đăng ký hay thanh toán. Vì vậy, việc tạo và quản lý sự kiện phải được thiết kế thật trọn vẹn từ đầu đến cuối. Nhóm chức năng này bao gồm toàn bộ vòng đời của một sự kiện: bắt đầu từ việc organiser thiết lập hồ sơ công khai với logo, tên tổ chức, website và mô tả để tạo uy tín với người tham dự. Tiếp theo, organiser tạo sự kiện mới với đầy đủ thông tin: tiêu đề, mô tả chi tiết, ngày giờ bắt đầu và kết thúc, địa điểm, danh mục, thành phố, và ảnh bìa được upload lên Cloudinary CDN. Hệ thống còn hỗ trợ sự kiện lặp lại — organiser có thể cài đặt để sự kiện tự động tạo bản sao hàng tuần hoặc hàng tháng, rất phù hợp cho các buổi meetup định kỳ. Mỗi sự kiện đi qua vòng đời rõ ràng: DRAFT khi mới tạo, PUBLISHED khi organiser gửi duyệt, APPROVED khi admin chấp nhận, và COMPLETED khi sự kiện đã diễn ra xong. Cách tiếp cận này đảm bảo chỉ những sự kiện chất lượng, đã được kiểm duyệt mới xuất hiện trên feed công khai của nền tảng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trước tiên, organiser cần thiết lập hồ sơ công khai tại trang <code>/organiser/profile</code> — tại đây họ cập nhật logo tổ chức, tên hiển thị, đường link website, và đoạn mô tả giới thiệu về tổ chức của mình. Hồ sơ này sẽ hiển thị cho người tham dự khi họ xem chi tiết sự kiện, giúp tạo sự tin tưởng. Sau khi có hồ sơ, organiser vào trang <code>/organiser/events</code> và bấm nút "Tạo sự kiện mới" để mở form tạo sự kiện. Form bao gồm các trường: tiêu đề, mô tả (có thể dùng AI sinh tự động), ngày giờ, địa điểm, chọn danh mục và thành phố từ dropdown, và upload ảnh bìa bằng cách kéo thả hoặc chọn file — ảnh được tự động tối ưu kích thước và nén dung lượng trên Cloudinary CDN. Organiser chọn chế độ public hoặc private, rồi bấm "Lưu nháp" để lưu tạm hoặc "Xuất bản" để gửi duyệt. Khi xuất bản, sự kiện chuyển sang trạng thái chờ duyệt và admin nhận thông báo. Admin vào trang <code>/admin/events</code> xem danh sách sự kiện chờ duyệt, bấm vào để xem chi tiết nội dung, rồi chọn Approve hoặc Reject kèm lý do. Sự kiện được duyệt tự động xuất hiện trên feed Explore của ứng dụng mobile, sẵn sàng để hàng nghìn người dùng tìm thấy và đăng ký.</div>
+    <div class="result"><strong>Kết quả:</strong> Sự kiện xuất hiện trên trang Explore của mobile, sẵn sàng để người dùng tìm kiếm, xem chi tiết và đăng ký. Organiser nhận thông báo realtime về kết quả duyệt. Nếu bị từ chối, organiser thấy lý do và có thể sửa rồi gửi duyệt lại. Ảnh được phân phối qua CDN toàn cầu nên load nhanh ở mọi quốc gia.</div>
+    <div class="files-box">
+      <strong>Backend:</strong> <code>OrganiserEventController.java</code> · <code>EventService.java</code> · <code>UploadController.java</code> · <code>CloudinaryService.java</code> · <code>AdminEventController.java</code> · <code>OrganiserProfileController.java</code><br>
+      <strong>Admin:</strong> <code>src/pages/organiser/Events.js</code> · <code>src/pages/organiser/Profile.js</code> · <code>src/pages/admin/Events.js</code><br>
+      <strong>Mobile:</strong> <code>lib/features/create_event/</code> · <code>lib/features/events/presentation/screens/event_detail_screen.dart</code> · <code>lib/features/explore/presentation/screens/organiser_profile_screen.dart</code>
     </div>
-    <span class="time">⏱ 6 phút</span>
+    <div class="ui-box">
+      <strong>UI:</strong> <code>http://localhost:3000/organiser/events</code> · <code>http://localhost:3000/organiser/profile</code> · <code>http://localhost:3000/admin/events</code> · <code>http://localhost:5000/#/event/{id}</code>
+    </div>
   </div>
 
-  <h3>📌 Nội dung chính</h3>
-  <ul>
-    <li>Cấu trúc ứng dụng React: <code>pages/admin</code> vs <code>pages/organiser</code>, Context, Axios interceptor.</li>
-    <li>Admin Dashboard: KPI cards + charts (<code>@mui/x-charts</code>).</li>
-    <li>Duyệt sự kiện, ban user, CRUD category/city, quản lý boost, broadcast notification.</li>
-    <li>Organiser: CRUD event + tạo ticket đa bậc, Coupons, Polls (AI-generate), Questions drag-drop, Funnel Analytics.</li>
-    <li>Service worker fix: force no-cache + auto unregister (commit <code>2f8575c</code>).</li>
-  </ul>
-
-  <div class="files-box">
-    <strong>📁 Phải mở trước khi nói:</strong> <code>admin/admin/src/App.js</code> · <code>pages/admin/Dashboard.js</code> · <code>pages/admin/Events.js</code> · <code>pages/organiser/Events.js</code> · <code>pages/organiser/Coupons.js</code> · <code>pages/organiser/Polls.js</code> · <code>api/axios.js</code> · <code>api/adminApi.js</code>
+  <div class="feature-block">
+    <h4>2. Upload ảnh Cloudinary &amp; Gallery sự kiện</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Một hình ảnh bìa đẹp và chuyên nghiệp có thể tăng đáng kể tỷ lệ người dùng bấm vào xem chi tiết sự kiện — đây là ấn tượng đầu tiên và quan trọng nhất khi lướt feed. Tuy nhiên, việc lưu trữ hình ảnh trực tiếp trên server ứng dụng sẽ gây ra nhiều vấn đề: tốn dung lượng ổ cứng, tốc độ tải chậm cho người dùng ở xa, và phải tự xử lý việc resize và nén ảnh. Chính vì vậy, nhóm em sử dụng Cloudinary — một dịch vụ CDN chuyên về hình ảnh, tự động tối ưu kích thước, nén dung lượng mà không mất chất lượng, và phân phối nhanh toàn cầu thông qua mạng lưới edge server. Server của LUMA không lưu file ảnh mà chỉ lưu URL trả về từ Cloudinary, giúp kiến trúc gọn nhẹ và dễ mở rộng. Ngoài ảnh bìa sự kiện, nhóm em còn xây dựng tính năng Gallery — một album ảnh chung cho mỗi sự kiện, nơi cả organiser và attendee đều có thể upload ảnh kỷ niệm sau sự kiện. Gallery tạo nên cảm giác cộng đồng, giúp người tham dự chia sẻ khoảnh khắc và giúp người chưa tham dự hình dung được không khí sự kiện.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Khi tạo hoặc chỉnh sửa sự kiện trên admin panel, organiser thấy vùng upload ảnh bìa ngay trong form. Họ có thể kéo thả file ảnh từ máy tính vào vùng upload hoặc bấm nút chọn file để mở hộp thoại chọn ảnh. Sau khi chọn, ảnh được gửi đến backend qua <code>UploadController</code>, controller chuyển tiếp cho <code>CloudinaryService</code> xử lý upload lên Cloudinary, và nhận lại URL công khai của ảnh đã tối ưu. URL này được lưu vào trường coverImage của sự kiện và hiển thị ngay trên preview. Về phía Gallery, sau khi sự kiện diễn ra, attendee mở trang chi tiết sự kiện trên ứng dụng mobile và chuyển sang tab Gallery. Tại đây họ thấy tất cả ảnh đã được upload bởi organiser và các attendee khác, được sắp xếp theo thời gian. Người dùng bấm nút upload để thêm ảnh mới từ thiết bị của mình, ảnh cũng đi qua Cloudinary để tối ưu trước khi hiển thị trong gallery. Tất cả ảnh đều hỗ trợ xem full-screen khi bấm vào.</div>
+    <div class="result"><strong>Kết quả:</strong> Ảnh load nhanh ở mọi quốc gia nhờ CDN. Server không tốn dung lượng lưu trữ. Gallery tạo cộng đồng gắn kết quanh sự kiện.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UploadController.java</code> · <code>CloudinaryService.java</code> · <code>UserGalleryController.java</code><br><strong>Mobile:</strong> <code>lib/features/gallery/presentation/screens/gallery_screen.dart</code></div>
   </div>
 
-  <div class="script">
-    <h4>🎤 Câu mở đầu</h4>
-    <div class="say">Cảm ơn Huy. Em là <strong>Khoa</strong>, phụ trách tầng giao diện quản trị. Admin Panel của LUMA được thiết kế để phục vụ <em>đồng thời</em> 2 vai trò cao cấp là <strong>Admin hệ thống</strong> và <strong>Nhà tổ chức</strong> — nên trong source code tách rõ hai thư mục <code>pages/admin</code> và <code>pages/organiser</code>.</div>
-
-    <h4>🎤 Thân bài</h4>
-    <div class="say"><strong>Công nghệ:</strong> React 18 + Create React App, routing bằng React Router 6, UI dùng Material-UI 5 bao gồm <code>DataGrid</code> cho bảng dữ liệu lớn, <code>x-charts</code> cho biểu đồ doanh thu, <code>x-date-pickers</code> cho time picker event. Toàn bộ request đi qua <code>api/axios.js</code> — một instance axios đã gắn sẵn interceptor: mỗi request tự thêm JWT, response 401 tự đẩy user về trang login.</div>
-    <div class="say"><strong>Admin side:</strong> Dashboard hiển thị KPI (tổng doanh thu, user active, event…). Trang <code>Events.js</code> dùng MUI DataGrid có search, filter theo status, phân trang 10/25/50 dòng; nút <em>Approve</em> gọi <code>POST /api/admin/events/{id}/approve</code>, <em>Reject</em> mở dialog nhập lý do. Trang <code>Users.js</code> cho phép đổi role, ban/unban. Ngoài ra có Categories, Cities, Boosts, Revenue, Organisers.</div>
-    <div class="say"><strong>Organiser side — đây là phần phức tạp nhất:</strong> Trang tạo event là form động — chọn event type (NONE/WEEKLY/MONTHLY), upload ảnh Cloudinary, thêm <em>n</em> loại vé (<code>TicketType</code>) với tên – giá – số lượng. Trang <code>Coupons</code> tạo coupon <strong>có 2 phạm vi</strong>: gắn vào event cụ thể hoặc để trống <code>eventId</code> thì coupon áp dụng cho toàn bộ event của organiser mình. Trang <code>Polls</code> có nút <em>AI generate</em> — gọi <code>POST /api/organiser/polls/ai-generate</code>, backend gọi Groq API sinh ra câu hỏi + options sẵn, mình chỉ cần sửa lại và publish.</div>
-    <div class="say"><strong>Trang Questions</strong> dùng <code>@hello-pangea/dnd</code> để kéo thả sắp xếp thứ tự câu hỏi. <strong>Trang FunnelAnalytics</strong> cho organiser xem tỉ lệ chuyển đổi: lượt xem → đăng ký → thanh toán thành công.</div>
-    <div class="say"><strong>Xử lý cache:</strong> Trước đây service worker của CRA làm admin giữ code cũ sau khi deploy, em đã commit <code>2f8575c</code>: thêm header <code>no-cache</code> và tự gọi <code>navigator.serviceWorker.getRegistrations().forEach(r =&gt; r.unregister())</code>. Cùng với script <code>start-all.bat</code> luôn xoá build cũ trước khi chạy — đảm bảo mỗi lần F5 là code mới nhất.</div>
-
-    <h4>🎤 Nhấn mạnh để giảng viên thấy full-stack</h4>
-    <div class="say">Mỗi action ở UI đều truy ngược được về backend. Ví dụ khi em bấm <em>Approve event</em>, DevTools Network sẽ show request <code>PATCH /api/admin/events/{id}/approve</code>, kèm JWT trong header, response trả <code>{success:true}</code>. Em sẽ để bạn Khánh giải thích chi tiết tầng xử lý ở backend.</div>
-
-    <h4>🎤 Chuyển ý sang Khánh</h4>
-    <div class="say">Vậy điều gì xảy ra phía sau một cú click? Mời bạn <strong>Khánh</strong> trình bày backend nghiệp vụ và thanh toán.</div>
+  <div class="feature-block">
+    <h4>3. Quản lý Speaker &amp; Session/Schedule</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Đối với các sự kiện lớn có nhiều phiên trình bày song song — như hội nghị công nghệ, festival, hoặc ngày hội việc làm — người tham dự cần biết chính xác ai sẽ trình bày gì, ở đâu, và vào lúc mấy giờ để lên kế hoạch tham dự hiệu quả. Nếu không có lịch trình rõ ràng, attendee sẽ bị lạc giữa hàng chục phiên diễn ra cùng lúc và có thể bỏ lỡ phiên quan trọng nhất. Chính vì vậy, nhóm em xây dựng hệ thống quản lý Speaker và Session hoàn chỉnh. Mỗi Speaker có đầy đủ thông tin bao gồm tên, chức danh, tiểu sử chuyên môn, và ảnh đại diện — giúp attendee tìm hiểu trước về diễn giả và quyết định có nên tham dự phiên đó hay không. Mỗi Session (phiên trình bày) có thời gian bắt đầu và kết thúc cụ thể, phòng họp, track chuyên đề, và được gán một hoặc nhiều speaker. Hệ thống hỗ trợ tổ chức các session theo nhiều track song song — ví dụ track "AI", track "Web", track "Mobile" — giúp sự kiện có cấu trúc chuyên nghiệp như các hội nghị quốc tế. Lịch trình được hiển thị dạng timeline trực quan, dễ theo dõi và dễ tìm kiếm.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập admin panel và truy cập trang <code>/organiser/schedule</code> để quản lý toàn bộ lịch trình sự kiện. Đầu tiên, organiser thêm các speaker bằng cách bấm nút "Thêm diễn giả", điền tên, chức danh, tiểu sử, và upload ảnh đại diện — ảnh cũng đi qua Cloudinary để tối ưu. Mỗi speaker được tạo sẽ xuất hiện trong danh sách để gán vào session sau này. Tiếp theo, organiser tạo các session bằng cách bấm "Thêm phiên", chọn thời gian bắt đầu và kết thúc, nhập tên phiên, chọn phòng họp, chọn track chuyên đề, và gán speaker từ danh sách đã tạo. Hệ thống tự động kiểm tra xung đột thời gian — nếu hai session cùng phòng bị trùng giờ sẽ cảnh báo ngay. Trên ứng dụng mobile, người dùng vào trang chi tiết sự kiện và chuyển sang tab Schedule để xem toàn bộ lịch trình được trình bày dạng timeline theo thời gian. Mỗi phiên hiển thị tên, thời gian, phòng, và thông tin speaker — bấm vào speaker để xem tiểu sử chi tiết và danh sách các sự kiện khác mà speaker đó tham gia.</div>
+    <div class="result"><strong>Kết quả:</strong> Sự kiện có lịch trình chuyên nghiệp. Attendee biết chính xác ai nói gì, ở đâu, lúc mấy giờ. Speaker có hồ sơ riêng để attendee tìm hiểu trước.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>entity/Speaker.java</code> · <code>entity/EventSession.java</code> · <code>OrganiserScheduleController.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Schedule.js</code> · <code>src/components/common/SpeakerForm.js</code><br><strong>Mobile:</strong> <code>lib/features/events/presentation/screens/event_schedule_screen.dart</code> · <code>speaker_events_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/schedule</code></div>
   </div>
+
+  <div class="feature-block">
+    <h4>4. Câu hỏi đăng ký tùy chỉnh (kéo thả)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Khi người dùng đăng ký tham dự sự kiện, thông tin mặc định chỉ gồm họ tên và email — nhưng nhiều organiser cần thu thập thêm dữ liệu cụ thể tùy theo tính chất sự kiện. Ví dụ, một hội thảo doanh nghiệp cần biết tên công ty và chức vụ của người tham dự, một buổi tiệc cần biết yêu cầu ăn kiêng, một workshop cần biết trình độ kỹ năng hiện tại để chia nhóm phù hợp. Nếu chỉ dùng form cố định thì không thể đáp ứng được nhu cầu đa dạng này. Chính vì vậy, nhóm em xây dựng tính năng câu hỏi đăng ký tùy chỉnh, cho phép organiser thiết kế form riêng cho từng sự kiện. Hệ thống hỗ trợ nhiều loại câu hỏi: text ngắn (short answer), text dài (paragraph), trắc nghiệm chọn một (single choice), và trắc nghiệm chọn nhiều (multiple choice). Mỗi câu hỏi có thể đánh dấu là bắt buộc hoặc không bắt buộc. Đặc biệt, thứ tự hiển thị các câu hỏi được sắp xếp bằng giao diện kéo thả drag-and-drop rất trực quan, giúp organiser linh hoạt tổ chức form theo ý muốn mà không cần kiến thức kỹ thuật.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập admin panel và truy cập trang <code>/organiser/questions</code> để quản lý câu hỏi đăng ký cho sự kiện của mình. Bấm nút "Thêm câu hỏi" để mở form tạo mới, chọn loại câu hỏi từ dropdown (text ngắn, text dài, chọn một, chọn nhiều), nhập nội dung câu hỏi, thêm các lựa chọn nếu là câu trắc nghiệm, và đánh dấu bắt buộc hoặc không. Sau khi tạo xong nhiều câu hỏi, organiser có thể kéo thả để sắp xếp lại thứ tự hiển thị bằng thư viện @hello-pangea/dnd — chỉ cần giữ và kéo câu hỏi lên xuống. Tiếp theo, organiser vào trang <code>/organiser/registration-questions</code> để gán các câu hỏi đã tạo vào từng sự kiện cụ thể. Khi người dùng đăng ký sự kiện trên ứng dụng mobile, sau bước chọn vé, form câu hỏi tùy chỉnh sẽ tự động hiện ra trước bước thanh toán. Người dùng điền đầy đủ câu trả lời (các câu bắt buộc phải điền mới cho phép tiếp tục), sau đó chuyển sang bước thanh toán. Câu trả lời được lưu vào bảng RegistrationAnswer và organiser có thể xem tổng hợp trên trang Registrations, cũng như xuất ra file Excel để phân tích.</div>
+    <div class="result"><strong>Kết quả:</strong> Câu trả lời lưu vào RegistrationAnswer. Organiser xem tổng hợp trên trang Registrations và xuất Excel phân tích. Thông tin giúp chuẩn bị logistics tốt hơn cho sự kiện.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>OrganiserQuestionController.java</code> · <code>OrganiserRegistrationQuestionController.java</code> · <code>QuestionService.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Questions.js</code> · <code>src/pages/organiser/RegistrationQuestions.js</code><br><strong>Mobile:</strong> <code>lib/features/events/presentation/screens/registration_form_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/questions</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>5. Xuất bản &amp; Admin duyệt sự kiện</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trên một nền tảng mở cho phép bất kỳ organiser nào cũng có thể tạo sự kiện, việc kiểm duyệt nội dung trước khi công bố là vô cùng quan trọng. Nếu không có quy trình duyệt, có thể xuất hiện các sự kiện lừa đảo, nội dung vi phạm pháp luật, hoặc đơn giản là sự kiện thiếu thông tin gây nhầm lẫn cho người dùng. Chính vì vậy, nhóm em thiết kế cơ chế "gatekeeping" — mọi sự kiện phải được admin xem xét và chấp nhận trước khi xuất hiện trên feed công khai. Khi organiser hoàn thiện nội dung sự kiện và bấm nút "Xuất bản", sự kiện chuyển từ trạng thái DRAFT sang PUBLISHED, tức là đã gửi đi chờ duyệt. Admin nhận được thông báo có sự kiện mới cần xem xét, đọc qua nội dung, kiểm tra ảnh bìa, giá vé, và thông tin tổ chức. Nếu mọi thứ hợp lệ, admin bấm Approve và sự kiện chuyển sang APPROVED, xuất hiện ngay trên feed. Nếu phát hiện vấn đề, admin bấm Reject kèm lý do cụ thể để organiser biết cần sửa gì. Quy trình này bảo vệ chất lượng nền tảng và tạo niềm tin cho người dùng rằng mọi sự kiện trên LUMA đều đã được kiểm duyệt.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Sau khi organiser đã điền đầy đủ thông tin sự kiện, upload ảnh bìa, thiết lập vé và lịch trình, họ bấm nút "Xuất bản" trên trang chỉnh sửa sự kiện. Hệ thống kiểm tra các trường bắt buộc đã được điền đầy đủ chưa — nếu thiếu sẽ hiện cảnh báo yêu cầu bổ sung. Khi xuất bản thành công, sự kiện chuyển sang trạng thái PUBLISHED và admin nhận thông báo realtime qua WebSocket. Admin đăng nhập vào admin panel và truy cập trang <code>/admin/events</code>, tại đây hiển thị danh sách tất cả sự kiện đang chờ duyệt với thông tin tóm tắt. Admin bấm vào sự kiện để xem chi tiết đầy đủ bao gồm mô tả, ảnh, giá vé, và thông tin organiser. Nếu nội dung phù hợp, admin bấm nút "Approve" — sự kiện lập tức chuyển sang APPROVED và xuất hiện trên trang Explore của ứng dụng mobile. Nếu cần từ chối, admin bấm "Reject" và nhập lý do vào ô text — organiser nhận thông báo kèm lý do, có thể sửa nội dung và gửi duyệt lại. Organiser luôn theo dõi được trạng thái duyệt của tất cả sự kiện trên trang quản lý events của mình.</div>
+    <div class="result"><strong>Kết quả:</strong> Chỉ event chất lượng mới xuất hiện trên feed. Organiser biết rõ lý do nếu bị từ chối. Lifecycle rõ ràng: DRAFT → PUBLISHED → APPROVED → COMPLETED.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>AdminEventController.java</code> · <code>EventService.java</code><br><strong>Admin:</strong> <code>src/pages/admin/Events.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/admin/events</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>6. AI sinh nội dung sự kiện tự động</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Một trong những rào cản lớn nhất khi tạo sự kiện trên bất kỳ nền tảng nào là việc soạn nội dung — viết mô tả sự kiện hấp dẫn, tạo tiểu sử diễn giả chuyên nghiệp, hay nghĩ ra câu hỏi khảo sát phù hợp đều là những công việc tốn thời gian và đòi hỏi kỹ năng viết tốt. Nhiều organiser giỏi tổ chức nhưng không giỏi viết, dẫn đến mô tả sự kiện sơ sài và kém thu hút. Chính vì vậy, nhóm em tích hợp AI sinh nội dung tự động sử dụng mô hình ngôn ngữ lớn Groq (llama-3.3-70b-versatile) — một trong những mô hình nhanh nhất hiện nay với tốc độ phản hồi chỉ 1-2 giây. Tính năng AI hỗ trợ nhiều tác vụ: sinh mô tả sự kiện hoàn chỉnh từ tiêu đề, cải thiện và nâng cao chất lượng văn bản có sẵn, gợi ý giá vé phù hợp dựa trên loại sự kiện và thị trường, tạo bio speaker từ tên và chức danh, và sinh câu hỏi poll kèm lựa chọn từ chủ đề. Organiser chỉ cần cung cấp thông tin cơ bản, AI sẽ tạo ra nội dung chuyên nghiệp trong vài giây. Tất cả nội dung do AI sinh ra đều đi qua bước xem xét của organiser trước khi xuất bản, đảm bảo tính chính xác và phù hợp với thương hiệu của họ.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Khi tạo hoặc chỉnh sửa sự kiện trên admin panel, organiser sẽ thấy nút "AI Generate" xuất hiện bên cạnh ô mô tả sự kiện. Bấm vào nút này, hệ thống gửi tiêu đề sự kiện đến Groq API thông qua <code>AISmartContentService</code>, và nhận lại một đoạn mô tả chuyên nghiệp, hấp dẫn, được tự động điền vào ô mô tả — organiser có thể chỉnh sửa thêm hoặc giữ nguyên. Tương tự cho bio speaker: khi thêm diễn giả mới, organiser chỉ cần nhập tên và chức danh, bấm "AI Generate Bio" và hệ thống tạo ra một đoạn tiểu sử chuyên nghiệp trong vài giây. Tính năng AI Smart Pricing giúp organiser nhập thông tin về loại sự kiện, quy mô, và khu vực tổ chức, sau đó AI gợi ý mức giá vé phù hợp dựa trên phân tích thị trường. Tại trang Polls, nút "AI Generate" cho phép organiser nhập chủ đề khảo sát, ví dụ "đánh giá chất lượng workshop lập trình", và nhận về ngay một bộ câu hỏi hoàn chỉnh kèm các lựa chọn trả lời dạng JSON. Organiser xem xét toàn bộ nội dung AI đề xuất, chỉnh sửa nếu cần thiết, rồi mới xuất bản — đảm bảo AI chỉ là trợ lý, quyết định cuối cùng vẫn thuộc về con người.</div>
+    <div class="result"><strong>Kết quả:</strong> Nội dung sự kiện chuyên nghiệp hơn, tăng tỷ lệ người dùng bấm xem và đăng ký. Tiết kiệm 5-10 phút soạn thảo cho mỗi sự kiện. Mọi nội dung AI sinh ra đều qua organiser xem xét trước khi xuất bản, đảm bảo chính xác.</div>
+    <div class="files-box">
+      <strong>Backend:</strong> <code>AIService.java</code> · <code>AISmartContentService.java</code> · <code>AISmartPricingService.java</code> · <code>GroqConfig.java</code> · <code>OrganiserAISmartController.java</code>
+    </div>
+  </div>
+
 </section>
 
-<!-- ============== KHANH ============== -->
+<!-- ==================== KHÁNH ==================== -->
 <section id="khanh" class="member-section member-khanh">
   <div class="member-header">
     <div class="avatar">K</div>
-    <div class="info">
-      <h3>Khánh</h3>
-      <div class="role">Phần 3 · Backend nghiệp vụ · API · Thanh toán Stripe · Coupon</div>
-    </div>
-    <span class="time">⏱ 6 phút</span>
+    <div class="info"><h3>Khánh</h3><div class="role">Đăng ký &amp; Thanh toán</div></div>
+    <div class="time">~6 phút</div>
   </div>
 
-  <h3>📌 Nội dung chính</h3>
-  <ul>
-    <li>Phân tầng Spring Boot: Controller → Service → Repository.</li>
-    <li>Vòng đời sự kiện: DRAFT → PUBLISHED → Admin APPROVE.</li>
-    <li>Flow thanh toán end-to-end với Stripe: PaymentIntent → Stripe.js → Webhook idempotent.</li>
-    <li>Coupon 2-scope: <code>event-specific</code> vs <code>organiser-wide</code> — logic tại <code>CouponService.validateCoupon</code>.</li>
-    <li>Refund Stripe khi reject registration đã thanh toán.</li>
-    <li>Validation (Jakarta Bean Validation, <code>@StrongPassword</code>, <code>@ValidEventTime</code>) &amp; Global Exception Handler.</li>
-  </ul>
-
-  <div class="files-box">
-    <strong>📁 Phải mở trước khi nói:</strong> <code>controller/organiser/OrganiserEventController</code> · <code>controller/user/UserPaymentController</code> · <code>controller/webhook/StripeWebhookController</code> · <code>service/PaymentService</code> · <code>service/CouponService</code> · <code>exception/GlobalExceptionHandler</code> · <code>validation/ValidEventTime</code> · <code>entity/Coupon.java</code>
+  <div class="flow-overview">
+    <span class="step"><span class="step-num">1</span>Khám phá &amp; So sánh</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">2</span>Bookmark &amp; My Events</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">3</span>Chọn vé &amp; Đăng ký</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">4</span>Coupon</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">5</span>Thanh toán Stripe</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">6</span>Vé QR &amp; Check-in</span>
   </div>
 
-  <div class="script">
-    <h4>🎤 Câu mở đầu</h4>
-    <div class="say">Cảm ơn Khoa. Em là <strong>Khánh</strong>, phụ trách tầng backend nghiệp vụ. Em sẽ giải thích <em>điều gì xảy ra sau mỗi API request</em>, đặc biệt là luồng phức tạp nhất: thanh toán.</div>
-
-    <h4>🎤 Thân bài</h4>
-    <div class="say"><strong>Phân tầng:</strong> Backend tổ chức 3 lớp theo chuẩn Spring. Lớp <code>controller</code> chỉ nhận request, validate DTO, gọi service. Lớp <code>service</code> chứa business logic, đánh dấu <code>@Transactional</code> để đảm bảo atomic. Lớp <code>repository</code> dùng Spring Data JPA, truy vấn phức tạp dùng <code>@Query</code> JPQL. Exception ném từ service lên sẽ được <code>GlobalExceptionHandler</code> chuyển thành HTTP status phù hợp: <code>BadRequestException</code> → 400, <code>ResourceNotFoundException</code> → 404, <code>UnauthorizedException</code> → 401.</div>
-    <div class="say"><strong>Vòng đời sự kiện:</strong> Organiser tạo event ở trạng thái <code>DRAFT</code>, bấm Publish chuyển sang <code>PUBLISHED</code>. Admin duyệt chuyển <code>APPROVED</code> thì event mới xuất hiện trên feed công khai. Mọi xoá đều là soft-delete nhờ annotation Hibernate <code>@SQLDelete</code> — rất quan trọng vì đây là nền tảng tài chính, cần audit log.</div>
-    <div class="say"><strong>Luồng thanh toán — phần em tâm đắc nhất:</strong> Khi user mobile chọn vé và bấm Pay, frontend gọi <code>POST /api/user/registrations/{id}/payment-intent</code>. Backend tạo PaymentIntent ở Stripe, lưu <code>stripeClientSecret</code> vào DB và trả về. Flutter Stripe plugin dùng client secret đó thu số thẻ — <em>số thẻ không bao giờ chạm backend của em</em>, đúng chuẩn PCI-DSS. Stripe xử lý xong sẽ gọi webhook <code>POST /api/webhooks/stripe</code>. Em xử lý <code>charge.succeeded</code>: đánh dấu Payment <code>SUCCEEDED</code>, Registration <code>APPROVED</code>, sinh <code>OrganiserCommission</code> record, gửi email có mã QR.</div>
-    <div class="say"><strong>Idempotency:</strong> Stripe có thể gửi cùng một webhook nhiều lần. Em lưu <code>stripeEventId</code> vào bảng <code>ProcessedWebhookEvent</code> và kiểm tra trước khi xử lý — nếu đã có thì trả 200 ngay. Đây là best practice bắt buộc với payment gateway.</div>
-    <div class="say"><strong>Coupon 2-scope:</strong> Coupon có cột <code>eventId</code> nullable. Nếu khác null — coupon chỉ cho event đó. Nếu null — coupon áp dụng cho mọi event của chính organiser đã tạo coupon. Tức là organiser A không thể tạo coupon để áp dụng vào event của organiser B. Logic này ở <code>CouponService.validateCoupon</code>, commit gần nhất <code>a4d7857</code>. Em cũng check <code>maxUsageCount</code>, <code>maxUsagePerUser</code>, <code>validFrom/Until</code>, <code>minOrderAmount</code>, <code>maxDiscountAmount</code> trước khi áp dụng.</div>
-    <div class="say"><strong>Refund:</strong> Khi organiser reject một registration đã trả tiền, service gọi <code>Refund.create()</code> của Stripe, tiền tự hoàn về thẻ, đồng thời đẩy Payment về <code>REFUNDED</code>, giảm <code>usedCount</code> coupon.</div>
-    <div class="say"><strong>Validation:</strong> DTO có annotation <code>@NotBlank</code>, <code>@Email</code>, custom validator <code>@StrongPassword</code> (8 ký tự, hoa, số, ký tự đặc biệt), <code>@ValidEventTime</code> đảm bảo endTime &gt; startTime. Sai sẽ trả 400 với list lỗi theo từng field.</div>
-
-    <h4>🎤 Chuyển ý sang Trinh</h4>
-    <div class="say">Toàn bộ logic kể trên đều thao tác trên database với 57 bảng. Em xin mời bạn <strong>Trinh</strong> trình bày cơ sở dữ liệu và giao diện mobile.</div>
+  <div class="feature-block">
+    <h4>1. Khám phá, tìm kiếm &amp; so sánh sự kiện</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Với hàng trăm sự kiện được tổ chức trên nền tảng LUMA, người dùng cần một công cụ tìm kiếm mạnh mẽ để nhanh chóng tìm được sự kiện phù hợp với sở thích, thời gian, và ngân sách của mình. Nếu chỉ hiển thị một danh sách dài không có bộ lọc, người dùng sẽ phải lướt qua hàng chục trang và dễ bỏ cuộc giữa chừng. Chính vì vậy, nhóm em xây dựng trang Explore với hệ thống tìm kiếm và lọc đa chiều: theo danh mục (công nghệ, âm nhạc, kinh doanh...), theo thành phố, theo khoảng giá, theo từ khóa tự do, và theo thời gian diễn ra. Ngoài tìm kiếm, nhóm em còn phát triển tính năng Event Comparison — cho phép người dùng chọn từ 2 đến 3 sự kiện và đặt cạnh nhau trong một bảng đối chiếu chi tiết. Bảng so sánh hiển thị song song các thông tin quan trọng: giá vé, địa điểm, thời gian, số lượng đã đăng ký, điểm đánh giá, giúp người dùng đưa ra quyết định tốt hơn khi phân vân giữa nhiều sự kiện tương tự. Mỗi lượt xem trang chi tiết sự kiện đều được ghi nhận vào bảng EventView, tạo nguồn dữ liệu quan trọng cho funnel analytics — cho phép organiser biết bao nhiêu người xem sự kiện và bao nhiêu người thực sự đăng ký.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Người dùng mở ứng dụng mobile và chuyển sang tab Explore ở thanh điều hướng phía dưới. Trang Explore hiển thị danh sách sự kiện nổi bật với ảnh bìa, tiêu đề, ngày giờ, và giá vé. Phía trên có thanh tìm kiếm để nhập từ khóa tự do — ví dụ "workshop AI" hoặc "nhạc jazz". Bên dưới thanh tìm kiếm là các chip lọc nhanh theo danh mục và thành phố, người dùng bấm vào chip để lọc ngay lập tức. Để sử dụng tính năng so sánh, người dùng bấm giữ vào card sự kiện để chọn, chọn từ 2 đến 3 sự kiện, rồi bấm nút "So sánh" xuất hiện ở thanh dưới. Trang so sánh hiển thị bảng đối chiếu trực quan với các cột là sự kiện và các hàng là tiêu chí: giá, địa điểm, thời gian, số chỗ còn trống, điểm đánh giá trung bình. Người dùng có thể bấm thẳng vào sự kiện trong bảng so sánh để chuyển đến trang chi tiết và đăng ký. Hệ thống tự động ghi nhận mỗi lượt xem vào bảng EventView để phục vụ phân tích phễu chuyển đổi sau này.</div>
+    <div class="result"><strong>Kết quả:</strong> Người dùng tìm được event phù hợp nhanh chóng. EventView ghi nhận dữ liệu lượt xem cho phân tích phễu chuyển đổi.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserEventController.java</code> · <code>UserEventComparisonController.java</code> · <code>EventComparisonService.java</code><br><strong>Mobile:</strong> <code>lib/features/explore/</code> (explore_screen, search_screen, events_list_screen, event_comparison_screen)</div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/explore</code></div>
   </div>
+
+  <div class="feature-block">
+    <h4>2. Bookmark, Follow &amp; My Events</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trong thực tế, người dùng không phải lúc nào cũng sẵn sàng đăng ký ngay khi thấy một sự kiện hay — có thể họ cần kiểm tra lịch, hỏi ý kiến bạn bè, hoặc đợi ngày lương. Nếu không có cách lưu lại, họ sẽ quên mất sự kiện đó trong vô số thông tin trên mạng. Chính vì vậy, nhóm em xây dựng tính năng Bookmark cho phép người dùng đánh dấu sự kiện quan tâm để xem lại sau bất cứ lúc nào. Bên cạnh đó, tính năng Follow Organiser cho phép người dùng theo dõi nhà tổ chức yêu thích — mỗi khi organiser đó tạo sự kiện mới, hệ thống tự động gửi thông báo đến tất cả follower, giống cơ chế subscribe trên YouTube. Trang "My Events" tập hợp toàn bộ sự kiện mà người dùng đã đăng ký ở một nơi duy nhất, hiển thị trạng thái từng vé (chờ thanh toán, đã thanh toán, đã check-in), giúp người dùng quản lý lịch tham dự hiệu quả. Ngoài ra, trang "My Coupons" hiển thị tất cả mã giảm giá mà người dùng đã thu thập được, cho biết hạn sử dụng và điều kiện áp dụng, sẵn sàng để dùng khi thanh toán. Nhóm các tính năng này tạo nên trải nghiệm cá nhân hóa hoàn chỉnh cho mỗi người dùng trên nền tảng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Để bookmark một sự kiện, người dùng chỉ cần bấm vào biểu tượng bookmark (hình ngôi sao hoặc cờ) trên card sự kiện ở bất kỳ trang nào — Explore, trang chủ, hoặc kết quả tìm kiếm. Biểu tượng chuyển sang trạng thái đã đánh dấu và sự kiện được lưu vào danh sách bookmark cá nhân. Để xem lại, người dùng vào tab Bookmarks trên ứng dụng mobile tại <code>/#/bookmarks</code>. Để follow một organiser, người dùng vào trang hồ sơ organiser (bấm vào tên organiser trên trang chi tiết sự kiện) và bấm nút "Follow" — từ đó mỗi khi organiser tạo sự kiện mới, hệ thống tự động gửi notification. Trang "My Events" tại <code>/#/my-events</code> hiển thị danh sách toàn bộ sự kiện đã đăng ký, được phân loại theo trạng thái: sắp diễn ra, đang diễn ra, và đã kết thúc, kèm thông tin vé và mã QR check-in. Trang "My Coupons" hiển thị tất cả coupon đã thu thập với thông tin chi tiết: mã code, loại giảm giá, giá trị, hạn sử dụng, và sự kiện áp dụng — người dùng có thể bấm vào coupon để sao chép mã và sử dụng khi thanh toán.</div>
+    <div class="result"><strong>Kết quả:</strong> Danh sách bookmark lưu trữ lâu dài. Follow tự động gửi thông báo event mới. My Events giúp user không bỏ lỡ event. My Coupons hiện coupon sẵn sàng sử dụng khi thanh toán.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserBookmarkController.java</code> · <code>UserFollowController.java</code> · <code>BookmarkService.java</code> · <code>FollowService.java</code> · <code>UserCouponController.java</code><br><strong>Mobile:</strong> <code>lib/features/bookmarks/</code> · <code>lib/features/my_events/</code> · <code>lib/features/coupons/</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/bookmarks</code> · <code>http://localhost:5000/#/my-events</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>3. Chọn vé &amp; Đăng ký sự kiện</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Hầu hết các sự kiện chuyên nghiệp đều có nhiều hạng vé khác nhau để phục vụ các nhóm khách hàng với nhu cầu và ngân sách khác nhau — ví dụ vé General Admission cho đại chúng, vé VIP với quyền lợi đặc biệt như chỗ ngồi hàng đầu và phòng chờ riêng, vé Early Bird giá ưu đãi cho người đăng ký sớm. Nếu chỉ có một loại vé duy nhất, organiser sẽ mất đi nguồn doanh thu tiềm năng từ những khách hàng sẵn sàng trả nhiều hơn để có trải nghiệm tốt hơn. Chính vì vậy, nhóm em xây dựng hệ thống TicketType cho phép organiser tạo nhiều hạng vé với tên gọi, mô tả quyền lợi, giá, và số lượng giới hạn riêng cho mỗi hạng. Quy trình đăng ký sự kiện bao gồm: chọn loại vé, điền form câu hỏi tùy chỉnh nếu organiser có yêu cầu, và tiến hành thanh toán. Đặc biệt, khi một hạng vé hết chỗ, hệ thống không đơn giản từ chối mà tự động xếp người dùng vào Waitlist — danh sách chờ. WaitlistOfferScheduler chạy nền sẽ liên tục kiểm tra và ngay khi có slot trống (do hủy đăng ký hoặc hoàn tiền), hệ thống tự động gửi offer cho người đầu tiên trong danh sách chờ, cho họ cơ hội đăng ký trong thời gian giới hạn.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trên ứng dụng mobile, người dùng bấm vào sự kiện quan tâm để mở trang chi tiết, sau đó cuộn xuống phần Ticket Types để xem danh sách các hạng vé. Mỗi hạng vé hiển thị tên, mô tả quyền lợi, giá, và số chỗ còn trống. Người dùng bấm nút chọn bên cạnh hạng vé muốn mua và điều chỉnh số lượng nếu cần. Sau khi chọn xong, bấm "Tiếp tục" để chuyển sang màn hình đăng ký — nếu organiser có thiết lập câu hỏi tùy chỉnh, form câu hỏi sẽ hiện ra ở đây để người dùng điền trước khi thanh toán. Nếu hạng vé đã hết chỗ, nút sẽ chuyển thành "Đăng ký chờ" — bấm vào để tự động xếp vào Waitlist. Khi có slot trống, WaitlistOfferScheduler gửi thông báo và email cho người đầu tiên trong hàng chờ, cho họ một khoảng thời gian giới hạn để hoàn tất đăng ký và thanh toán. Phía organiser, trang <code>/organiser/registrations</code> hiển thị toàn bộ danh sách đăng ký và waitlist, cho phép quản lý và theo dõi tình trạng từng vé.</div>
+    <div class="result"><strong>Kết quả:</strong> Registration tạo với trạng thái PENDING (chờ thanh toán) hoặc APPROVED (event miễn phí). Mã ticket_code sinh tự động. Organiser quản lý tại <code>/organiser/registrations</code>.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>RegistrationService.java</code> · <code>OrganiserTicketTypeController.java</code> · <code>TicketTypeService.java</code> · <code>WaitlistService.java</code> · <code>OrganiserRegistrationController.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Registrations.js</code><br><strong>Mobile:</strong> <code>lib/features/events/presentation/widgets/ticket_tier_picker.dart</code> · <code>registration_form_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/registrations</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>4. Coupon &amp; Mã giảm giá</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Mã giảm giá (coupon) là một trong những công cụ marketing hiệu quả nhất để thu hút người đăng ký, đặc biệt trong giai đoạn đầu khi sự kiện chưa có nhiều lượt đăng ký. Organiser có thể tạo các chương trình khuyến mãi như "giảm 20% cho 50 người đầu tiên" hoặc "giảm 100.000đ cho đơn hàng từ 500.000đ" để kích thích người dùng ra quyết định nhanh hơn. Hệ thống coupon của LUMA hỗ trợ hai phạm vi áp dụng: coupon riêng cho một sự kiện cụ thể (khi event_id được gán) và coupon toàn hệ thống (khi event_id để trống, áp dụng cho mọi sự kiện). Về loại giảm giá, hệ thống hỗ trợ cả giảm theo phần trăm (ví dụ giảm 15%) và giảm cố định (ví dụ giảm 50.000đ). Mỗi coupon có các điều kiện ràng buộc chặt chẽ: hạn sử dụng (ngày bắt đầu và kết thúc), số lượt sử dụng tối đa, và giá đơn hàng tối thiểu để được áp dụng. Điều này giúp organiser kiểm soát ngân sách khuyến mãi chính xác, tránh tình trạng lạm dụng coupon. Khi người dùng hoàn tiền (refund), lượt sử dụng coupon cũng tự động giảm lại để coupon có thể được tái sử dụng — một chi tiết nhỏ nhưng quan trọng về mặt nghiệp vụ.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập admin panel và truy cập trang <code>/organiser/coupons</code> để quản lý mã giảm giá. Bấm "Tạo Coupon" để mở form, nhập mã code (ví dụ "EARLY20"), chọn loại giảm (phần trăm hoặc cố định), nhập giá trị giảm, đặt ngày bắt đầu và kết thúc chương trình, số lượt sử dụng tối đa, và giá đơn hàng tối thiểu. Organiser cũng chọn coupon áp dụng cho sự kiện cụ thể hay toàn hệ thống, rồi bấm "Lưu". Trên ứng dụng mobile, khi người dùng ở màn hình thanh toán, họ sẽ thấy ô nhập mã coupon và danh sách các coupon khả dụng được gợi ý bên dưới. Người dùng nhập mã trực tiếp hoặc bấm chọn từ danh sách gợi ý. Hệ thống ngay lập tức validate: kiểm tra mã có tồn tại không, còn trong hạn sử dụng không, còn lượt dùng không, có đúng sự kiện không, và đơn hàng có đạt giá tối thiểu không. Nếu tất cả điều kiện hợp lệ, giá vé trên giao diện giảm ngay lập tức và hiển thị rõ số tiền được giảm. Nếu không hợp lệ, hệ thống hiện thông báo lỗi cụ thể để người dùng biết lý do.</div>
+    <div class="result"><strong>Kết quả:</strong> CouponUsage gắn với Registration. usedCount tăng tự động. Giá hiển thị trên nút Pay là giá đã giảm. Nếu refund, usedCount giảm lại để coupon tái sử dụng.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>CouponService.java</code> · <code>OrganiserCouponController.java</code> · <code>UserCouponController.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Coupons.js</code><br><strong>Mobile:</strong> <code>lib/features/coupons/</code> · <code>payment_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/coupons</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>5. Thanh toán Stripe &amp; Hoàn tiền</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Thanh toán trực tuyến là luồng kiếm tiền chính của cả organiser lẫn nền tảng LUMA, nên phải được xây dựng an toàn tuyệt đối và tuân thủ các tiêu chuẩn bảo mật quốc tế. Nhóm em chọn Stripe — cổng thanh toán phổ biến nhất thế giới, xử lý hàng tỷ giao dịch mỗi năm cho các công ty như Amazon, Google, và Shopify. Kiến trúc sử dụng Stripe PaymentIntent, trong đó dữ liệu thẻ tín dụng của người dùng không bao giờ đi qua server của LUMA — số thẻ được gửi thẳng từ thiết bị người dùng đến Stripe, tuân thủ chuẩn bảo mật PCI-DSS. Server LUMA chỉ nhận lại kết quả giao dịch thông qua cơ chế Webhook. Webhook được thiết kế idempotent — nghĩa là dù Stripe gửi notification nhiều lần (do network retry), hệ thống chỉ xử lý một lần duy nhất nhờ bảng ProcessedWebhookEvent chống trùng. Ngoài thanh toán, hệ thống còn hỗ trợ hoàn tiền tự động: khi organiser từ chối một đăng ký đã thanh toán, backend tự động gọi Stripe Refund API để hoàn tiền về thẻ gốc của người dùng mà không cần thao tác thủ công nào. Toàn bộ quy trình này đảm bảo tiền được xử lý minh bạch, an toàn, và có thể kiểm chứng được.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Sau khi chọn vé và điền form đăng ký, người dùng bấm nút "Thanh toán" trên ứng dụng mobile. Backend nhận yêu cầu và gọi Stripe API để tạo một PaymentIntent với số tiền chính xác (đã trừ coupon nếu có). Flutter Stripe plugin nhận lại client_secret và mở form nhập thông tin thẻ — form này do Stripe cung cấp, số thẻ được mã hóa và gửi thẳng đến server Stripe mà không đi qua backend LUMA. Người dùng nhập số thẻ, ngày hết hạn, và CVC, rồi bấm xác nhận (thẻ test: 4242 4242 4242 4242, CVC bất kỳ, ngày hết hạn trong tương lai). Stripe xử lý giao dịch và gửi webhook <code>charge.succeeded</code> đến endpoint của LUMA. WebhookService nhận webhook, kiểm tra chống trùng bằng ProcessedWebhookEvent, rồi cập nhật Payment sang SUCCEEDED, Registration sang APPROVED, tính hoa hồng cho organiser qua OrganiserCommission, và gửi email xác nhận kèm mã QR vé. Nếu organiser từ chối đăng ký đã thanh toán, hệ thống tự động gọi Stripe Refund API — tiền hoàn về thẻ gốc trong 5-10 ngày làm việc và người dùng nhận thông báo hoàn tiền.</div>
+    <div class="result"><strong>Kết quả:</strong> Thanh toán an toàn tuyệt đối. Webhook idempotent (ProcessedWebhookEvent chống trùng). Refund tự động. Tiền hoàn 5-10 ngày làm việc.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserPaymentController.java</code> · <code>StripeWebhookController.java</code> · <code>PaymentService.java</code> · <code>WebhookService.java</code><br><strong>Mobile:</strong> <code>payment_screen.dart</code> · <code>payment_success_screen.dart</code> · <code>payment_cancelled_screen.dart</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>6. Vé QR, Check-in &amp; Chuyển nhượng vé</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trong thời đại số, vé giấy truyền thống đã lỗi thời — dễ mất, dễ làm giả, và tốn thời gian kiểm tra thủ công tại cửa vào. Vé điện tử mã QR giải quyết tất cả những vấn đề này: mỗi vé có một mã QR duy nhất được sinh tự động sau khi thanh toán thành công, chứa thông tin mã hóa để xác thực. Khi check-in, organiser chỉ cần quét mã QR bằng camera và hệ thống xác nhận trong vòng 2 giây — nếu QR đã được quét trước đó, hệ thống báo lỗi ngay lập tức để chống giả mạo và sử dụng lại. Ngoài ra, nhóm em còn xây dựng tính năng Chuyển nhượng vé (Ticket Transfer) — một nhu cầu thực tế rất phổ biến. Khi người dùng đã mua vé nhưng không thể tham dự vì lý do cá nhân, thay vì lãng phí tiền vé, họ có thể chuyển nhượng cho người khác. Quy trình chuyển nhượng được thiết kế an toàn với hai bước xác nhận: người gửi yêu cầu chuyển và người nhận phải chấp nhận, đảm bảo không ai bị nhận vé ngoài ý muốn. Toàn bộ lịch sử chuyển nhượng được ghi nhận trong bảng TicketTransfer để truy vết khi cần.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Sau khi thanh toán thành công, vé QR tự động xuất hiện trong phần "Vé của tôi" trên ứng dụng mobile. Người dùng bấm vào vé để xem chi tiết bao gồm tên sự kiện, hạng vé, thời gian, địa điểm, và mã QR lớn ở giữa màn hình. Tại cửa vào sự kiện, organiser mở tính năng quét QR trên thiết bị của mình — camera tự động nhận diện mã QR và hệ thống xác nhận check-in trong 2 giây, hiển thị tên người tham dự và hạng vé trên màn hình. Nếu mã QR đã được quét trước đó, màn hình hiện cảnh báo đỏ "Vé đã sử dụng" kèm thời gian check-in trước đó. Về chuyển nhượng vé, người dùng vào "Vé của tôi", chọn vé muốn chuyển, bấm nút "Chuyển nhượng", nhập địa chỉ email của người nhận. Người nhận sẽ nhận được thông báo và email mời chấp nhận vé — khi họ bấm "Chấp nhận", quyền sở hữu vé chuyển sang hoàn toàn, mã QR mới được sinh cho người nhận và mã QR cũ bị vô hiệu hóa. Nếu người nhận từ chối, vé quay lại cho người gửi ban đầu.</div>
+    <div class="result"><strong>Kết quả:</strong> Check-in nhanh, chính xác. checked_in_at ghi nhận tỷ lệ tham dự thực tế. TicketTransfer lưu lịch sử rõ ràng. Vé không lãng phí.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>RegistrationService.java</code> · <code>UserTicketTransferController.java</code> · <code>TicketTransferService.java</code><br><strong>Mobile:</strong> <code>ticket_screen.dart</code> · <code>qr_scanner_screen.dart</code></div>
+  </div>
+
 </section>
 
-<!-- ============== TRINH ============== -->
+<!-- ==================== TRINH ==================== -->
 <section id="trinh" class="member-section member-trinh">
   <div class="member-header">
     <div class="avatar">T</div>
-    <div class="info">
-      <h3>Trinh</h3>
-      <div class="role">Phần 4 · Cơ sở dữ liệu · ORM · Mobile UI/UX (Flutter)</div>
+    <div class="info"><h3>Trinh</h3><div class="role">Nền tảng hệ thống</div></div>
+    <div class="time">~6 phút</div>
+  </div>
+
+  <div class="flow-overview">
+    <span class="step"><span class="step-num">1</span>Đăng ký &amp; Đăng nhập</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">2</span>Hồ sơ cá nhân</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">3</span>Admin quản lý Users</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">4</span>Admin quản lý Organisers</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">5</span>Danh mục &amp; Thành phố</span>
+  </div>
+
+  <div class="feature-block">
+    <h4>1. Đăng ký &amp; Đăng nhập (JWT + Google OAuth)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Đăng ký và đăng nhập là cánh cửa đầu tiên để người dùng bước vào nền tảng LUMA. Mỗi người dùng cần có một danh tính riêng biệt để hệ thống biết họ là ai, có quyền làm gì, đã đăng ký sự kiện nào, và có những giao dịch nào. Nếu không có hệ thống xác thực, bất kỳ ai cũng có thể truy cập dữ liệu của người khác, mua vé rồi không thanh toán, hoặc giả mạo nhà tổ chức. Nhóm em hỗ trợ hai phương thức đăng nhập: đăng nhập truyền thống bằng email và mật khẩu với JWT Token, và đăng nhập nhanh bằng Google OAuth chỉ với một chạm — rất tiện lợi vì hầu hết người dùng đều đã có tài khoản Google. Mật khẩu được mã hóa bằng BCrypt trước khi lưu vào database, một thuật toán băm một chiều mạnh mẽ — nghĩa là ngay cả admin với quyền truy cập database cũng không thể đọc được mật khẩu gốc. Hệ thống cấp JWT Token sau khi đăng nhập thành công, token này chứa thông tin về danh tính và vai trò của người dùng, được gửi kèm trong mọi request sau đó để server xác thực mà không cần lưu session trên server. Token access có thời hạn 24 giờ và refresh token 7 ngày, tự động làm mới khi hết hạn để người dùng không phải đăng nhập lại liên tục.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Người dùng mới mở ứng dụng mobile lần đầu và bấm nút "Đăng ký" trên màn hình chào mừng. Form đăng ký yêu cầu nhập họ tên, địa chỉ email, và mật khẩu — mật khẩu phải có ít nhất 8 ký tự bao gồm chữ hoa, chữ số, và ký tự đặc biệt để đảm bảo an toàn. Sau khi điền đầy đủ và bấm "Đăng ký", tài khoản được tạo và người dùng được chuyển đến màn hình đăng nhập. Để đăng nhập, người dùng nhập email và mật khẩu rồi bấm "Đăng nhập", hoặc bấm nút "Đăng nhập bằng Google" để sử dụng tài khoản Google có sẵn — nếu email Google chưa tồn tại trên hệ thống, tài khoản mới sẽ tự động được tạo. Sau đăng nhập, hệ thống cấp JWT Token và chuyển người dùng đến trang phù hợp với vai trò: User vào ứng dụng mobile, Organiser vào trang quản lý sự kiện, Admin vào trang quản trị hệ thống. Trên admin panel tại <code>/login</code>, admin và organiser cũng đăng nhập tương tự với giao diện riêng. Token được lưu an toàn trên thiết bị và tự động gửi kèm mọi API request.</div>
+    <div class="result"><strong>Kết quả:</strong> Người dùng có tài khoản bảo mật. Đăng nhập Google tự tạo tài khoản nếu email chưa tồn tại. Token stateless giúp hệ thống dễ mở rộng.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>AuthController.java</code> · <code>AuthService.java</code> · <code>JwtService.java</code><br><strong>Admin:</strong> <code>src/context/AuthContext.js</code> · <code>src/pages/shared/Login.js</code><br><strong>Mobile:</strong> <code>lib/features/auth/presentation/screens/login_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/login</code> · <code>http://localhost:5000/#/login</code> · <code>http://localhost:5000/#/register</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>2. Quản lý hồ sơ cá nhân</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Hồ sơ cá nhân là bộ mặt của người dùng trên nền tảng — nó hiển thị khi họ chat với người khác, viết review đánh giá sự kiện, hoặc tham gia vào các cuộc thảo luận trong sự kiện. Một hồ sơ đầy đủ với ảnh đại diện, tiểu sử, và lĩnh vực quan tâm giúp tạo uy tín và kết nối tốt hơn với những người tham dự khác. Ngoài thông tin hiển thị, trang hồ sơ còn cho phép người dùng quản lý các cài đặt cá nhân như bật/tắt email thông báo, bật/tắt nhắc nhở sự kiện, và thay đổi ngôn ngữ. Ảnh đại diện được upload lên Cloudinary CDN, tự động tối ưu kích thước để hiển thị nhanh trên mọi thiết bị. Hệ thống cho phép người dùng cập nhật thông tin bất cứ lúc nào — họ có thể thay đổi tên hiển thị, viết lại tiểu sử, hoặc cập nhật ảnh đại diện mới, và mọi thay đổi sẽ được phản ánh ngay lập tức trên toàn hệ thống. Trang hồ sơ cũng là nơi người dùng kiểm tra thông tin tài khoản như email đăng ký, ngày tạo tài khoản, và số sự kiện đã tham gia.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trên ứng dụng mobile, người dùng bấm vào tab Profile ở thanh điều hướng phía dưới để mở trang hồ sơ cá nhân. Tại đây hiển thị ảnh đại diện, tên, email, tiểu sử, và các thống kê như số sự kiện đã tham gia, số review đã viết. Để chỉnh sửa, người dùng bấm nút "Chỉnh sửa hồ sơ" để mở form cập nhật. Họ có thể thay đổi tên hiển thị, viết hoặc sửa tiểu sử, chọn lĩnh vực quan tâm từ danh sách, và upload ảnh đại diện mới bằng cách bấm vào ảnh hiện tại — ảnh được gửi lên Cloudinary và URL mới tự động cập nhật. Phần cài đặt thông báo nằm ngay trong trang Profile, người dùng có thể bật/tắt email notifications khi có tin nhắn mới, bật/tắt event reminders nhắc lịch trước 24 giờ, và quản lý kết nối Google Calendar. Bấm "Lưu" để cập nhật tất cả thay đổi, hệ thống xác nhận thành công bằng thông báo toast trên màn hình.</div>
+    <div class="result"><strong>Kết quả:</strong> Hồ sơ đầy đủ hiển thị khi chat và review. Ảnh load nhanh nhờ CDN. Cài đặt thông báo linh hoạt theo nhu cầu.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>UserProfileController.java</code><br><strong>Mobile:</strong> <code>lib/features/profile/presentation/screens/profile_screen.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:5000/#/profile</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>3. Admin quản lý người dùng</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Khi nền tảng có hàng nghìn người dùng, admin cần một công cụ quản lý tập trung để giám sát và kiểm soát toàn bộ tài khoản. Các tình huống thường gặp bao gồm: một tài khoản bị báo cáo spam cần bị khóa, một User muốn nâng cấp thành Organiser để bắt đầu tổ chức sự kiện, hoặc admin cần tìm kiếm thông tin một người dùng cụ thể theo email để xử lý khiếu nại. Nếu không có giao diện quản lý, admin phải sửa trực tiếp database bằng SQL — đây là cách làm rất nguy hiểm vì một sai sót nhỏ có thể ảnh hưởng đến toàn bộ dữ liệu. Chính vì vậy, nhóm em xây dựng trang Admin Users với đầy đủ tính năng: xem danh sách phân trang, tìm kiếm theo tên hoặc email, lọc theo vai trò (Admin/Organiser/User) và trạng thái (active/locked), xem chi tiết thông tin từng người, khóa tài khoản vi phạm, mở khóa tài khoản, và đổi vai trò. Tất cả thao tác đều có xác nhận trước khi thực thi để tránh nhầm lẫn. Việc khóa tài khoản sử dụng cơ chế soft delete — dữ liệu người dùng vẫn được giữ nguyên trong database, chỉ đánh dấu trạng thái không hoạt động, để có thể mở khóa lại bất cứ lúc nào.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Admin đăng nhập vào admin panel và truy cập trang <code>/admin/users</code>. Trang hiển thị bảng danh sách người dùng với các cột: tên, email, vai trò, trạng thái, ngày đăng ký, và số sự kiện đã tham gia. Phía trên bảng có thanh tìm kiếm để nhập tên hoặc email, và các dropdown lọc theo vai trò và trạng thái. Admin bấm vào một dòng để xem chi tiết đầy đủ thông tin người dùng, bao gồm lịch sử đăng ký sự kiện, giao dịch thanh toán, và review đã viết. Từ trang chi tiết hoặc từ menu thao tác trên mỗi dòng, admin có thể chọn "Lock" để khóa tài khoản vi phạm — hệ thống yêu cầu xác nhận trước khi thực hiện, và tài khoản bị khóa sẽ không thể đăng nhập cho đến khi được mở khóa. Admin cũng có thể chọn "Change Role" để đổi vai trò — ví dụ nâng User lên Organiser khi họ muốn bắt đầu tổ chức sự kiện, hoặc hạ Organiser về User nếu vi phạm chính sách. Mọi thay đổi vai trò có hiệu lực ngay lập tức — ở lần đăng nhập tiếp theo, người dùng sẽ thấy giao diện tương ứng với vai trò mới.</div>
+    <div class="result"><strong>Kết quả:</strong> Kiểm soát tập trung từ một giao diện. Khóa tài khoản dùng soft delete — dữ liệu vẫn giữ. Đổi vai trò cập nhật quyền ngay lập tức.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>AdminUserController.java</code> · <code>UserService.java</code><br><strong>Admin:</strong> <code>src/pages/admin/Users.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/admin/users</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>4. Admin quản lý nhà tổ chức</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Nhà tổ chức sự kiện là đối tác quan trọng nhất của nền tảng LUMA — họ tạo ra nội dung và sản phẩm (sự kiện) để thu hút người dùng. Tuy nhiên, không phải ai cũng đáng tin cậy để tổ chức sự kiện thu phí — nếu một organiser lừa đảo thu tiền vé rồi hủy sự kiện, uy tín toàn bộ nền tảng sẽ bị ảnh hưởng. Chính vì vậy, admin cần xác minh nhà tổ chức trước khi cho phép họ tạo sự kiện có thu phí. Trang quản lý Organisers cho phép admin xem toàn bộ danh sách nhà tổ chức trên nền tảng với đầy đủ thông tin: trạng thái xác minh, số sự kiện đã tạo, tổng doanh thu, và thông tin liên hệ. Admin có thể xác minh organiser mới, xem chi tiết hoạt động của từng organiser, và cài đặt tỷ lệ hoa hồng (commission) riêng cho mỗi organiser dựa trên quy mô và lịch sử hoạt động. Việc quản lý tập trung này giúp admin có cái nhìn tổng thể về hệ sinh thái nhà tổ chức, phát hiện sớm những bất thường, và đảm bảo chất lượng dịch vụ trên toàn nền tảng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Admin đăng nhập vào admin panel và truy cập trang <code>/admin/organisers</code>. Trang hiển thị bảng danh sách tất cả nhà tổ chức với các cột: tên tổ chức, email liên hệ, trạng thái xác minh (đã xác minh hoặc chờ xác minh), số sự kiện đã tạo, tổng doanh thu, và tỷ lệ hoa hồng hiện tại. Admin có thể dùng thanh tìm kiếm và bộ lọc để tìm organiser cụ thể. Bấm vào một organiser để mở trang chi tiết, hiển thị hồ sơ đầy đủ bao gồm logo, mô tả, website, danh sách sự kiện đã tổ chức, và thống kê doanh thu theo thời gian. Tại đây, admin bấm nút "Xác minh" để chuyển organiser từ trạng thái chờ sang đã xác minh — chỉ organiser đã xác minh mới được phép tạo sự kiện thu phí. Admin cũng có thể cài đặt tỷ lệ commission riêng — ví dụ organiser mới bắt đầu có thể được ưu đãi tỷ lệ thấp hơn để khuyến khích, trong khi organiser lớn có tỷ lệ tiêu chuẩn. Mọi thay đổi đều có hiệu lực ngay lập tức và được ghi nhận trong lịch sử hoạt động.</div>
+    <div class="result"><strong>Kết quả:</strong> Chỉ organiser đã xác minh mới tạo được event thu phí. Hoa hồng linh hoạt theo từng organiser. Thông tin tổ chức minh bạch.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>AdminOrganiserController.java</code> · <code>OrganiserService.java</code><br><strong>Admin:</strong> <code>src/pages/admin/Organisers.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/admin/organisers</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>5. Quản lý danh mục &amp; thành phố</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Danh mục (Category) và Thành phố (City) là hai dữ liệu nền tảng quan trọng nhất của hệ thống LUMA — chúng được sử dụng xuyên suốt từ việc tạo sự kiện, lọc tìm kiếm, đến phân tích thống kê. Khi organiser tạo sự kiện, họ phải chọn danh mục (ví dụ: Công nghệ, Âm nhạc, Kinh doanh, Giáo dục) và thành phố (ví dụ: Hồ Chí Minh, Hà Nội, Đà Nẵng) — thông tin này giúp phân loại sự kiện một cách có hệ thống. Khi người dùng tìm kiếm trên trang Explore, họ lọc theo danh mục và thành phố để nhanh chóng tìm được sự kiện phù hợp. Trên Dashboard, biểu đồ phân bố sự kiện theo danh mục và thành phố cung cấp cái nhìn tổng quan về xu hướng thị trường. Nếu những dữ liệu này bị hardcode trong code, mỗi khi muốn thêm danh mục mới hoặc mở rộng sang thành phố mới sẽ phải sửa code và deploy lại — rất bất tiện. Chính vì vậy, nhóm em xây dựng trang quản lý cho phép admin thêm, sửa, xóa danh mục và thành phố trực tiếp trên giao diện, thay đổi có hiệu lực ngay lập tức mà không cần can thiệp vào code.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Admin đăng nhập vào admin panel và truy cập trang <code>/admin/categories</code> để quản lý danh mục sự kiện. Trang hiển thị danh sách tất cả danh mục hiện có dạng bảng với tên, mô tả, biểu tượng, và số sự kiện đang sử dụng danh mục đó. Để thêm mới, admin bấm "Thêm danh mục", nhập tên (ví dụ "Blockchain"), mô tả ngắn, chọn biểu tượng, rồi bấm "Lưu" — danh mục mới lập tức xuất hiện trong dropdown khi organiser tạo sự kiện và trong bộ lọc trên trang Explore. Để chỉnh sửa, admin bấm nút Edit trên dòng danh mục, thay đổi thông tin và lưu lại. Tương tự, trang <code>/admin/cities</code> cho phép quản lý danh sách thành phố với tên và mã vùng. Admin có thể thêm thành phố mới khi nền tảng mở rộng sang khu vực mới, hoặc ẩn thành phố không còn hoạt động. Hệ thống kiểm tra ràng buộc trước khi xóa — nếu một danh mục hoặc thành phố đang được sử dụng bởi sự kiện nào đó, hệ thống sẽ cảnh báo và không cho phép xóa để tránh mất dữ liệu liên quan.</div>
+    <div class="result"><strong>Kết quả:</strong> Danh mục và thành phố được quản lý linh hoạt từ giao diện, không cần sửa code. Mở rộng danh mục hoặc thành phố mới chỉ mất vài giây. Ràng buộc dữ liệu đảm bảo không xóa nhầm danh mục đang sử dụng.</div>
+    <div class="files-box">
+      <strong>Backend:</strong> <code>AuthController.java</code> · <code>SecurityConfig.java</code> · <code>JwtService.java</code> · <code>JwtAuthenticationFilter.java</code> · <code>RateLimitConfig.java</code><br>
+      <strong>Admin:</strong> <code>src/context/AuthContext.js</code> · <code>src/pages/shared/Login.js</code><br>
+      <strong>Mobile:</strong> <code>lib/features/auth/presentation/screens/login_screen.dart</code>
     </div>
-    <span class="time">⏱ 6 phút</span>
+    <div class="ui-box">
+      <strong>UI:</strong> <code>http://localhost:3000/login</code> (Admin) · <code>http://localhost:5000/#/login</code> (Mobile) · <code>http://localhost:5000/#/register</code>
+    </div>
   </div>
 
-  <h3>📌 Nội dung chính</h3>
-  <ul>
-    <li>SQL Server + JPA + Hibernate, 57 entity, migration Flyway, soft delete.</li>
-    <li>Các cụm entity: User/Organiser, Event/Ticket, Registration/Payment, Poll/Review, Conversation/Message.</li>
-    <li>Mobile Flutter: 15 feature module, Riverpod, GoRouter, Dio.</li>
-    <li>Design tokens tách riêng (<code>app_radius / app_shadows / app_spacing / app_typography</code>).</li>
-    <li>Payment screen hiển thị tổng đã giảm trên nút Pay (commit <code>58b76fb</code>).</li>
-    <li>i18n Vi/En + QR ticket.</li>
-  </ul>
-
-  <div class="files-box">
-    <strong>📁 Phải mở trước khi nói:</strong> <code>backend/entity/User.java · Event.java · Registration.java · Coupon.java · Poll.java</code> · <code>backend/repository/CouponRepository</code> · <code>resources/db/migration/V1__Fix_Poll_Boolean_Columns.sql</code> · <code>mobile/lib/main.dart</code> · <code>mobile/lib/core/design_tokens/design_tokens.dart</code> · <code>mobile/lib/features/events/presentation/screens/payment_screen.dart</code> · <code>mobile/lib/l10n/app_vi.arb</code>
-  </div>
-
-  <div class="script">
-    <h4>🎤 Câu mở đầu</h4>
-    <div class="say">Cảm ơn Khánh. Em là <strong>Trinh</strong>. Em sẽ đi ngược từ nơi dữ liệu được lưu — database — rồi đi lên cho đến giao diện mobile cuối cùng mà user cầm trên tay.</div>
-
-    <h4>🎤 Thân bài — Database</h4>
-    <div class="say"><strong>Loại:</strong> SQL Server, backup có sẵn <code>luma_db.bak</code> trong repo để mọi máy đều restore được. <strong>ORM:</strong> Spring Data JPA + Hibernate, sinh SQL tự động, nhóm em dùng <code>ddl-auto=update</code> trong dev, migration thay đổi schema lớn bằng Flyway — trong <code>db/migration/V1__Fix_Poll_Boolean_Columns.sql</code> em đã sửa các cột boolean nullable thành NOT NULL default để tránh NPE khi JPA load.</div>
-    <div class="say"><strong>Soft delete:</strong> Em dùng annotation <code>@SQLDelete(sql = "UPDATE ... SET deleted = true")</code> + <code>@SQLRestriction("deleted = false")</code> trên entity lớn (User, Event, Registration...). Ưu điểm là mọi query mặc định tự lọc record đã xoá, nhưng vẫn giữ data để audit — cực kỳ quan trọng với hệ thống liên quan tiền.</div>
-    <div class="say"><strong>57 entity em chia 4 cụm:</strong> (1) Người dùng &amp; tổ chức — User, OrganiserProfile, BankAccount, Subscription; (2) Sự kiện &amp; vé — Event, TicketType, Session, Question; (3) Giao dịch — Registration, Payment, Coupon, Commission, Payout; (4) Tương tác — Poll, Review, Conversation, Message, Notification, EmailCampaign. Relation chính: 1 User có nhiều Event, 1 Event có nhiều TicketType và Registration, 1 Registration có 1 Payment và tuỳ chọn 1 CouponUsage.</div>
-
-    <h4>🎤 Thân bài — Mobile</h4>
-    <div class="say"><strong>Về Flutter:</strong> Nhóm em dùng Flutter compile sang web (không dùng service worker để tránh cache sai phiên bản). State management là Riverpod 2 — kiểu provider-based dễ test. Routing là GoRouter 13 — declarative, hỗ trợ deep link. HTTP là Dio với interceptor tự gắn JWT từ <code>flutter_secure_storage</code>.</div>
-    <div class="say"><strong>Clean architecture:</strong> Mỗi feature trong <code>lib/features/</code> chia 3 lớp: <code>data</code> (gọi API), <code>domain</code> (entity, use case), <code>presentation</code> (widget + screen). Ví dụ <code>features/events/presentation/screens/payment_screen.dart</code> là màn hình thanh toán.</div>
-    <div class="say"><strong>Design tokens:</strong> Ở commit <code>23d1ae7</code> nhóm em tách token thành 4 file: <code>app_radius.dart</code>, <code>app_shadows.dart</code>, <code>app_spacing.dart</code>, <code>app_typography.dart</code>. Nhờ đó mọi widget trong 15 module đều dùng cùng 1 hệ spacing 4–8–12–16 px, cùng 1 hệ font. Nếu muốn đổi brand, em chỉ sửa 4 file, không phải tìm từng widget.</div>
-    <div class="say"><strong>Payment screen — case study:</strong> Khi user chọn vé, màn hình load coupon khả dụng (chip ưu đãi cao nhất đầu), tap để apply, backend validate và trả về tổng đã giảm. Commit gần nhất <code>58b76fb</code> em sửa bug nút Pay chỉ hiển thị giá gốc — nay hiển thị đúng tổng cuối cùng.</div>
-    <div class="say"><strong>i18n:</strong> Nhóm em có 2 file ARB: <code>app_vi.arb</code> và <code>app_en.arb</code>. User đổi ngôn ngữ trong Settings là toàn app đổi runtime nhờ <code>locale_provider</code>. Ngoài ra mobile còn có: QR ticket (qr_flutter), check-in QR (mobile_scanner), cached_network_image, flutter_pdfview xem chứng chỉ, map sự kiện bằng flutter_map.</div>
-
-    <h4>🎤 Chuyển ý sang Duy</h4>
-    <div class="say">Giao diện và dữ liệu đã sẵn sàng. Giờ em mời bạn <strong>Duy</strong> trình bày các tính năng nâng cao: chat real-time, poll có AI, scheduler tự động, và demo tổng cuối bài.</div>
-  </div>
 </section>
 
-<!-- ============== DUY ============== -->
+<!-- ==================== DUY ==================== -->
 <section id="duy" class="member-section member-duy">
   <div class="member-header">
     <div class="avatar">D</div>
-    <div class="info">
-      <h3>Duy</h3>
-      <div class="role">Phần 5 · Realtime · Poll · AI · Scheduler · Demo tổng &amp; Kết luận</div>
-    </div>
-    <span class="time">⏱ 7 phút</span>
+    <div class="info"><h3>Duy</h3><div class="role">Vận hành &amp; Tăng trưởng</div></div>
+    <div class="time">~6 phút</div>
   </div>
 
-  <h3>📌 Nội dung chính</h3>
-  <ul>
-    <li>WebSocket STOMP cho chat &amp; notification realtime &lt; 1s.</li>
-    <li>Poll lifecycle (DRAFT/SCHEDULED/ACTIVE/CLOSED) + auto open/close theo thời gian event.</li>
-    <li>Tích hợp Groq AI (llama-3.3-70b) sinh poll &amp; mô tả sự kiện.</li>
-    <li>5 scheduler: event reminder, certificate, auto-complete, waitlist, cleanup.</li>
-    <li>Email Thymeleaf + email campaign, Cloudinary upload, QR check-in.</li>
-    <li>Demo tổng hệ thống &amp; kết luận.</li>
-  </ul>
-
-  <div class="files-box">
-    <strong>📁 Phải mở trước khi nói:</strong> <code>config/WebSocketConfig.java</code> · <code>controller/websocket/ChatWebSocketController</code> · <code>service/PollService</code> · <code>service/GroqService</code> · <code>scheduler/EventReminderScheduler</code> · <code>scheduler/CertificateScheduler</code> · <code>resources/templates/*.html</code> · <code>mobile/lib/features/chat</code> · <code>mobile/lib/features/notifications</code>
+  <div class="flow-overview">
+    <span class="step"><span class="step-num">1</span>Dashboard</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">2</span>Doanh thu &amp; Hoa hồng</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">3</span>Event Boost</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">4</span>Subscription</span><span class="arr">&rarr;</span>
+    <span class="step"><span class="step-num">5</span>Báo cáo &amp; Funnel</span>
   </div>
 
-  <div class="script">
-    <h4>🎤 Câu mở đầu</h4>
-    <div class="say">Cảm ơn Trinh. Em là <strong>Duy</strong>, khép lại phần thuyết trình với những tính năng nâng cao làm LUMA khác biệt với CRUD thông thường, rồi demo tổng và tổng kết.</div>
-
-    <h4>🎤 Thân bài — Realtime</h4>
-    <div class="say"><strong>WebSocket STOMP:</strong> Backend expose endpoint <code>/ws</code> qua Spring WebSocket. Mobile dùng <code>stomp_dart_client</code> kết nối, JWT đi trong CONNECT frame. Chat 1-1 và group đều qua topic <code>/topic/chat/{conversationId}</code>. Notification thời gian thực qua <code>/topic/notifications/{userId}</code>. Khi admin duyệt event, user nhận thông báo tức thì mà không cần reload.</div>
-    <div class="say"><strong>Message được lưu DB:</strong> mọi message đều persist trong bảng <code>Message</code>, nếu user offline vẫn xem được lịch sử khi online lại.</div>
-
-    <h4>🎤 Thân bài — Poll &amp; AI</h4>
-    <div class="say"><strong>Poll lifecycle:</strong> 4 trạng thái DRAFT → SCHEDULED → ACTIVE → CLOSED. Organiser có thể cài <code>scheduledOpenAt</code>, <code>closesAt</code>, <code>closeAtVoteCount</code>, hay bật auto-open khi event bắt đầu. Cờ <code>hideResultsUntilClosed</code> cho phép giấu kết quả để tránh ảnh hưởng người vote sau. Poll có 3 kiểu: chọn 1, chọn nhiều, rating. Mọi chuyển trạng thái đều validate — ví dụ chỉ sửa được poll khi DRAFT hoặc SCHEDULED và chưa có vote nào.</div>
-    <div class="say"><strong>AI-generate:</strong> Organiser chỉ cần nhập chủ đề, backend gọi Groq API với model <code>llama-3.3-70b-versatile</code>, trả về câu hỏi + các option sẵn dạng JSON. Tiết kiệm 5-10 phút soạn thảo cho mỗi poll. Ngoài ra AI còn sinh mô tả sự kiện, bio speaker, cải thiện mô tả cũ.</div>
-
-    <h4>🎤 Thân bài — Scheduler &amp; Email</h4>
-    <div class="say"><strong>5 background job</strong> chạy bằng <code>@Scheduled</code> cron: (1) <em>EventReminderScheduler</em> gửi email 24h trước event; (2) <em>CertificateScheduler</em> tự sinh certificate PDF iText khi event kết thúc; (3) <em>EventAutoCompleteScheduler</em> đổi event về COMPLETED khi hết giờ; (4) <em>WaitlistOfferScheduler</em> gửi offer cho waitlist khi có slot trống; (5) poll scheduler auto open/close theo thời gian.</div>
-    <div class="say"><strong>Email:</strong> template HTML bằng Thymeleaf trong <code>resources/templates</code>, gửi async qua Spring Mail. Email campaign hàng loạt dùng bảng <code>EmailCampaign</code> + <code>EmailCampaignRecipient</code> track status PENDING/SENT/OPENED, người nhận có thể unsubscribe lưu ở <code>EmailUnsubscribe</code>.</div>
-    <div class="say"><strong>Cloudinary:</strong> mọi ảnh event/avatar đều upload qua <code>UploadController</code> về Cloudinary CDN, giới hạn 10MB, backend chỉ lưu URL. <strong>QR check-in:</strong> vé gắn mã QR sinh bằng ZXing, organiser quét bằng <code>mobile_scanner</code> trong app — đây là tính năng mới commit <code>ee574ef</code>.</div>
-
-    <h4>🎤 Demo tổng (ngắn gọn, nếu còn thời gian)</h4>
-    <div class="say">Giờ em demo nhanh luồng hoàn chỉnh: (1) user mobile tìm event → (2) chọn vé VIP, áp coupon → (3) thanh toán Stripe test card → (4) nhận email có QR → (5) organiser duyệt approve → (6) user đi tới event quét QR check-in → (7) sau event gửi review → (8) organiser xem funnel analytics. Toàn bộ dưới 3 phút.</div>
-
-    <h4>🎤 Tổng kết</h4>
-    <div class="say"><strong>Điểm mạnh:</strong> LUMA bao phủ đủ 3 tầng full-stack, tích hợp thanh toán thật, realtime thật, AI thật, 57 entity với quan hệ phức tạp, có phân quyền, rate limit, idempotency — là một sản phẩm gần với production.</div>
-    <div class="say"><strong>Hạn chế:</strong> (1) chưa có test tự động coverage; (2) Flutter deploy dạng web thay vì APK/iOS; (3) AI phụ thuộc API key Groq; (4) chưa có CI/CD và containerisation; (5) SeatMap cũ chưa xoá sạch code dù đã thay bằng Multi-tier.</div>
-    <div class="say"><strong>Hướng phát triển:</strong> (1) viết JUnit + integration test; (2) Dockerize + GitHub Actions; (3) build native APK &amp; iOS; (4) thêm OAuth Facebook, Zalo; (5) Elasticsearch cho full-text search; (6) Redis cache cho trang event phổ biến; (7) dashboard BI cho admin.</div>
-    <div class="say"><strong>Cảm ơn thầy cô</strong> đã theo dõi phần thuyết trình của nhóm 5 — LUMA. Nhóm em sẵn sàng nhận câu hỏi.</div>
+  <!-- 1 -->
+  <div class="feature-block">
+    <h4>1. Dashboard Admin &amp; Organiser</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Dashboard là trang đầu tiên admin và organiser nhìn thấy mỗi khi đăng nhập — nó phải cung cấp cái nhìn tổng quan nhanh nhất về tình trạng hoạt động của nền tảng hoặc sự kiện mà không cần phải vào từng trang riêng lẻ. Admin cần biết ngay: hôm nay có bao nhiêu đăng ký mới, tổng doanh thu tháng này bao nhiêu, có bao nhiêu sự kiện đang chờ duyệt, và xu hướng tăng trưởng ra sao. Organiser cũng cần dashboard riêng để theo dõi hiệu quả các sự kiện của mình: bao nhiêu vé đã bán, doanh thu cụ thể từng event, event nào đang thu hút nhất. Nhóm em xây dựng Dashboard với các thành phần trực quan: KPI cards hiển thị 4 chỉ số quan trọng nhất (tổng doanh thu, số user, số event, số đăng ký), biểu đồ đường (line chart) thể hiện xu hướng doanh thu theo tháng, biểu đồ tròn (pie chart) phân bố sự kiện theo danh mục, và biểu đồ cột (bar chart) số sự kiện theo thành phố. Tất cả biểu đồ được xây dựng bằng thư viện MUI x-charts, responsive trên mọi kích thước màn hình. Dữ liệu được tính toán realtime từ database thông qua AnalyticsService, đảm bảo luôn chính xác và cập nhật.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Admin đăng nhập vào admin panel và được tự động chuyển đến trang <code>/admin/dashboard</code>. Ngay phía trên cùng hiển thị 4 KPI cards với số liệu lớn, dễ đọc: tổng doanh thu, tổng số người dùng, tổng số sự kiện, và tổng số đăng ký — mỗi card kèm theo tỷ lệ tăng/giảm so với tháng trước bằng mũi tên xanh hoặc đỏ. Phía dưới là các biểu đồ tương tác: biểu đồ đường hiển thị doanh thu 12 tháng gần nhất, hover vào để xem số liệu chi tiết từng tháng; biểu đồ tròn cho thấy phân bố sự kiện theo danh mục, giúp admin biết lĩnh vực nào đang thịnh hành; biểu đồ cột hiển thị số sự kiện theo từng thành phố. Organiser vào <code>/organiser/dashboard</code> thấy giao diện tương tự nhưng dữ liệu chỉ phản ánh các sự kiện của riêng mình: số vé đã bán, doanh thu sau hoa hồng, danh sách top events theo số đăng ký, và biểu đồ xu hướng. Dashboard giúp cả admin và organiser ra quyết định dựa trên dữ liệu thay vì cảm tính.</div>
+    <div class="result"><strong>Kết quả:</strong> Giao diện trực quan giúp ra quyết định nhanh. Admin thấy xu hướng tăng trưởng. Organiser biết event nào cần quảng bá thêm.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>AdminAnalyticsController.java</code> · <code>AnalyticsService.java</code> · <code>OrganiserDashboardController.java</code><br><strong>Admin:</strong> <code>src/pages/admin/Dashboard.js</code> · <code>src/pages/organiser/Dashboard.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/admin/dashboard</code> · <code>http://localhost:3000/organiser/dashboard</code></div>
   </div>
+
+  <div class="feature-block">
+    <h4>2. Doanh thu &amp; Hoa hồng</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Mô hình kinh doanh của LUMA dựa trên việc thu hoa hồng (commission) trên mỗi giao dịch bán vé — đây là nguồn thu chính của nền tảng. Khi một người dùng thanh toán vé sự kiện, hệ thống tự động tính hoa hồng theo tỷ lệ đã cài đặt cho từng organiser và ghi nhận vào bảng CommissionTransaction. Admin cần theo dõi doanh thu toàn nền tảng để đánh giá sức khỏe tài chính: tổng thu bao nhiêu, hoa hồng bao nhiêu, organiser nào đóng góp nhiều nhất, xu hướng tăng hay giảm. Organiser cũng cần biết rõ số tiền thực nhận sau khi trừ hoa hồng và phí giao dịch để quản lý tài chính cho tổ chức của mình. Sự minh bạch tài chính này rất quan trọng — nếu organiser không biết rõ tiền đi đâu, họ sẽ mất niềm tin vào nền tảng. Chính vì vậy, nhóm em xây dựng hệ thống theo dõi doanh thu chi tiết đến từng đồng, với breakdown rõ ràng theo event, theo organiser, và theo thời gian, kèm biểu đồ trực quan để dễ phân tích xu hướng.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Admin đăng nhập vào admin panel và truy cập trang <code>/admin/revenue</code>. Trang hiển thị các KPI cards ở phía trên: tổng doanh thu, tổng hoa hồng nền tảng thu được, tổng số giao dịch, và giá trị giao dịch trung bình. Phía dưới là bảng breakdown chi tiết có thể sắp xếp và lọc theo nhiều tiêu chí: theo organiser để xem organiser nào đóng góp nhiều nhất, theo event để xem event nào bán chạy nhất, hoặc theo khoảng thời gian tùy chọn. Mỗi dòng trong bảng hiển thị tên event/organiser, số giao dịch, tổng doanh thu, hoa hồng nền tảng, và số tiền organiser nhận được. Biểu đồ đường bên cạnh hiển thị xu hướng doanh thu theo tháng, giúp admin nhận biết mùa cao điểm và thấp điểm. Phía organiser, họ vào trang doanh thu riêng để xem tổng thu từ các sự kiện đã tổ chức, chi tiết từng giao dịch, số tiền hoa hồng đã trừ, và số tiền thực nhận. Tất cả số liệu đều chính xác đến từng đồng và có thể xuất ra file Excel hoặc PDF để phục vụ đối soát và báo cáo tài chính.</div>
+    <div class="result"><strong>Kết quả:</strong> Doanh thu minh bạch đến từng đồng. CommissionTransaction ghi lại mọi khoản hoa hồng. Số liệu chính xác phục vụ đối soát và báo cáo tài chính.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>RevenueService.java</code> · <code>AdminRevenueController.java</code> · <code>CommissionService.java</code> · <code>OrganiserRevenueController.java</code><br><strong>Admin:</strong> <code>src/pages/admin/Revenue.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/admin/revenue</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>3. Event Boost (4 gói quảng bá)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Trên một nền tảng có hàng trăm sự kiện, việc nổi bật giữa đám đông là thách thức lớn nhất của organiser. Một sự kiện mới tạo dễ bị chìm giữa danh sách dài và ít người nhìn thấy. Event Boost giải quyết vấn đề này bằng cách cho phép organiser trả phí để đẩy sự kiện lên vị trí ưu tiên trên feed, giống cơ chế quảng cáo trên Facebook hay Google. Hệ thống cung cấp 4 gói boost với mức độ hiển thị khác nhau: Basic ($9.99/7 ngày) thêm badge BOOSTED trên card sự kiện, Standard ($24.99/14 ngày) thêm badge FEATURED và ưu tiên trong kết quả tìm kiếm, Premium ($49.99/30 ngày) hiện trên trang chủ trong mục sự kiện nổi bật, và VIP ($99.99/30 ngày) hiện trên banner carousel lớn ở đầu trang chủ — vị trí đắt giá nhất với lượt nhìn cao nhất. Đây cũng là nguồn thu quan trọng thứ hai của nền tảng ngoài hoa hồng bán vé, giúp duy trì hoạt động và phát triển hệ thống. Hệ thống đo lường hiệu quả boost bằng các chỉ số cụ thể: số lượt xem, số lượt bấm, và số đăng ký trong thời gian boost, giúp organiser đánh giá ROI từng gói.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập admin panel và truy cập trang <code>/organiser/boost</code>. Trang hiển thị bảng so sánh 4 gói boost với chi tiết giá, thời hạn, và quyền lợi từng gói. Organiser chọn sự kiện muốn boost từ dropdown, chọn gói phù hợp với ngân sách, và bấm "Thanh toán" — hệ thống chuyển sang Stripe Checkout để xử lý thanh toán. Sau khi thanh toán thành công, sự kiện ngay lập tức được boost: badge đặc biệt xuất hiện trên card sự kiện (BOOSTED, FEATURED, PREMIUM, hoặc VIP tùy gói), sự kiện được ưu tiên hiển thị trên feed Explore, và với gói VIP, banner sự kiện xuất hiện trên carousel trang chủ mobile. Trên ứng dụng mobile, người dùng thấy rõ sự khác biệt — sự kiện được boost có badge nổi bật và xuất hiện ở vị trí đầu kết quả tìm kiếm. Admin quản lý toàn bộ boost đang hoạt động tại trang <code>/admin/boosts</code>, nơi hiển thị danh sách boost với thông tin: event, organiser, gói, ngày bắt đầu/kết thúc, và các chỉ số hiệu quả (views, clicks, registrations trong thời gian boost). Khi hết hạn boost, badge tự động biến mất và sự kiện trở lại vị trí bình thường.</div>
+    <div class="result"><strong>Kết quả:</strong> Event boost đo lường được: views_during_boost, clicks_during_boost, registrations_during_boost. VIP events hiện banner carousel trên trang chủ mobile. Organiser đánh giá ROI từng gói boost.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>EventBoostService.java</code> · <code>OrganiserBoostController.java</code> · <code>AdminBoostController.java</code> · <code>UserBoostService.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Boost.js</code> · <code>src/pages/admin/Boosts.js</code><br><strong>Mobile:</strong> <code>lib/features/home/presentation/widgets/vip_banner_carousel.dart</code> · <code>boosted_events_section.dart</code> · <code>lib/shared/widgets/boost_badge.dart</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/boost</code> · <code>http://localhost:3000/admin/boosts</code> · <code>http://localhost:5000/#/home</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>4. Subscription nhà tổ chức (3 tier)</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Không phải tất cả nhà tổ chức đều có cùng nhu cầu — một cá nhân tổ chức meetup nhỏ hàng tháng có nhu cầu rất khác so với một công ty tổ chức hàng chục sự kiện lớn mỗi năm. Chính vì vậy, nhóm em thiết kế hệ thống Subscription với 3 gói dịch vụ phân tầng: Basic (miễn phí, giới hạn số lượng sự kiện có thể tạo), Premium (phí hàng tháng, mở rộng giới hạn sự kiện và ưu tiên hỗ trợ kỹ thuật), và Enterprise (phí cao hơn, không giới hạn sự kiện và các tính năng nâng cao). Mỗi gói có quyền lợi rõ ràng, giúp organiser chọn đúng gói phù hợp với quy mô hoạt động và ngân sách. Thanh toán subscription sử dụng Stripe Subscription API, cho phép tự động gia hạn hàng tháng mà organiser không cần thao tác thủ công mỗi lần. Đây là nguồn thu ổn định và có thể dự đoán được cho nền tảng — khác với doanh thu hoa hồng phụ thuộc vào số lượng giao dịch, doanh thu subscription đều đặn mỗi tháng. Hệ thống tự động kiểm tra và thực thi giới hạn theo gói — nếu organiser Basic đã đạt số sự kiện tối đa, hệ thống yêu cầu nâng cấp lên Premium để tiếp tục tạo sự kiện mới.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Organiser đăng nhập vào admin panel và truy cập trang <code>/organiser/subscription</code>. Trang hiển thị bảng so sánh 3 gói dịch vụ dạng cards đặt cạnh nhau: mỗi card hiển thị tên gói, giá hàng tháng, danh sách quyền lợi chi tiết (số event tối đa, tính năng nâng cao, mức ưu tiên hỗ trợ), và nút "Chọn gói" hoặc "Nâng cấp" nếu organiser đang ở gói thấp hơn. Khi bấm chọn gói Premium hoặc Enterprise, hệ thống chuyển đến trang thanh toán Stripe với form nhập thông tin thẻ — sau khi thanh toán thành công, gói được kích hoạt ngay lập tức và organiser thấy badge gói hiện tại trên dashboard. Subscription tự động gia hạn mỗi tháng — Stripe tự động trừ tiền thẻ đã đăng ký và gửi email hóa đơn. Nếu organiser muốn hủy, họ bấm "Hủy đăng ký" — gói vẫn hoạt động đến cuối chu kỳ thanh toán hiện tại rồi mới chuyển về Basic. Trên trang subscription, organiser luôn thấy thông tin gói hiện tại, ngày gia hạn tiếp theo, lịch sử thanh toán, và các hóa đơn có thể tải về.</div>
+    <div class="result"><strong>Kết quả:</strong> Organiser mở khóa tính năng cao cấp tùy gói. OrganiserSubscription entity lưu gói hiện tại, ngày hết hạn, trạng thái thanh toán. Nguồn thu ổn định cho nền tảng.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>OrganiserSubscriptionController.java</code> · <code>OrganiserSubscriptionService.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/Subscription.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/subscription</code></div>
+  </div>
+
+  <div class="feature-block">
+    <h4>5. Xuất báo cáo &amp; Funnel Analytics</h4>
+    <div class="why"><strong>Giới thiệu và lý do:</strong> Dữ liệu trên nền tảng chỉ thực sự có giá trị khi organiser có thể xuất ra để phân tích sâu hơn, báo cáo cho ban lãnh đạo, hoặc gửi cho nhà tài trợ. Trong thực tế, nhiều tổ chức yêu cầu báo cáo dưới dạng file Excel hoặc PDF để lưu trữ và trình bày — việc chỉ xem trên web là không đủ. Chính vì vậy, nhóm em tích hợp tính năng xuất báo cáo sử dụng Apache POI để sinh file Excel chuyên nghiệp với định dạng bảng biểu rõ ràng, và iText7 để sinh file PDF với layout đẹp, sẵn sàng in ấn. Ngoài xuất báo cáo, nhóm em còn xây dựng Funnel Analytics — công cụ phân tích phễu chuyển đổi cho phép organiser nhìn thấy toàn bộ hành trình của người dùng: bao nhiêu người xem sự kiện (views), bao nhiêu người đăng ký (registrations), và bao nhiêu người thực sự thanh toán (payments). Phễu này cho thấy rõ ràng chỗ nào người dùng "rơi rụng" nhiều nhất — ví dụ nếu nhiều người xem nhưng ít người đăng ký, có thể mô tả sự kiện chưa đủ hấp dẫn; nếu nhiều người đăng ký nhưng ít thanh toán, có thể giá vé quá cao. Thông tin này giúp organiser tối ưu hóa chiến lược marketing và nội dung sự kiện một cách có dữ liệu.</div>
+    <div class="how"><strong>Quy trình sử dụng:</strong> Trên admin panel, ở các trang quản lý như Events, Registrations, và Revenue, organiser và admin đều thấy hai nút ở góc trên bên phải: "Export Excel" và "Export PDF". Bấm vào "Export Excel" — hệ thống gọi ExcelExportService để tổng hợp dữ liệu hiện tại, sinh file Excel với các cột được định dạng gọn gàng, tiêu đề đậm, và tổng cộng ở cuối — file tải về thiết bị ngay lập tức. Tương tự, bấm "Export PDF" sinh file PDF với logo nền tảng, bảng biểu chuyên nghiệp, và ngày xuất báo cáo — sẵn sàng để gửi email cho nhà tài trợ hoặc in ra giấy. Về Funnel Analytics, organiser truy cập trang <code>/organiser/funnel</code> trên admin panel. Trang hiển thị biểu đồ phễu trực quan cho từng sự kiện: tầng trên cùng là số lượt xem (views), tầng giữa là số đăng ký (registrations), tầng dưới cùng là số thanh toán thành công (payments), mỗi tầng hiển thị số lượng và tỷ lệ chuyển đổi so với tầng trên. Organiser chọn sự kiện cụ thể từ dropdown để xem funnel riêng. Biểu đồ funnel giúp organiser xác định chính xác nơi cần cải thiện — nếu tỷ lệ view-to-register thấp thì cần cải thiện nội dung mô tả, nếu tỷ lệ register-to-pay thấp thì cần xem lại giá vé hoặc quy trình thanh toán.</div>
+    <div class="result"><strong>Kết quả:</strong> File Excel/PDF chuyên nghiệp, sẵn sàng gửi kế toán hoặc sponsor. Funnel cho thấy chỗ cần tối ưu. Quy trình vận hành khép kín.</div>
+    <div class="files-box"><strong>Backend:</strong> <code>ExcelExportService.java</code> · <code>FunnelAnalyticsService.java</code> · <code>OrganiserFunnelController.java</code> · <code>AdminFunnelController.java</code><br><strong>Admin:</strong> <code>src/pages/organiser/FunnelAnalytics.js</code></div>
+    <div class="ui-box"><strong>UI:</strong> <code>http://localhost:3000/organiser/funnel</code></div>
+  </div>
+
 </section>
 
-<!-- ============== 8. DEMO FLOW ============== -->
-<section id="demo-flow">
-  <h2><span class="num">8</span>Demo flow đề xuất khi bảo vệ</h2>
-  <p class="lead">Kịch bản demo ngắn, trơn tru, tránh phần dễ hỏng. Thực hiện khoảng 5–7 phút, 2 tab trình duyệt: Admin (port 3000) + Mobile (port 5000).</p>
-
-  <ol class="timeline">
-    <li data-t="B1"><strong>Bật hệ thống:</strong> chạy <code>start-all.bat</code> trước buổi bảo vệ 3 phút. Mở sẵn 3 tab: backend Swagger (localhost:8080/swagger-ui.html), admin (localhost:3000), mobile (localhost:5000).</li>
-    <li data-t="B2"><strong>Đăng nhập 3 role:</strong> (a) Admin demo — sẵn tài khoản, vào Dashboard thấy KPI; (b) Organiser — đã có event DRAFT sẵn; (c) User — đã verify email.</li>
-    <li data-t="B3"><strong>Organiser tạo event:</strong> tạo event mới với 2 ticket type (General $20, VIP $50), upload ảnh Cloudinary, publish.</li>
-    <li data-t="B4"><strong>Admin duyệt event:</strong> chuyển sang tab Admin, vào Events, bấm Approve — notification realtime bắn về organiser (mở 2 tab song song để thấy).</li>
-    <li data-t="B5"><strong>User mobile tìm &amp; đăng ký:</strong> mở app mobile, search hoặc vào Explore, tap vào event, chọn VIP x1, trả lời câu hỏi đăng ký.</li>
-    <li data-t="B6"><strong>Áp coupon + thanh toán:</strong> ở payment screen chọn chip coupon → nút Pay hiển thị <em>tổng đã giảm</em>. Nhập thẻ test Stripe <code>4242 4242 4242 4242</code>, bất kỳ CVC &amp; expiry tương lai.</li>
-    <li data-t="B7"><strong>Webhook tự động:</strong> Stripe bắn charge.succeeded → backend đánh APPROVED → user thấy PaymentSuccess screen có QR → email có trong inbox.</li>
-    <li data-t="B8"><strong>Realtime chat (tuỳ chọn):</strong> mở 2 thiết bị, gửi message qua lại để chứng minh WebSocket.</li>
-    <li data-t="B9"><strong>Poll AI:</strong> organiser vào Polls → AI-generate từ chủ đề "Networking event" → show poll được sinh tự động → publish → user vote → kết quả cập nhật live.</li>
-    <li data-t="B10"><strong>Admin analytics:</strong> chuyển về Admin → Revenue page hiển thị doanh thu + biểu đồ line chart.</li>
-    <li data-t="B11"><strong>Kết thúc demo:</strong> nhấn mạnh "tất cả dữ liệu đều là thật, không mock".</li>
-  </ol>
-
-  <div class="alert alert-warn">
-    <strong>❌ TRÁNH DEMO:</strong> (1) tính năng SeatMap cũ (đã thay bằng multi-tier); (2) tạo event recurring phức tạp (dễ lỗi giờ); (3) Stripe Connect onboarding (cần KYC, chậm); (4) Email campaign gửi thật (tốn hạn mức Gmail); (5) file <code>Events_backup.js</code> là bản cũ, không dùng.
+<!-- ==================== DEMO ==================== -->
+<section id="demo">
+  <h2><span class="num">3</span>Kịch bản Demo</h2>
+  <p class="lead">Demo 5 phút trên 2 tab: Admin (<code>localhost:3000</code>) + Mobile (<code>localhost:5000</code>).</p>
+  <div class="flow">
+    <span class="step">Đăng nhập 3 role</span><span class="arr">&rarr;</span>
+    <span class="step">Organiser tạo event + speaker + vé</span><span class="arr">&rarr;</span>
+    <span class="step">Admin duyệt</span><span class="arr">&rarr;</span>
+    <span class="step">User tìm event + chọn vé + coupon + thanh toán Stripe</span><span class="arr">&rarr;</span>
+    <span class="step">Nhận QR</span><span class="arr">&rarr;</span>
+    <span class="step">Chat + Vote poll</span><span class="arr">&rarr;</span>
+    <span class="step">Admin xem dashboard + export Excel</span>
   </div>
-
-  <div class="alert alert-ok">
-    <strong>✅ AN TOÀN ĐỂ DEMO:</strong> login, tạo event, duyệt event, mua vé với coupon, QR check-in bằng ảnh chụp, chat realtime, poll AI, analytics, export Excel events.
-  </div>
+  <div class="alert alert-info"><strong>Thẻ test Stripe:</strong> 4242 4242 4242 4242, CVC bất kỳ, ngày hết hạn tương lai.</div>
 </section>
 
-<!-- ============== 9. HIGHLIGHT ============== -->
-<section id="highlight">
-  <h2><span class="num">9</span>Điểm nổi bật Full-Stack</h2>
-  <div class="grid-2">
-    <div class="card"><h4>🧩 Đủ 3 tầng rõ ràng</h4><p>Backend Spring Boot + Admin React + Mobile Flutter — mỗi tầng có repo + build độc lập nhưng ráp qua REST + STOMP.</p></div>
-    <div class="card"><h4>💳 Thanh toán thật</h4><p>Stripe PaymentIntent + Webhook idempotent + Stripe Connect cho payout — không mock.</p></div>
-    <div class="card"><h4>⚡ Realtime &lt; 1s</h4><p>WebSocket STOMP authenticated bằng JWT, chat &amp; notification instant.</p></div>
-    <div class="card"><h4>🤖 AI Groq</h4><p>Generate poll và mô tả sự kiện bằng LLM — khác biệt với đồ án CRUD thuần.</p></div>
-    <div class="card"><h4>🎟️ Nghiệp vụ phức tạp</h4><p>Multi-tier tickets, coupon 2-scope, commission, subscription, waitlist, ticket transfer — chuẩn marketplace thực tế.</p></div>
-    <div class="card"><h4>🛡️ Bảo mật chuẩn</h4><p>JWT + BCrypt + Rate limit Bucket4j + role-based + webhook idempotency + soft delete audit.</p></div>
-    <div class="card"><h4>🎨 Design system</h4><p>Design tokens tách riêng cho Flutter (radius, shadow, spacing, typography) — dễ rebrand.</p></div>
-    <div class="card"><h4>🔁 DevOps tích hợp</h4><p><code>start-all.bat</code> dựng toàn bộ 3 service + clear cache trong 1 lệnh.</p></div>
-  </div>
-</section>
-
-<!-- ============== 10. RISKS ============== -->
-<section id="risks">
-  <h2><span class="num">10</span>Hạn chế &amp; rủi ro cần tránh khi thuyết trình</h2>
-  <table class="tbl">
-    <tr><th style="width:28%">Hạn chế</th><th>Giải thích</th><th style="width:30%">Cách xử lý khi bị hỏi</th></tr>
-    <tr><td>Chưa có unit / integration test</td><td>Chưa viết JUnit / Mockito coverage cho service layer.</td><td>Ghi nhận và liệt kê vào <em>Hướng phát triển</em>.</td></tr>
-    <tr><td>Flutter chạy web thay vì native</td><td>Demo nhanh trên laptop, chưa build APK/iOS.</td><td>Nói code base đã sẵn sàng, chỉ cần <code>flutter build apk</code>.</td></tr>
-    <tr><td>Stripe đang ở test mode</td><td>Dùng test API key; thẻ test <code>4242…</code>.</td><td>Nói rõ production chỉ cần đổi env.</td></tr>
-    <tr><td>SeatMap cũ còn code thừa</td><td>Đã bị thay bằng multi-tier nhưng chưa xoá hết entity.</td><td>Không demo phần này.</td></tr>
-    <tr><td>AI Groq phụ thuộc key cloud</td><td>Nếu rate limit / key hết hạn thì fail.</td><td>Có fallback tạo poll thủ công.</td></tr>
-    <tr><td>Chưa có CI/CD, Docker</td><td>Deploy tay qua <code>start-all.bat</code>.</td><td>Nêu kế hoạch GitHub Actions + Docker Compose.</td></tr>
-    <tr><td>Rủi ro demo mạng yếu</td><td>Cloudinary/Stripe cần internet.</td><td>Chuẩn bị screenshot dự phòng.</td></tr>
-    <tr><td><code>admin/BAO_CAO_THUYET_TRINH_LUMA.html</code> là file của nhóm cũ</td><td>Có sẵn trong repo, gây nhầm lẫn.</td><td>Khi demo không mở file này — dùng file mới ở root.</td></tr>
-  </table>
-</section>
-
-<!-- ============== 11. ROADMAP ============== -->
-<section id="roadmap">
-  <h2><span class="num">11</span>Hướng phát triển</h2>
-  <div class="grid-3">
-    <div class="card"><h4>✅ Ngắn hạn</h4><p>JUnit + integration test, Dockerize backend, GitHub Actions CI, build APK Android.</p></div>
-    <div class="card"><h4>🚀 Trung hạn</h4><p>Elasticsearch full-text search, Redis cache event hot, OAuth Facebook/Zalo, push FCM thật, payment gateway VN (VNPay/MoMo).</p></div>
-    <div class="card"><h4>🌟 Dài hạn</h4><p>AI recommend event, chatbot hỗ trợ, livestream trong app, marketplace B2B cho sponsor, Kubernetes + multi-region.</p></div>
-  </div>
-</section>
-
-<!-- ============== 12. TIMELINE ============== -->
+<!-- ==================== TIMELINE ==================== -->
 <section id="timeline">
-  <h2><span class="num">12</span>Timeline trình bày (30 phút)</h2>
-  <ol class="timeline">
-    <li data-t="00:00"><strong>Huy</strong> — Mở đầu, giới thiệu nhóm, tổng quan LUMA, kiến trúc 3-tier, bảo mật JWT (5'). </li>
-    <li data-t="05:00"><strong>Khoa</strong> — Demo Admin + Organiser Panel, tạo event, duyệt event, CRUD coupon &amp; poll UI (6').</li>
-    <li data-t="11:00"><strong>Khánh</strong> — Backend nghiệp vụ, sequence diagram thanh toán Stripe + coupon + refund + webhook idempotent (6').</li>
-    <li data-t="17:00"><strong>Trinh</strong> — 57 entity, soft delete, Flyway, mobile Flutter + design tokens + payment screen + i18n (6').</li>
-    <li data-t="23:00"><strong>Duy</strong> — Realtime WebSocket, Poll AI Groq, Scheduler, Email Thymeleaf, demo tổng end-to-end, kết luận (7').</li>
-    <li data-t="30:00"><strong>Q&amp;A</strong> — 10 phút trả lời câu hỏi, mỗi thành viên tự trả lời phần của mình.</li>
-  </ol>
-
-  <div class="alert alert-info">
-    <strong>💡 Mẹo:</strong> Mỗi người khi chuyển ý phải gọi đích danh người tiếp theo (đã có câu chuyển ý sẵn trong script) — giúp mạch thuyết trình liền mạch, giảng viên thấy nhóm đồng bộ.
-  </div>
+  <h2><span class="num">4</span>Timeline trình bày (30 phút)</h2>
+  <ul class="timeline">
+    <li data-t="0:00"><strong>Huy</strong> — Mở đầu + 6 chức năng: Chat, Chatbot AI, Thông báo &amp; Calendar, Live Poll, Review, Chứng chỉ tham dự (~6 phút)</li>
+    <li data-t="6:00"><strong>Khoa</strong> — 6 chức năng: Tạo event &amp; Profile, Upload &amp; Gallery, Speaker &amp; Schedule, Câu hỏi đăng ký, Xuất bản &amp; Duyệt, AI nội dung (~6 phút)</li>
+    <li data-t="12:00"><strong>Khánh</strong> — 6 chức năng: Khám phá &amp; So sánh, Bookmark &amp; My Events, Chọn vé &amp; Đăng ký, Coupon, Thanh toán Stripe, Vé QR &amp; Check-in (~6 phút)</li>
+    <li data-t="18:00"><strong>Trinh</strong> — 5 chức năng: Đăng ký &amp; Đăng nhập, Hồ sơ cá nhân, Admin Users, Admin Organisers, Danh mục &amp; Thành phố (~6 phút)</li>
+    <li data-t="24:00"><strong>Duy</strong> — 5 chức năng: Dashboard, Doanh thu &amp; Hoa hồng, Event Boost, Subscription, Báo cáo &amp; Funnel. Tổng kết (~6 phút)</li>
+    <li data-t="30:00"><strong>Q&amp;A</strong> — Toàn nhóm trả lời câu hỏi (~10 phút)</li>
+  </ul>
 </section>
 
-<!-- ============== FOOTER ============== -->
+<!-- FOOTER -->
 <section style="text-align:center;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;padding:48px">
-  <h2 style="color:#fff;font-size:36px">🎓 Cảm ơn thầy cô đã theo dõi</h2>
+  <h2 style="color:#fff;font-size:36px">Cảm ơn thầy cô đã theo dõi</h2>
   <p style="font-size:16px;margin-top:8px;opacity:.95">Nhóm 5 — LUMA Event Marketplace</p>
-  <p style="font-size:14px;margin-top:6px;opacity:.85">Huy · Khoa · Khánh · Trinh · Duy</p>
+  <p style="font-size:14px;margin-top:6px;opacity:.85">Huy &middot; Khoa &middot; Khánh &middot; Trinh &middot; Duy</p>
 </section>
 
 </main>
