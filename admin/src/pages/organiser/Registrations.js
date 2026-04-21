@@ -67,6 +67,68 @@ const statusMap = {
     WAITING_LIST: 'primary',
 };
 
+// Map raw backend check-in errors to friendlier copy. The code field is
+// hidden when it's just a UUID that doesn't help the organiser act.
+const describeScanError = (rawMessage) => {
+    const msg = (rawMessage || '').toString();
+    const lower = msg.toLowerCase();
+
+    if (lower.includes('not available yet') || lower.includes('opens 2 hours')) {
+        return {
+            emoji: '⏰',
+            title: 'Check-in not open yet',
+            detail: 'Check-in opens 2 hours before the event starts.',
+            hideCode: true,
+        };
+    }
+    if (lower.includes('check-in period has ended') || lower.includes('period has ended')) {
+        return {
+            emoji: '⌛',
+            title: 'Check-in window closed',
+            detail: 'The event has ended, no more check-ins allowed.',
+            hideCode: true,
+        };
+    }
+    if (lower.includes('already been checked in') || lower.includes('already checked')) {
+        return {
+            emoji: '✅',
+            title: 'Already checked in',
+            detail: 'This ticket has already been scanned.',
+            hideCode: false,
+        };
+    }
+    if (lower.includes('only approved') || lower.includes('must be approved')) {
+        return {
+            emoji: '⛔',
+            title: 'Registration not approved',
+            detail: 'This registration is still pending — approve it before check-in.',
+            hideCode: false,
+        };
+    }
+    if (lower.includes('does not belong') || lower.includes('not belong')) {
+        return {
+            emoji: '🎟️',
+            title: 'Ticket is for another event',
+            detail: 'This ticket belongs to a different event — double-check the selected event.',
+            hideCode: false,
+        };
+    }
+    if (lower.includes('no registration found') || lower.includes('not found')) {
+        return {
+            emoji: '❓',
+            title: 'Ticket not found',
+            detail: 'The scanned code doesn\'t match any registration. Ask the guest to reopen the ticket in the app.',
+            hideCode: true,
+        };
+    }
+    return {
+        emoji: '✗',
+        title: 'Check-in failed',
+        detail: msg || 'Unknown error.',
+        hideCode: false,
+    };
+};
+
 const OrganiserRegistrations = () => {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState('');
@@ -193,6 +255,7 @@ const OrganiserRegistrations = () => {
             toast.success(`✓ ${result.name} checked in${result.ticketTypeName ? ' · ' + result.ticketTypeName : ''}`);
         } catch (error) {
             const msg = error.response?.data?.message || error.message || 'Check-in failed';
+            const friendly = describeScanError(msg);
             const result = {
                 status: 'error',
                 at: new Date(),
@@ -203,7 +266,7 @@ const OrganiserRegistrations = () => {
             setLastScanResult(result);
             setScanHistory((prev) => [result, ...prev].slice(0, 10));
             setScanError(msg);
-            toast.error(msg);
+            toast.error(`${friendly.emoji} ${friendly.title}`);
         } finally {
             setScanBusy(false);
         }
@@ -1119,23 +1182,31 @@ const OrganiserRegistrations = () => {
                                         Code: {lastScanResult.code}
                                     </Typography>
                                 </Paper>
-                            ) : (
-                                <Paper variant="outlined" sx={{ p: 2, borderLeft: '4px solid', borderLeftColor: 'error.main', bgcolor: 'error.light', minHeight: 180 }}>
-                                    <Typography variant="body1" fontWeight="bold" color="error.dark">
-                                        ✗ Check-in Failed
-                                    </Typography>
-                                    <Typography variant="caption" color="error.dark" sx={{ display: 'block', mt: 0.5 }}>
-                                        {lastScanResult.at.toLocaleTimeString()}
-                                    </Typography>
-                                    <Divider sx={{ my: 1 }} />
-                                    <Typography variant="body2" color="error.dark">
-                                        {lastScanResult.message}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontFamily: 'monospace' }}>
-                                        Code: {lastScanResult.code}
-                                    </Typography>
-                                </Paper>
-                            )}
+                            ) : (() => {
+                                const err = describeScanError(lastScanResult.message);
+                                return (
+                                    <Paper variant="outlined" sx={{ p: 2, borderLeft: '4px solid', borderLeftColor: 'error.main', bgcolor: 'error.light', minHeight: 180 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography sx={{ fontSize: 22 }}>{err.emoji}</Typography>
+                                            <Typography variant="body1" fontWeight="bold" color="error.dark">
+                                                {err.title}
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="caption" color="error.dark" sx={{ display: 'block', mt: 0.5 }}>
+                                            {lastScanResult.at.toLocaleTimeString()}
+                                        </Typography>
+                                        <Divider sx={{ my: 1 }} />
+                                        <Typography variant="body2" color="error.dark">
+                                            {err.detail}
+                                        </Typography>
+                                        {!err.hideCode && (
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                Code: {lastScanResult.code}
+                                            </Typography>
+                                        )}
+                                    </Paper>
+                                );
+                            })()}
                         </Grid>
 
                         {scanHistory.length > 0 && (
@@ -1172,11 +1243,13 @@ const OrganiserRegistrations = () => {
                                             <Typography variant="body2" sx={{ flex: 1 }} noWrap>
                                                 {s.status === 'success'
                                                     ? `${s.name}${s.ticketTypeName ? ' · ' + s.ticketTypeName + '×' + s.quantity : ''}`
-                                                    : s.message}
+                                                    : describeScanError(s.message).title}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }} noWrap>
-                                                {s.code}
-                                            </Typography>
+                                            {(s.status === 'success' || !describeScanError(s.message).hideCode) && (
+                                                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }} noWrap>
+                                                    {s.code}
+                                                </Typography>
+                                            )}
                                         </Box>
                                     ))}
                                 </Box>
