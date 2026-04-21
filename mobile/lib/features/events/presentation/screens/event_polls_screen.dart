@@ -4,16 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class EventPollsScreen extends ConsumerStatefulWidget {
-  final String eventId;
-  final String eventTitle;
-
   const EventPollsScreen({
     super.key,
     required this.eventId,
     required this.eventTitle,
   });
+
+  final String eventId;
+  final String eventTitle;
 
   @override
   ConsumerState<EventPollsScreen> createState() => _EventPollsScreenState();
@@ -23,6 +24,7 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
   List<Map<String, dynamic>> _polls = [];
   bool _loading = true;
   bool _submitting = false;
+  String? _errorMessage;
   final Map<String, List<String>> _selectedOptions = {};
   final Map<String, int> _selectedRatings = {};
 
@@ -33,20 +35,27 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
   }
 
   Future<void> _loadPolls() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
     try {
       final api = ref.read(apiServiceProvider);
       final polls = await api.getEventPolls(widget.eventId);
+      if (!mounted) return;
       setState(() {
         _polls = polls;
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _errorMessage = '$error';
+      });
     }
   }
 
-  // Returns polls the user has filled in but not yet submitted.
   List<Map<String, dynamic>> get _pendingPolls {
     return _polls.where((poll) {
       final isActive = poll['active'] == true || poll['isActive'] == true;
@@ -57,8 +66,8 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
       if (type == 'RATING') {
         return (_selectedRatings[pollId] ?? 0) > 0;
       }
-      final opts = _selectedOptions[pollId];
-      return opts != null && opts.isNotEmpty;
+      final options = _selectedOptions[pollId];
+      return options != null && options.isNotEmpty;
     }).toList();
   }
 
@@ -116,50 +125,123 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
   @override
   Widget build(BuildContext context) {
     final pendingCount = _pendingPolls.length;
+    final activeCount = _polls
+        .where(
+          (poll) => poll['active'] == true || poll['isActive'] == true,
+        )
+        .length;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Polls — ${widget.eventTitle}'),
+        title: const Text('Event Polls'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.pageX),
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+              ),
+              onPressed: _loadPolls,
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ),
+        ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _polls.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadPolls,
-                  child: ListView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      pendingCount > 0 ? 120 : AppSpacing.lg,
+          ? const LoadingState(message: 'Loading polls...')
+          : _errorMessage != null
+              ? ErrorState(message: _errorMessage!, onRetry: _loadPolls)
+              : _polls.isEmpty
+                  ? EmptyState(
+                      icon: Icons.poll_outlined,
+                      title: 'No polls available',
+                      subtitle:
+                          'Live polls and quick feedback requests will appear here during the event.',
+                      actionLabel: 'Refresh',
+                      onAction: _loadPolls,
+                    )
+                  : RefreshIndicator(
+                      color: AppColors.primary,
+                      onRefresh: _loadPolls,
+                      child: ListView(
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.pageX,
+                          AppSpacing.xl,
+                          AppSpacing.pageX,
+                          pendingCount > 0
+                              ? AppSpacing.massive + 88
+                              : AppSpacing.massive,
+                        ),
+                        children: [
+                          AppCard(
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.section,
+                            ),
+                            borderColor: AppColors.borderLight,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: const BoxDecoration(
+                                    gradient: AppColors.primaryGradient,
+                                    borderRadius: AppRadius.allLg,
+                                  ),
+                                  child: const Icon(
+                                    Icons.poll_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.eventTitle,
+                                        style: AppTypography.h3.copyWith(
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.xs),
+                                      Text(
+                                        '$activeCount active poll${activeCount == 1 ? '' : 's'} • $pendingCount ready to submit',
+                                        style: AppTypography.body.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ..._polls.map(_buildPollCard),
+                        ],
+                      ),
                     ),
-                    itemCount: _polls.length,
-                    itemBuilder: (context, index) => _buildPollCard(_polls[index]),
-                  ),
-                ),
       bottomSheet: _buildSubmitBar(pendingCount),
     );
   }
 
   Widget? _buildSubmitBar(int pendingCount) {
-    // Only show the bar when at least one vote is queued up, so it does not
-    // obscure content when the user hasn't interacted yet.
     if (_polls.isEmpty || pendingCount == 0) return null;
 
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
+          AppSpacing.pageX,
           AppSpacing.md,
-          AppSpacing.lg,
+          AppSpacing.pageX,
           AppSpacing.md,
         ),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.surface,
           border: Border(
-            top: BorderSide(color: AppColors.divider, width: 1),
+            top: BorderSide(color: AppColors.divider),
           ),
           boxShadow: AppShadows.md,
         ),
@@ -167,62 +249,34 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
           children: [
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '$pendingCount poll${pendingCount > 1 ? 's' : ''} ready',
-                    style: AppTypography.h4.copyWith(color: AppColors.textPrimary),
+                    style: AppTypography.h4.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Tap submit to send all your answers',
-                    style: AppTypography.caption.copyWith(color: AppColors.textMuted),
+                    'Submit all queued answers in one action.',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            ElevatedButton.icon(
+            AppButton(
+              label: _submitting ? 'Submitting...' : 'Submit All',
+              icon: Icons.how_to_vote_rounded,
+              loading: _submitting,
               onPressed: _submitting ? null : _submitAllPolls,
-              icon: _submitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.how_to_vote, size: 18),
-              label: Text(_submitting ? 'Submitting...' : 'Submit All'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.md,
-                ),
-                minimumSize: const Size(0, 48),
-                textStyle: AppTypography.button,
-              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.poll_outlined, size: 64, color: AppColors.textLight),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'No polls available',
-            style: AppTypography.h3.copyWith(color: AppColors.textMuted),
-          ),
-        ],
       ),
     );
   }
@@ -235,111 +289,83 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
     final options = (poll['options'] as List<dynamic>?) ?? [];
     final pollId = poll['id'] as String;
     final status = poll['status'] as String? ?? '';
-
-    // Has the user queued up an answer for this specific poll?
     final hasSelection = type == 'RATING'
         ? (_selectedRatings[pollId] ?? 0) > 0
         : (_selectedOptions[pollId]?.isNotEmpty ?? false);
 
-    final Color stateColor = hasVoted
-        ? AppColors.success
-        : (hasSelection && isActive ? AppColors.primary : AppColors.divider);
+    final borderColor = hasVoted
+        ? AppColors.success.withValues(alpha: 0.24)
+        : hasSelection && isActive
+            ? AppColors.primary.withValues(alpha: 0.24)
+            : AppColors.border;
 
-    return Container(
+    return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppRadius.allLg,
-        border: Border.all(
-          color: stateColor,
-          width: hasVoted || (hasSelection && isActive) ? 1.5 : 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.poll,
-                  color: isActive ? AppColors.success : AppColors.textLight,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    poll['question'] ?? '',
-                    style: AppTypography.h4.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
+      borderColor: borderColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.ballot_outlined,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  poll['question']?.toString() ?? '',
+                  style: AppTypography.h4.copyWith(
+                    color: AppColors.textPrimary,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _PollBadge(
-                  label: isActive ? 'Active' : status,
-                  color: isActive ? AppColors.success : AppColors.textMuted,
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.how_to_vote,
-                        size: 14, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$totalVotes votes',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-                if (hasSelection && isActive && !hasVoted)
-                  _PollBadge(
-                    label: 'Ready',
-                    color: AppColors.primary,
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (type == 'RATING')
-              _buildRatingPoll(poll, pollId, hasVoted, isActive)
-            else
-              _buildChoicePoll(poll, pollId, options, hasVoted, isActive, type),
-            if (hasVoted)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle,
-                        size: 16, color: AppColors.success),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      'You have voted',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
                 ),
               ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              StatusChip(
+                label: isActive ? 'Active' : status,
+                variant: isActive
+                    ? StatusChipVariant.success
+                    : StatusChipVariant.neutral,
+                compact: true,
+              ),
+              StatusChip(
+                label: '$totalVotes votes',
+                variant: StatusChipVariant.primary,
+                compact: true,
+              ),
+              if (hasSelection && isActive && !hasVoted)
+                const StatusChip(
+                  label: 'Ready',
+                  variant: StatusChipVariant.info,
+                  compact: true,
+                ),
+              if (hasVoted)
+                const StatusChip(
+                  label: 'Submitted',
+                  variant: StatusChipVariant.success,
+                  compact: true,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          if (type == 'RATING')
+            _buildRatingPoll(poll, pollId, hasVoted, isActive)
+          else
+            _buildChoicePoll(pollId, options, hasVoted, isActive, type),
+        ],
       ),
     );
   }
 
   Widget _buildChoicePoll(
-    Map<String, dynamic> poll,
     String pollId,
     List<dynamic> options,
     bool hasVoted,
@@ -349,22 +375,21 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
     final showResults = hasVoted || !isActive;
 
     return Column(
-      children: options.map<Widget>((opt) {
-        final optionId = opt['id'] as String;
-        final text = opt['text'] as String? ?? '';
-        final voteCount = opt['voteCount'] as int? ?? 0;
-        final percentage = (opt['percentage'] as num? ?? 0).toDouble();
+      children: options.map<Widget>((option) {
+        final optionId = option['id'] as String;
+        final text = option['text'] as String? ?? '';
+        final voteCount = option['voteCount'] as int? ?? 0;
+        final percentage = (option['percentage'] as num? ?? 0).toDouble();
         final isSelected =
             _selectedOptions[pollId]?.contains(optionId) ?? false;
 
         if (showResults) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
@@ -374,10 +399,11 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
-                      '$voteCount (${percentage.toStringAsFixed(1)}%)',
+                      '$voteCount • ${percentage.toStringAsFixed(1)}%',
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -389,8 +415,8 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
                     value: percentage / 100,
                     minHeight: 8,
                     backgroundColor: AppColors.neutral100,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primary.withValues(alpha: 0.75),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
                     ),
                   ),
                 ),
@@ -400,8 +426,9 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
         }
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xs + 2),
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: InkWell(
+            borderRadius: AppRadius.allMd,
             onTap: () {
               setState(() {
                 if (type == 'MULTIPLE_CHOICE') {
@@ -418,36 +445,31 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
                 }
               });
             },
-            borderRadius: AppRadius.allMd,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.md,
                 horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
               ),
               decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primarySoft
+                    : AppColors.surfaceVariant,
+                borderRadius: AppRadius.allMd,
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.border,
-                  width: isSelected ? 1.5 : 1,
                 ),
-                borderRadius: AppRadius.allMd,
-                color: isSelected
-                    ? AppColors.primary.withValues(alpha: 0.05)
-                    : null,
               ),
               child: Row(
                 children: [
                   Icon(
                     type == 'MULTIPLE_CHOICE'
                         ? (isSelected
-                            ? Icons.check_box
-                            : Icons.check_box_outline_blank)
+                            ? Icons.check_box_rounded
+                            : Icons.check_box_outline_blank_rounded)
                         : (isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_unchecked),
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                    size: 22,
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded),
+                    color: isSelected ? AppColors.primary : AppColors.textLight,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -484,14 +506,18 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(maxRating, (_) {
-              return const Icon(Icons.star, color: Colors.amber, size: 28);
-            }),
+            children: List.generate(
+              maxRating,
+              (_) =>
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '$totalVotes responses',
-            style: AppTypography.body.copyWith(color: AppColors.textMuted),
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       );
@@ -502,43 +528,14 @@ class _EventPollsScreenState extends ConsumerState<EventPollsScreen> {
       children: List.generate(maxRating, (index) {
         final value = index + 1;
         return IconButton(
-          onPressed: () =>
-              setState(() => _selectedRatings[pollId] = value),
+          onPressed: () => setState(() => _selectedRatings[pollId] = value),
           icon: Icon(
-            value <= selected ? Icons.star : Icons.star_border,
+            value <= selected ? Icons.star_rounded : Icons.star_border_rounded,
             color: value <= selected ? Colors.amber : AppColors.textLight,
-            size: 36,
+            size: 34,
           ),
         );
       }),
-    );
-  }
-}
-
-class _PollBadge extends StatelessWidget {
-  const _PollBadge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: AppRadius.allPill,
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: AppTypography.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-          fontSize: 10.5,
-        ),
-      ),
     );
   }
 }

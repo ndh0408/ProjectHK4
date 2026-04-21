@@ -35,6 +35,22 @@ public class ConversationResponse {
     private LocalDateTime closedAt;
     private LocalDateTime createdAt;
 
+    // Pinned announcement (organiser only). Null when nothing is pinned.
+    private PinnedMessageResponse pinnedMessage;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PinnedMessageResponse {
+        private UUID id;
+        private String content;
+        private String senderName;
+        private LocalDateTime createdAt;
+        private LocalDateTime pinnedAt;
+        private UUID pinnedByUserId;
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -43,6 +59,9 @@ public class ConversationResponse {
         private UUID userId;
         private String fullName;
         private String avatarUrl;
+        // When this participant last marked the conversation as read. Mobile
+        // uses it to render sent/read checkmarks on own messages (✓ vs ✓✓).
+        private LocalDateTime lastReadAt;
     }
 
     public static ConversationResponse fromEntity(Conversation conversation, ConversationParticipant currentUserParticipant) {
@@ -61,6 +80,23 @@ public class ConversationResponse {
                    .eventTitle(conversation.getEvent().getTitle());
         }
 
+        if (conversation.getPinnedMessage() != null
+                && !conversation.getPinnedMessage().isDeleted()) {
+            var pinned = conversation.getPinnedMessage();
+            builder.pinnedMessage(PinnedMessageResponse.builder()
+                    .id(pinned.getId())
+                    .content(pinned.getContent())
+                    .senderName(pinned.getSender() != null
+                            ? pinned.getSender().getFullName()
+                            : null)
+                    .createdAt(pinned.getCreatedAt())
+                    .pinnedAt(conversation.getPinnedAt())
+                    .pinnedByUserId(conversation.getPinnedBy() != null
+                            ? conversation.getPinnedBy().getId()
+                            : null)
+                    .build());
+        }
+
         if (currentUserParticipant != null) {
             builder.unreadCount(currentUserParticipant.getUnreadCount())
                    .muted(currentUserParticipant.isMuted())
@@ -76,6 +112,7 @@ public class ConversationResponse {
                             .userId(p.getUser().getId())
                             .fullName(p.getUser().getFullName())
                             .avatarUrl(p.getUser().getAvatarUrl())
+                            .lastReadAt(p.getLastReadAt())
                             .build())
                     .toList();
             builder.participants(participants);

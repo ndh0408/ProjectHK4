@@ -85,6 +85,9 @@ public class Poll {
     @Builder.Default
     private boolean hideResultsUntilClosed = false;  // Ẩn kết quả đến khi đóng
 
+    @Column(name = "chat_message_id")
+    private UUID chatMessageId;  // ID tin nhắn đã đăng trong event group chat (idempotent flag)
+
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     @OrderBy("displayOrder ASC")

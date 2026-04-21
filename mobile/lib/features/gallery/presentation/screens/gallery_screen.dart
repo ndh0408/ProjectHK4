@@ -1,14 +1,21 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
-import '../../../../shared/models/event_image.dart';
 import '../../../../shared/models/category.dart';
+import '../../../../shared/models/event_image.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../explore/presentation/screens/explore_screen.dart';
 
-final galleryImagesProvider = FutureProvider.autoDispose<List<EventImage>>((ref) async {
+final galleryImagesProvider = FutureProvider.autoDispose<List<EventImage>>((
+  ref,
+) async {
   final api = ref.watch(apiServiceProvider);
   final response = await api.getGalleryImages(page: 0, size: 50);
   return response.content;
@@ -16,17 +23,20 @@ final galleryImagesProvider = FutureProvider.autoDispose<List<EventImage>>((ref)
 
 final galleryCategoryProvider = StateProvider<int?>((ref) => null);
 
-final filteredGalleryProvider = FutureProvider.autoDispose<List<EventImage>>((ref) async {
+final filteredGalleryProvider = FutureProvider.autoDispose<List<EventImage>>((
+  ref,
+) async {
   final api = ref.watch(apiServiceProvider);
   final categoryId = ref.watch(galleryCategoryProvider);
 
   if (categoryId != null) {
-    final response = await api.getGalleryImagesByCategory(categoryId, page: 0, size: 50);
-    return response.content;
-  } else {
-    final response = await api.getGalleryImages(page: 0, size: 50);
+    final response =
+        await api.getGalleryImagesByCategory(categoryId, page: 0, size: 50);
     return response.content;
   }
+
+  final response = await api.getGalleryImages(page: 0, size: 50);
+  return response.content;
 });
 
 class GalleryScreen extends ConsumerWidget {
@@ -34,178 +44,215 @@ class GalleryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final imagesAsync = ref.watch(filteredGalleryProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final selectedCategory = ref.watch(galleryCategoryProvider);
 
+    final selectedCategoryName = categoriesAsync.maybeWhen(
+      data: (categories) {
+        final match = categories.cast<Category?>().firstWhere(
+              (category) => category?.id == selectedCategory,
+              orElse: () => null,
+            );
+        return match?.name;
+      },
+      orElse: () => null,
+    );
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Gallery'),
+        title: Text(l10n.galleryTitle),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterSheet(context, ref, categoriesAsync),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.pageX),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: 'Filter gallery',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.surfaceVariant,
+                  ),
+                  onPressed: () =>
+                      _showFilterSheet(context, ref, categoriesAsync),
+                  icon: const Icon(Icons.tune_rounded),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                IconButton(
+                  tooltip: l10n.refreshTooltip,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.surfaceVariant,
+                  ),
+                  onPressed: () => ref.invalidate(filteredGalleryProvider),
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (selectedCategory != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  categoriesAsync.when(
-                    data: (categories) {
-                      final cat = categories.firstWhere(
-                        (c) => c.id == selectedCategory,
-                        orElse: () => categories.first,
-                      );
-                      return Chip(
-                        label: Text(cat.name),
-                        deleteIcon: const Icon(Icons.close, size: 18),
-                        onDeleted: () {
-                          ref.read(galleryCategoryProvider.notifier).state = null;
-                        },
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: imagesAsync.when(
-              data: (images) {
-                if (images.isEmpty) {
-                  return Center(
+      body: imagesAsync.when(
+        data: (images) {
+          if (images.isEmpty) {
+            return EmptyState(
+              icon: Icons.photo_library_outlined,
+              iconColor: AppColors.primary,
+              title: 'No photos yet',
+              subtitle:
+                  'Event imagery will appear here as attendees and organisers publish moments.',
+              actionLabel: l10n.refresh,
+              onAction: () => ref.invalidate(filteredGalleryProvider),
+            );
+          }
+
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async => ref.invalidate(filteredGalleryProvider),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageX,
+                      AppSpacing.xl,
+                      AppSpacing.pageX,
+                      0,
+                    ),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.photo_library_outlined,
-                          size: 64,
-                          color: AppColors.textSecondary,
+                        AppCard(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                          borderColor: AppColors.borderLight,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: const BoxDecoration(
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: AppRadius.allLg,
+                                ),
+                                child: const Icon(
+                                  Icons.collections_rounded,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${images.length} captured moments',
+                                      style: AppTypography.h3.copyWith(
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      selectedCategoryName != null
+                                          ? 'Filtered to $selectedCategoryName so users can browse a tighter visual story.'
+                                          : 'Visual browsing now keeps enough context on each card to preserve the event connection.',
+                                      style: AppTypography.body.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No photos yet',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Event photos will appear here',
-                          style: TextStyle(color: AppColors.textSecondary),
+                        if (selectedCategoryName != null)
+                          AppCard(
+                            margin:
+                                const EdgeInsets.only(bottom: AppSpacing.lg),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                              vertical: AppSpacing.md,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.filter_alt_outlined,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    'Showing only $selectedCategoryName',
+                                    style: AppTypography.body.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Clear filter',
+                                  onPressed: () {
+                                    ref
+                                        .read(galleryCategoryProvider.notifier)
+                                        .state = null;
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                ),
+                              ],
+                            ),
+                          ),
+                        const SectionHeader(
+                          title: 'Latest event moments',
+                          subtitle:
+                              'The grid uses fewer columns so imagery, titles and captions stay readable on real devices.',
                         ),
                       ],
                     ),
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(filteredGalleryProvider);
-                  },
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 4,
-                      mainAxisSpacing: 4,
-                    ),
-                    itemCount: images.length,
-                    itemBuilder: (context, index) {
-                      final image = images[index];
-                      return GestureDetector(
-                        onTap: () => _openFullScreenGallery(context, images, index),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            CachedNetworkImage(
-                              imageUrl: image.imageUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => Container(
-                                color: AppColors.primary.withOpacity(0.1),
-                              ),
-                              errorWidget: (_, __, ___) => Container(
-                                color: AppColors.primary.withOpacity(0.1),
-                                child: const Icon(Icons.broken_image, size: 24),
-                              ),
-                            ),
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: GestureDetector(
-                                onTap: () => context.push('/event/${image.eventId}'),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Icon(
-                                    Icons.open_in_new,
-                                    color: AppColors.textOnPrimary,
-                                    size: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      AppColors.textPrimary.withOpacity(0.7),
-                                    ],
-                                  ),
-                                ),
-                                child: Text(
-                                  image.eventTitle ?? '',
-                                  style: const TextStyle(
-                                    color: AppColors.textOnPrimary,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 16),
-                    Text('Error: $e'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => ref.invalidate(filteredGalleryProvider),
-                      child: const Text('Retry'),
-                    ),
-                  ],
                 ),
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.lg),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageX,
+                    0,
+                    AppSpacing.pageX,
+                    AppSpacing.massive,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.lg,
+                      mainAxisSpacing: AppSpacing.lg,
+                      mainAxisExtent: 260,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final image = images[index];
+                        return _GalleryCard(
+                          image: image,
+                          onTap: () =>
+                              _openFullScreenGallery(context, images, index),
+                          onOpenEvent: () =>
+                              context.push('/event/${image.eventId}'),
+                        );
+                      },
+                      childCount: images.length,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
+        loading: () => const LoadingState(message: 'Loading gallery...'),
+        error: (error, _) => ErrorState(
+          message: '$error',
+          onRetry: () => ref.invalidate(filteredGalleryProvider),
+        ),
       ),
     );
   }
@@ -215,75 +262,234 @@ class GalleryScreen extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<Category>> categoriesAsync,
   ) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      title: 'Filter gallery',
+      subtitle: 'Focus on one event category at a time.',
+      child: categoriesAsync.when(
+        data: (categories) => Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Filter by Category',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
+            _FilterOptionChip(
+              label: 'All',
+              selected: ref.watch(galleryCategoryProvider) == null,
+              onTap: () {
+                ref.read(galleryCategoryProvider.notifier).state = null;
+                Navigator.pop(context);
+              },
             ),
-            const SizedBox(height: 16),
-            categoriesAsync.when(
-              data: (categories) => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('All'),
-                    selected: ref.watch(galleryCategoryProvider) == null,
-                    onSelected: (_) {
-                      ref.read(galleryCategoryProvider.notifier).state = null;
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ...categories.map(
-                    (cat) => ChoiceChip(
-                      label: Text(cat.name),
-                      selected: ref.watch(galleryCategoryProvider) == cat.id,
-                      onSelected: (_) {
-                        ref.read(galleryCategoryProvider.notifier).state = cat.id;
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                ],
+            ...categories.map(
+              (category) => _FilterOptionChip(
+                label: category.name,
+                selected: ref.watch(galleryCategoryProvider) == category.id,
+                onTap: () {
+                  ref.read(galleryCategoryProvider.notifier).state =
+                      category.id;
+                  Navigator.pop(context);
+                },
               ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Text('Failed to load categories'),
             ),
-            const SizedBox(height: 16),
           ],
         ),
+        loading: () => const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (_, __) => const Text('Failed to load categories'),
       ),
     );
   }
 
-  void _openFullScreenGallery(BuildContext context, List<EventImage> images, int initialIndex) {
+  void _openFullScreenGallery(
+    BuildContext context,
+    List<EventImage> images,
+    int initialIndex,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => _FullScreenGallery(
           images: images,
           initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+}
+
+class _GalleryCard extends StatelessWidget {
+  const _GalleryCard({
+    required this.image,
+    required this.onTap,
+    required this.onOpenEvent,
+  });
+
+  final EventImage image;
+  final VoidCallback onTap;
+  final VoidCallback onOpenEvent;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppRadius.lg),
+                ),
+                child: SizedBox(
+                  height: 150,
+                  width: double.infinity,
+                  child: CachedNetworkImage(
+                    imageUrl: image.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      color: AppColors.primarySoft,
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      color: AppColors.primarySoft,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: AppSpacing.md,
+                left: AppSpacing.md,
+                child: StatusChip(
+                  label: image.isCover ? 'Cover' : 'Photo',
+                  variant: image.isCover
+                      ? StatusChipVariant.warning
+                      : StatusChipVariant.primary,
+                  compact: true,
+                ),
+              ),
+              Positioned(
+                top: AppSpacing.md,
+                right: AppSpacing.md,
+                child: IconButton(
+                  tooltip: 'Open event',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.94),
+                    foregroundColor: AppColors.primary,
+                  ),
+                  onPressed: onOpenEvent,
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    image.eventTitle ?? 'Event moment',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.h4.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    image.caption?.trim().isNotEmpty == true
+                        ? image.caption!
+                        : 'Tap for full-screen viewing and jump directly to the related event.',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.camera_alt_outlined,
+                        color: AppColors.textLight,
+                        size: 14,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          image.uploadedByName?.trim().isNotEmpty == true
+                              ? image.uploadedByName!
+                              : 'Event gallery',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterOptionChip extends StatelessWidget {
+  const _FilterOptionChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppRadius.allPill,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primarySoft : AppColors.surfaceVariant,
+            borderRadius: AppRadius.allPill,
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppTypography.label.copyWith(
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );
@@ -304,7 +510,7 @@ class _FullScreenGallery extends StatefulWidget {
 }
 
 class _FullScreenGalleryState extends State<_FullScreenGallery> {
-  late PageController _pageController;
+  late final PageController _pageController;
   late int _currentIndex;
 
   @override
@@ -322,18 +528,16 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
 
   @override
   Widget build(BuildContext context) {
+    final activeImage = widget.images[_currentIndex];
+
     return Scaffold(
       backgroundColor: AppColors.textPrimary,
       appBar: AppBar(
         backgroundColor: AppColors.textPrimary,
-        foregroundColor: AppColors.textOnPrimary,
+        foregroundColor: Colors.white,
         title: Text(
           '${_currentIndex + 1} / ${widget.images.length}',
-          style: const TextStyle(color: AppColors.textOnPrimary),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textOnPrimary),
-          onPressed: () => Navigator.pop(context),
+          style: AppTypography.h4.copyWith(color: Colors.white),
         ),
       ),
       body: Stack(
@@ -347,19 +551,19 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
             itemBuilder: (context, index) {
               final image = widget.images[index];
               return InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
+                minScale: 0.75,
+                maxScale: 4,
                 child: Center(
                   child: CachedNetworkImage(
                     imageUrl: image.imageUrl,
                     fit: BoxFit.contain,
                     placeholder: (_, __) => const Center(
-                      child: CircularProgressIndicator(color: AppColors.textOnPrimary),
+                      child: CircularProgressIndicator(color: Colors.white),
                     ),
                     errorWidget: (_, __, ___) => const Icon(
-                      Icons.broken_image,
-                      color: AppColors.textOnPrimary,
-                      size: 64,
+                      Icons.broken_image_outlined,
+                      color: Colors.white,
+                      size: 72,
                     ),
                   ),
                 ),
@@ -367,60 +571,76 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
             },
           ),
           Positioned(
-            bottom: 0,
             left: 0,
             right: 0,
+            bottom: 0,
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.massive,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppColors.textPrimary.withOpacity(0.7),
+                    AppColors.textPrimary.withValues(alpha: 0.92),
                   ],
                 ),
               ),
               child: SafeArea(
+                top: false,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.images[_currentIndex].eventTitle ?? '',
-                      style: const TextStyle(
-                        color: AppColors.textOnPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                      activeImage.eventTitle ?? 'Event moment',
+                      style: AppTypography.h3.copyWith(color: Colors.white),
                     ),
-                    if (widget.images[_currentIndex].uploadedByName != null) ...[
-                      const SizedBox(height: 4),
+                    if (activeImage.caption?.trim().isNotEmpty == true) ...[
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'by ${widget.images[_currentIndex].uploadedByName}',
-                        style: TextStyle(
-                          color: AppColors.textOnPrimary.withOpacity(0.7),
-                          fontSize: 12,
+                        activeImage.caption!,
+                        style: AppTypography.body.copyWith(
+                          color: Colors.white.withValues(alpha: 0.82),
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        final eventId = widget.images[_currentIndex].eventId;
-                        context.push('/event/$eventId');
-                      },
-                      icon: const Icon(Icons.event, size: 18),
-                      label: const Text('View Event'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textOnPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        if (activeImage.uploadedByName?.trim().isNotEmpty ==
+                            true)
+                          Expanded(
+                            child: Text(
+                              'By ${activeImage.uploadedByName}',
+                              style: AppTypography.caption.copyWith(
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                        if (activeImage.createdAt != null)
+                          Text(
+                            DateFormat('MMM d, yyyy').format(
+                              activeImage.createdAt!,
+                            ),
+                            style: AppTypography.caption.copyWith(
+                              color: Colors.white.withValues(alpha: 0.7),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    AppButton(
+                      label: 'View related event',
+                      icon: Icons.event_outlined,
+                      expanded: true,
+                      onPressed: () =>
+                          context.push('/event/${activeImage.eventId}'),
                     ),
                   ],
                 ),

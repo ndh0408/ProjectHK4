@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide Card;
-import 'package:flutter/material.dart' as material show Card;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/coupon.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({
@@ -47,6 +48,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   List<Coupon> _availableCoupons = [];
   bool _loadingAvailableCoupons = false;
 
+  double get _effectiveAmount => _appliedCoupon != null
+      ? ((_appliedCoupon!['finalAmount'] as num?)?.toDouble() ?? widget.amount)
+      : widget.amount;
+
+  double get _discountAmount =>
+      (_appliedCoupon?['discountAmount'] as num?)?.toDouble() ?? 0;
+
   @override
   void initState() {
     super.initState();
@@ -66,9 +74,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       );
       if (!mounted) return;
       setState(() {
-        _availableCoupons = coupons
-            .where((c) => c.isValid)
-            .toList()
+        _availableCoupons = coupons.where((c) => c.isValid).toList()
           ..sort((a, b) {
             // Put higher-value discounts first. Percentage vs fixed amounts
             // are roughly comparable enough for this UX hint.
@@ -144,7 +150,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     setState(() => _validatingCoupon = true);
     try {
       final api = ref.read(apiServiceProvider);
-      final result = await api.validateCoupon(code, widget.amount, widget.registrationId);
+      final result =
+          await api.validateCoupon(code, widget.amount, widget.registrationId);
       if (result['valid'] == true) {
         setState(() {
           _appliedCoupon = result;
@@ -155,7 +162,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         setState(() => _validatingCoupon = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Invalid coupon'), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text(result['message'] ?? 'Invalid coupon'),
+                backgroundColor: Colors.red),
           );
         }
       }
@@ -163,7 +172,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       setState(() => _validatingCoupon = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to validate: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to validate: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -193,25 +204,31 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
       if (kIsWeb) {
         debugPrint('Calling API createCheckoutSession for web...');
-        final couponCode = _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
-        final result = await api.createCheckoutSession(widget.registrationId, couponCode: couponCode);
+        final couponCode =
+            _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
+        final result = await api.createCheckoutSession(widget.registrationId,
+            couponCode: couponCode);
         debugPrint('API Response: $result');
 
         setState(() {
           _checkoutUrl = result['checkoutUrl'];
-          debugPrint('Checkout URL received: ${_checkoutUrl != null ? 'YES' : 'NULL'}');
+          debugPrint(
+              'Checkout URL received: ${_checkoutUrl != null ? 'YES' : 'NULL'}');
           _isLoading = false;
           _isPaymentReady = _checkoutUrl != null;
         });
       } else {
         debugPrint('Calling API initiatePayment for mobile...');
-        final couponCode = _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
-        final result = await api.initiatePayment(widget.registrationId, couponCode: couponCode);
+        final couponCode =
+            _appliedCoupon != null ? _appliedCoupon!['code'] as String? : null;
+        final result = await api.initiatePayment(widget.registrationId,
+            couponCode: couponCode);
         debugPrint('API Response: $result');
 
         setState(() {
           _clientSecret = result['clientSecret'];
-          debugPrint('Client Secret received: ${_clientSecret != null ? '${_clientSecret!.substring(0, 20)}...' : 'NULL'}');
+          debugPrint(
+              'Client Secret received: ${_clientSecret != null ? '${_clientSecret!.substring(0, 20)}...' : 'NULL'}');
           _isLoading = false;
           _isPaymentReady = _clientSecret != null;
         });
@@ -223,7 +240,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       debugPrint('Stack trace: $stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = ErrorUtils.extractMessage(e, fallback: 'Failed to initiate payment');
+        _errorMessage = ErrorUtils.extractMessage(e,
+            fallback: 'Failed to initiate payment');
       });
     }
   }
@@ -284,7 +302,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.checkPopupBlocker,
-                      style: const TextStyle(fontSize: 12, color: AppColors.textLight),
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textLight),
                     ),
                   ],
                 ),
@@ -316,7 +335,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ErrorUtils.extractMessage(e, fallback: 'Failed to open payment')),
+          content: Text(
+              ErrorUtils.extractMessage(e, fallback: 'Failed to open payment')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -341,7 +361,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             builder: (dialogContext) {
               final l10n = AppLocalizations.of(dialogContext)!;
               return AlertDialog(
-                icon: const Icon(Icons.check_circle, color: AppColors.success, size: 64),
+                icon: const Icon(Icons.check_circle,
+                    color: AppColors.success, size: 64),
                 title: Text(l10n.paymentSuccessful),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -384,7 +405,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ErrorUtils.extractMessage(e, fallback: 'Failed to check payment status')),
+          content: Text(ErrorUtils.extractMessage(e,
+              fallback: 'Failed to check payment status')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -393,7 +415,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   Future<void> _processMobilePayment() async {
     debugPrint('Processing mobile payment with Payment Sheet...');
-    debugPrint('Client Secret: ${_clientSecret != null ? '${_clientSecret!.substring(0, 20)}...' : 'NULL'}');
+    debugPrint(
+        'Client Secret: ${_clientSecret != null ? '${_clientSecret!.substring(0, 20)}...' : 'NULL'}');
 
     if (_clientSecret == null) {
       debugPrint('ERROR: Client secret is null!');
@@ -431,7 +454,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       debugPrint('Step 3: Confirming payment with backend...');
       await _confirmPaymentWithBackend();
       debugPrint('=== PROCESS PAYMENT SUCCESS ===');
-
     } on StripeException catch (e, stackTrace) {
       debugPrint('=== STRIPE EXCEPTION ===');
       debugPrint('Error code: ${e.error.code}');
@@ -449,7 +471,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           ),
         );
       } else {
-        final errorMsg = e.error.localizedMessage ?? e.error.message ?? 'Payment failed';
+        final errorMsg =
+            e.error.localizedMessage ?? e.error.message ?? 'Payment failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Stripe [${e.error.code}]: $errorMsg'),
@@ -489,7 +512,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           builder: (dialogContext) {
             final l10n = AppLocalizations.of(dialogContext)!;
             return AlertDialog(
-              icon: const Icon(Icons.check_circle, color: AppColors.success, size: 64),
+              icon: const Icon(Icons.check_circle,
+                  color: AppColors.success, size: 64),
               title: Text(l10n.paymentSuccessful),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -525,7 +549,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ErrorUtils.extractMessage(e, fallback: 'Failed to confirm payment')),
+          content: Text(ErrorUtils.extractMessage(e,
+              fallback: 'Failed to confirm payment')),
           backgroundColor: AppColors.error,
         ),
       );
@@ -534,347 +559,426 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.payment),
+        title: Text(l10n.payment),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context, false),
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(AppLocalizations.of(context)!.processingPayment),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  material.Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.eventTitle,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Divider(),
-                          const SizedBox(height: 8),
-                          if (widget.tierName != null) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Ticket', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                                Text(widget.tierName!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Unit price × Qty', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                                Text(
-                                  '\$${(widget.unitPrice ?? widget.amount).toStringAsFixed(2)} × ${widget.quantity}',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context)!.registrationFee,
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              Text(
-                                '\$${widget.amount.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  decoration: _appliedCoupon != null
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: _appliedCoupon != null ? Colors.grey : AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (_appliedCoupon != null) ...[
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Discount (${_appliedCoupon!['code']})',
-                                  style: const TextStyle(fontSize: 14, color: Colors.green),
-                                ),
-                                Text(
-                                  '-\$${(_appliedCoupon!['discountAmount'] as num? ?? 0).toStringAsFixed(2)}',
-                                  style: const TextStyle(fontSize: 14, color: Colors.green),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                Text(
-                                  '\$${(_appliedCoupon!['finalAmount'] as num? ?? 0).toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  material.Card(
-                    elevation: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Have a coupon code?', style: TextStyle(fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _couponController,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Enter code',
-                                    isDense: true,
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  textCapitalization: TextCapitalization.characters,
-                                  enabled: _appliedCoupon == null,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: _validatingCoupon
-                                    ? null
-                                    : (_appliedCoupon == null ? _applyCoupon : _removeCoupon),
-                                child: _validatingCoupon
-                                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                    : Text(_appliedCoupon == null ? 'Apply' : 'Remove'),
-                              ),
-                            ],
-                          ),
-                          _buildAvailableCouponsSection(),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  if (_errorMessage != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.error_outline, color: AppColors.error),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: AppColors.error),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
+          ? const LoadingState(message: 'Preparing your payment session...')
+          : ListView(
+              padding: AppSpacing.screenPadding,
+              children: [
+                _buildOrderSummaryCard(context, l10n),
+                const SizedBox(height: AppSpacing.lg),
+                _buildCouponCard(),
+                const SizedBox(height: AppSpacing.lg),
+                if (_errorMessage != null) ...[
+                  _buildFeedbackCard(
+                    icon: Icons.error_outline_rounded,
+                    title: 'Payment setup failed',
+                    message: _errorMessage!,
+                    color: AppColors.error,
+                    action: AppButton(
+                      label: l10n.retry,
+                      icon: Icons.refresh_rounded,
+                      variant: AppButtonVariant.secondary,
+                      expanded: true,
                       onPressed: _initiatePayment,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(AppLocalizations.of(context)!.retry),
                     ),
-                  ] else if (_isPaymentReady) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.check_circle_outline, color: AppColors.success),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              kIsWeb
-                                  ? AppLocalizations.of(context)!.paymentReadyWeb
-                                  : AppLocalizations.of(context)!.paymentReady,
-                              style: const TextStyle(color: AppColors.success),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 32),
-
-                  if (kIsWeb) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.open_in_new, size: 18, color: AppColors.warning),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context)!.paymentWillOpenInNewWindow,
-                              style: const TextStyle(fontSize: 13, color: AppColors.warning),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ] else ...[
+                  _buildFeedbackCard(
+                    icon: _isPaymentReady
+                        ? Icons.check_circle_outline_rounded
+                        : Icons.hourglass_top_rounded,
+                    title: _isPaymentReady
+                        ? 'Ready to pay'
+                        : 'Preparing secure checkout',
+                    message: _isPaymentReady
+                        ? (kIsWeb ? l10n.paymentReadyWeb : l10n.paymentReady)
+                        : l10n.processingPayment,
+                    color:
+                        _isPaymentReady ? AppColors.success : AppColors.warning,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                if (kIsWeb) ...[
+                  _buildFeedbackCard(
+                    icon: Icons.open_in_new_rounded,
+                    title: 'External checkout',
+                    message: l10n.paymentWillOpenInNewWindow,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.lock_outline, size: 16, color: AppColors.textSecondary),
-                      const SizedBox(width: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lock_outline_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            l10n.securePaymentByStripe,
+                            style: AppTypography.h4.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
-                        AppLocalizations.of(context)!.securePaymentByStripe,
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                        'Card data stays inside Stripe. Your registration is preserved while checkout is being prepared.',
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 24),
-
-                  ElevatedButton(
-                    onPressed: _isPaymentReady ? _processPayment : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (kIsWeb) ...[
-                          const Icon(Icons.open_in_new, size: 20),
-                          const SizedBox(width: 8),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                AppCard(
+                  background: AppColors.primarySoft,
+                  borderColor: AppColors.primary.withValues(alpha: 0.12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.science_outlined,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            l10n.testMode,
+                            style: AppTypography.h4.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ],
-                        Builder(builder: (context) {
-                          // Show the discounted total on the CTA when a coupon
-                          // is active so the label matches the Total row above.
-                          final effectiveAmount = _appliedCoupon != null
-                              ? ((_appliedCoupon!['finalAmount'] as num?)?.toDouble() ?? widget.amount)
-                              : widget.amount;
-                          return Text(
-                            '${AppLocalizations.of(context)!.pay} \$${effectiveAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.useTestCard,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.testCardExpiry,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 140),
+              ],
+            ),
+      bottomNavigationBar: _isLoading
+          ? null
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageX,
+                  AppSpacing.md,
+                  AppSpacing.pageX,
+                  AppSpacing.pageY,
+                ),
+                child: AppCard(
+                  shadow: AppShadows.md,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Total due',
+                                  style: AppTypography.label.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  '\$${_effectiveAmount.toStringAsFixed(2)}',
+                                  style: AppTypography.h2.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-
-                  if (kIsWeb && _isPaymentReady) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _checkPaymentStatus,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(AppLocalizations.of(context)!.checkPaymentStatus),
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(AppLocalizations.of(context)!.cancel),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
-                            const SizedBox(width: 8),
-                            Text(
-                              AppLocalizations.of(context)!.testMode,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary,
-                              ),
+                          ),
+                          if (_appliedCoupon != null)
+                            StatusChip(
+                              label: _appliedCoupon!['code'] as String? ??
+                                  'Coupon',
+                              variant: StatusChipVariant.success,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          AppLocalizations.of(context)!.useTestCard,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        Text(
-                          AppLocalizations.of(context)!.testCardExpiry,
-                          style: const TextStyle(fontSize: 13),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      AppButton(
+                        label:
+                            '${l10n.pay} \$${_effectiveAmount.toStringAsFixed(2)}',
+                        icon: kIsWeb
+                            ? Icons.open_in_new_rounded
+                            : Icons.lock_open_rounded,
+                        size: AppButtonSize.lg,
+                        expanded: true,
+                        onPressed: _isPaymentReady ? _processPayment : null,
+                      ),
+                      if (kIsWeb && _isPaymentReady) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppButton(
+                          label: l10n.checkPaymentStatus,
+                          icon: Icons.refresh_rounded,
+                          variant: AppButtonVariant.secondary,
+                          expanded: true,
+                          onPressed: _checkPaymentStatus,
                         ),
                       ],
-                    ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppButton(
+                        label: l10n.cancel,
+                        variant: AppButtonVariant.ghost,
+                        expanded: true,
+                        onPressed: () => Navigator.pop(context, false),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
+    );
+  }
+
+  Widget _buildOrderSummaryCard(BuildContext context, AppLocalizations l10n) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.eventTitle,
+            style: AppTypography.h2.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              StatusChip(
+                label: kIsWeb ? 'Web checkout' : 'Mobile sheet',
+                variant: StatusChipVariant.info,
+              ),
+              if (widget.tierName != null)
+                StatusChip(
+                  label: widget.tierName!,
+                  variant: StatusChipVariant.neutral,
+                ),
+              if (widget.quantity > 1)
+                StatusChip(
+                  label: '${widget.quantity} tickets',
+                  variant: StatusChipVariant.primary,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          if (widget.tierName != null)
+            _buildSummaryRow('Ticket', widget.tierName!),
+          if (widget.tierName != null)
+            _buildSummaryRow(
+              'Unit price × Qty',
+              '\$${(widget.unitPrice ?? widget.amount).toStringAsFixed(2)} × ${widget.quantity}',
+            ),
+          _buildSummaryRow(
+            l10n.registrationFee,
+            '\$${widget.amount.toStringAsFixed(2)}',
+            muted: _appliedCoupon != null,
+            strike: _appliedCoupon != null,
+          ),
+          if (_appliedCoupon != null)
+            _buildSummaryRow(
+              'Discount (${_appliedCoupon!['code']})',
+              '-\$${_discountAmount.toStringAsFixed(2)}',
+              valueColor: AppColors.success,
+              labelColor: AppColors.success,
+            ),
+          const Divider(height: AppSpacing.xl),
+          _buildSummaryRow(
+            'Total',
+            '\$${_effectiveAmount.toStringAsFixed(2)}',
+            large: true,
+            valueColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    bool large = false,
+    bool muted = false,
+    bool strike = false,
+    Color? valueColor,
+    Color? labelColor,
+  }) {
+    final labelStyle = (large ? AppTypography.h4 : AppTypography.body).copyWith(
+      color: labelColor ?? AppColors.textSecondary,
+      fontWeight: large ? FontWeight.w700 : FontWeight.w500,
+    );
+    final valueStyle =
+        (large ? AppTypography.h2 : AppTypography.bodyLg).copyWith(
+      color:
+          valueColor ?? (muted ? AppColors.textMuted : AppColors.textPrimary),
+      fontWeight: large ? FontWeight.w800 : FontWeight.w600,
+      decoration: strike ? TextDecoration.lineThrough : null,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: labelStyle)),
+          Text(value, style: valueStyle),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCouponCard() {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Coupon code',
+            style: AppTypography.h4.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Apply a discount before checkout to reduce the amount due.',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: AppTextField(
+                  controller: _couponController,
+                  hint: 'Enter code',
+                  enabled: _appliedCoupon == null,
+                  onChanged: (value) {
+                    _couponController.value = _couponController.value.copyWith(
+                      text: value.toUpperCase(),
+                      selection: TextSelection.collapsed(
+                        offset: value.length,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              SizedBox(
+                width: 108,
+                child: AppButton(
+                  label: _appliedCoupon == null ? 'Apply' : 'Remove',
+                  loading: _validatingCoupon,
+                  variant: _appliedCoupon == null
+                      ? AppButtonVariant.primary
+                      : AppButtonVariant.secondary,
+                  expanded: true,
+                  onPressed: _validatingCoupon
+                      ? null
+                      : (_appliedCoupon == null ? _applyCoupon : _removeCoupon),
+                ),
+              ),
+            ],
+          ),
+          _buildAvailableCouponsSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard({
+    required IconData icon,
+    required String title,
+    required String message,
+    required Color color,
+    Widget? action,
+  }) {
+    return AppCard(
+      background: color.withValues(alpha: 0.08),
+      borderColor: color.withValues(alpha: 0.18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.h4
+                          .copyWith(color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      message,
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (action != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            action,
+          ],
+        ],
+      ),
     );
   }
 }
@@ -1004,7 +1108,8 @@ class _CouponSuggestionTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: disabled ? AppColors.neutral200 : AppColors.primary,
                     borderRadius: BorderRadius.circular(999),

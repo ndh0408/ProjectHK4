@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
-import '../../../../services/notification_service.dart' show notificationStreamProvider;
+import '../../../../services/notification_service.dart'
+    show notificationStreamProvider;
 import '../../../../shared/models/notification.dart';
 import '../../../../shared/models/event_buddy.dart';
 import '../../../../shared/models/conversation.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
 
@@ -35,8 +38,9 @@ final notificationsProvider = StateNotifierProvider.autoDispose<
   return notifier;
 });
 
-final eventBuddiesProvider = StateNotifierProvider.autoDispose<
-    EventBuddiesNotifier, EventBuddiesState>((ref) {
+final eventBuddiesProvider =
+    StateNotifierProvider.autoDispose<EventBuddiesNotifier, EventBuddiesState>(
+        (ref) {
   final user = ref.watch(currentUserProvider);
   final api = ref.watch(apiServiceProvider);
   return EventBuddiesNotifier(api, isLoggedIn: user != null);
@@ -64,15 +68,17 @@ class EventBuddiesState {
 
     if (searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
-      result = result.where((buddy) =>
-        buddy.fullName.toLowerCase().contains(query)
-      ).toList();
+      result = result
+          .where((buddy) => buddy.fullName.toLowerCase().contains(query))
+          .toList();
     }
 
     if (filterEventId != null) {
-      result = result.where((buddy) =>
-        buddy.sharedEvents?.any((e) => e.eventId == filterEventId) ?? false
-      ).toList();
+      result = result
+          .where((buddy) =>
+              buddy.sharedEvents?.any((e) => e.eventId == filterEventId) ??
+              false)
+          .toList();
     }
 
     return result;
@@ -88,7 +94,8 @@ class EventBuddiesState {
       }
     }
     return eventsMap.values.toList()
-      ..sort((a, b) => (b.eventDate ?? DateTime.now()).compareTo(a.eventDate ?? DateTime.now()));
+      ..sort((a, b) => (b.eventDate ?? DateTime.now())
+          .compareTo(a.eventDate ?? DateTime.now()));
   }
 
   EventBuddiesState copyWith({
@@ -143,10 +150,13 @@ class EventBuddiesNotifier extends StateNotifier<EventBuddiesState> {
   }
 
   void toggleBuddySelection(EventBuddy buddy) {
-    final isSelected = state.selectedBuddies.any((b) => b.userId == buddy.userId);
+    final isSelected =
+        state.selectedBuddies.any((b) => b.userId == buddy.userId);
     if (isSelected) {
       state = state.copyWith(
-        selectedBuddies: state.selectedBuddies.where((b) => b.userId != buddy.userId).toList(),
+        selectedBuddies: state.selectedBuddies
+            .where((b) => b.userId != buddy.userId)
+            .toList(),
       );
     } else {
       state = state.copyWith(
@@ -267,7 +277,8 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
           hasMore: response.hasMore,
           currentPage: response.number + 1,
         );
-        debugPrint('State updated with ${newNotifications.length} notifications');
+        debugPrint(
+            'State updated with ${newNotifications.length} notifications');
       }
     } catch (e) {
       debugPrint('Error loading notifications: $e');
@@ -318,9 +329,8 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
   void removeNotificationsBySenderId(String senderId) {
     state = state.copyWith(
-      notifications: state.notifications
-          .where((n) => n.senderId != senderId)
-          .toList(),
+      notifications:
+          state.notifications.where((n) => n.senderId != senderId).toList(),
     );
   }
 }
@@ -531,7 +541,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                       children: [
                         CircleAvatar(
                           radius: 20,
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          backgroundColor:
+                              AppColors.primary.withValues(alpha: 0.1),
                           backgroundImage: buddy.avatarUrl != null
                               ? NetworkImage(buddy.avatarUrl!)
                               : null,
@@ -595,7 +606,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     }
   }
 
-  Future<void> _createGroupChat(String groupName, List<EventBuddy> members) async {
+  Future<void> _createGroupChat(
+      String groupName, List<EventBuddy> members) async {
     try {
       showDialog(
         context: context,
@@ -648,9 +660,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.primary,
-        leadingWidth: 40,
+        toolbarHeight: 72,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        leadingWidth: 44,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, size: 22),
           onPressed: () => context.pop(),
@@ -660,11 +673,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: AppColors.surface.withValues(alpha: 0.3), width: 2),
+              decoration: const BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: AppRadius.allPill,
               ),
               child: const Icon(
                 Icons.notifications_active,
@@ -682,7 +693,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textOnPrimary,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Row(
@@ -700,7 +711,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                         'Online',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textOnPrimary.withValues(alpha: 0.8),
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -713,6 +724,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         actions: [
           if (hasUnread && _tabController.index == 0)
             IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+              ),
               onPressed: () async {
                 final success = await ref
                     .read(notificationsProvider.notifier)
@@ -729,8 +743,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               icon: const Icon(Icons.done_all, size: 22),
               tooltip: 'Mark all as read',
             ),
-          if (buddiesState.selectedBuddies.isNotEmpty && _tabController.index == 1)
+          if (buddiesState.selectedBuddies.isNotEmpty &&
+              _tabController.index == 1)
             IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+              ),
               onPressed: _showCreateGroupDialog,
               icon: Badge(
                 label: Text('${buddiesState.selectedBuddies.length}'),
@@ -739,62 +757,78 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               tooltip: 'Create Group Chat',
             ),
           IconButton(
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.surfaceVariant,
+            ),
             onPressed: () {},
             icon: const Icon(Icons.more_vert, size: 22),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.textOnPrimary,
-          labelColor: AppColors.textOnPrimary,
-          unselectedLabelColor: AppColors.textOnPrimary.withValues(alpha: 0.6),
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.notifications, size: 18),
-                  const SizedBox(width: 6),
-                  const Text('Notifications'),
-                  if (hasUnread) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppColors.error,
-                        shape: BoxShape.circle,
-                      ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(72),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageX,
+              0,
+              AppSpacing.pageX,
+              AppSpacing.md,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: AppRadius.allPill,
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.textSecondary,
+                dividerColor: Colors.transparent,
+                tabs: [
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.notifications, size: 18),
+                        const SizedBox(width: 6),
+                        const Text('Notifications'),
+                        if (hasUnread)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6),
+                            child: Icon(
+                              Icons.brightness_1,
+                              size: 8,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.people, size: 18),
+                        const SizedBox(width: 6),
+                        const Text('Event Buddies'),
+                        if (buddiesState.buddies.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Text(
+                              '${buddiesState.buddies.length}',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.people, size: 18),
-                  const SizedBox(width: 6),
-                  const Text('Event Buddies'),
-                  if (buddiesState.buddies.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.textOnPrimary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${buddiesState.buddies.length}',
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       body: TabBarView(
@@ -806,7 +840,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 child: RefreshIndicator(
                   onRefresh: () =>
                       ref.read(notificationsProvider.notifier).refresh(),
-                  child: notificationState.notifications.isEmpty && !notificationState.isLoading
+                  child: notificationState.notifications.isEmpty &&
+                          !notificationState.isLoading
                       ? _buildEmptyState()
                       : _buildChatMessages(notificationState),
                 ),
@@ -822,72 +857,24 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   Widget _buildEventBuddiesTab(EventBuddiesState state) {
     if (state.isLoading && state.buddies.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState(message: 'Loading event buddies...');
     }
 
     if (state.error != null && state.buddies.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(state.error!),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.read(eventBuddiesProvider.notifier).refresh(),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+      return ErrorState(
+        message: state.error!,
+        onRetry: () => ref.read(eventBuddiesProvider.notifier).refresh(),
       );
     }
 
     if (state.buddies.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.people_outline,
-                  size: 50,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'No Event Buddies Yet',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Register for events to connect with other attendees who share your interests!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => context.go('/explore'),
-                icon: const Icon(Icons.explore),
-                label: const Text('Explore Events'),
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        icon: Icons.people_outline_rounded,
+        title: 'No event buddies yet',
+        subtitle:
+            'Register for events to connect with attendees who share your interests.',
+        actionLabel: 'Explore Events',
+        onAction: () => context.go('/explore'),
       );
     }
 
@@ -908,16 +895,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 ),
                 const Spacer(),
                 TextButton(
-                  onPressed: () => ref.read(eventBuddiesProvider.notifier).clearSelection(),
+                  onPressed: () =>
+                      ref.read(eventBuddiesProvider.notifier).clearSelection(),
                   child: const Text('Clear'),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
-                  onPressed: state.selectedBuddies.length >= 2 ? _showCreateGroupDialog : null,
+                  onPressed: state.selectedBuddies.length >= 2
+                      ? _showCreateGroupDialog
+                      : null,
                   icon: const Icon(Icons.group_add, size: 18),
                   label: const Text('Create Group'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                 ),
               ],
@@ -931,13 +922,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
               itemCount: state.buddies.length,
               itemBuilder: (context, index) {
                 final buddy = state.buddies[index];
-                final isSelected = state.selectedBuddies.any((b) => b.userId == buddy.userId);
+                final isSelected =
+                    state.selectedBuddies.any((b) => b.userId == buddy.userId);
                 return _BuddyTile(
                   buddy: buddy,
                   isSelected: isSelected,
                   onTap: () => _startDirectChat(buddy),
-                  onLongPress: () => ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy),
-                  onSelect: () => ref.read(eventBuddiesProvider.notifier).toggleBuddySelection(buddy),
+                  onLongPress: () => ref
+                      .read(eventBuddiesProvider.notifier)
+                      .toggleBuddySelection(buddy),
+                  onSelect: () => ref
+                      .read(eventBuddiesProvider.notifier)
+                      .toggleBuddySelection(buddy),
                 );
               },
             ),
@@ -948,55 +944,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   }
 
   Widget _buildEmptyState() {
-    return ListView(
-      children: [
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.5,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.textPrimary.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.chat_bubble_outline,
-                    size: 40,
-                    color: AppColors.textLight,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'No notifications yet',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your notifications will appear here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textLight,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    return const EmptyState(
+      icon: Icons.notifications_none_rounded,
+      title: 'No notifications yet',
+      subtitle: 'Your notifications will appear here when there is activity.',
     );
   }
 
@@ -1004,7 +955,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       itemCount: state.notifications.length + (state.isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == state.notifications.length) {
@@ -1027,7 +981,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         return Column(
           children: [
             if (showDateHeader) _buildDateHeader(notification.createdAt),
-
             _ChatMessageBubble(
               notification: notification,
               timeText: _formatTime(notification.createdAt),
@@ -1103,7 +1056,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
             const SizedBox(width: 16),
             Icon(Icons.image_outlined, color: AppColors.textLight, size: 26),
             const SizedBox(width: 12),
-
             Expanded(
               child: Container(
                 height: 38,
@@ -1122,7 +1074,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 ),
               ),
             ),
-
             const SizedBox(width: 12),
             Icon(Icons.more_horiz, color: AppColors.textLight, size: 26),
           ],
@@ -1155,7 +1106,9 @@ class _BuddyTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
           border: Border(
             bottom: BorderSide(
               color: AppColors.divider,
@@ -1269,11 +1222,15 @@ class _BuddyTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (buddy.sharedEvents != null && buddy.sharedEvents!.isNotEmpty)
+                  if (buddy.sharedEvents != null &&
+                      buddy.sharedEvents!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        buddy.sharedEvents!.map((e) => e.eventTitle).take(2).join(', '),
+                        buddy.sharedEvents!
+                            .map((e) => e.eventTitle)
+                            .take(2)
+                            .join(', '),
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textLight,
@@ -1346,7 +1303,6 @@ class _ChatMessageBubble extends StatelessWidget {
               size: 20,
             ),
           ),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1402,9 +1358,7 @@ class _ChatMessageBubble extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 6),
-
                         ..._buildMessageContent(notification.body),
-
                         if (notification.relatedEventId != null) ...[
                           const SizedBox(height: 10),
                           Container(
@@ -1436,7 +1390,6 @@ class _ChatMessageBubble extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.only(left: 4, top: 5),
                   child: Row(
@@ -1463,7 +1416,6 @@ class _ChatMessageBubble extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 50),
         ],
       ),
@@ -1506,7 +1458,8 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -1542,7 +1495,8 @@ class _ChatMessageBubble extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     part.substring(2).trim(),
-                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppColors.textPrimary),
                   ),
                 ],
               ),

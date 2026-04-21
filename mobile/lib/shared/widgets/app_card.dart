@@ -15,7 +15,7 @@ class AppCard extends StatelessWidget {
     this.borderColor,
     this.background,
     this.radius = AppRadius.lg,
-    this.shadow,
+    this.shadow = AppShadows.xs,
     this.border = true,
   });
 

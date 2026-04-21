@@ -155,13 +155,90 @@ public class ChatController {
     }
 
     @DeleteMapping("/messages/{messageId}")
-    @Operation(summary = "Delete a message (only sender can delete)")
+    @Operation(summary = "Delete a message (sender can always delete; event organiser can delete any message in their EVENT_GROUP chat)")
     public ResponseEntity<ApiResponse<Void>> deleteMessage(
             @PathVariable UUID messageId,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         chatService.deleteMessage(user, messageId);
         return ResponseEntity.ok(ApiResponse.success("Message deleted", null));
+    }
+
+    @PostMapping("/conversations/{conversationId}/pin/{messageId}")
+    @Operation(summary = "Pin a message as the conversation announcement (organiser only for EVENT_GROUP)")
+    public ResponseEntity<ApiResponse<ConversationResponse>> pinMessage(
+            @PathVariable UUID conversationId,
+            @PathVariable UUID messageId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        ConversationResponse response = chatService.pinMessage(user, conversationId, messageId);
+        return ResponseEntity.ok(ApiResponse.success("Message pinned", response));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/pin")
+    @Operation(summary = "Unpin the currently pinned announcement (organiser only)")
+    public ResponseEntity<ApiResponse<ConversationResponse>> unpinMessage(
+            @PathVariable UUID conversationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        ConversationResponse response = chatService.unpinMessage(user, conversationId);
+        return ResponseEntity.ok(ApiResponse.success("Message unpinned", response));
+    }
+
+    @PostMapping("/conversations/{conversationId}/participants/{targetUserId}/ban")
+    @Operation(summary = "Ban an attendee from the event chat (organiser only)")
+    public ResponseEntity<ApiResponse<Void>> banParticipant(
+            @PathVariable UUID conversationId,
+            @PathVariable UUID targetUserId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        chatService.banParticipant(user, conversationId, targetUserId);
+        return ResponseEntity.ok(ApiResponse.success("Participant banned", null));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/participants/{targetUserId}/ban")
+    @Operation(summary = "Lift a ban on an attendee (organiser only)")
+    public ResponseEntity<ApiResponse<Void>> unbanParticipant(
+            @PathVariable UUID conversationId,
+            @PathVariable UUID targetUserId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        chatService.unbanParticipant(user, conversationId, targetUserId);
+        return ResponseEntity.ok(ApiResponse.success("Participant unbanned", null));
+    }
+
+    @PostMapping("/conversations/{conversationId}/participants/{targetUserId}/mute")
+    @Operation(summary = "Temporarily mute an attendee (organiser only). Pass minutes=0 to unmute.")
+    public ResponseEntity<ApiResponse<Void>> muteParticipant(
+            @PathVariable UUID conversationId,
+            @PathVariable UUID targetUserId,
+            @RequestParam(defaultValue = "60") int minutes,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        chatService.muteParticipant(user, conversationId, targetUserId, minutes);
+        return ResponseEntity.ok(ApiResponse.success(minutes <= 0 ? "Participant unmuted" : "Participant muted", null));
+    }
+
+    @GetMapping("/conversations/{conversationId}/messages/search")
+    @Operation(summary = "Search messages in a conversation by text content")
+    public ResponseEntity<ApiResponse<PageResponse<MessageResponse>>> searchMessages(
+            @PathVariable UUID conversationId,
+            @RequestParam String q,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 30) Pageable pageable) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(
+                chatService.searchMessages(user, conversationId, q, pageable)));
+    }
+
+    @PostMapping("/events/{eventId}/contact-organiser")
+    @Operation(summary = "Open (or create) a 1:1 support DM with the event organiser")
+    public ResponseEntity<ApiResponse<ConversationResponse>> contactOrganiser(
+            @PathVariable UUID eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(
+                chatService.openSupportConversationWithOrganiser(user, eventId)));
     }
 
     @DeleteMapping("/conversations/{conversationId}")

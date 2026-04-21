@@ -6,43 +6,43 @@ import '../design_tokens/design_tokens.dart';
 /// `AppColors.foo` references continue to resolve without changes.
 abstract final class AppColors {
   // Brand
-  static const Color primary = Color(0xFF6366F1);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color primarySoft = Color(0xFFEEF2FF);
-  static const Color secondary = Color(0xFFEC4899);
-  static const Color secondarySoft = Color(0xFFFDF2F8);
-  static const Color accent = Color(0xFFEC4899);
+  static const Color primary = Color(0xFF1858E8);
+  static const Color primaryDark = Color(0xFF123FB1);
+  static const Color primaryLight = Color(0xFF5F8FFF);
+  static const Color primarySoft = Color(0xFFEAF1FF);
+  static const Color secondary = Color(0xFFFF7A45);
+  static const Color secondarySoft = Color(0xFFFFF0EA);
+  static const Color accent = Color(0xFFF59E0B);
 
   // Surfaces
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color background = Color(0xFFF5F7FB);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF1F5F9);
+  static const Color surfaceVariant = Color(0xFFEEF2F7);
   static const Color cardBackground = Color(0xFFFFFFFF);
 
   // Status
-  static const Color error = Color(0xFFEF4444);
-  static const Color errorLight = Color(0xFFFEE2E2);
-  static const Color success = Color(0xFF10B981);
-  static const Color successLight = Color(0xFFD1FAE5);
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color warningLight = Color(0xFFFEF3C7);
-  static const Color info = Color(0xFF3B82F6);
-  static const Color infoLight = Color(0xFFDBEAFE);
+  static const Color error = Color(0xFFE5484D);
+  static const Color errorLight = Color(0xFFFFE8E9);
+  static const Color success = Color(0xFF0E9F6E);
+  static const Color successLight = Color(0xFFE4F8EF);
+  static const Color warning = Color(0xFFE8A10A);
+  static const Color warningLight = Color(0xFFFFF4DA);
+  static const Color info = Color(0xFF1697D2);
+  static const Color infoLight = Color(0xFFE6F6FD);
 
   // Text
   static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
+  static const Color textSecondary = Color(0xFF334155);
   static const Color textMuted = Color(0xFF64748B);
   static const Color textLight = Color(0xFF94A3B8);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnPrimary70 = Color(0xB3FFFFFF);
 
   // Borders
-  static const Color divider = Color(0xFFE2E8F0);
-  static const Color border = Color(0xFFCBD5E1);
-  static const Color borderLight = Color(0xFFE2E8F0);
-  static const Color cardBorder = Color(0xFFE2E8F0);
+  static const Color divider = Color(0xFFE3E8F1);
+  static const Color border = Color(0xFFD6DEEA);
+  static const Color borderLight = Color(0xFFE8EDF5);
+  static const Color cardBorder = Color(0xFFE5EAF2);
 
   // Neutrals (semantic ramp for grey replacements)
   static const Color neutral50 = Color(0xFFF8FAFC);
@@ -57,10 +57,10 @@ abstract final class AppColors {
   static const Color neutral900 = Color(0xFF0F172A);
 
   // Misc
-  static const Color iconDefault = Color(0xFF6366F1);
+  static const Color iconDefault = Color(0xFF1858E8);
   static const Color iconSecondary = Color(0xFF64748B);
-  static const Color shimmerBase = Color(0xFFE2E8F0);
-  static const Color shimmerHighlight = Color(0xFFF8FAFC);
+  static const Color shimmerBase = Color(0xFFE8EEF7);
+  static const Color shimmerHighlight = Color(0xFFF8FAFD);
   static const Color online = Color(0xFF10B981);
   static const Color offline = Color(0xFF94A3B8);
 
@@ -68,32 +68,32 @@ abstract final class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF6366F1), Color(0xFFEC4899)],
+    colors: [Color(0xFF1858E8), Color(0xFFFF7A45)],
   );
 }
 
 abstract final class AppColorsDark {
-  static const Color primary = Color(0xFF818CF8);
-  static const Color primaryDark = Color(0xFF6366F1);
-  static const Color secondary = Color(0xFFF472B6);
-  static const Color accent = Color(0xFFF472B6);
+  static const Color primary = Color(0xFF6E97FF);
+  static const Color primaryDark = Color(0xFF2C66F4);
+  static const Color secondary = Color(0xFFFF8D62);
+  static const Color accent = Color(0xFFF3B33D);
 
-  static const Color background = Color(0xFF0F172A);
-  static const Color surface = Color(0xFF1E293B);
-  static const Color surfaceLight = Color(0xFF334155);
-  static const Color error = Color(0xFFF87171);
-  static const Color success = Color(0xFF34D399);
-  static const Color warning = Color(0xFFFBBF24);
-  static const Color info = Color(0xFF60A5FA);
+  static const Color background = Color(0xFF0B1120);
+  static const Color surface = Color(0xFF121A2A);
+  static const Color surfaceLight = Color(0xFF1F293C);
+  static const Color error = Color(0xFFFF7B82);
+  static const Color success = Color(0xFF29C48A);
+  static const Color warning = Color(0xFFFFC24D);
+  static const Color info = Color(0xFF54B8F0);
 
-  static const Color textPrimary = Color(0xFFF1F5F9);
-  static const Color textSecondary = Color(0xFFCBD5E1);
-  static const Color textMuted = Color(0xFF94A3B8);
+  static const Color textPrimary = Color(0xFFF3F6FC);
+  static const Color textSecondary = Color(0xFFD1DAE9);
+  static const Color textMuted = Color(0xFF91A0B8);
   static const Color textLight = Color(0xFF64748B);
 
-  static const Color divider = Color(0xFF334155);
-  static const Color border = Color(0xFF475569);
-  static const Color borderLight = Color(0xFF334155);
+  static const Color divider = Color(0xFF223049);
+  static const Color border = Color(0xFF31415E);
+  static const Color borderLight = Color(0xFF223049);
 }
 
 abstract final class AppTheme {
@@ -139,17 +139,14 @@ abstract final class AppTheme {
       canvasColor: surface,
       dividerColor: divider,
       splashFactory: InkRipple.splashFactory,
-      // Keep AppBar in the brand primary so existing screens that draw
-      // white-on-primary content (search TextField, custom titles, icons) stay
-      // legible. Individual screens can override if they want a light header.
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? AppColorsDark.surface : AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: surface,
+        foregroundColor: textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: AppTypography.h3.copyWith(color: Colors.white),
+        iconTheme: IconThemeData(color: textPrimary, size: 22),
+        titleTextStyle: AppTypography.h3.copyWith(color: textPrimary),
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
@@ -170,7 +167,7 @@ abstract final class AppTheme {
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
           ),
-          minimumSize: const Size(0, 48),
+          minimumSize: const Size(0, 52),
           textStyle: AppTypography.button,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),
           elevation: 0,
@@ -183,7 +180,7 @@ abstract final class AppTheme {
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
           ),
-          minimumSize: const Size(0, 48),
+          minimumSize: const Size(0, 52),
           textStyle: AppTypography.button,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),
           side: BorderSide(color: border),
@@ -206,18 +203,19 @@ abstract final class AppTheme {
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
           ),
-          minimumSize: const Size(0, 48),
+          minimumSize: const Size(0, 52),
           textStyle: AppTypography.button,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor:
+            isDark ? AppColorsDark.surfaceLight : AppColors.surfaceVariant,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          vertical: AppSpacing.lg,
         ),
         hintStyle: AppTypography.body.copyWith(color: textMuted),
         labelStyle: AppTypography.label.copyWith(color: textSecondary),
@@ -251,9 +249,7 @@ abstract final class AppTheme {
       ),
       dividerTheme: DividerThemeData(color: divider, thickness: 1, space: 1),
       chipTheme: ChipThemeData(
-        backgroundColor: isDark
-            ? AppColorsDark.surface
-            : AppColors.neutral100,
+        backgroundColor: isDark ? AppColorsDark.surface : AppColors.neutral100,
         selectedColor: scheme.primary.withValues(alpha: 0.12),
         disabledColor: divider,
         labelStyle: AppTypography.label.copyWith(color: textPrimary),
@@ -298,7 +294,8 @@ abstract final class AppTheme {
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? AppColorsDark.surface : AppColors.neutral900,
+        backgroundColor:
+            isDark ? AppColorsDark.surfaceLight : AppColors.neutral900,
         contentTextStyle: AppTypography.body.copyWith(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),
         behavior: SnackBarBehavior.floating,
@@ -326,9 +323,8 @@ abstract final class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,
-        linearTrackColor: isDark
-            ? AppColorsDark.surfaceLight
-            : AppColors.neutral100,
+        linearTrackColor:
+            isDark ? AppColorsDark.surfaceLight : AppColors.neutral100,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
@@ -349,8 +345,8 @@ abstract final class AppTheme {
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.xs,
         ),
-        titleTextStyle:
-            AppTypography.body.copyWith(color: textPrimary, fontWeight: FontWeight.w500),
+        titleTextStyle: AppTypography.body
+            .copyWith(color: textPrimary, fontWeight: FontWeight.w500),
         subtitleTextStyle: AppTypography.caption.copyWith(color: textMuted),
         iconColor: textSecondary,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),

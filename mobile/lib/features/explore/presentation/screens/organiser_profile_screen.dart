@@ -10,9 +10,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/organiser_profile.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../home/providers/events_provider.dart';
 
@@ -96,20 +98,20 @@ class OrganiserProfileScreen extends ConsumerWidget {
     final isOwnProfile = currentUser?.id == organiserId;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       body: profile.when(
         data: (organiser) => NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
             SliverAppBar(
-              expandedHeight: 180,
+              expandedHeight: 220,
               pinned: true,
               backgroundColor: AppColors.primary,
               leading: IconButton(
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.textPrimary.withValues(alpha: 0.3),
-                    shape: BoxShape.circle,
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: AppRadius.allPill,
                   ),
                   child: const Icon(Icons.arrow_back,
                       color: AppColors.textOnPrimary, size: 20),
@@ -121,8 +123,8 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.textPrimary.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.3),
+                      borderRadius: AppRadius.allPill,
                     ),
                     child: const Icon(Icons.share_outlined,
                         color: AppColors.textOnPrimary, size: 20),
@@ -133,8 +135,8 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   icon: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.textPrimary.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.3),
+                      borderRadius: AppRadius.allPill,
                     ),
                     child: const Icon(Icons.more_vert,
                         color: AppColors.textOnPrimary, size: 20),
@@ -146,14 +148,16 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (organiser.logoUrl != null || organiser.avatarUrl != null)
+                    if (organiser.logoUrl != null ||
+                        organiser.avatarUrl != null)
                       Stack(
                         fit: StackFit.expand,
                         children: [
                           CachedNetworkImage(
                             imageUrl: organiser.logoUrl ?? organiser.avatarUrl!,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => _buildGradientBackground(),
+                            errorWidget: (_, __, ___) =>
+                                _buildGradientBackground(),
                           ),
                           Container(
                             decoration: BoxDecoration(
@@ -189,224 +193,212 @@ class OrganiserProfileScreen extends ConsumerWidget {
               ),
             ),
           ],
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  color: AppColors.surface,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Row(
+          body: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pageX,
+              AppSpacing.xl,
+              AppSpacing.pageX,
+              AppSpacing.massive,
+            ),
+            children: [
+              AppCard(
+                margin: const EdgeInsets.only(bottom: AppSpacing.section),
+                borderColor: AppColors.borderLight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 36,
+                          backgroundColor: AppColors.primarySoft,
+                          backgroundImage: organiser.avatarUrl != null
+                              ? CachedNetworkImageProvider(organiser.avatarUrl!)
+                              : null,
+                          child: organiser.avatarUrl == null
+                              ? Text(
+                                  organiser.displayName
+                                      .substring(0, 1)
+                                      .toUpperCase(),
+                                  style: AppTypography.h2.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: AppSpacing.lg),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  Flexible(
+                                  Expanded(
                                     child: Text(
                                       organiser.displayName,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
+                                      style: AppTypography.h2.copyWith(
                                         color: AppColors.textPrimary,
                                       ),
                                     ),
                                   ),
-                                  if (organiser.verified) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.check,
-                                        size: 14,
-                                        color: AppColors.textOnPrimary,
-                                      ),
+                                  if (organiser.verified)
+                                    const StatusChip(
+                                      label: 'Verified',
+                                      variant: StatusChipVariant.success,
                                     ),
-                                  ],
                                 ],
                               ),
-                            ),
-                            if (!isOwnProfile)
-                              _buildSubscribeButton(ref, context, followState),
-                          ],
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                organiser.website?.isNotEmpty == true
+                                    ? organiser.website!
+                                    : organiser.contactEmail?.isNotEmpty == true
+                                        ? organiser.contactEmail!
+                                        : 'Independent organiser profile',
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    if (!isOwnProfile)
+                      SizedBox(
+                        width: 160,
+                        child: _buildSubscribeButton(ref, context, followState),
+                      ),
+                    if (!isOwnProfile) const SizedBox(height: AppSpacing.xl),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.md,
+                      children: [
+                        _StatItem(
+                          icon: Icons.people_outline_rounded,
+                          value: _formatCount(organiser.followersCount),
+                          label: 'Followers',
+                        ),
+                        _StatItem(
+                          icon: Icons.event_outlined,
+                          value: _formatCount(organiser.eventsCount),
+                          label: 'Events',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.md,
+                      children: [
+                        _ActionButton(
+                          icon: Icons.calendar_today_outlined,
+                          label: 'Calendar',
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Calendar sync coming soon!'),
+                              ),
+                            );
+                          },
+                        ),
+                        if (organiser.website != null &&
+                            organiser.website!.isNotEmpty)
+                          _ActionButton(
+                            icon: Icons.language_rounded,
+                            label: 'Website',
+                            onTap: () =>
+                                _openWebsite(context, organiser.website),
+                          ),
+                        if (organiser.contactEmail != null &&
+                            organiser.contactEmail!.isNotEmpty)
+                          _ActionButton(
+                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            onTap: () => _openEmail(organiser.contactEmail!),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (organiser.bio != null && organiser.bio!.isNotEmpty)
+                AppCard(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.section),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'About',
+                        style: AppTypography.h3.copyWith(
+                          color: AppColors.textPrimary,
                         ),
                       ),
-
-                        if (organiser.bio != null &&
-                            organiser.bio!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: MarkdownBody(
-                              data: organiser.bio!,
-                              shrinkWrap: true,
-                              softLineBreak: true,
-                              styleSheet: MarkdownStyleSheet(
-                                p: TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.textSecondary,
-                                  height: 1.5,
-                                ),
-                                strong: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                                em: TextStyle(
-                                  fontSize: 15,
-                                  fontStyle: FontStyle.italic,
-                                  color: AppColors.textSecondary,
-                                ),
-                                a: const TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.primary,
-                                  decoration: TextDecoration.underline,
-                                ),
-                                listBullet: TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.textSecondary,
-                                ),
-                                h1: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                                h2: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                                h3: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              onTapLink: (text, href, title) {
-                                if (href != null) {
-                                  launchUrl(Uri.parse(href));
-                                }
-                              },
-                            ),
+                      const SizedBox(height: AppSpacing.sm),
+                      MarkdownBody(
+                        data: organiser.bio!,
+                        shrinkWrap: true,
+                        softLineBreak: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: AppTypography.body.copyWith(
+                            color: AppColors.textSecondary,
                           ),
-                        ],
-
-                        const SizedBox(height: 16),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            children: [
-                              _StatItem(
-                                icon: Icons.people_outline,
-                                value: _formatCount(organiser.followersCount),
-                                label: 'Followers',
-                              ),
-                              const SizedBox(width: 24),
-                              _StatItem(
-                                icon: Icons.event_outlined,
-                                value: _formatCount(organiser.eventsCount),
-                                label: 'Events',
-                              ),
-                            ],
+                          strong: AppTypography.body.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          em: AppTypography.body.copyWith(
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          a: AppTypography.body.copyWith(
+                            color: AppColors.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                          listBullet: AppTypography.body.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          h1: AppTypography.h2.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                          h2: AppTypography.h3.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                          h3: AppTypography.h4.copyWith(
+                            color: AppColors.textPrimary,
                           ),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            children: [
-                              _ActionButton(
-                                icon: Icons.calendar_today_outlined,
-                                onTap: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text('Calendar sync coming soon!')),
-                                  );
-                                },
-                              ),
-                              if (organiser.website != null &&
-                                  organiser.website!.isNotEmpty) ...[
-                                const SizedBox(width: 12),
-                                _ActionButton(
-                                  icon: Icons.language,
-                                  onTap: () =>
-                                      _openWebsite(context, organiser.website),
-                                ),
-                              ],
-                              if (organiser.contactEmail != null &&
-                                  organiser.contactEmail!.isNotEmpty) ...[
-                                const SizedBox(width: 12),
-                                _ActionButton(
-                                  icon: Icons.email_outlined,
-                                  onTap: () =>
-                                      _openEmail(organiser.contactEmail!),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                      const SizedBox(height: 24),
-                      const Divider(height: 1),
+                        onTapLink: (text, href, title) {
+                          if (href != null) {
+                            launchUrl(Uri.parse(href));
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),
-
-                events.when(
-                  data: (eventList) =>
-                      _buildEventsSection(context, ref, eventList),
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.error_outline,
-                              size: 48, color: AppColors.textLight),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Failed to load events',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+              events.when(
+                data: (eventList) =>
+                    _buildEventsSection(context, ref, eventList),
+                loading: () => const LoadingState(
+                  message: 'Loading organiser events...',
                 ),
-              ],
-            ),
-          ),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
-              const Text('Failed to load profile'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.invalidate(organiserProfileProvider(organiserId)),
-                child: const Text('Retry'),
+                error: (error, _) => ErrorState(
+                  message: '$error',
+                  onRetry: () =>
+                      ref.invalidate(organiserEventsProvider(organiserId)),
+                ),
               ),
             ],
           ),
+        ),
+        loading: () =>
+            const LoadingState(message: 'Loading organiser profile...'),
+        error: (error, _) => ErrorState(
+          message: '$error',
+          onRetry: () => ref.invalidate(organiserProfileProvider(organiserId)),
         ),
       ),
     );
@@ -415,111 +407,85 @@ class OrganiserProfileScreen extends ConsumerWidget {
   Widget _buildSubscribeButton(
       WidgetRef ref, BuildContext context, FollowState followState) {
     if (!followState.isInitialized || followState.isLoading) {
-      return Container(
-        height: 40,
-        width: 100,
-        decoration: BoxDecoration(
-          color: AppColors.divider,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+      return const AppButton(
+        label: 'Follow',
+        expanded: true,
+        loading: true,
       );
     }
 
-    return ElevatedButton(
+    return AppButton(
+      label: followState.isFollowing ? 'Following' : 'Subscribe',
+      variant: followState.isFollowing
+          ? AppButtonVariant.secondary
+          : AppButtonVariant.primary,
+      icon: followState.isFollowing ? Icons.check_rounded : Icons.add_rounded,
+      expanded: true,
       onPressed: () => _toggleFollow(ref, context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor:
-            followState.isFollowing ? AppColors.divider : AppColors.primary,
-        foregroundColor:
-            followState.isFollowing ? AppColors.textPrimary : AppColors.textOnPrimary,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-      child: Text(
-        followState.isFollowing ? 'Following' : 'Subscribe',
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
     );
   }
 
   Widget _buildEventsSection(
       BuildContext context, WidgetRef ref, List<Event> events) {
     if (events.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(32),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(Icons.event_busy_outlined,
-                  size: 64, color: AppColors.divider),
-              const SizedBox(height: 16),
-              Text(
-                'No upcoming events',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
+      return const EmptyState(
+        icon: Icons.event_busy_outlined,
+        compact: true,
+        title: 'No upcoming events',
+        subtitle:
+            'This organiser does not have any published upcoming events yet.',
       );
     }
 
+    events.sort((a, b) => a.startDate.compareTo(b.startDate));
     final groupedEvents = _groupEventsByDate(events);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: groupedEvents.entries.map((entry) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Row(
-                children: [
-                  Text(
-                    entry.key.split(' | ')[0],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+      children: [
+        const SectionHeader(
+          title: 'Upcoming events',
+          subtitle:
+              'Published events are grouped by date so users can scan the organiser pipeline quickly.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ...groupedEvents.entries.map((entry) {
+          final parts = entry.key.split(' | ');
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.section),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(
+                  title: parts.first,
+                  subtitle: parts.length > 1 ? parts[1] : '',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...entry.value.map(
+                  (event) => EventListTile(
+                    event: event,
+                    compact: true,
+                    status: event.isFull
+                        ? 'Sold out'
+                        : event.isAlmostFull
+                            ? 'Almost full'
+                            : 'Open',
+                    statusVariant: event.isFull
+                        ? StatusChipVariant.warning
+                        : event.isAlmostFull
+                            ? StatusChipVariant.info
+                            : StatusChipVariant.success,
+                    onTap: () {
+                      ref.read(selectedEventProvider.notifier).state = event;
+                      context.push('/event/${event.id}');
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    entry.key.split(' | ').length > 1
-                        ? entry.key.split(' | ')[1]
-                        : '',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textLight,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ...entry.value.map((event) => _OrganiserEventCard(
-                  event: event,
-                  onTap: () {
-                    ref.read(selectedEventProvider.notifier).state = event;
-                    context.push('/event/${event.id}');
-                  },
-                )),
-          ],
-        );
-      }).toList(),
+          );
+        }),
+      ],
     );
   }
 
@@ -553,35 +519,32 @@ class OrganiserProfileScreen extends ConsumerWidget {
   }
 
   void _showMoreOptions(BuildContext context, OrganiserProfile organiser) {
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.share_outlined),
-              title: const Text('Share'),
-              onTap: () {
-                Navigator.pop(context);
-                _shareOrganiser(organiser);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.report_outlined),
-              title: const Text('Report'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Report submitted')),
-                );
-              },
-            ),
-          ],
-        ),
+      title: 'More actions',
+      subtitle: 'Share or report this organiser profile.',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.share_outlined),
+            title: const Text('Share'),
+            onTap: () {
+              Navigator.pop(context);
+              _shareOrganiser(organiser);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.report_outlined),
+            title: const Text('Report'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Report submitted')),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -665,27 +628,33 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.textSecondary),
-        const SizedBox(width: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: AppRadius.allMd,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            value,
+            style: AppTypography.h4.copyWith(color: AppColors.textPrimary),
           ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -693,196 +662,45 @@ class _StatItem extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
+    required this.label,
     required this.onTap,
   });
 
   final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          shape: BoxShape.circle,
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Icon(icon, size: 20, color: AppColors.textSecondary),
-      ),
-    );
-  }
-}
-
-class _OrganiserEventCard extends StatelessWidget {
-  const _OrganiserEventCard({
-    required this.event,
-    required this.onTap,
-  });
-
-  final Event event;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final timeFormat = DateFormat('h:mm a');
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: AppColors.primary.withValues(alpha: 0.1),
-                child: event.imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: event.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => const Icon(
-                          Icons.event,
-                          color: AppColors.primary,
-                          size: 32,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.event,
-                        color: AppColors.primary,
-                        size: 32,
-                      ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.allMd,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
+          decoration: const BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: AppRadius.allMd,
+            border:
+                Border.fromBorderSide(BorderSide(color: AppColors.borderLight)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: AppColors.textSecondary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                        ),
-                        child: event.organiser?.avatarUrl != null
-                            ? ClipOval(
-                                child: CachedNetworkImage(
-                                  imageUrl: event.organiser!.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => const Icon(
-                                    Icons.person,
-                                    size: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 12,
-                                color: AppColors.primary,
-                              ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.organiserName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      Icon(Icons.schedule, size: 14, color: AppColors.textLight),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${timeFormat.format(event.startDate)} · ${timeFormat.format(event.endDate)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: event.isFree
-                              ? AppColors.successLight
-                              : AppColors.warningLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          event.isFree
-                              ? 'FREE'
-                              : '\$${event.price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: event.isFree
-                                ? AppColors.success
-                                : AppColors.warning,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined,
-                          size: 14, color: AppColors.textLight),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event.location,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

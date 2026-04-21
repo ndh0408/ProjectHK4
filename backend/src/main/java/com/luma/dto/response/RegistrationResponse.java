@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 @Builder
@@ -40,6 +41,19 @@ public class RegistrationResponse {
     private LocalDateTime checkedInAt;
     private boolean eligibleForCertificate;
     private CertificateResponse certificate;
+
+    // Professional Profile
+    private String jobTitle;
+    private String company;
+    private String industry;
+    private String linkedinUrl;
+
+    // Decision Support Signals
+    private Integer totalScore;
+    private List<String> scoreReasons;
+    private List<String> warningFlags;
+    private Integer pastEventsAttended;
+    private Integer pastNoShows;
 
     private UUID ticketTypeId;
     private String ticketTypeName;
@@ -97,7 +111,11 @@ public class RegistrationResponse {
                 .checkedInAt(registration.getCheckedInAt())
                 .eligibleForCertificate(eligibleForCertificate)
                 .certificate(certificate)
-                .quantity(registration.getQuantity());
+                .quantity(registration.getQuantity())
+                .jobTitle(registration.getUser().getJobTitle())
+                .company(registration.getUser().getCompany())
+                .industry(registration.getUser().getIndustry())
+                .linkedinUrl(registration.getUser().getLinkedinUrl());
 
         if (ticketType != null) {
             builder.ticketTypeId(ticketType.getId())

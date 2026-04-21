@@ -12,26 +12,26 @@ abstract final class AppSpacing {
   static const double xxl = 24;
   static const double xxxl = 32;
   static const double huge = 40;
-  static const double massive = 48;
+  static const double massive = 56;
 
   /// Default page horizontal padding.
-  static const double pageX = lg;
+  static const double pageX = xl;
 
   /// Default page vertical padding.
-  static const double pageY = lg;
+  static const double pageY = xxl;
 
   /// Default gap between stacked form fields.
-  static const double field = md;
+  static const double field = lg;
 
   /// Default gap between related sections on a screen.
-  static const double section = xxl;
+  static const double section = 28;
 
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
     horizontal: pageX,
     vertical: pageY,
   );
 
-  static const EdgeInsets cardPadding = EdgeInsets.all(lg);
+  static const EdgeInsets cardPadding = EdgeInsets.all(xl);
   static const EdgeInsets compactCardPadding = EdgeInsets.all(md);
   static const EdgeInsets listItemPadding =
       EdgeInsets.symmetric(horizontal: lg, vertical: md);

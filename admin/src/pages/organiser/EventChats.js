@@ -50,6 +50,7 @@ import { toast } from 'react-toastify';
 import { format, isSameDay, isToday, isYesterday } from 'date-fns';
 
 import chatApi from '../../api/chatApi';
+import organiserApi from '../../api/organiserApi';
 import { useAuth } from '../../context/AuthContext';
 import { PageHeader } from '../../components/ui';
 import { tokens } from '../../theme';
@@ -107,9 +108,9 @@ const formatDateSeparator = (iso) => {
 
 const previewFromMessage = (message) => {
     if (!message) return '';
-    if (message.deleted) return 'Tin nhắn đã bị xoá';
-    if (message.type === 'IMAGE') return '📷 Ảnh';
-    if (message.type === 'FILE') return '📎 Tệp đính kèm';
+    if (message.deleted) return 'Message deleted';
+    if (message.type === 'IMAGE') return '📷 Image';
+    if (message.type === 'FILE') return '📎 Attachment';
     return message.content || '';
 };
 
@@ -249,10 +250,10 @@ const EmptyChat = () => (
             <ChatIcon sx={{ fontSize: 36, color: tokens.palette.primary[600] }} />
         </Box>
         <Typography variant="h6" sx={{ fontWeight: 700, color: tokens.text.strong, mt: 1 }}>
-            Chọn một nhóm để bắt đầu
+            Select a group to start
         </Typography>
         <Typography variant="body2" sx={{ maxWidth: 340, textAlign: 'center', color: tokens.text.secondary, lineHeight: 1.6 }}>
-            Tin nhắn mới sẽ xuất hiện tức thì qua WebSocket. Đồng bộ realtime với ứng dụng mobile.
+            New messages will appear instantly via WebSocket. Realtime sync with mobile app.
         </Typography>
     </Box>
 );
@@ -300,17 +301,26 @@ const TypingDots = () => (
 const MessageBubble = ({
     message,
     isMe,
+    isOrganiser,
     showAvatar,
     showName,
     onReply,
     onDelete,
+    onPin,
+    onUnpin,
+    onBan,
+    onMute,
+    isPinned = false,
 }) => {
     const [anchor, setAnchor] = useState(null);
     const openMenu = (e) => setAnchor(e.currentTarget);
     const closeMenu = () => setAnchor(null);
 
+    const isFromOrganiser = message.senderRole === 'ORGANISER';
+
     return (
         <Stack
+            id={`msg-${message.id}`}
             direction="row"
             spacing={1}
             justifyContent={isMe ? 'flex-end' : 'flex-start'}
@@ -318,6 +328,7 @@ const MessageBubble = ({
             sx={{
                 px: { xs: 1.5, md: 2.5 },
                 '&:hover .msg-actions': { opacity: 1 },
+                position: 'relative',
             }}
         >
             {!isMe && (
@@ -339,7 +350,7 @@ const MessageBubble = ({
                 </Avatar>
             )}
 
-            {isMe && (
+            {(isMe || isOrganiser) && (
                 <Box
                     className="msg-actions"
                     sx={{
@@ -360,9 +371,45 @@ const MessageBubble = ({
                             }}
                         >
                             <ReplyIcon fontSize="small" sx={{ mr: 1 }} />
-                            Trả lời
+                            Reply
                         </MenuItem>
-                        {!message.deleted && (
+
+                        {isOrganiser && (
+                            <>
+                                <MenuItem
+                                    onClick={() => {
+                                        isPinned ? onUnpin?.(message) : onPin?.(message);
+                                        closeMenu();
+                                    }}
+                                >
+                                    <ReplyIcon fontSize="small" sx={{ mr: 1, transform: 'rotate(90deg)' }} />
+                                    {isPinned ? 'Unpin' : 'Pin Message'}
+                                </MenuItem>
+                                {!isMe && (
+                                    <>
+                                        <MenuItem
+                                            onClick={() => {
+                                                onMute?.(message.sender?.id);
+                                                closeMenu();
+                                            }}
+                                        >
+                                            Mute
+                                        </MenuItem>
+                                        <MenuItem
+                                            onClick={() => {
+                                                onBan?.(message.sender?.id);
+                                                closeMenu();
+                                            }}
+                                            sx={{ color: tokens.palette.danger[600] }}
+                                        >
+                                            Ban from event
+                                        </MenuItem>
+                                    </>
+                                )}
+                            </>
+                        )}
+
+                        {(!message.deleted && (isMe || isOrganiser)) && (
                             <MenuItem
                                 onClick={() => {
                                     onDelete?.(message);
@@ -371,7 +418,7 @@ const MessageBubble = ({
                                 sx={{ color: tokens.palette.danger[600] }}
                             >
                                 <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                                Xoá
+                                Delete
                             </MenuItem>
                         )}
                     </Menu>
@@ -380,20 +427,34 @@ const MessageBubble = ({
 
             <Box sx={{ maxWidth: { xs: '82%', lg: '65%' }, minWidth: 96 }}>
                 {!isMe && showName && (
-                    <Typography
-                        variant="caption"
-                        sx={{
-                            ml: 1.5,
-                            mb: 0.5,
-                            fontWeight: 700,
-                            display: 'block',
-                            color: tokens.palette.primary[700],
-                            fontSize: '0.7rem',
-                            letterSpacing: '0.01em',
-                        }}
-                    >
-                        {message.sender?.fullName || 'Unknown'}
-                    </Typography>
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 1.5, mb: 0.5 }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontWeight: 700,
+                                color: tokens.palette.primary[700],
+                                fontSize: '0.7rem',
+                                letterSpacing: '0.01em',
+                            }}
+                        >
+                            {message.sender?.fullName || 'Unknown'}
+                        </Typography>
+                        {isFromOrganiser && (
+                            <Chip
+                                label="HOST"
+                                size="small"
+                                sx={{
+                                    height: 16,
+                                    fontSize: '0.6rem',
+                                    fontWeight: 800,
+                                    bgcolor: tokens.palette.primary[50],
+                                    color: tokens.palette.primary[600],
+                                    border: `1px solid ${tokens.palette.primary[100]}`,
+                                    '& .MuiChip-label': { px: 0.5 },
+                                }}
+                            />
+                        )}
+                    </Stack>
                 )}
 
                 {message.replyTo && !message.deleted && (
@@ -456,7 +517,9 @@ const MessageBubble = ({
                             variant="body2"
                             sx={{ fontStyle: 'italic', opacity: 0.65 }}
                         >
-                            Tin nhắn đã bị xoá
+                            {message.deletedByName 
+                                ? `Message deleted by ${message.deletedByName}`
+                                : 'This message was deleted'}
                         </Typography>
                     ) : message.type === 'IMAGE' && message.mediaUrl ? (
                         <Box
@@ -511,7 +574,7 @@ const MessageBubble = ({
                         transition: `opacity ${tokens.motion.fast}`,
                     }}
                 >
-                    <Tooltip title="Trả lời">
+                    <Tooltip title="Reply">
                         <IconButton
                             size="small"
                             onClick={() => onReply?.(message)}
@@ -543,7 +606,7 @@ const ReplyPreview = ({ replyingTo, onCancel }) => {
             <ReplyIcon sx={{ fontSize: 18, color: tokens.palette.primary[600] }} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: tokens.palette.primary[700] }}>
-                    Trả lời {replyingTo.sender?.fullName || ''}
+                    Replying to {replyingTo.sender?.fullName || ''}
                 </Typography>
                 <Typography
                     variant="caption"
@@ -602,7 +665,7 @@ const EventChats = () => {
             const list = await chatApi.listEventChats();
             setChats(list || []);
         } catch {
-            toast.error('Không thể tải danh sách nhóm chat');
+            toast.error('Could not load chat groups');
         } finally {
             setLoadingChats(false);
         }
@@ -647,7 +710,7 @@ const EventChats = () => {
                     );
                 }
             } catch {
-                toast.error('Không thể tải tin nhắn');
+                toast.error('Could not load messages');
             } finally {
                 setLoadingMessages(false);
                 setLoadingMore(false);
@@ -683,7 +746,7 @@ const EventChats = () => {
                 setMessages((prev) =>
                     prev.map((m) =>
                         m.id === message.id
-                            ? { ...m, deleted: true, content: 'Tin nhắn đã bị xoá' }
+                            ? { ...m, deleted: true, content: 'Message deleted' }
                             : m,
                     ),
                 );
@@ -724,10 +787,17 @@ const EventChats = () => {
                         ? (current.unreadCount || 0) + 1
                         : current.unreadCount,
                 };
+                
+                // Messenger effect: Remove, Update, and let useMemo/Sorting handle position
                 const next = [...prev];
-                next.splice(idx, 1);
-                next.unshift(updated);
-                return next;
+                next[idx] = updated;
+                
+                // Re-sort immediately to ensure it jumps to top (or after pinned)
+                return next.sort((a, b) => {
+                    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+                    const getTs = (c) => (c.lastMessageAt ? new Date(c.lastMessageAt).getTime() : 0);
+                    return getTs(b) - getTs(a);
+                });
             });
         },
         [user?.id],
@@ -761,7 +831,7 @@ const EventChats = () => {
                         await loadMessages(joined.conversationId, { reset: true });
                     }
                 } catch {
-                    toast.error('Không thể tham gia nhóm chat');
+                    toast.error('Could not join chat group');
                 }
                 return;
             }
@@ -805,26 +875,81 @@ const EventChats = () => {
             });
         } catch (err) {
             const backendMsg = err?.response?.data?.message;
-            toast.error(backendMsg || 'Không gửi được tin nhắn');
+            toast.error(backendMsg || 'Could not send message');
         } finally {
             setSending(false);
         }
     }, [draft, selectedId, sending, replyingTo]);
 
     const handleDelete = useCallback(async (message) => {
+        const isMe = message.sender?.id === user?.id;
         try {
-            await chatApi.deleteMessage(message.id);
+            if (isMe) {
+                await chatApi.deleteMessage(message.id);
+            } else {
+                await organiserApi.deleteAnyMessage(message.id);
+            }
             setMessages((prev) =>
                 prev.map((m) =>
                     m.id === message.id
-                        ? { ...m, deleted: true, content: 'Tin nhắn đã bị xoá' }
+                        ? { ...m, deleted: true, content: 'Message deleted' }
                         : m,
                 ),
             );
+            toast.success('Message deleted');
         } catch {
-            toast.error('Không xoá được tin');
+            toast.error('Could not delete message');
         }
-    }, []);
+    }, [user?.id]);
+
+    const handlePin = useCallback(async (message) => {
+        if (!selectedId) return;
+        try {
+            await organiserApi.pinMessage(selectedId, message.id);
+            setChats(prev => prev.map(c => c.conversationId === selectedId ? {
+                ...c,
+                pinnedMessage: {
+                    id: message.id,
+                    content: message.content,
+                    senderName: message.sender?.fullName || 'Unknown'
+                }
+            } : c));
+            toast.success('Message pinned');
+        } catch (err) {
+            toast.error('Could not pin message');
+        }
+    }, [selectedId]);
+
+    const handleUnpin = useCallback(async () => {
+        if (!selectedId) return;
+        try {
+            await organiserApi.unpinMessage(selectedId);
+            setChats(prev => prev.map(c => c.conversationId === selectedId ? { ...c, pinnedMessage: null } : c));
+            toast.success('Message unpinned');
+        } catch (err) {
+            toast.error('Could not unpin message');
+        }
+    }, [selectedId]);
+
+    const handleBan = useCallback(async (userId) => {
+        if (!selectedId || !userId || !window.confirm('Ban this user from the event chat?')) return;
+        try {
+            await organiserApi.banUser(selectedId, userId);
+            toast.success('User banned from chat');
+        } catch (err) {
+            toast.error('Could not ban user');
+        }
+    }, [selectedId]);
+
+    const handleMute = useCallback(async (userId) => {
+        if (!selectedId || !userId || !window.confirm('Mute this user?')) return;
+        try {
+            await organiserApi.muteUser(selectedId, userId, true);
+            toast.success('User muted successfully');
+        } catch (err) {
+            toast.error('Could not mute user');
+        }
+    }, [selectedId]);
 
     const handleDraftChange = (value) => {
         setDraft(value);
@@ -884,20 +1009,32 @@ const EventChats = () => {
 
     const filteredChats = useMemo(() => {
         const query = normalizeSearchText(deferredChatSearch);
-        if (!query) return chats;
+        let list = [...chats];
 
-        return chats.filter((chat) => {
-            const searchHaystack = normalizeSearchText([
-                chat.eventTitle,
-                chat.lastMessageContent,
-                chat.venue,
-                chat.joined ? 'joined da tham gia' : 'join tham gia',
-                chat.closed ? 'closed da dong' : 'open dang mo',
-            ]
-                .filter(Boolean)
-                .join(' '));
+        if (query) {
+            list = list.filter((chat) => {
+                const searchHaystack = normalizeSearchText([
+                    chat.eventTitle,
+                    chat.lastMessageContent,
+                    chat.venue,
+                ].filter(Boolean).join(' '));
+                return searchHaystack.includes(query);
+            });
+        }
 
-            return searchHaystack.includes(query);
+        // Professional Sorting Logic (Messenger-style)
+        return list.sort((a, b) => {
+            // 1. Pinned priority
+            if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+            
+            // 2. Time priority (Newest first)
+            const getTs = (c) => {
+                if (!c.lastMessageAt) return 0;
+                const d = new Date(c.lastMessageAt);
+                return isNaN(d.getTime()) ? 0 : d.getTime();
+            };
+            
+            return getTs(b) - getTs(a);
         });
     }, [chats, deferredChatSearch]);
 
@@ -907,39 +1044,49 @@ const EventChats = () => {
         .filter(Boolean);
 
     const renderedMessages = useMemo(() => {
+        // Force sort to ensure newest is always at the bottom
+        const sorted = [...messages].sort((a, b) => 
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
         const out = [];
         let lastDate = null;
-        for (let i = 0; i < messages.length; i += 1) {
-            const m = messages[i];
+        const pinnedId = selectedChat?.pinnedMessage?.id;
+
+        for (let i = 0; i < sorted.length; i += 1) {
+            const m = sorted[i];
             const msgDate = m.createdAt ? new Date(m.createdAt) : null;
             if (msgDate && (!lastDate || !isSameDay(lastDate, msgDate))) {
-                out.push({ type: 'separator', key: `sep-${m.id}`, date: m.createdAt });
+                out.push({ type: 'separator', key: `sep-${m.id || i}`, date: m.createdAt });
                 lastDate = msgDate;
             }
-            const prev = messages[i - 1];
-            const next = messages[i + 1];
+            const prev = sorted[i - 1];
+            const next = sorted[i + 1];
             const sameSenderAsPrev =
                 prev && prev.sender?.id === m.sender?.id && !prev.deleted;
             const sameSenderAsNext =
                 next && next.sender?.id === m.sender?.id;
             const isMe = m.sender?.id === user?.id;
+            const isFromOrganiser = m.senderRole === 'ORGANISER';
             out.push({
                 type: 'message',
-                key: m.id,
+                key: m.id || i,
                 message: m,
                 isMe,
+                isOrganiser: isFromOrganiser,
+                isPinned: m.id === pinnedId,
                 showAvatar: !isMe && !sameSenderAsNext,
                 showName: !isMe && !sameSenderAsPrev,
             });
         }
         return out;
-    }, [messages, user?.id]);
+    }, [messages, user?.id, selectedChat?.pinnedMessage]);
 
     return (
         <Box sx={{ height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
             <PageHeader
                 title="Event Group Chats"
-                subtitle="Nhắn tin trong nhóm chat của các sự kiện bạn tổ chức hoặc tham gia · đồng bộ realtime với mobile."
+                subtitle="Chat in event groups for events you organize or attend · realtime sync with mobile."
                 icon={<ChatIcon />}
                 dense
                 actions={
@@ -1014,10 +1161,10 @@ const EventChats = () => {
                         </Box>
                         <Box sx={{ flex: 1 }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, color: tokens.text.strong }}>
-                                Nhóm Sự Kiện
+                                Event Groups
                             </Typography>
                             <Typography variant="caption" sx={{ color: tokens.text.muted }}>
-                                {filteredChats.length}/{chats.length} nhóm
+                                {filteredChats.length}/{chats.length} groups
                             </Typography>
                         </Box>
                     </Stack>
@@ -1059,7 +1206,7 @@ const EventChats = () => {
                                             handleSelect(filteredChats[0]);
                                         }
                                     }}
-                                    placeholder="Tìm nhóm theo tên, preview, trạng thái..."
+                                    placeholder="Search by event title, preview, status..."
                                     sx={{
                                         flex: 1,
                                         fontSize: 13,
@@ -1087,13 +1234,13 @@ const EventChats = () => {
                             >
                                 <Typography variant="caption" sx={{ color: tokens.text.muted, fontSize: '0.7rem' }}>
                                     {chatSearch.trim()
-                                        ? `Tìm thấy ${filteredChats.length} kết quả`
-                                        : 'Gõ để lọc nhanh · Enter để mở đầu tiên'}
+                                        ? `Found ${filteredChats.length} results`
+                                        : 'Type to filter · Enter to open top'}
                                 </Typography>
                                 {totalUnread > 0 && (
                                     <Chip
                                         size="small"
-                                        label={`${totalUnread} chưa đọc`}
+                                        label={`${totalUnread} unread`}
                                         sx={{
                                             height: 22,
                                             fontSize: 11,
@@ -1130,7 +1277,7 @@ const EventChats = () => {
                                     <EventIcon sx={{ fontSize: 28, color: tokens.text.disabled }} />
                                 </Box>
                                 <Typography variant="body2" sx={{ color: tokens.text.secondary }}>
-                                    Chưa có nhóm chat sự kiện nào.
+                                    No event groups yet.
                                 </Typography>
                             </Box>
                         ) : filteredChats.length === 0 ? (
@@ -1150,10 +1297,10 @@ const EventChats = () => {
                                     <SearchIcon sx={{ fontSize: 28, color: tokens.text.disabled }} />
                                 </Box>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: tokens.text.strong }}>
-                                    Không tìm thấy nhóm phù hợp
+                                    No groups found
                                 </Typography>
                                 <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: tokens.text.secondary }}>
-                                    Thử tên sự kiện hoặc xoá bớt từ khoá.
+                                    Try event title or clear keywords.
                                 </Typography>
                             </Box>
                         ) : (
@@ -1283,8 +1430,8 @@ const EventChats = () => {
                                                         >
                                                             {chat.lastMessageContent ||
                                                                 (chat.joined
-                                                                    ? 'Chưa có tin nhắn'
-                                                                    : 'Nhấn để tham gia')}
+                                                                    ? 'No messages yet'
+                                                                    : 'Click to join')}
                                                         </Typography>
                                                         {unread > 0 && (
                                                             <Box
@@ -1361,13 +1508,13 @@ const EventChats = () => {
                                     </Typography>
                                     <Stack direction="row" alignItems="center" spacing={0.75}>
                                         <Typography variant="caption" sx={{ color: tokens.text.muted }}>
-                                            {selectedChat.participantCount || 0} thành viên
+                                            {selectedChat.participantCount || 0} members
                                         </Typography>
                                         {selectedChat.closed && (
                                             <>
                                                 <Box sx={{ width: 3, height: 3, bgcolor: tokens.text.disabled, borderRadius: '50%' }} />
                                                 <Typography variant="caption" sx={{ color: tokens.palette.danger[600], fontWeight: 600 }}>
-                                                    Đã đóng
+                                                    Closed
                                                 </Typography>
                                             </>
                                         )}
@@ -1376,8 +1523,8 @@ const EventChats = () => {
                                                 <Box sx={{ width: 3, height: 3, bgcolor: tokens.text.disabled, borderRadius: '50%' }} />
                                                 <Typography variant="caption" sx={{ fontStyle: 'italic', color: tokens.palette.primary[600] }}>
                                                     {currentTypingNames.length === 1
-                                                        ? `${currentTypingNames[0]} đang nhập`
-                                                        : `${currentTypingNames.length} người đang nhập`}
+                                                        ? `${currentTypingNames[0]} is typing`
+                                                        : `${currentTypingNames.length} people are typing`}
                                                 </Typography>
                                                 <TypingDots />
                                             </>
@@ -1385,6 +1532,51 @@ const EventChats = () => {
                                     </Stack>
                                 </Box>
                             </Stack>
+
+                            {selectedChat.pinnedMessage && (
+                                <Box
+                                    sx={{
+                                        px: 3,
+                                        py: 1,
+                                        bgcolor: tokens.palette.primary[50],
+                                        borderBottom: `1px solid ${tokens.borders.subtle}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 2,
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s',
+                                        '&:hover': { bgcolor: tokens.palette.primary[100] }
+                                    }}
+                                    onClick={() => {
+                                        const el = document.getElementById(`msg-${selectedChat.pinnedMessage.id}`);
+                                        if (el) {
+                                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            el.style.backgroundColor = tokens.palette.primary[50];
+                                            setTimeout(() => {
+                                                el.style.backgroundColor = '';
+                                            }, 2000);
+                                        } else {
+                                            toast.info('This message is old, please scroll up to find it');
+                                        }
+                                    }}
+                                >
+                                    <ReplyIcon sx={{ transform: 'rotate(90deg)', fontSize: 16, color: tokens.palette.primary[600] }} />
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 700, color: tokens.palette.primary[700], display: 'block' }}>
+                                            Pinned Message
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: tokens.text.secondary }} noWrap>
+                                            {selectedChat.pinnedMessage.senderName}: {selectedChat.pinnedMessage.content}
+                                        </Typography>
+                                    </Box>
+                                    <IconButton size="small" onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUnpin(selectedChat.pinnedMessage);
+                                    }}>
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            )}
 
                             <Box
                                 ref={messagesScrollRef}
@@ -1424,7 +1616,7 @@ const EventChats = () => {
                                                 <ChatIcon sx={{ fontSize: 28, color: tokens.palette.primary[500] }} />
                                             </Box>
                                             <Typography variant="body2" sx={{ color: tokens.text.secondary }}>
-                                                Chưa có tin nhắn. Gửi tin đầu tiên nhé!
+                                                No messages yet. Send the first one!
                                             </Typography>
                                         </Box>
                                     ) : (
@@ -1437,10 +1629,16 @@ const EventChats = () => {
                                                         key={item.key}
                                                         message={item.message}
                                                         isMe={item.isMe}
+                                                        isOrganiser={item.isOrganiser}
+                                                        isPinned={item.isPinned}
                                                         showAvatar={item.showAvatar}
                                                         showName={item.showName}
                                                         onReply={setReplyingTo}
                                                         onDelete={handleDelete}
+                                                        onPin={handlePin}
+                                                        onUnpin={handleUnpin}
+                                                        onBan={handleBan}
+                                                        onMute={handleMute}
                                                     />
                                                 ),
                                             )}
@@ -1481,7 +1679,7 @@ const EventChats = () => {
                                         color: tokens.palette.info[700],
                                     }}
                                 >
-                                    Nhóm chat đã đóng. Không thể gửi tin nhắn.
+                                    Chat group is closed. Cannot send messages.
                                 </Alert>
                             ) : (
                                 <Box
@@ -1559,7 +1757,7 @@ const EventChats = () => {
                                                     handleSend();
                                                 }
                                             }}
-                                            placeholder="Nhập tin nhắn... (Enter để gửi, Shift+Enter xuống dòng)"
+                                            placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
                                             multiline
                                             maxRows={5}
                                             sx={{
@@ -1582,7 +1780,7 @@ const EventChats = () => {
                                                 },
                                             }}
                                         />
-                                        <Tooltip title="Gửi">
+                                        <Tooltip title="Send">
                                             <span>
                                                 <IconButton
                                                     onClick={handleSend}

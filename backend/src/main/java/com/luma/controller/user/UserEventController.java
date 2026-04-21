@@ -153,6 +153,16 @@ public class UserEventController {
         return ResponseEntity.ok(ApiResponse.success("Registration cancelled successfully", response));
     }
 
+    @PostMapping("/registrations/{registrationId}/confirm")
+    @Operation(summary = "Confirm participation after approval")
+    public ResponseEntity<ApiResponse<RegistrationResponse>> confirmRegistration(
+            @PathVariable UUID registrationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        RegistrationResponse response = registrationService.confirmRegistration(registrationId, user);
+        return ResponseEntity.ok(ApiResponse.success("Participation confirmed successfully", response));
+    }
+
     @GetMapping("/my-registrations/upcoming")
     @Operation(summary = "Get user upcoming registrations")
     public ResponseEntity<ApiResponse<PageResponse<RegistrationResponse>>> getUpcomingRegistrations(

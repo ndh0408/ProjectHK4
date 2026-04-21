@@ -44,6 +44,7 @@ public class RegistrationService {
     private final EventService eventService;
     private final NotificationService notificationService;
     private final WaitlistService waitlistService;
+    private final RegistrationReviewService registrationReviewService;
     private final CouponRepository couponRepository;
     private final CouponUsageRepository couponUsageRepository;
 
@@ -437,6 +438,28 @@ public class RegistrationService {
     }
 
     @Transactional
+    public void deleteRegistration(UUID registrationId, User organiser) {
+        Registration registration = getEntityById(registrationId);
+        validateOrganiserAccess(registration.getEvent(), organiser);
+
+        // Return tickets if it was approved
+        if (registration.getStatus() == RegistrationStatus.APPROVED || 
+            registration.getStatus() == RegistrationStatus.CONFIRMED ||
+            registration.getStatus() == RegistrationStatus.CHECKED_IN) {
+            eventService.decrementApprovedCount(registration.getEvent());
+        }
+        
+        returnTicketsToPool(registration);
+        
+        // Delete related data first (answers, payments)
+        answerRepository.deleteAll(registration.getAnswers());
+        paymentRepository.deleteByRegistrationId(registration.getId());
+        
+        registrationRepository.delete(registration);
+        log.info("Registration {} deleted by organiser {}", registrationId, organiser.getEmail());
+    }
+
+    @Transactional
     public RegistrationResponse checkInRegistration(UUID registrationId, User organiser) {
         Registration registration = getEntityById(registrationId);
         Event event = registration.getEvent();
@@ -454,6 +477,7 @@ public class RegistrationService {
         validateCheckInTime(event);
 
         registration.setCheckedInAt(LocalDateTime.now());
+        registration.setStatus(RegistrationStatus.CHECKED_IN);
         return RegistrationResponse.fromEntity(registrationRepository.save(registration));
     }
 
@@ -511,12 +535,18 @@ public class RegistrationService {
 
     public PageResponse<RegistrationResponse> getRegistrationsByEvent(Event event, Pageable pageable) {
         Page<Registration> registrations = registrationRepository.findByEvent(event, pageable);
-        return PageResponse.from(registrations, RegistrationResponse::fromEntity);
+        return PageResponse.from(registrations, reg -> {
+            RegistrationResponse response = RegistrationResponse.fromEntity(reg);
+            return registrationReviewService.enrichWithReviewData(response, reg);
+        });
     }
 
     public PageResponse<RegistrationResponse> getRegistrationsByEventAndStatus(Event event, RegistrationStatus status, Pageable pageable) {
         Page<Registration> registrations = registrationRepository.findByEventAndStatus(event, status, pageable);
-        return PageResponse.from(registrations, RegistrationResponse::fromEntity);
+        return PageResponse.from(registrations, reg -> {
+            RegistrationResponse response = RegistrationResponse.fromEntity(reg);
+            return registrationReviewService.enrichWithReviewData(response, reg);
+        });
     }
 
     @Transactional
@@ -542,7 +572,10 @@ public class RegistrationService {
         }
 
         return waitingList.stream()
-                .map(RegistrationResponse::fromEntity)
+                .map(reg -> {
+                    RegistrationResponse response = RegistrationResponse.fromEntity(reg);
+                    return registrationReviewService.enrichWithReviewData(response, reg);
+                })
                 .toList();
     }
 
@@ -564,6 +597,25 @@ public class RegistrationService {
         if (!event.getOrganiser().getId().equals(organiser.getId())) {
             throw new BadRequestException("You do not have permission to manage registrations for this event");
         }
+    }
+
+    @Transactional
+    public RegistrationResponse confirmRegistration(UUID registrationId, User user) {
+        Registration registration = getEntityById(registrationId);
+
+        if (!registration.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("You do not have permission to confirm this registration");
+        }
+
+        if (registration.getStatus() != RegistrationStatus.APPROVED) {
+            throw new BadRequestException("Only approved registrations can be confirmed. Current status: " + registration.getStatus());
+        }
+
+        registration.setStatus(RegistrationStatus.CONFIRMED);
+        registration.setApprovedAt(LocalDateTime.now()); // Reuse or add confirmedAt if needed
+
+        Registration saved = registrationRepository.save(registration);
+        return RegistrationResponse.fromEntity(saved);
     }
 
     private String generateTicketCode() {

@@ -11,7 +11,7 @@ enum ConversationType {
   group,
 }
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Conversation {
   const Conversation({
     required this.id,
@@ -30,6 +30,7 @@ class Conversation {
     this.participantCount,
     this.closedAt,
     this.createdAt,
+    this.pinnedMessage,
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json) =>
@@ -51,6 +52,10 @@ class Conversation {
   final int? participantCount;
   final DateTime? closedAt;
   final DateTime? createdAt;
+  /// Organiser-pinned announcement sitting at the top of the chat. Null when
+  /// nothing is pinned. Attendees see it read-only; only organisers can
+  /// pin/unpin (handled on the web admin).
+  final PinnedMessage? pinnedMessage;
 
   bool get isClosed => closedAt != null;
 
@@ -71,6 +76,8 @@ class Conversation {
     int? participantCount,
     DateTime? closedAt,
     DateTime? createdAt,
+    PinnedMessage? pinnedMessage,
+    bool clearPinnedMessage = false,
   }) {
     return Conversation(
       id: id ?? this.id,
@@ -89,6 +96,8 @@ class Conversation {
       participantCount: participantCount ?? this.participantCount,
       closedAt: closedAt ?? this.closedAt,
       createdAt: createdAt ?? this.createdAt,
+      pinnedMessage:
+          clearPinnedMessage ? null : (pinnedMessage ?? this.pinnedMessage),
     );
   }
 
@@ -123,6 +132,7 @@ class ChatParticipant {
     required this.userId,
     required this.fullName,
     this.avatarUrl,
+    this.lastReadAt,
   });
 
   factory ChatParticipant.fromJson(Map<String, dynamic> json) =>
@@ -131,6 +141,38 @@ class ChatParticipant {
   final String userId;
   final String fullName;
   final String? avatarUrl;
+  /// When this participant last marked the conversation as read. Used by the
+  /// message bubble to decide whether to show ✓ (sent) or ✓✓ (read) on the
+  /// current user's own messages.
+  final DateTime? lastReadAt;
 
   Map<String, dynamic> toJson() => _$ChatParticipantToJson(this);
+}
+
+/// Lightweight shape of the currently-pinned announcement. Comes straight
+/// from the backend's ConversationResponse.PinnedMessageResponse — a
+/// snapshot of the message body + who pinned it, so the attendee UI can
+/// render the banner without fetching the full message row.
+@JsonSerializable()
+class PinnedMessage {
+  const PinnedMessage({
+    required this.id,
+    this.content,
+    this.senderName,
+    this.createdAt,
+    this.pinnedAt,
+    this.pinnedByUserId,
+  });
+
+  factory PinnedMessage.fromJson(Map<String, dynamic> json) =>
+      _$PinnedMessageFromJson(json);
+
+  final String id;
+  final String? content;
+  final String? senderName;
+  final DateTime? createdAt;
+  final DateTime? pinnedAt;
+  final String? pinnedByUserId;
+
+  Map<String, dynamic> toJson() => _$PinnedMessageToJson(this);
 }

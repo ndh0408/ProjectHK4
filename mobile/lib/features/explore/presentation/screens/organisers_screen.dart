@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../shared/models/organiser_profile.dart';
+import '../../../../shared/widgets/app_components.dart';
 import 'explore_screen.dart';
 
 class OrganisersScreen extends ConsumerWidget {
@@ -13,72 +15,167 @@ class OrganisersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final organisers = ref.watch(featuredOrganisersProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.organisers),
+        title: Text(l10n.organisers),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.pageX),
+            child: IconButton(
+              tooltip: l10n.refreshTooltip,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+              ),
+              onPressed: () => ref.invalidate(featuredOrganisersProvider),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ),
+        ],
       ),
       body: organisers.when(
         data: (data) {
           if (data.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.groups_outlined,
-                    size: 64,
-                    color: AppColors.textLight,
-                  ),
-                  SizedBox(height: 16),
-                  Text('No organisers available'),
-                ],
-              ),
+            return EmptyState(
+              icon: Icons.groups_outlined,
+              title: l10n.noOrganisersAvailable,
+              subtitle:
+                  'Featured organisers will appear here as their event pages gain traction.',
+              actionLabel: l10n.refresh,
+              onAction: () => ref.invalidate(featuredOrganisersProvider),
             );
           }
 
+          final verifiedCount =
+              data.where((organiser) => organiser.verified).length;
+          final totalFollowers = data.fold<int>(
+            0,
+            (sum, organiser) => sum + organiser.followersCount,
+          );
+
           return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(featuredOrganisersProvider);
-            },
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.85,
-              ),
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final organiser = data[index];
-                return _OrganiserCard(
-                  organiser: organiser,
-                  onTap: () => context.push('/organiser/${organiser.id}'),
-                );
-              },
+            color: AppColors.primary,
+            onRefresh: () async => ref.invalidate(featuredOrganisersProvider),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageX,
+                      AppSpacing.xl,
+                      AppSpacing.pageX,
+                      0,
+                    ),
+                    child: AppCard(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.section),
+                      borderColor: AppColors.borderLight,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: const BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: AppRadius.allLg,
+                            ),
+                            child: const Icon(
+                              Icons.groups_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${data.length} organisers • $verifiedCount verified',
+                                  style: AppTypography.h3.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  '${_formatNumber(totalFollowers)} combined followers create stronger trust and conversion cues.',
+                                  style: AppTypography.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+                    child: SectionHeader(
+                      title: 'Featured organisers',
+                      subtitle:
+                          'Profiles surface reputation first so users can judge credibility before tapping into the full detail view.',
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.lg),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pageX,
+                    0,
+                    AppSpacing.pageX,
+                    AppSpacing.massive,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.lg,
+                      mainAxisSpacing: AppSpacing.lg,
+                      childAspectRatio: 0.73,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final organiser = data[index];
+                        return _OrganiserCard(
+                          organiser: organiser,
+                          onTap: () =>
+                              context.push('/organiser/${organiser.id}'),
+                        );
+                      },
+                      childCount: data.length,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
-              Text('Error: $e'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(featuredOrganisersProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        loading: () => const LoadingState(message: 'Loading organisers...'),
+        error: (error, _) => ErrorState(
+          message: '$error',
+          onRetry: () => ref.invalidate(featuredOrganisersProvider),
         ),
       ),
     );
+  }
+
+  static String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    }
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
   }
 }
 
@@ -93,124 +190,186 @@ class _OrganiserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
+    return AppCard(
+      onTap: onTap,
+      child: SizedBox.expand(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: StatusChip(
+                label: organiser.verified ? 'Verified' : 'Active',
+                variant: organiser.verified
+                    ? StatusChipVariant.success
+                    : StatusChipVariant.primary,
+                compact: true,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    backgroundImage: organiser.avatarUrl != null
-                        ? CachedNetworkImageProvider(organiser.avatarUrl!)
-                        : null,
-                    child: organiser.avatarUrl == null
-                        ? Text(
-                            organiser.displayName[0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      gradient: organiser.verified
+                          ? const LinearGradient(
+                              colors: [
+                                AppColors.primary,
+                                AppColors.secondary,
+                              ],
+                            )
+                          : LinearGradient(
+                              colors: [
+                                AppColors.primary.withValues(alpha: 0.18),
+                                AppColors.info.withValues(alpha: 0.18),
+                              ],
                             ),
-                          )
-                        : null,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: AppColors.surfaceVariant,
+                      backgroundImage: organiser.avatarUrl != null
+                          ? CachedNetworkImageProvider(organiser.avatarUrl!)
+                          : null,
+                      child: organiser.avatarUrl == null
+                          ? Text(
+                              organiser.displayName
+                                  .substring(0, 1)
+                                  .toUpperCase(),
+                              style: AppTypography.h2.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                   if (organiser.verified)
                     Positioned(
-                      right: 0,
-                      bottom: 0,
+                      right: -2,
+                      bottom: -2,
                       child: Container(
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(AppSpacing.xs),
                         decoration: const BoxDecoration(
                           color: AppColors.surface,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.verified,
-                          size: 20,
+                          Icons.verified_rounded,
                           color: AppColors.primary,
+                          size: 18,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
-
-              Text(
-                organiser.displayName,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              organiser.displayName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.h4.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              organiser.verified
+                  ? 'High-trust organiser with a verified identity and an active event footprint.'
+                  : 'Active organiser with a growing event portfolio and audience.',
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: _MiniStat(
+                    label: 'Followers',
+                    value: OrganisersScreen._formatNumber(
+                      organiser.followersCount,
                     ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _StatChip(
-                    icon: Icons.people_outline,
-                    value: _formatNumber(organiser.followersCount),
                   ),
-                  const SizedBox(width: 12),
-                  _StatChip(
-                    icon: Icons.event_outlined,
-                    value: '${organiser.eventsCount}',
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _MiniStat(
+                    label: 'Events',
+                    value: organiser.eventsCount.toString(),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Text(
+                  'View profile',
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
-
-  String _formatNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}K';
-    }
-    return number.toString();
-  }
 }
 
-class _StatChip extends StatelessWidget {
-  const _StatChip({
-    required this.icon,
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({
+    required this.label,
     required this.value,
   });
 
-  final IconData icon;
+  final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 14,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: AppRadius.allMd,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: AppTypography.h4.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

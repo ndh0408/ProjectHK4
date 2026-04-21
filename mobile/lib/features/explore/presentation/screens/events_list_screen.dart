@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../home/providers/events_provider.dart';
 
 class EventsListState {
@@ -69,7 +72,8 @@ class EventsListNotifier extends StateNotifier<EventsListState> {
         upcoming: true,
       );
 
-      final newEvents = refresh ? response.content : [...state.events, ...response.content];
+      final newEvents =
+          refresh ? response.content : [...state.events, ...response.content];
 
       state = state.copyWith(
         events: newEvents,
@@ -86,8 +90,8 @@ class EventsListNotifier extends StateNotifier<EventsListState> {
   }
 }
 
-final eventsListProvider = StateNotifierProvider.autoDispose
-    .family<EventsListNotifier, EventsListState, ({int? categoryId, int? cityId})>(
+final eventsListProvider = StateNotifierProvider.autoDispose.family<
+    EventsListNotifier, EventsListState, ({int? categoryId, int? cityId})>(
   (ref, params) {
     final api = ref.watch(apiServiceProvider);
     final notifier = EventsListNotifier(api, params.categoryId, params.cityId);
@@ -96,7 +100,8 @@ final eventsListProvider = StateNotifierProvider.autoDispose
   },
 );
 
-final categoryNameProvider = FutureProvider.family<String?, int>((ref, id) async {
+final categoryNameProvider =
+    FutureProvider.family<String?, int>((ref, id) async {
   final api = ref.watch(apiServiceProvider);
   final categories = await api.getCategories();
   final category = categories.where((c) => c.id == id).firstOrNull;
@@ -111,7 +116,9 @@ final cityDetailProvider = FutureProvider.family<City?, int>((ref, id) async {
 
 String _getCityImageUrl(String cityName) {
   final lower = cityName.toLowerCase();
-  if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
+  if (lower.contains('ho chi minh') ||
+      lower.contains('hcm') ||
+      lower.contains('saigon')) {
     return 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&h=400&fit=crop';
   }
   if (lower.contains('ha noi') || lower.contains('hanoi')) {
@@ -149,7 +156,9 @@ String _getCityImageUrl(String cityName) {
 
 String _getCityDescription(String cityName) {
   final lower = cityName.toLowerCase();
-  if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
+  if (lower.contains('ho chi minh') ||
+      lower.contains('hcm') ||
+      lower.contains('saigon')) {
     return 'Ho Chi Minh City is Vietnam\'s bustling economic hub, offering diverse tech meetups, startup events, and cultural experiences. The city blends modern innovation with rich heritage.';
   }
   if (lower.contains('ha noi') || lower.contains('hanoi')) {
@@ -226,7 +235,7 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
     final resolvedCityName = cityName;
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceVariant,
+      backgroundColor: AppColors.background,
       body: isCityView && resolvedCityName != null
           ? _buildCityView(context, resolvedCityName, state, params)
           : _buildCategoryView(context, title, state, params, categoryName),
@@ -256,7 +265,8 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                 color: AppColors.textPrimary.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.arrow_back, color: AppColors.textOnPrimary, size: 20),
+              child: const Icon(Icons.arrow_back,
+                  color: AppColors.textOnPrimary, size: 20),
             ),
             onPressed: () => context.pop(),
           ),
@@ -268,7 +278,8 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                   color: AppColors.textPrimary.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.search, color: AppColors.textOnPrimary, size: 20),
+                child: const Icon(Icons.search,
+                    color: AppColors.textOnPrimary, size: 20),
               ),
               onPressed: () => context.push('/search'),
             ),
@@ -279,10 +290,13 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                   color: AppColors.textPrimary.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.share, color: AppColors.textOnPrimary, size: 20),
+                child: const Icon(Icons.share,
+                    color: AppColors.textOnPrimary, size: 20),
               ),
-              onPressed: () {
-              },
+              onPressed: () => Share.share(
+                'Check out events happening in $cityName on LUMA!\n\n$description',
+                subject: 'Events in $cityName',
+              ),
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(
@@ -339,26 +353,26 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
             ),
           ),
         ),
-
         SliverToBoxAdapter(
-          child: Container(
-            color: AppColors.textOnPrimary,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
+          child: Padding(
+            padding: AppSpacing.screenPadding,
+            child: AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    description,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                  const SizedBox(height: AppSpacing.lg),
+                  AppButton(
+                    label: 'Follow city updates',
+                    icon: Icons.notifications_active_outlined,
+                    variant: AppButtonVariant.tonal,
+                    expanded: true,
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -367,28 +381,12 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
                         ),
                       );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.warning,
-                      foregroundColor: AppColors.textOnPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Subscribe',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-
         _buildEventsList(state, params),
       ],
     );
@@ -407,40 +405,49 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
         SliverAppBar(
           pinned: true,
           title: Text(title),
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textOnPrimary,
         ),
-
         if (widget.categoryId != null || widget.cityId != null)
           SliverToBoxAdapter(
-            child: Container(
-              color: AppColors.textOnPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageX,
+                AppSpacing.lg,
+                AppSpacing.pageX,
+                0,
+              ),
               child: Row(
                 children: [
                   if (widget.categoryId != null)
                     categoryName?.when(
-                      data: (name) => name != null
-                          ? Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Chip(
-                                label: Text(name),
-                                avatar: const Icon(Icons.category, size: 16),
-                                deleteIcon: const Icon(Icons.close, size: 16),
-                                onDeleted: () {
-                                  context.go('/events${widget.cityId != null ? '?cityId=${widget.cityId}' : ''}');
-                                },
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                      loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
-                    ) ?? const SizedBox.shrink(),
+                          data: (name) => name != null
+                              ? Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Chip(
+                                    label: Text(name),
+                                    avatar:
+                                        const Icon(Icons.category, size: 16),
+                                    deleteIcon:
+                                        const Icon(Icons.close, size: 16),
+                                    backgroundColor: AppColors.primarySoft,
+                                    side: BorderSide(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.12),
+                                    ),
+                                    onDeleted: () {
+                                      context.go(
+                                          '/events${widget.cityId != null ? '?cityId=${widget.cityId}' : ''}');
+                                    },
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ) ??
+                        const SizedBox.shrink(),
                 ],
               ),
             ),
           ),
-
         _buildEventsList(state, params),
       ],
     );
@@ -455,7 +462,9 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
         child: _ErrorView(
           error: state.error!,
           onRetry: () {
-            unawaited(ref.read(eventsListProvider(params).notifier).loadEvents(refresh: true));
+            unawaited(ref
+                .read(eventsListProvider(params).notifier)
+                .loadEvents(refresh: true));
           },
         ),
       );
@@ -521,7 +530,8 @@ class _EventsListScreenState extends ConsumerState<EventsListScreen> {
       } else if (eventDate == tomorrow) {
         dateKey = 'Tomorrow / ${DateFormat('EEEE').format(eventDate)}';
       } else {
-        dateKey = '${DateFormat('MMMM d').format(eventDate)} / ${DateFormat('EEEE').format(eventDate)}';
+        dateKey =
+            '${DateFormat('MMMM d').format(eventDate)} / ${DateFormat('EEEE').format(eventDate)}';
       }
 
       grouped.putIfAbsent(dateKey, () => []).add(event);
@@ -547,23 +557,24 @@ class _DateSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          color: AppColors.surfaceVariant,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageX,
+            AppSpacing.xl,
+            AppSpacing.pageX,
+            AppSpacing.sm,
+          ),
           child: Text(
             dateKey,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.label.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
         ),
-
         ...events.map((event) => _EventListItem(
-          event: event,
-          onTap: () => onEventTap(event),
-        )),
+              event: event,
+              onTap: () => onEventTap(event),
+            )),
       ],
     );
   }
@@ -580,168 +591,19 @@ class _EventListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('h:mm a');
-    final startTime = timeFormat.format(event.startDate);
-    final endTime = timeFormat.format(event.endDate);
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: AppColors.primary.withValues(alpha: 0.1),
-                child: event.imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: event.imageUrl!,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => const Icon(
-                          Icons.event,
-                          color: AppColors.primary,
-                          size: 32,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.event,
-                        color: AppColors.primary,
-                        size: 32,
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                        ),
-                        child: event.organiser?.avatarUrl != null
-                            ? ClipOval(
-                                child: CachedNetworkImage(
-                                  imageUrl: event.organiser!.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => _buildAvatarPlaceholder(),
-                                ),
-                              )
-                            : _buildAvatarPlaceholder(),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.organiserName,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: AppColors.textLight,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$startTime - $endTime',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: event.isFree ? AppColors.success.withOpacity(0.1) : AppColors.warning.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          event.isFree ? 'FREE' : '\$${event.price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: event.isFree ? AppColors.success : AppColors.warning,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.textLight,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event.location,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatarPlaceholder() {
-    return Center(
-      child: Text(
-        event.organiserName.isNotEmpty ? event.organiserName[0].toUpperCase() : '?',
-        style: const TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w700,
-          fontSize: 10,
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+      child: EventListTile(
+        event: event,
+        compact: true,
+        onTap: onTap,
+        status: event.isFull
+            ? 'Sold out'
+            : event.isAlmostFull
+                ? 'Almost full'
+                : null,
+        statusVariant:
+            event.isFull ? StatusChipVariant.warning : StatusChipVariant.info,
       ),
     );
   }
@@ -754,43 +616,17 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.event_busy,
-            size: 64,
-            color: AppColors.divider,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            hasFilter ? 'No events match your filter' : 'No events available',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasFilter
-                ? 'Try removing some filters'
-                : 'Check back later for new events',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textLight,
-            ),
-          ),
-          if (hasFilter) ...[
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () => context.go('/events'),
-              icon: const Icon(Icons.clear_all),
-              label: const Text('Clear Filters'),
-            ),
-          ],
-        ],
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: EmptyState(
+        icon: Icons.event_busy_rounded,
+        title:
+            hasFilter ? 'No events match this filter' : 'No events available',
+        subtitle: hasFilter
+            ? 'Try removing one of the applied filters to reveal more results.'
+            : 'Check back later for newly published events and ticket releases.',
+        actionLabel: hasFilter ? 'Clear filters' : null,
+        onAction: hasFilter ? () => context.go('/events') : null,
       ),
     );
   }
@@ -804,43 +640,11 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error.withOpacity(0.7),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Something went wrong',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textLight,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: ErrorState(
+        message: error,
+        onRetry: onRetry,
       ),
     );
   }

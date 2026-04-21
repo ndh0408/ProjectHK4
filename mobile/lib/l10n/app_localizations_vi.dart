@@ -341,7 +341,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get noMessages => 'Không có tin nhắn';
 
   @override
-  String get noConversations => 'Không có hội thoại';
+  String get noConversations => 'Chưa có cuộc hội thoại nào';
 
   @override
   String get popularEvents => 'Sự kiện phổ biến';
@@ -430,6 +430,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get thisMessageWasDeleted => 'Tin nhắn này đã bị xóa';
 
   @override
+  String messageDeletedBy(String name) {
+    return 'Tin nhắn đã bị xóa bởi $name';
+  }
+
+  @override
   String get noMessagesYet => 'Chưa có tin nhắn';
 
   @override
@@ -439,6 +444,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String members(int count) {
     return '$count thành viên';
   }
+
+  @override
+  String get reliabilityScore => 'Điểm uy tín';
+
+  @override
+  String get pastNoShows => 'Số lần bùng';
+
+  @override
+  String get checkedInCount => 'Đã tham gia';
+
+  @override
+  String get confirmParticipation => 'Xác nhận tham gia';
+
+  @override
+  String get groupsTab => 'Nhóm';
+
+  @override
+  String get dmsTab => 'Cá nhân';
+
+  @override
+  String get eventGroupsTab => 'Nhóm Sự Kiện';
+
+  @override
+  String get joinGroupSubtitle => 'Tham gia cộng đồng sự kiện này';
+
+  @override
+  String get alreadyInChat => 'Đang tham gia';
 
   @override
   String get imageUploadedSuccessfully => 'Tải ảnh lên thành công';
@@ -1093,7 +1125,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get eventChatClosedBanner =>
-      'Nhóm chat đã đóng — sự kiện đã kết thúc hơn 24 giờ.';
+      'Nhóm chat đã đóng — sự kiện đã kết thúc hơn 7 ngày.';
 
   @override
   String get joinedEventChat => 'Đã tham gia nhóm chat';

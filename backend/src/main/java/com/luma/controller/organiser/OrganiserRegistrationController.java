@@ -122,6 +122,16 @@ public class OrganiserRegistrationController {
         return ResponseEntity.ok(ApiResponse.success("Check-in successful", response));
     }
 
+    @DeleteMapping("/registrations/{registrationId}")
+    @Operation(summary = "Delete a registration")
+    public ResponseEntity<ApiResponse<Void>> deleteRegistration(
+            @PathVariable UUID registrationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        registrationService.deleteRegistration(registrationId, user);
+        return ResponseEntity.ok(ApiResponse.success("Registration deleted successfully", null));
+    }
+
     @GetMapping("/registrations/event/{eventId}/export")
     @Operation(summary = "Export attendees to Excel")
     public ResponseEntity<byte[]> exportAttendees(

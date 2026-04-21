@@ -9,8 +9,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
-import '../../../../shared/widgets/empty_state.dart';
-import '../../../home/presentation/widgets/event_card.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../home/providers/events_provider.dart';
 
 class SearchState {
@@ -113,6 +112,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.query);
+    _controller.addListener(_handleControllerChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.query.isNotEmpty) {
@@ -123,117 +123,54 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_handleControllerChanged);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _handleControllerChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchProvider);
-    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
+          padding: const EdgeInsets.only(
+            right: AppSpacing.lg,
+            top: AppSpacing.sm,
+            bottom: AppSpacing.sm,
           ),
-          // Pill-style search input: opaque surface + subtle border so the
-          // typed text stays readable regardless of the surrounding AppBar
-          // color. Built with a Theme override so the app-wide
-          // InputDecorationTheme does not bleed into this one.
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              inputDecorationTheme: const InputDecorationTheme(
-                filled: false,
-                fillColor: Colors.transparent,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
-              ),
-            ),
-            child: Container(
-              height: 42,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.allPill,
-                border: Border.all(
-                  color: AppColors.neutral300,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.search,
-                    size: 20,
+          child: AppSearchField(
+            controller: _controller,
+            hintText: 'Search events, venues or organisers',
+            autofocus: widget.query.isEmpty,
+            onChanged: ref.read(searchProvider.notifier).updateQuery,
+            onSubmitted: (value) {
+              if (value.isNotEmpty) {
+                unawaited(ref.read(searchProvider.notifier).search(value));
+              }
+            },
+            trailing: _controller.text.isEmpty
+                ? null
+                : IconButton(
+                    onPressed: () {
+                      _controller.clear();
+                      ref.read(searchProvider.notifier).updateQuery('');
+                    },
+                    icon: const Icon(Icons.close_rounded, size: 18),
                     color: AppColors.textMuted,
+                    splashRadius: 18,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      autofocus: widget.query.isEmpty,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: 'Search events...',
-                        hintStyle: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        filled: false,
-                        fillColor: Colors.transparent,
-                        contentPadding: EdgeInsets.zero,
-                        isDense: true,
-                      ),
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                      ),
-                      cursorColor: scheme.primary,
-                      onChanged: (value) {
-                        ref.read(searchProvider.notifier).updateQuery(value);
-                      },
-                      onSubmitted: (value) {
-                        if (value.isNotEmpty) {
-                          unawaited(
-                            ref.read(searchProvider.notifier).search(value),
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  if (_controller.text.isNotEmpty)
-                    InkWell(
-                      onTap: () {
-                        _controller.clear();
-                        ref.read(searchProvider.notifier).updateQuery('');
-                        setState(() {});
-                      },
-                      borderRadius: AppRadius.allPill,
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.close,
-                          size: 18,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
           ),
         ),
-        actions: const [SizedBox(width: AppSpacing.xs)],
       ),
       body: _buildBody(context, searchState),
     );
@@ -241,7 +178,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildBody(BuildContext context, SearchState state) {
     if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingState(
+        message: 'Searching events and ticket inventory...',
+      );
     }
 
     if (state.error != null) {
@@ -254,83 +193,72 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     if (!state.hasSearched) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.search,
-              size: 64,
-              color: AppColors.textLight,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Search for events',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Enter keywords to find events',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+      return Padding(
+        padding: AppSpacing.screenPadding,
+        child: EmptyState(
+          icon: Icons.travel_explore_rounded,
+          title: 'Start with a keyword',
+          subtitle:
+              'Search by event name, city, category or organiser to jump straight into the right ticket flow.',
         ),
       );
     }
 
     if (state.results.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.search_off,
-              size: 64,
-              color: AppColors.textLight,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No results found',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try different keywords',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
+      return Padding(
+        padding: AppSpacing.screenPadding,
+        child: EmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'No matching events',
+          subtitle:
+              'Try a shorter keyword, another city, or browse categories from Explore instead.',
+          actionLabel: 'Open Explore',
+          onAction: () => context.push('/explore'),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      padding: AppSpacing.screenPadding,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            '${state.results.length} result${state.results.length != 1 ? 's' : ''} for "${state.query}"',
-            style: Theme.of(context).textTheme.bodyMedium,
+        AppCard(
+          background: AppColors.primarySoft,
+          borderColor: AppColors.primary.withValues(alpha: 0.12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${state.results.length} result${state.results.length != 1 ? 's' : ''}',
+                style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Showing the best event matches for "${state.query}".',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: state.results.length,
-            itemBuilder: (context, index) {
-              final event = state.results[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: EventCard(
-                  event: event,
-                  showStatusLabel: true,
-                  onTap: () {
-                    ref.read(selectedEventProvider.notifier).state = event;
-                    unawaited(context.push('/event/${event.id}'));
-                  },
-                ),
-              );
+        const SizedBox(height: AppSpacing.xl),
+        ...state.results.map(
+          (event) => EventListTile(
+            event: event,
+            onTap: () {
+              ref.read(selectedEventProvider.notifier).state = event;
+              unawaited(context.push('/event/${event.id}'));
             },
+            status: event.isFull
+                ? 'Sold out'
+                : event.isFree
+                    ? 'Free'
+                    : 'Book now',
+            statusVariant: event.isFull
+                ? StatusChipVariant.warning
+                : event.isFree
+                    ? StatusChipVariant.success
+                    : StatusChipVariant.primary,
           ),
         ),
       ],

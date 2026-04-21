@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/theme.dart';
-import '../../../../l10n/app_localizations.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration_question.dart';
-import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/app_components.dart';
+import '../../../../shared/widgets/app_text_field.dart';
 import 'payment_screen.dart';
 
 class RegistrationFormScreen extends ConsumerStatefulWidget {
@@ -41,6 +43,15 @@ class _RegistrationFormScreenState
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _errorMessage;
+  
+  // Profile Form Fields
+  final _jobTitleController = TextEditingController();
+  final _companyController = TextEditingController();
+  final _industryController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final _goalsController = TextEditingController();
+  final _expectationsController = TextEditingController();
+  final _linkedinController = TextEditingController();
 
   @override
   void initState() {
@@ -58,7 +69,9 @@ class _RegistrationFormScreenState
       final api = ref.read(apiServiceProvider);
 
       final regStatus = await api.getRegistrationStatus(widget.eventId);
-      if (regStatus.isRegistered && regStatus.requiresPayment && regStatus.registrationId != null) {
+      if (regStatus.isRegistered &&
+          regStatus.requiresPayment &&
+          regStatus.registrationId != null) {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -73,6 +86,26 @@ class _RegistrationFormScreenState
         return;
       }
 
+      // Nếu là sự kiện PAID, chuyển thẳng sang payment screen
+      if (!widget.isFree && widget.ticketPrice != null && widget.ticketPrice! > 0) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PaymentScreen(
+              registrationId: regStatus.registrationId ?? '',
+              eventTitle: widget.eventTitle,
+              amount: widget.ticketPrice ?? 0,
+              tierName: widget.ticketTypeName,
+              unitPrice: widget.ticketPrice,
+              quantity: widget.quantity,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Sự kiện FREE mới cần load questions
       await _loadQuestions();
     } catch (e) {
       setState(() {
@@ -106,19 +139,30 @@ class _RegistrationFormScreenState
   }
 
   bool _validateForm() {
+    // Validate Profile Form
+    if (_jobTitleController.text.trim().isEmpty) {
+      _showError('Please enter your job title');
+      return false;
+    }
+    if (_companyController.text.trim().isEmpty) {
+      _showError('Please enter your company');
+      return false;
+    }
+    
+    // Validate Custom Questions
     for (final question in _questions) {
-      if (question.required) {
-        final answer = _answers[question.id];
-        if (question.questionType == QuestionType.multipleChoice) {
-          if ((answer as List<String>).isEmpty) {
-            _showError('Please answer: ${question.questionText}');
-            return false;
-          }
-        } else {
-          if ((answer as String).trim().isEmpty) {
-            _showError('Please answer: ${question.questionText}');
-            return false;
-          }
+      if (!question.required) continue;
+
+      final answer = _answers[question.id];
+      if (question.questionType == QuestionType.multipleChoice) {
+        if ((answer as List<String>).isEmpty) {
+          _showError('Please answer: ${question.questionText}');
+          return false;
+        }
+      } else {
+        if ((answer as String).trim().isEmpty) {
+          _showError('Please answer: ${question.questionText}');
+          return false;
         }
       }
     }
@@ -143,16 +187,8 @@ class _RegistrationFormScreenState
       final api = ref.read(apiServiceProvider);
 
       final regStatus = await api.getRegistrationStatus(widget.eventId);
-      debugPrint('=== Registration Status Check ===');
-      debugPrint('isRegistered: ${regStatus.isRegistered}');
-      debugPrint('registrationId: ${regStatus.registrationId}');
-      debugPrint('requiresPayment: ${regStatus.requiresPayment}');
-      debugPrint('ticketPrice: ${regStatus.ticketPrice}');
-      debugPrint('status: ${regStatus.status}');
-
       if (regStatus.isRegistered && regStatus.registrationId != null) {
         if (regStatus.requiresPayment) {
-          debugPrint('=== Navigating to PaymentScreen (existing registration) ===');
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
@@ -165,46 +201,53 @@ class _RegistrationFormScreenState
             ),
           );
           return;
-        } else {
-          debugPrint('=== Already registered, no payment needed ===');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalizations.of(context)!.alreadyRegistered),
-                backgroundColor: AppColors.success,
-              ),
-            );
-            Navigator.pop(context, true);
-          }
-          return;
         }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.alreadyRegistered),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+        return;
       }
 
       final answersList = _questions.map((q) {
         final answer = _answers[q.id];
-        String answerText;
-        if (q.questionType == QuestionType.multipleChoice) {
-          answerText = (answer as List<String>).join(', ');
-        } else {
-          answerText = answer as String;
-        }
+        final answerText = q.questionType == QuestionType.multipleChoice
+            ? (answer as List<String>).join(', ')
+            : answer as String;
         return RegistrationAnswer(
           questionId: q.id,
           answer: answerText,
         );
       }).toList();
 
-      debugPrint('=== Creating new registration ===');
-      final registration = await api.registerForEventWithAnswers(
+      // Prepare profile data
+      final profileData = <String, dynamic>{
+        'jobTitle': _jobTitleController.text.trim(),
+        'company': _companyController.text.trim(),
+        'industry': _industryController.text.trim(),
+        'experienceLevel': _experienceController.text.trim(),
+        'registrationGoals': _goalsController.text.trim(),
+        'expectations': _expectationsController.text.trim(),
+        'linkedinUrl': _linkedinController.text.trim(),
+      };
+
+      final registration = await api.registerForEventWithAnswersAndProfile(
         widget.eventId,
         answersList,
+        profileData,
         ticketTypeId: widget.ticketTypeId,
         quantity: widget.quantity,
       );
-      debugPrint('=== Registration created: ${registration.id} ===');
 
-      if (!widget.isFree && widget.ticketPrice != null && widget.ticketPrice! > 0) {
-        debugPrint('=== Navigating to PaymentScreen (new registration) ===');
+      if (!widget.isFree &&
+          widget.ticketPrice != null &&
+          widget.ticketPrice! > 0) {
         if (!mounted) return;
         final total = widget.ticketPrice! * widget.quantity;
         Navigator.pushReplacement(
@@ -220,16 +263,14 @@ class _RegistrationFormScreenState
             ),
           ),
         );
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)!.successfullyRegistered),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context, true);
-        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.successfullyRegistered),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -244,18 +285,22 @@ class _RegistrationFormScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.registrationForm),
+        title: Text(l10n.registrationForm),
       ),
-      body: _buildBody(),
-      bottomNavigationBar: _questions.isNotEmpty ? _buildSubmitButton() : null,
+      body: _buildBody(context, l10n),
+      bottomNavigationBar: _buildSubmitBar(context, l10n),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     if (_isLoading) {
-      return LoadingState(message: AppLocalizations.of(context)!.loadingQuestions);
+      return const LoadingState(
+        message: 'Loading registration form...',
+      );
     }
 
     if (_errorMessage != null) {
@@ -265,236 +310,446 @@ class _RegistrationFormScreenState
       );
     }
 
-    if (_questions.isEmpty) {
-      return EmptyState(
-        icon: Icons.quiz_outlined,
-        title: AppLocalizations.of(context)!.noQuestions,
-        subtitle: AppLocalizations.of(context)!.noQuestionsSubtitle,
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.eventTitle,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  AppLocalizations.of(context)!.fillOutFormToComplete,
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          ...List.generate(_questions.length, (index) {
-            final question = _questions[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: _buildQuestionWidget(question, index + 1),
-            );
-          }),
-
-          const SizedBox(height: 80),
+    return ListView(
+      padding: AppSpacing.screenPadding.copyWith(bottom: 140),
+      children: [
+        _buildSummaryCard(context, l10n),
+        const SizedBox(height: AppSpacing.xl),
+        _buildProfileForm(context, l10n),
+        if (_questions.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xl),
+          _buildCustomQuestionsSection(context, l10n),
         ],
-      ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 
-  Widget _buildQuestionWidget(RegistrationQuestion question, int number) {
+  Widget _buildProfileForm(BuildContext context, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Center(
-                child: Text(
-                  '$number',
-                  style: const TextStyle(
-                    color: AppColors.textOnPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      text: question.questionText,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                      children: [
-                        if (question.required)
-                          const TextSpan(
-                            text: ' *',
-                            style: TextStyle(color: AppColors.error),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAnswerInput(question),
-                ],
-              ),
+            Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Professional Profile',
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Help organizers understand your background and goals',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        AppTextField(
+          controller: _jobTitleController,
+          label: 'Job Title *',
+          hint: 'e.g., Product Manager',
+          keyboardType: TextInputType.text,
+          required: true,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _companyController,
+          label: 'Company *',
+          hint: 'e.g., Google',
+          keyboardType: TextInputType.text,
+          required: true,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _industryController,
+          label: 'Industry',
+          hint: 'e.g., Technology',
+          keyboardType: TextInputType.text,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _experienceController,
+          label: 'Experience Level',
+          hint: 'e.g., Mid-level, Senior, Executive',
+          keyboardType: TextInputType.text,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Icon(Icons.lightbulb_outline, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Goals & Expectations',
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _goalsController,
+          label: 'Why do you want to attend this event?',
+          hint: 'Tell us about your goals...',
+          keyboardType: TextInputType.multiline,
+          maxLines: 3,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _expectationsController,
+          label: 'What are your expectations?',
+          hint: 'What do you hope to gain?',
+          keyboardType: TextInputType.multiline,
+          maxLines: 3,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Icon(Icons.link, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Online Profile',
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _linkedinController,
+          label: 'LinkedIn URL (Optional)',
+          hint: 'https://linkedin.com/in/yourname',
+          keyboardType: TextInputType.url,
         ),
       ],
     );
   }
 
-  Widget _buildAnswerInput(RegistrationQuestion question) {
+  Widget _buildCustomQuestionsSection(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.quiz, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Event-Specific Questions',
+              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          'Additional questions from the organizer',
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ...List.generate(
+          _questions.length,
+          (index) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+            child: _buildQuestionCard(context, _questions[index], index + 1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(BuildContext context, AppLocalizations l10n) {
+    final total = (widget.ticketPrice ?? 0) * widget.quantity;
+
+    return AppCard(
+      background: AppColors.primarySoft,
+      borderColor: AppColors.primary.withValues(alpha: 0.12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.eventTitle,
+            style: AppTypography.h2.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Complete the short form below to secure your registration and keep checkout friction low.',
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              StatusChip(
+                label: widget.isFree ? 'Free entry' : 'Paid ticket',
+                variant: widget.isFree
+                    ? StatusChipVariant.success
+                    : StatusChipVariant.primary,
+              ),
+              if (widget.ticketTypeName != null)
+                StatusChip(
+                  label: widget.ticketTypeName!,
+                  variant: StatusChipVariant.neutral,
+                ),
+              if (widget.quantity > 1)
+                StatusChip(
+                  label: '${widget.quantity} attendees',
+                  variant: StatusChipVariant.info,
+                ),
+            ],
+          ),
+          if (!widget.isFree && widget.ticketPrice != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Text(
+                  l10n.registrationFee,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '\$${total.toStringAsFixed(2)}',
+                  style: AppTypography.h3.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionCard(
+    BuildContext context,
+    RegistrationQuestion question,
+    int number,
+  ) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$number',
+                  style: AppTypography.label.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      question.questionText,
+                      style: AppTypography.h4.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      question.required
+                          ? 'Required information'
+                          : 'Optional information',
+                      style: AppTypography.caption.copyWith(
+                        color: question.required
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildAnswerInput(context, question),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnswerInput(
+    BuildContext context,
+    RegistrationQuestion question,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+
     switch (question.questionType) {
       case QuestionType.text:
-        return TextField(
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.enterYourAnswer,
-            border: const OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            _answers[question.id] = value;
-          },
+        return AppTextField(
+          hint: l10n.enterYourAnswer,
+          initialValue: _answers[question.id] as String?,
+          required: question.required,
+          onChanged: (value) => _answers[question.id] = value,
         );
 
       case QuestionType.textarea:
-        return TextField(
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.enterYourAnswer,
-            border: const OutlineInputBorder(),
-          ),
-          onChanged: (value) {
-            _answers[question.id] = value;
-          },
+        return AppTextField(
+          hint: l10n.enterYourAnswer,
+          initialValue: _answers[question.id] as String?,
+          maxLines: 5,
+          required: question.required,
+          onChanged: (value) => _answers[question.id] = value,
         );
 
       case QuestionType.singleChoice:
-        return Column(
-          children: question.options?.map((option) {
-                return RadioListTile<String>(
-                  title: Text(option),
-                  value: option,
-                  groupValue: _answers[question.id] as String?,
-                  onChanged: (value) {
-                    setState(() {
-                      _answers[question.id] = value ?? '';
-                    });
-                  },
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                );
-              }).toList() ??
-              [],
+        final groupValue = _answers[question.id] as String?;
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final option in question.options ?? <String>[])
+              ChoiceChip(
+                label: Text(option),
+                selected: groupValue == option,
+                onSelected: (_) {
+                  setState(() {
+                    _answers[question.id] = option;
+                  });
+                },
+                selectedColor: AppColors.primarySoft,
+                labelStyle: AppTypography.body.copyWith(
+                  color: groupValue == option
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                  fontWeight:
+                      groupValue == option ? FontWeight.w700 : FontWeight.w500,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.allPill,
+                  side: BorderSide(
+                    color: groupValue == option
+                        ? AppColors.primary
+                        : AppColors.border,
+                  ),
+                ),
+              ),
+          ],
         );
 
       case QuestionType.multipleChoice:
-        return Column(
-          children: question.options?.map((option) {
-                final selectedOptions =
-                    _answers[question.id] as List<String>? ?? [];
-                return CheckboxListTile(
-                  title: Text(option),
-                  value: selectedOptions.contains(option),
-                  onChanged: (checked) {
-                    setState(() {
-                      final list =
-                          List<String>.from(_answers[question.id] as List);
-                      if (checked == true) {
-                        list.add(option);
-                      } else {
-                        list.remove(option);
-                      }
-                      _answers[question.id] = list;
-                    });
-                  },
-                  contentPadding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                );
-              }).toList() ??
-              [],
+        final selectedOptions = _answers[question.id] as List<String>? ?? [];
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final option in question.options ?? <String>[])
+              FilterChip(
+                label: Text(option),
+                selected: selectedOptions.contains(option),
+                onSelected: (selected) {
+                  setState(() {
+                    final list = List<String>.from(selectedOptions);
+                    if (selected) {
+                      list.add(option);
+                    } else {
+                      list.remove(option);
+                    }
+                    _answers[question.id] = list;
+                  });
+                },
+                selectedColor: AppColors.primarySoft,
+                checkmarkColor: AppColors.primary,
+                labelStyle: AppTypography.body.copyWith(
+                  color: selectedOptions.contains(option)
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                  fontWeight: selectedOptions.contains(option)
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppRadius.allPill,
+                  side: BorderSide(
+                    color: selectedOptions.contains(option)
+                        ? AppColors.primary
+                        : AppColors.border,
+                  ),
+                ),
+              ),
+          ],
         );
     }
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitBar(BuildContext context, AppLocalizations l10n) {
+    final total = (widget.ticketPrice ?? 0) * widget.quantity;
+
     return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageX,
+          AppSpacing.md,
+          AppSpacing.pageX,
+          AppSpacing.pageY,
         ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textOnPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.textOnPrimary,
-                    ),
-                  )
-                : Text(
-                    widget.isFree ? AppLocalizations.of(context)!.submitRegistration : AppLocalizations.of(context)!.continueToPayment,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+        child: AppCard(
+          shadow: AppShadows.md,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.isFree ? 'Ready to confirm' : 'Next step',
+                          style: AppTypography.label.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          widget.isFree
+                              ? 'Submit registration'
+                              : 'Continue to payment',
+                          style: AppTypography.h4.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  if (!widget.isFree && widget.ticketPrice != null)
+                    Text(
+                      '\$${total.toStringAsFixed(2)}',
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                label: widget.isFree
+                    ? l10n.submitRegistration
+                    : l10n.continueToPayment,
+                icon: widget.isFree
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.arrow_forward_rounded,
+                loading: _isSubmitting,
+                expanded: true,
+                size: AppButtonSize.lg,
+                onPressed: _isSubmitting ? null : _submit,
+              ),
+            ],
           ),
         ),
       ),

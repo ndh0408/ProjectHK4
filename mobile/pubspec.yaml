@@ -27,6 +27,7 @@ dependencies:
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
   flutter_markdown: ^0.7.4+3
+  google_fonts: ^6.2.1
   google_sign_in: ^6.2.1
   flutter_stripe: ^11.5.0
   flutter_stripe_web: ^6.5.1

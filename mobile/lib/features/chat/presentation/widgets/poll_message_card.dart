@@ -188,11 +188,16 @@ class _PollMessageCardState extends ConsumerState<PollMessageCard> {
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
     // Voted + organiser chose to hide results until close: render the
-    // options as read-only placeholders so the user can't re-pick. The
-    // backend doesn't tell us which option the viewer picked, so all rows
-    // look uniformly locked.
+    // options as read-only placeholders so the user can't re-pick.
+    // Highlight the row(s) the viewer actually picked when the backend
+    // supplied their votedOptionIds.
     if (poll.hasVoted && poll.resultsHidden) {
-      return Column(children: options.map(_buildLockedOption).toList());
+      final picked = poll.votedOptionIds?.toSet() ?? const <String>{};
+      return Column(
+        children: options
+            .map((opt) => _buildLockedOption(opt, picked.contains(opt.id)))
+            .toList(),
+      );
     }
 
     return Column(
@@ -204,7 +209,7 @@ class _PollMessageCardState extends ConsumerState<PollMessageCard> {
     );
   }
 
-  Widget _buildLockedOption(PollSnapshotOption option) {
+  Widget _buildLockedOption(PollSnapshotOption option, bool isMyPick) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Container(
@@ -213,23 +218,41 @@ class _PollMessageCardState extends ConsumerState<PollMessageCard> {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(
+            color: isMyPick ? AppColors.primary : AppColors.border,
+            width: isMyPick ? 1.5 : 1,
+          ),
           borderRadius: AppRadius.allMd,
-          color: AppColors.surface,
+          color: isMyPick
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : AppColors.surface,
         ),
         child: Row(
           children: [
-            Icon(Icons.lock_outline, size: 16, color: AppColors.textMuted),
+            Icon(
+              isMyPick ? Icons.check_circle : Icons.lock_outline,
+              size: 16,
+              color: isMyPick ? AppColors.primary : AppColors.textMuted,
+            ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 option.text,
                 style: AppTypography.body.copyWith(
                   fontSize: 13.5,
-                  color: AppColors.textMuted,
+                  color: isMyPick ? AppColors.primary : AppColors.textMuted,
+                  fontWeight: isMyPick ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
+            if (isMyPick)
+              Text(
+                'Your pick',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
           ],
         ),
       ),

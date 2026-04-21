@@ -139,9 +139,27 @@
   "deleteMessage": "Xóa tin nhắn",
   "deleteMessageConfirm": "Bạn có chắc muốn xóa tin nhắn này?",
   "thisMessageWasDeleted": "Tin nhắn này đã bị xóa",
+  "messageDeletedBy": "Tin nhắn đã bị xóa bởi {name}",
+  "@messageDeletedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noMessagesYet": "Chưa có tin nhắn",
   "sendMessageToStart": "Gửi tin nhắn để bắt đầu cuộc trò chuyện",
   "members": "{count} thành viên",
+  "reliabilityScore": "Điểm uy tín",
+  "pastNoShows": "Số lần bùng",
+  "checkedInCount": "Đã tham gia",
+  "confirmParticipation": "Xác nhận tham gia",
+  "groupsTab": "Nhóm",
+  "dmsTab": "Cá nhân",
+  "noConversations": "Chưa có cuộc hội thoại nào",
+  "eventGroupsTab": "Nhóm Sự Kiện",
+  "joinGroupSubtitle": "Tham gia cộng đồng sự kiện này",
+  "alreadyInChat": "Đang tham gia",
   "imageUploadedSuccessfully": "Tải ảnh lên thành công",
   "failedToUploadImage": "Tải ảnh lên thất bại",
   "eventName": "Tên sự kiện",
@@ -358,7 +376,7 @@
   "noMessagesYetTapToChat": "Chưa có tin nhắn · chạm để bắt đầu",
   "eventChatClosedLabel": "Đã đóng",
   "eventChatClosedSubtitle": "Nhóm đã đóng",
-  "eventChatClosedBanner": "Nhóm chat đã đóng — sự kiện đã kết thúc hơn 24 giờ.",
+  "eventChatClosedBanner": "Nhóm chat đã đóng — sự kiện đã kết thúc hơn 7 ngày.",
   "joinedEventChat": "Đã tham gia nhóm chat",
   "failedToJoinChat": "Không thể tham gia nhóm chat",
   "failedToLeaveChat": "Không thể rời nhóm chat",

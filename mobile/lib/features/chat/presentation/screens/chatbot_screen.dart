@@ -9,7 +9,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../../shared/widgets/luma_logo.dart';
 import '../models/chatbot_message.dart';
 import '../providers/chatbot_provider.dart';
@@ -103,6 +105,16 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     await notifier.sendMessage(trimmed);
   }
 
+  void _showToast(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: isError ? AppColors.error : AppColors.neutral900,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<List<ChatbotMessage>>>(chatbotProvider, (prev, next) {
@@ -120,27 +132,43 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Row(
+        titleSpacing: 0,
+        title: Row(
           children: [
-            LumaLogo(size: 32),
-            SizedBox(width: 10),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: AppRadius.allLg,
+              ),
+              child: const Center(child: LumaLogo(size: 24)),
+            ),
+            const SizedBox(width: AppSpacing.md),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('LUMA Assistant',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('AI-powered event discovery',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.normal)),
+                Text(
+                  'LUMA Assistant',
+                  style: AppTypography.h4.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Event-only concierge',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ],
         ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -168,7 +196,12 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                     ? _buildEmptyState()
                     : ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.pageX,
+                          AppSpacing.pageY,
+                          AppSpacing.pageX,
+                          AppSpacing.sm,
+                        ),
                         itemCount: messages.length,
                         itemBuilder: (context, index) =>
                             _buildMessageBubble(messages[index]),
@@ -184,26 +217,13 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             ],
           );
         },
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline,
-                    size: 48, color: AppColors.error),
-                const SizedBox(height: 16),
-                Text('Error: $error', textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref.invalidate(chatbotProvider),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
+        error: (error, _) => ErrorState(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(chatbotProvider),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const LoadingState(
+          message: 'Preparing your event assistant...',
+        ),
       ),
     );
   }
@@ -220,115 +240,118 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Widget _buildEmptyState() {
     final isVi = Localizations.localeOf(context).languageCode == 'vi';
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            const LumaLogo(size: 80),
-            const SizedBox(height: 20),
-            const Text(
-              'LUMA Assistant',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              isVi
-                  ? 'Trợ lý AI khám phá sự kiện trên LUMA.\n'
-                      'Mình chỉ hỗ trợ về sự kiện trên LUMA — hỏi gì cũng được!'
-                  : 'Your AI-powered event discovery assistant.\n'
-                      'I can only help with events on LUMA — ask me anything about them!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-                height: 1.5,
+    return ListView(
+      padding: AppSpacing.screenPadding,
+      children: [
+        AppCard(
+          margin: const EdgeInsets.only(bottom: AppSpacing.section),
+          background: AppColors.primarySoft,
+          borderColor: AppColors.primary.withValues(alpha: 0.18),
+          child: Column(
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: const BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: LumaLogo(size: 46),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildScopeBadge(isVi),
-            const SizedBox(height: 28),
-            Column(
-              children: _defaultSuggestions(context)
-                  .map((q) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildSuggestedQuestion(q),
-                      ))
-                  .toList(),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'LUMA Assistant',
+                style: AppTypography.h2.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                isVi
+                    ? 'Trợ lý AI chuyên cho hệ sinh thái sự kiện LUMA. Hỏi về khám phá sự kiện, vé, lịch trình hoặc các đăng ký hiện có.'
+                    : 'Your AI guide for the LUMA event ecosystem. Ask about discovery, tickets, schedules, or existing registrations.',
+                textAlign: TextAlign.center,
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _buildScopeBadge(isVi),
+            ],
+          ),
         ),
-      ),
+        const SectionHeader(
+          title: 'Suggested prompts',
+          subtitle:
+              'Start with a guided question, then continue naturally like a real support thread.',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ..._defaultSuggestions(context).map((q) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: _buildSuggestedQuestion(q),
+            )),
+      ],
     );
   }
 
   Widget _buildScopeBadge(bool isVi) {
-    Widget pill(IconData icon, String text) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 12, color: AppColors.primary),
-              const SizedBox(width: 6),
-              Text(text,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600)),
-            ],
-          ),
-        );
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: 8,
-      runSpacing: 8,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: [
-        pill(Icons.auto_awesome, isVi ? 'Dùng AI' : 'AI-powered'),
-        pill(Icons.storage_rounded, isVi ? 'Dữ liệu thật' : 'Live database'),
-        pill(Icons.lock_outline, isVi ? 'Chỉ sự kiện' : 'Events only'),
+        StatusChip(
+          label: isVi ? 'Dùng AI' : 'AI-powered',
+          variant: StatusChipVariant.primary,
+        ),
+        StatusChip(
+          label: isVi ? 'Dữ liệu thật' : 'Live data',
+          variant: StatusChipVariant.success,
+        ),
+        StatusChip(
+          label: isVi ? 'Chỉ sự kiện' : 'Events only',
+          variant: StatusChipVariant.neutral,
+        ),
       ],
     );
   }
 
   Widget _buildSuggestedQuestion(String text) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _sendMessage(text),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+    return AppCard(
+      onTap: () => _sendMessage(text),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: AppRadius.allMd,
+            ),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(text,
-                    style: TextStyle(
-                        color: AppColors.textPrimary, fontSize: 14)),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTypography.body.copyWith(
+                color: AppColors.textPrimary,
               ),
-              Icon(Icons.arrow_forward_ios,
-                  size: 14, color: AppColors.primary.withOpacity(0.5)),
-            ],
+            ),
           ),
-        ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: AppColors.primary.withValues(alpha: 0.55),
+          ),
+        ],
       ),
     );
   }
@@ -490,7 +513,8 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
           if (message.supportRequestId != null)
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: _SupportEscalationCard(requestId: message.supportRequestId!),
+              child:
+                  _SupportEscalationCard(requestId: message.supportRequestId!),
             ),
           Padding(
             padding: EdgeInsets.only(
@@ -526,51 +550,35 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final isVi = Localizations.localeOf(context).languageCode == 'vi';
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => AppBottomSheet(
+        title: isVi ? 'Tác vụ tin nhắn' : 'Message actions',
+        subtitle: isVi
+            ? 'Chọn thao tác cho phản hồi này.'
+            : 'Choose what to do with this response.',
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.neutral300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.copy_rounded),
               title: Text(isVi ? 'Sao chép tin nhắn' : 'Copy message'),
               onTap: () {
                 Clipboard.setData(ClipboardData(text: message.content));
                 Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(isVi ? 'Đã sao chép' : 'Copied to clipboard'),
-                    duration: const Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                _showToast(isVi ? 'Đã sao chép' : 'Copied to clipboard');
               },
             ),
             ListTile(
               leading: const Icon(Icons.refresh_rounded),
               title: Text(isVi ? 'Hỏi lại' : 'Regenerate response'),
-              subtitle: Text(isVi
-                  ? 'Hỏi lại câu hỏi gần nhất'
-                  : 'Re-ask the last question'),
+              subtitle: Text(
+                isVi ? 'Hỏi lại câu hỏi gần nhất' : 'Re-ask the last question',
+              ),
               onTap: () {
                 Navigator.of(ctx).pop();
                 ref.read(chatbotProvider.notifier).regenerateLast();
               },
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -625,7 +633,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -665,22 +673,53 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
   Widget _buildQuickSuggestions(List<String> suggestions) {
     return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: suggestions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final label = suggestions[index];
-          return ActionChip(
-            label: Text(label, style: const TextStyle(fontSize: 12)),
-            backgroundColor: AppColors.primary.withOpacity(0.1),
-            side: BorderSide(color: AppColors.primary.withOpacity(0.3)),
-            onPressed: () => _sendMessage(label),
-            visualDensity: VisualDensity.compact,
-          );
-        },
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageX,
+        AppSpacing.sm,
+        AppSpacing.pageX,
+        AppSpacing.md,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: AppColors.borderLight),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Suggested follow-ups',
+            style: AppTypography.label.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: suggestions.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final label = suggestions[index];
+                return ActionChip(
+                  label: Text(
+                    label,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  backgroundColor: AppColors.primarySoft,
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.18),
+                  ),
+                  onPressed: () => _sendMessage(label),
+                  visualDensity: VisualDensity.compact,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -691,22 +730,24 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pageX,
+          AppSpacing.sm,
+          AppSpacing.pageX,
+          AppSpacing.pageX,
+        ),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
+          border: const Border(
+            top: BorderSide(color: AppColors.borderLight),
+          ),
         ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.neutral300),
+            border: Border.all(color: AppColors.borderLight),
+            boxShadow: AppShadows.sm,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -724,8 +765,12 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                             : 'Ask me about events...'),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    hintStyle: TextStyle(color: AppColors.neutral400),
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    hintStyle: AppTypography.body.copyWith(
+                      color: AppColors.textLight,
+                    ),
                   ),
                   textInputAction: TextInputAction.send,
                   onSubmitted: canSend ? _sendMessage : null,
@@ -759,34 +804,28 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final isVi = Localizations.localeOf(context).languageCode == 'vi';
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isVi ? 'Xoá lịch sử chat' : 'Clear Chat History'),
-        content: Text(isVi
-            ? 'Xoá toàn bộ tin nhắn? Hành động này không thể hoàn tác.'
-            : 'Are you sure you want to delete all messages? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(isVi ? 'Huỷ' : 'Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(chatbotProvider.notifier).clearMessages();
-              Navigator.pop(context);
-            },
-            child: Text(isVi ? 'Xoá' : 'Clear',
-                style: const TextStyle(color: AppColors.error)),
-          ),
-        ],
+      builder: (dialogContext) => AppDialog(
+        title: isVi ? 'Xoá lịch sử chat' : 'Clear chat history',
+        message: isVi
+            ? 'Toàn bộ hội thoại sẽ bị xoá. Hành động này không thể hoàn tác.'
+            : 'This deletes the full conversation and cannot be undone.',
+        icon: Icons.delete_outline_rounded,
+        destructive: true,
+        primaryLabel: isVi ? 'Xoá' : 'Clear',
+        secondaryLabel: isVi ? 'Huỷ' : 'Cancel',
+        onSecondary: () => Navigator.of(dialogContext).pop(),
+        onPrimary: () {
+          ref.read(chatbotProvider.notifier).clearMessages();
+          Navigator.of(dialogContext).pop();
+        },
       ),
     );
   }
 
   String _formatIntent(String intent) => intent
       .split('_')
-      .map((w) => w.isEmpty
-          ? w
-          : w[0].toUpperCase() + w.substring(1).toLowerCase())
+      .map((w) =>
+          w.isEmpty ? w : w[0].toUpperCase() + w.substring(1).toLowerCase())
       .join(' ');
 }
 
@@ -813,7 +852,9 @@ class _SendButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isThinking
         ? AppColors.error
-        : (enabled ? AppColors.primary : AppColors.primary.withOpacity(0.4));
+        : (enabled
+            ? AppColors.primary
+            : AppColors.primary.withValues(alpha: 0.4));
     return SizedBox(
       width: 40,
       height: 40,
@@ -954,8 +995,7 @@ class _ChatbotEventCardState extends ConsumerState<_ChatbotEventCard> {
           ? (isVi ? 'Vui lòng đăng nhập' : 'Please sign in to save events')
           : (isVi ? 'Không thể lưu' : 'Could not save event');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(msg), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
       );
     } catch (_) {
       if (!mounted) return;
@@ -1096,7 +1136,8 @@ class _ChatbotEventCardState extends ConsumerState<_ChatbotEventCard> {
                 icon: const Icon(Icons.confirmation_number_outlined, size: 14),
                 label: Text(
                   isVi ? 'Đăng ký' : 'Register',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -1185,9 +1226,8 @@ class _IconAction extends StatelessWidget {
               : Icon(
                   icon,
                   size: 18,
-                  color: highlighted
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                  color:
+                      highlighted ? AppColors.primary : AppColors.textSecondary,
                 ),
         ),
       ),
@@ -1278,7 +1318,9 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
 
     setState(() => _cancelling = true);
     try {
-      await ref.read(apiServiceProvider).cancelRegistration(widget.ticket.registrationId);
+      await ref
+          .read(apiServiceProvider)
+          .cancelRegistration(widget.ticket.registrationId);
       if (!mounted) return;
       setState(() {
         _cancelling = false;
@@ -1357,12 +1399,15 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
                         const SizedBox(height: 3),
                         Row(
                           children: [
-                            const Icon(Icons.schedule, size: 12, color: AppColors.textSecondary),
+                            const Icon(Icons.schedule,
+                                size: 12, color: AppColors.textSecondary),
                             const SizedBox(width: 3),
                             Expanded(
                               child: Text(
                                 _formatDate(ticket.startTime),
-                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1374,12 +1419,17 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            const Icon(Icons.location_on, size: 12, color: AppColors.textSecondary),
+                            const Icon(Icons.location_on,
+                                size: 12, color: AppColors.textSecondary),
                             const SizedBox(width: 3),
                             Expanded(
                               child: Text(
-                                [ticket.venue, ticket.city].whereType<String>().join(' · '),
-                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                [ticket.venue, ticket.city]
+                                    .whereType<String>()
+                                    .join(' · '),
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textSecondary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1407,11 +1457,15 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               iconSize: 16,
-                              tooltip: isVi ? 'Sao chép mã vé' : 'Copy ticket code',
+                              tooltip:
+                                  isVi ? 'Sao chép mã vé' : 'Copy ticket code',
                               onPressed: () {
-                                Clipboard.setData(ClipboardData(text: ticket.ticketCode!));
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text(isVi ? 'Đã sao chép' : 'Copied'),
+                                Clipboard.setData(
+                                    ClipboardData(text: ticket.ticketCode!));
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content:
+                                      Text(isVi ? 'Đã sao chép' : 'Copied'),
                                   duration: const Duration(seconds: 1),
                                 ));
                               },
@@ -1430,7 +1484,8 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
               children: [
                 if (ticket.checkedIn)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -1446,7 +1501,8 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
                   )
                 else if (cancelled)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -1483,10 +1539,12 @@ class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
                             height: 12,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.cancel_outlined, size: 14, color: AppColors.error),
+                        : const Icon(Icons.cancel_outlined,
+                            size: 14, color: AppColors.error),
                     label: Text(
                       isVi ? 'Huỷ' : 'Cancel',
-                      style: const TextStyle(fontSize: 12, color: AppColors.error),
+                      style:
+                          const TextStyle(fontSize: 12, color: AppColors.error),
                     ),
                     style: TextButton.styleFrom(
                       minimumSize: const Size(0, 28),
@@ -1529,7 +1587,8 @@ class _ChatbotTicketTypePicker extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.confirmation_number_outlined, size: 16, color: AppColors.primary),
+              const Icon(Icons.confirmation_number_outlined,
+                  size: 16, color: AppColors.primary),
               const SizedBox(width: 6),
               Text(
                 isVi ? 'Chọn loại vé' : 'Pick a ticket',
@@ -1587,7 +1646,9 @@ class _TicketTypeRow extends StatelessWidget {
           color: type.soldOut ? AppColors.neutral100 : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: type.soldOut ? AppColors.neutral200 : AppColors.primary.withOpacity(0.3),
+            color: type.soldOut
+                ? AppColors.neutral200
+                : AppColors.primary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -1601,13 +1662,16 @@ class _TicketTypeRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: type.soldOut ? AppColors.textSecondary : AppColors.textPrimary,
+                      color: type.soldOut
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   if (type.description != null && type.description!.isNotEmpty)
                     Text(
                       type.description!,
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1620,7 +1684,9 @@ class _TicketTypeRow extends StatelessWidget {
                             : '${type.available} available'),
                     style: TextStyle(
                       fontSize: 10,
-                      color: type.soldOut ? AppColors.error : AppColors.textSecondary,
+                      color: type.soldOut
+                          ? AppColors.error
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -1652,7 +1718,8 @@ class _SupportEscalationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isVi = Localizations.localeOf(context).languageCode == 'vi';
-    final shortId = requestId.length > 8 ? requestId.substring(0, 8) : requestId;
+    final shortId =
+        requestId.length > 8 ? requestId.substring(0, 8) : requestId;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1680,7 +1747,8 @@ class _SupportEscalationCard extends StatelessWidget {
                   isVi
                       ? 'Mã yêu cầu: #$shortId — CSKH sẽ liên hệ bạn sớm nhất.'
                       : 'Ticket #$shortId — our team will follow up shortly.',
-                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
               ],
             ),

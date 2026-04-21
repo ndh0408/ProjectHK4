@@ -158,9 +158,23 @@
   "deleteMessage": "Xóa tin nhắn",
   "deleteMessageConfirm": "Bạn có chắc muốn xóa tin nhắn này?",
   "thisMessageWasDeleted": "Tin nhắn này đã bị xóa",
+  "messageDeletedBy": "Tin nhắn đã bị xóa bởi {name}",
+  "@messageDeletedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noMessagesYet": "Chưa có tin nhắn",
   "sendMessageToStart": "Gửi tin nhắn để bắt đầu cuộc trò chuyện",
   "members": "{count} thành viên",
+  "reliabilityScore": "Điểm uy tín",
+  "pastNoShows": "Số lần bùng",
+  "checkedInCount": "Đã tham gia",
+  "groupsTab": "Nhóm",
+  "dmsTab": "Cá nhân",
+  "noConversations": "Chưa có hội thoại",
 
   "imageUploadedSuccessfully": "Tải ảnh lên thành công",
   "failedToUploadImage": "Tải ảnh lên thất bại",

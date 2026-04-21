@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class WriteReviewScreen extends ConsumerStatefulWidget {
   const WriteReviewScreen({
@@ -33,10 +35,12 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
   }
 
   Future<void> _submitReview() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.pleaseSelectRating),
+          content: Text(l10n.pleaseSelectRating),
           backgroundColor: AppColors.error,
         ),
       );
@@ -53,24 +57,22 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
         comment: _commentController.text.trim(),
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.reviewSubmitted),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.pop(true);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.extractMessage(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.reviewSubmitted),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorUtils.extractMessage(error)),
+          backgroundColor: AppColors.error,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -83,79 +85,122 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(l10n.writeReview),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.eventTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+      body: ListView(
+        padding: AppSpacing.screenPadding,
+        children: [
+          AppCard(
+            margin: const EdgeInsets.only(bottom: AppSpacing.section),
+            borderColor: AppColors.borderLight,
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: AppRadius.allLg,
                   ),
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              l10n.rating,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            _RatingStars(
-              rating: _rating,
-              onRatingChanged: (value) => setState(() => _rating = value),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _getRatingLabel(l10n),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              l10n.comment,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _commentController,
-              maxLines: 5,
-              maxLength: 1000,
-              decoration: InputDecoration(
-                hintText: l10n.writeYourReview,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  child: const Icon(Icons.rate_review_rounded,
+                      color: Colors.white),
                 ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitReview,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.eventTitle,
+                        style: AppTypography.h3.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Reviews help future attendees trust the event and decide faster.',
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.submitReview),
-              ),
+              ],
             ),
-          ],
+          ),
+          AppCard(
+            margin: const EdgeInsets.only(bottom: AppSpacing.section),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.rating,
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _getRatingLabel(l10n),
+                  style: AppTypography.body.copyWith(
+                    color: _rating == 0
+                        ? AppColors.textSecondary
+                        : AppColors.primary,
+                    fontWeight:
+                        _rating == 0 ? FontWeight.w400 : FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _RatingStars(
+                  rating: _rating,
+                  onRatingChanged: (value) => setState(() => _rating = value),
+                ),
+              ],
+            ),
+          ),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.comment,
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: _commentController,
+                  hint: l10n.writeYourReview,
+                  maxLines: 7,
+                  maxLength: 1000,
+                  helper:
+                      'Mention the venue, agenda quality, check-in flow or anything future attendees should know.',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageX,
+            AppSpacing.md,
+            AppSpacing.pageX,
+            AppSpacing.md,
+          ),
+          child: AppButton(
+            label: l10n.submitReview,
+            icon: Icons.publish_rounded,
+            expanded: true,
+            loading: _isSubmitting,
+            onPressed: _isSubmitting ? null : _submitReview,
+          ),
         ),
       ),
     );
@@ -194,14 +239,26 @@ class _RatingStars extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(5, (index) {
         final starIndex = index + 1;
-        return GestureDetector(
-          onTap: () => onRatingChanged(starIndex),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Icon(
-              starIndex <= rating ? Icons.star : Icons.star_border,
-              size: 48,
-              color: starIndex <= rating ? Colors.amber : AppColors.textSecondary,
+        final selected = starIndex <= rating;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Material(
+            color: selected ? AppColors.warningLight : AppColors.surfaceVariant,
+            borderRadius: AppRadius.allPill,
+            child: InkWell(
+              borderRadius: AppRadius.allPill,
+              onTap: () => onRatingChanged(starIndex),
+              child: Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                child: Icon(
+                  selected ? Icons.star_rounded : Icons.star_border_rounded,
+                  size: 30,
+                  color: selected ? AppColors.warning : AppColors.textLight,
+                ),
+              ),
             ),
           ),
         );

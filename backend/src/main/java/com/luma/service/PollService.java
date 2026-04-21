@@ -32,6 +32,7 @@ public class PollService {
     private final PollVoteRepository pollVoteRepository;
     private final EventService eventService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final PollChatPoster pollChatPoster;
 
     @Transactional
     public PollResponse createPoll(UUID eventId, CreatePollRequest request, User organiser) {
@@ -106,6 +107,10 @@ public class PollService {
                     "/topic/event." + eventId + ".polls",
                     response
             );
+        }
+
+        if (poll.getStatus() == PollStatus.ACTIVE) {
+            pollChatPoster.postPollToEventChat(poll);
         }
 
         log.info("Poll created: {} for event {} with status {}", poll.getId(), eventId, poll.getStatus());
@@ -251,6 +256,10 @@ public class PollService {
 
         poll = pollRepository.save(poll);
 
+        if (poll.getStatus() == PollStatus.ACTIVE) {
+            pollChatPoster.postPollToEventChat(poll);
+        }
+
         PollResponse response = PollResponse.fromEntity(poll, false);
         messagingTemplate.convertAndSend(
                 "/topic/event." + poll.getEvent().getId() + ".polls",
@@ -317,6 +326,8 @@ public class PollService {
 
         log.info("Poll {} opened manually by {}", pollId, organiser.getEmail());
 
+        pollChatPoster.postPollToEventChat(poll);
+
         PollResponse response = PollResponse.fromEntity(poll, false);
         messagingTemplate.convertAndSend(
                 "/topic/event." + poll.getEvent().getId() + ".polls",
@@ -352,6 +363,10 @@ public class PollService {
             poll.setClosesAt(null);  // Người dùng sẽ cần set lại
         }
 
+        // Clear the cached chat message id so PollChatPoster will post a fresh
+        // message into the event group chat — attendees see a new poll bubble
+        // when the organiser reopens a closed poll.
+        poll.setChatMessageId(null);
         poll = pollRepository.save(poll);
 
         log.info("Poll {} reopened by {}", pollId, organiser.getEmail());
@@ -361,6 +376,10 @@ public class PollService {
                 "/topic/event." + poll.getEvent().getId() + ".polls",
                 response
         );
+
+        // Post a fresh chat message so the reopened poll surfaces in the
+        // event's group chat. Idempotency was reset above.
+        pollChatPoster.postPollToEventChat(poll);
 
         return response;
     }
@@ -462,6 +481,8 @@ public class PollService {
             poll.setOpenedAt(LocalDateTime.now());
             pollRepository.save(poll);
 
+            pollChatPoster.postPollToEventChat(poll);
+
             messagingTemplate.convertAndSend(
                     "/topic/event." + poll.getEvent().getId() + ".polls",
                     PollResponse.fromEntity(poll, false)
@@ -534,6 +555,8 @@ public class PollService {
                 poll.setStatus(PollStatus.ACTIVE);
                 poll.setOpenedAt(LocalDateTime.now());
                 pollRepository.save(poll);
+
+                pollChatPoster.postPollToEventChat(poll);
 
                 messagingTemplate.convertAndSend(
                         "/topic/event." + poll.getEvent().getId() + ".polls",

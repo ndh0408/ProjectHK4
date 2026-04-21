@@ -3,41 +3,41 @@ import 'package:flutter/material.dart';
 abstract final class AppShadows {
   static const List<BoxShadow> xs = [
     BoxShadow(
-      color: Color(0x0A000000),
-      blurRadius: 2,
-      offset: Offset(0, 1),
+      color: Color(0x0A0F172A),
+      blurRadius: 8,
+      offset: Offset(0, 2),
     ),
   ];
 
   static const List<BoxShadow> sm = [
     BoxShadow(
-      color: Color(0x0F0F172A),
-      blurRadius: 6,
-      offset: Offset(0, 2),
+      color: Color(0x100F172A),
+      blurRadius: 16,
+      offset: Offset(0, 6),
     ),
   ];
 
   static const List<BoxShadow> md = [
     BoxShadow(
-      color: Color(0x141E293B),
-      blurRadius: 12,
-      offset: Offset(0, 4),
+      color: Color(0x160F172A),
+      blurRadius: 28,
+      offset: Offset(0, 10),
     ),
   ];
 
   static const List<BoxShadow> lg = [
     BoxShadow(
-      color: Color(0x1A0F172A),
-      blurRadius: 24,
-      offset: Offset(0, 8),
+      color: Color(0x1D0F172A),
+      blurRadius: 44,
+      offset: Offset(0, 18),
     ),
   ];
 
   static const List<BoxShadow> primary = [
     BoxShadow(
-      color: Color(0x40667EEA),
-      blurRadius: 20,
-      offset: Offset(0, 8),
+      color: Color(0x2B1858E8),
+      blurRadius: 28,
+      offset: Offset(0, 14),
     ),
   ];
 }

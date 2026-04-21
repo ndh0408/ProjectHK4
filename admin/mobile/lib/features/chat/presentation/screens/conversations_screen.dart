@@ -116,8 +116,17 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
           : [...state.conversations, ...response.content];
 
       if (mounted) {
+        // Sort: Pinned first, then by Last Message Time (newest at top)
+        final sortedConversations = [...newConversations];
+        sortedConversations.sort((a, b) {
+          if (a.pinned != b.pinned) return b.pinned ? -1 : 1;
+          final timeA = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final timeB = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return timeB.compareTo(timeA); // Descending (Newest first)
+        });
+
         state = state.copyWith(
-          conversations: newConversations,
+          conversations: sortedConversations,
           isLoading: false,
           hasMore: response.hasMore,
           currentPage: response.number + 1,
@@ -345,12 +354,12 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                'No conversations yet',
+                AppLocalizations.of(context)!.noConversations,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                'Start chatting with your event buddies!',
+                AppLocalizations.of(context)!.sendMessageToStart,
                 style: TextStyle(color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),

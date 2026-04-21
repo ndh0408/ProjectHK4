@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event_buddy.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart'
     show eventBuddiesProvider;
@@ -44,9 +46,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _groupImage = File(picked.path);
-      });
+      setState(() => _groupImage = File(picked.path));
     }
   }
 
@@ -74,29 +74,27 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
       final conversation = await api.createGroupChat(
         name: _nameController.text.trim(),
-        participantIds: _selectedUsers.map((u) => u.userId).toList(),
+        participantIds: _selectedUsers.map((user) => user.userId).toList(),
         imageUrl: imageUrl,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Group created successfully!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.pop();
-        context.push('/chat/${conversation.id}', extra: conversation);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create group: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Group created successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop();
+      context.push('/chat/${conversation.id}', extra: conversation);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create group: $error'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -107,53 +105,32 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final buddiesState = ref.watch(eventBuddiesProvider);
+    ref.watch(currentUserProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Create Group'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textOnPrimary,
-        elevation: 0,
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _createGroup,
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.textOnPrimary,
-                    ),
-                  )
-                : const Text(
-                    'Create',
-                    style: TextStyle(
-                      color: AppColors.textOnPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-        ],
       ),
       body: Form(
         key: _formKey,
-        child: Column(
+        child: ListView(
+          padding: AppSpacing.screenPadding,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: AppColors.surface,
+            AppCard(
+              margin: const EdgeInsets.only(bottom: AppSpacing.section),
+              borderColor: AppColors.borderLight,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
-                      width: 72,
-                      height: 72,
+                      width: 76,
+                      height: 76,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+                        color: AppColors.primarySoft,
+                        borderRadius: AppRadius.allLg,
                         image: _groupImage != null
                             ? DecorationImage(
                                 image: FileImage(_groupImage!),
@@ -163,35 +140,19 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                       ),
                       child: _groupImage == null
                           ? const Icon(
-                              Icons.camera_alt,
-                              size: 32,
+                              Icons.camera_alt_rounded,
                               color: AppColors.primary,
+                              size: 30,
                             )
                           : null,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.lg),
                   Expanded(
-                    child: TextFormField(
+                    child: AppTextField(
                       controller: _nameController,
-                      decoration: InputDecoration(
-                        hintText: 'Group name',
-                        hintStyle: TextStyle(color: AppColors.textLight),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.border),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColors.border),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                        ),
-                        filled: true,
-                        fillColor: AppColors.surfaceVariant,
-                      ),
+                      label: 'Group name',
+                      hint: 'Weekend planners, VIP crew, check-in team...',
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter a group name';
@@ -203,57 +164,42 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                 ],
               ),
             ),
-
-            if (_selectedUsers.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                color: AppColors.surface,
+            if (_selectedUsers.isNotEmpty) ...[
+              AppCard(
+                margin: const EdgeInsets.only(bottom: AppSpacing.section),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Text(
-                          'Selected Members',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                          'Selected members',
+                          style: AppTypography.h3.copyWith(
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${_selectedUsers.length}',
-                            style: const TextStyle(
-                              color: AppColors.textOnPrimary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        const SizedBox(width: AppSpacing.sm),
+                        StatusChip(
+                          label: '${_selectedUsers.length}',
+                          variant: StatusChipVariant.primary,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.lg),
                     SizedBox(
-                      height: 70,
+                      height: 78,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: _selectedUsers.length,
                         itemBuilder: (context, index) {
                           final user = _selectedUsers.elementAt(index);
                           return Padding(
-                            padding: const EdgeInsets.only(right: 12),
+                            padding:
+                                const EdgeInsets.only(right: AppSpacing.md),
                             child: _SelectedUserChip(
                               user: user,
                               onRemove: () {
-                                setState(() {
-                                  _selectedUsers.remove(user);
-                                });
+                                setState(() => _selectedUsers.remove(user));
                               },
                             ),
                           );
@@ -263,83 +209,58 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                   ],
                 ),
               ),
-
-            const Divider(height: 1),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: AppColors.surfaceVariant,
-              child: Row(
-                children: [
-                  Icon(Icons.people, color: AppColors.primary, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Add Members from Event Buddies',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            ],
+            const SectionHeader(
+              title: 'Add members from Event Buddies',
+              subtitle:
+                  'Start with people you already share events with to improve chat relevance from day one.',
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            if (buddiesState.isLoading && buddiesState.buddies.isEmpty)
+              const LoadingState(message: 'Loading buddies...')
+            else if (buddiesState.buddies.isEmpty)
+              const EmptyState(
+                icon: Icons.people_outline_rounded,
+                compact: true,
+                title: 'No event buddies',
+                subtitle:
+                    'Register for more events to unlock suggested members for group chat.',
+              )
+            else
+              ...buddiesState.buddies.map(
+                (buddy) => _SelectableBuddyCard(
+                  buddy: buddy,
+                  isSelected: _selectedUsers.contains(buddy),
+                  onToggle: () {
+                    setState(() {
+                      if (_selectedUsers.contains(buddy)) {
+                        _selectedUsers.remove(buddy);
+                      } else {
+                        _selectedUsers.add(buddy);
+                      }
+                    });
+                  },
+                ),
               ),
-            ),
-
-            Expanded(
-              child: buddiesState.isLoading && buddiesState.buddies.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : buddiesState.buddies.isEmpty
-                      ? _buildEmptyBuddies()
-                      : ListView.builder(
-                          itemCount: buddiesState.buddies.length,
-                          itemBuilder: (context, index) {
-                            final buddy = buddiesState.buddies[index];
-                            final isSelected = _selectedUsers.contains(buddy);
-                            return _SelectableBuddyTile(
-                              buddy: buddy,
-                              isSelected: isSelected,
-                              onToggle: () {
-                                setState(() {
-                                  if (isSelected) {
-                                    _selectedUsers.remove(buddy);
-                                  } else {
-                                    _selectedUsers.add(buddy);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildEmptyBuddies() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 64,
-              color: AppColors.textLight,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Event Buddies',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Register for events to find buddies',
-              style: TextStyle(color: AppColors.textSecondary),
-              textAlign: TextAlign.center,
-            ),
-          ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageX,
+            AppSpacing.md,
+            AppSpacing.pageX,
+            AppSpacing.md,
+          ),
+          child: AppButton(
+            label: 'Create Group',
+            icon: Icons.group_add_rounded,
+            expanded: true,
+            loading: _isLoading,
+            onPressed: _isLoading ? null : _createGroup,
+          ),
         ),
       ),
     );
@@ -360,18 +281,19 @@ class _SelectedUserChip extends StatelessWidget {
     return Column(
       children: [
         Stack(
+          clipBehavior: Clip.none,
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              backgroundImage: user.avatarUrl != null
-                  ? NetworkImage(user.avatarUrl!)
-                  : null,
+              backgroundColor: AppColors.primarySoft,
+              backgroundImage:
+                  user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
               child: user.avatarUrl == null
                   ? Text(
-                      user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      user.fullName.isNotEmpty
+                          ? user.fullName.substring(0, 1).toUpperCase()
+                          : '?',
+                      style: AppTypography.h4.copyWith(
                         color: AppColors.primary,
                       ),
                     )
@@ -383,30 +305,32 @@ class _SelectedUserChip extends StatelessWidget {
               child: GestureDetector(
                 onTap: onRemove,
                 child: Container(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(AppSpacing.xxs),
                   decoration: const BoxDecoration(
                     color: AppColors.error,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.close,
+                    Icons.close_rounded,
                     size: 12,
-                    color: AppColors.textOnPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         SizedBox(
-          width: 56,
+          width: 64,
           child: Text(
             user.fullName.split(' ').first,
-            style: const TextStyle(fontSize: 11),
-            textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],
@@ -414,8 +338,8 @@ class _SelectedUserChip extends StatelessWidget {
   }
 }
 
-class _SelectableBuddyTile extends StatelessWidget {
-  const _SelectableBuddyTile({
+class _SelectableBuddyCard extends StatelessWidget {
+  const _SelectableBuddyCard({
     required this.buddy,
     required this.isSelected,
     required this.onToggle,
@@ -427,84 +351,58 @@ class _SelectableBuddyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      borderColor: isSelected ? AppColors.primary : AppColors.border,
+      background: isSelected ? AppColors.primarySoft : AppColors.surface,
       onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.05)
-              : AppColors.surface,
-          border: Border(
-            bottom: BorderSide(
-              color: AppColors.divider,
-              width: 0.5,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppColors.primarySoft,
+            backgroundImage:
+                buddy.avatarUrl != null ? NetworkImage(buddy.avatarUrl!) : null,
+            child: buddy.avatarUrl == null
+                ? Text(
+                    buddy.fullName.isNotEmpty
+                        ? buddy.fullName.substring(0, 1).toUpperCase()
+                        : '?',
+                    style: AppTypography.h4.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  buddy.fullName,
+                  style: AppTypography.h4.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '${buddy.sharedEventsCount} shared event${buddy.sharedEventsCount > 1 ? 's' : ''}',
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              backgroundImage: buddy.avatarUrl != null
-                  ? NetworkImage(buddy.avatarUrl!)
-                  : null,
-              child: buddy.avatarUrl == null
-                  ? Text(
-                      buddy.fullName.isNotEmpty ? buddy.fullName[0].toUpperCase() : '?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    buddy.fullName,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${buddy.sharedEventsCount} shared event${buddy.sharedEventsCount > 1 ? 's' : ''}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.transparent,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: AppColors.textOnPrimary,
-                    )
-                  : null,
-            ),
-          ],
-        ),
+          const SizedBox(width: AppSpacing.md),
+          Icon(
+            isSelected
+                ? Icons.check_circle_rounded
+                : Icons.add_circle_outline_rounded,
+            color: isSelected ? AppColors.primary : AppColors.textLight,
+          ),
+        ],
       ),
     );
   }

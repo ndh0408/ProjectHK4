@@ -75,4 +75,7 @@ const _$RegistrationStatusEnumEnumMap = {
   RegistrationStatusEnum.rejected: 'REJECTED',
   RegistrationStatusEnum.waitingList: 'WAITING_LIST',
   RegistrationStatusEnum.cancelled: 'CANCELLED',
+  RegistrationStatusEnum.confirmed: 'CONFIRMED',
+  RegistrationStatusEnum.checkedIn: 'CHECKED_IN',
+  RegistrationStatusEnum.noShow: 'NO_SHOW',
 };

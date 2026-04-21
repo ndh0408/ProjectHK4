@@ -87,11 +87,20 @@ class WebSocketService {
   final Set<String> _desiredConversations = {};
   // Live subscription handles; cleared on disconnect (connection is dead).
   final Map<String, StompUnsubscribe> _conversationSubs = {};
+  // Event poll topic subscriptions (for inline poll cards in event chats).
+  final Set<String> _desiredEventPolls = {};
+  final Map<String, StompUnsubscribe> _eventPollSubs = {};
   StompUnsubscribe? _presenceSub;
   StompUnsubscribe? _userQueueSub;
 
   final _eventController = StreamController<ChatEvent>.broadcast();
   Stream<ChatEvent> get eventStream => _eventController.stream;
+
+  // Poll snapshots broadcast from `/topic/event.{eventId}.polls`.
+  final _pollEventController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get pollEventStream =>
+      _pollEventController.stream;
 
   final _connectionController = StreamController<bool>.broadcast();
   Stream<bool> get connectionStream => _connectionController.stream;
@@ -140,6 +149,9 @@ class WebSocketService {
     for (final conversationId in _desiredConversations) {
       _subscribeConversationInternal(conversationId);
     }
+    for (final eventId in _desiredEventPolls) {
+      _subscribeEventPollsInternal(eventId);
+    }
   }
 
   void _onDisconnect(StompFrame frame) {
@@ -148,6 +160,7 @@ class WebSocketService {
     // Stomp connection is dead — drop handles so we don't try to unsubscribe
     // on the next reconnect. _desiredConversations stays intact for replay.
     _conversationSubs.clear();
+    _eventPollSubs.clear();
     _presenceSub = null;
     _userQueueSub = null;
   }
@@ -233,6 +246,35 @@ class WebSocketService {
     unsub?.call();
   }
 
+  void subscribeToEventPolls(String eventId) {
+    _desiredEventPolls.add(eventId);
+    _subscribeEventPollsInternal(eventId);
+  }
+
+  void _subscribeEventPollsInternal(String eventId) {
+    if (_stompClient == null || !_isConnected) return;
+    if (_eventPollSubs.containsKey(eventId)) return;
+
+    final unsub = _stompClient!.subscribe(
+      destination: '/topic/event.$eventId.polls',
+      callback: (frame) {
+        if (frame.body != null) {
+          final payload = json.decode(frame.body!);
+          if (payload is Map<String, dynamic>) {
+            _pollEventController.add(payload);
+          }
+        }
+      },
+    );
+    _eventPollSubs[eventId] = unsub;
+  }
+
+  void unsubscribeFromEventPolls(String eventId) {
+    _desiredEventPolls.remove(eventId);
+    final unsub = _eventPollSubs.remove(eventId);
+    unsub?.call();
+  }
+
   void _handlePresenceEvent(ChatEvent event) {
     if (event.userId != null) {
       if (event.type == ChatEventType.online) {
@@ -293,6 +335,7 @@ class WebSocketService {
 
   void disconnect({bool keepDesired = false}) {
     _conversationSubs.clear();
+    _eventPollSubs.clear();
     _presenceSub = null;
     _userQueueSub = null;
     _stompClient?.deactivate();
@@ -302,12 +345,14 @@ class WebSocketService {
     _onlineUsers.clear();
     if (!keepDesired) {
       _desiredConversations.clear();
+      _desiredEventPolls.clear();
     }
   }
 
   void dispose() {
     disconnect();
     _eventController.close();
+    _pollEventController.close();
     _connectionController.close();
   }
 }
@@ -344,6 +389,11 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
 final chatEventStreamProvider = StreamProvider<ChatEvent>((ref) {
   final service = ref.watch(webSocketServiceProvider);
   return service.eventStream;
+});
+
+final pollEventStreamProvider = StreamProvider<Map<String, dynamic>>((ref) {
+  final service = ref.watch(webSocketServiceProvider);
+  return service.pollEventStream;
 });
 
 final wsConnectionStatusProvider = StreamProvider<bool>((ref) {

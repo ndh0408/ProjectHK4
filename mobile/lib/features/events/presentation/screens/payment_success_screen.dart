@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../my_events/presentation/screens/my_events_screen.dart';
 
 class PaymentSuccessScreen extends ConsumerStatefulWidget {
-  final String? registrationId;
-
   const PaymentSuccessScreen({
     super.key,
     this.registrationId,
   });
+
+  final String? registrationId;
 
   @override
   ConsumerState<PaymentSuccessScreen> createState() =>
@@ -32,6 +35,8 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
   }
 
   Future<void> _confirmPayment() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (widget.registrationId == null) {
       setState(() {
         _isConfirming = false;
@@ -45,226 +50,220 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen> {
       final api = ref.read(apiServiceProvider);
       await api.confirmPayment(widget.registrationId!);
 
-      if (mounted) {
-        ref.invalidate(myFutureRegistrationsProvider);
-        ref.invalidate(myPastRegistrationsProvider);
+      if (!mounted) return;
+      ref.invalidate(myFutureRegistrationsProvider);
+      ref.invalidate(myPastRegistrationsProvider);
 
-        setState(() {
-          _isConfirming = false;
-          _isSuccess = true;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isConfirming = false;
-          _isSuccess = false;
-          _errorMessage = e.toString();
-        });
-      }
+      setState(() {
+        _isConfirming = false;
+        _isSuccess = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isConfirming = false;
+        _isSuccess = false;
+        _errorMessage = '$error';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.paymentNotYetConfirmed),
+          backgroundColor: AppColors.warning,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: _isConfirming
-                ? _buildLoadingState()
-                : _isSuccess
-                    ? _buildSuccessState()
-                    : _buildErrorState(),
+        child: Padding(
+          padding: AppSpacing.screenPadding,
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              child: _isConfirming
+                  ? LoadingState(message: l10n.processingPayment)
+                  : _isSuccess
+                      ? _OutcomeCard(
+                          icon: Icons.verified_rounded,
+                          iconColor: AppColors.success,
+                          background: AppColors.successLight,
+                          title: l10n.paymentSuccessful,
+                          subtitle:
+                              'Your booking is confirmed and your ticket is now available inside My Events.',
+                          badges: const [
+                            _OutcomeBadge(
+                              icon: Icons.lock_outline_rounded,
+                              label: 'Secure payment confirmed',
+                            ),
+                            _OutcomeBadge(
+                              icon: Icons.confirmation_number_outlined,
+                              label: 'Ticket ready for check-in',
+                            ),
+                          ],
+                          primaryButton: AppButton(
+                            label: 'View My Events',
+                            icon: Icons.confirmation_number_outlined,
+                            expanded: true,
+                            onPressed: () => context.go('/my-events'),
+                          ),
+                          secondaryButton: AppButton(
+                            label: 'Back to Home',
+                            variant: AppButtonVariant.secondary,
+                            expanded: true,
+                            onPressed: () => context.go('/home'),
+                          ),
+                        )
+                      : _OutcomeCard(
+                          icon: Icons.error_outline_rounded,
+                          iconColor: AppColors.error,
+                          background: AppColors.errorLight,
+                          title: 'Payment verification failed',
+                          subtitle: _errorMessage ??
+                              'We could not verify the transaction yet. You can retry confirmation or return to the app safely.',
+                          badges: const [
+                            _OutcomeBadge(
+                              icon: Icons.receipt_long_outlined,
+                              label: 'No ticket was issued',
+                            ),
+                            _OutcomeBadge(
+                              icon: Icons.support_agent_outlined,
+                              label: 'Retry if payment already completed',
+                            ),
+                          ],
+                          primaryButton: AppButton(
+                            label: 'Try Again',
+                            icon: Icons.refresh_rounded,
+                            expanded: true,
+                            onPressed: () {
+                              setState(() {
+                                _isConfirming = true;
+                                _errorMessage = null;
+                              });
+                              _confirmPayment();
+                            },
+                          ),
+                          secondaryButton: AppButton(
+                            label: 'Back to Home',
+                            variant: AppButtonVariant.secondary,
+                            expanded: true,
+                            onPressed: () => context.go('/home'),
+                          ),
+                        ),
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildLoadingState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const SizedBox(
-          width: 60,
-          height: 60,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Confirming your payment...',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Please wait while we verify your payment',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
+class _OutcomeCard extends StatelessWidget {
+  const _OutcomeCard({
+    required this.icon,
+    required this.iconColor,
+    required this.background,
+    required this.title,
+    required this.subtitle,
+    required this.badges,
+    required this.primaryButton,
+    required this.secondaryButton,
+  });
 
-  Widget _buildSuccessState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AppColors.success.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check_circle,
-            size: 60,
-            color: Color(0xFF22C55E),
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Payment Successful!',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Your registration has been confirmed.\nYou can now view your ticket in My Events.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 15,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 40),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => context.go('/my-events'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textOnPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+  final IconData icon;
+  final Color iconColor;
+  final Color background;
+  final String title;
+  final String subtitle;
+  final List<Widget> badges;
+  final Widget primaryButton;
+  final Widget secondaryButton;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: background,
+              shape: BoxShape.circle,
             ),
-            child: const Text(
-              'View My Events',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Icon(icon, size: 52, color: iconColor),
           ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => context.go('/home'),
-          child: Text(
-            'Back to Home',
-            style: TextStyle(
-              fontSize: 15,
+          const SizedBox(height: AppSpacing.xxl),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: AppTypography.h1.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyLg.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.xl),
+          ...badges,
+          const SizedBox(height: AppSpacing.xxl),
+          primaryButton,
+          const SizedBox(height: AppSpacing.md),
+          secondaryButton,
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildErrorState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AppColors.error.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.error_outline,
-            size: 60,
-            color: Color(0xFFEF4444),
-          ),
+class _OutcomeBadge extends StatelessWidget {
+  const _OutcomeBadge({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
         ),
-        const SizedBox(height: 32),
-        const Text(
-          'Payment Verification Failed',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: AppRadius.allMd,
         ),
-        const SizedBox(height: 12),
-        Text(
-          _errorMessage ?? 'Something went wrong. Please try again.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 15,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 40),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _isConfirming = true;
-              });
-              _confirmPayment();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.textOnPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.primary),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
-            child: const Text(
-              'Try Again',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          ],
         ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => context.go('/home'),
-          child: Text(
-            'Back to Home',
-            style: TextStyle(
-              fontSize: 15,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

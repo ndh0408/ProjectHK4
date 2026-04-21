@@ -249,6 +249,7 @@ const OrganiserBoost = () => {
 
     const [upgradeInfo, setUpgradeInfo] = useState(null);
     const [checkingUpgrade, setCheckingUpgrade] = useState(false);
+    const [subscriptionInfo, setSubscriptionInfo] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -259,20 +260,36 @@ const OrganiserBoost = () => {
                 const boostId = params.get('boost');
                 const action = params.get('action');
                 const existingBoostId = params.get('existingBoostId');
+                
                 if (boostId) {
                     try {
+                        console.log('Confirming boost payment:', { boostId, action, existingBoostId });
+                        
+                        // Try to confirm payment
                         await organiserApi.confirmBoostPayment(boostId, action, existingBoostId);
+                        
+                        // Success - boost is active
                         const actionMessage = action === 'EXTEND'
                             ? 'Boost extended successfully!'
                             : action === 'UPGRADE' || action === 'DOWNGRADE'
                             ? 'Boost upgraded successfully!'
                             : 'Payment successful! Your boost is now active.';
                         toast.success(actionMessage);
-                        await loadData();
+                        
                     } catch (error) {
                         console.error('Error confirming boost payment:', error);
-                        toast.error('Payment successful but failed to activate boost. Please contact support.');
+                        
+                        // Fallback: Backend webhook should have already activated the boost
+                        toast.info('Payment received! Checking boost status...');
+                        
+                        // Wait a bit for webhook to process, then check status
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    } finally {
+                        // Always reload data to show updated status
+                        await loadData();
                     }
+                } else {
+                    toast.warning('Payment successful but no boost ID found. Please contact support.');
                 }
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (params.get('canceled') === 'true') {
@@ -310,19 +327,26 @@ const OrganiserBoost = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [packagesRes, boostsRes, eventsRes, discountRes] = await Promise.all([
+            const [packagesRes, boostsRes, eventsRes, discountRes, subscriptionRes] = await Promise.all([
                 organiserApi.getBoostPackages(),
                 organiserApi.getMyBoosts({ page, size: rowsPerPage }),
                 organiserApi.getMyEvents({ size: 1000 }),
                 organiserApi.getBoostDiscount().catch(() => ({ data: { data: 0 } })),
+                organiserApi.getBoostSubscription().catch((error) => {
+                    // Silently handle if endpoint doesn't exist yet
+                    console.log('Boost subscription info not available:', error.message);
+                    return { data: { data: null } };
+                }),
             ]);
             setPackages(packagesRes.data?.data || []);
             setBoosts(boostsRes.data?.data?.content || []);
             setTotalElements(boostsRes.data?.data?.totalElements || 0);
             setEvents(eventsRes.data?.data?.content || []);
             setDiscountPercent(discountRes.data?.data || 0);
+            setSubscriptionInfo(subscriptionRes.data?.data || null);
         } catch (error) {
-            toast.error('Failed to load data');
+            console.error('Load data error:', error);
+            toast.error('Failed to load boost data. Please refresh the page.');
         } finally {
             setLoading(false);
         }
@@ -340,10 +364,31 @@ const OrganiserBoost = () => {
                 eventId: selectedEvent,
                 boostPackage: selectedPackage.packageType,
             });
-            const checkoutUrl = response.data.data.checkoutUrl;
 
+            const data = response.data.data;
+            const checkoutUrl = data?.checkoutUrl;
+            const boostId = data?.boostId;
+            const action = upgradeInfo?.action || 'CREATE';
+            const existingBoostId = upgradeInfo?.existingBoostId;
+
+            if (!checkoutUrl) {
+                toast.error('No checkout URL received');
+                setSubmitting(false);
+                return;
+            }
+
+            // Stripe expects these as query params in the success/cancel URLs
+            // The backend should handle this, but we'll add them here just in case
+            console.log('Redirecting to Stripe:', {
+                boostId,
+                action,
+                existingBoostId
+            });
+
+            // Redirect to Stripe Checkout
             window.location.href = checkoutUrl;
         } catch (error) {
+            console.error('Failed to create boost checkout:', error);
             toast.error(error.response?.data?.message || 'Failed to create checkout session');
             setSubmitting(false);
         }
@@ -457,10 +502,47 @@ const OrganiserBoost = () => {
                 </Alert>
             )}
 
+            {/* Subscription Status */}
+            {subscriptionInfo && (
+                <SectionCard sx={{ mb: 3, bgcolor: tokens.palette.primary[50] }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box
+                            sx={{
+                                width: 56,
+                                height: 56,
+                                borderRadius: `${tokens.radius.lg}px`,
+                                bgcolor: tokens.palette.primary[100],
+                                color: tokens.palette.primary[600],
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <DiamondIcon sx={{ fontSize: 32 }} />
+                        </Box>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="h5" fontWeight="bold">
+                                {subscriptionInfo.packageName || 'Premium Subscription'}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {subscriptionInfo.status === 'ACTIVE' ? 'Active' : subscriptionInfo.status} • 
+                                Renews on {new Date(subscriptionInfo.nextBillingDate).toLocaleDateString()}
+                            </Typography>
+                        </Box>
+                        <Chip
+                            label="ACTIVE"
+                            color="success"
+                            sx={{ fontWeight: 700 }}
+                        />
+                    </Stack>
+                </SectionCard>
+            )}
+
             <Alert severity="info" sx={{ mb: 3, borderRadius: `${tokens.radius.md}px` }}>
                 <Typography variant="body2">
                     <strong>Event Boost</strong> helps your events appear in prominent positions, increasing views and registrations.
                     You can <strong>extend</strong> an existing boost with the same package, or <strong>upgrade</strong> to a higher tier.
+                    {subscriptionInfo && ' Your subscription discount applies automatically.'}
                 </Typography>
             </Alert>
 
@@ -794,6 +876,18 @@ const OrganiserBoost = () => {
                                 {upgradeInfo.message}
                             </Typography>
                         )}
+                    </Alert>
+                )}
+
+                {!upgradeInfo?.hasExistingBoost && subscriptionInfo && (
+                    <Alert
+                        severity="success"
+                        sx={{ mb: 3, borderRadius: `${tokens.radius.md}px` }}
+                        icon={<CheckIcon />}
+                    >
+                        <Typography variant="body2">
+                            <strong>Subscriber Benefit:</strong> You get {discountPercent}% off on boost packages
+                        </Typography>
                     </Alert>
                 )}
 

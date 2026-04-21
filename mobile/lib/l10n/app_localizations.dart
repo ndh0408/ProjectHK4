@@ -761,7 +761,7 @@ abstract class AppLocalizations {
   /// No description provided for @noConversations.
   ///
   /// In en, this message translates to:
-  /// **'No Conversations'**
+  /// **'No conversations yet'**
   String get noConversations;
 
   /// No description provided for @popularEvents.
@@ -932,6 +932,12 @@ abstract class AppLocalizations {
   /// **'This message was deleted'**
   String get thisMessageWasDeleted;
 
+  /// No description provided for @messageDeletedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted by {name}'**
+  String messageDeletedBy(String name);
+
   /// No description provided for @noMessagesYet.
   ///
   /// In en, this message translates to:
@@ -949,6 +955,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} members'**
   String members(int count);
+
+  /// No description provided for @reliabilityScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Reliability Score'**
+  String get reliabilityScore;
+
+  /// No description provided for @pastNoShows.
+  ///
+  /// In en, this message translates to:
+  /// **'Past No-shows'**
+  String get pastNoShows;
+
+  /// No description provided for @checkedInCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked-in'**
+  String get checkedInCount;
+
+  /// No description provided for @confirmParticipation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Participation'**
+  String get confirmParticipation;
+
+  /// No description provided for @groupsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groupsTab;
+
+  /// No description provided for @dmsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'DMs'**
+  String get dmsTab;
+
+  /// No description provided for @eventGroupsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Event Groups'**
+  String get eventGroupsTab;
+
+  /// No description provided for @joinGroupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to join the event community'**
+  String get joinGroupSubtitle;
+
+  /// No description provided for @alreadyInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'In Chat'**
+  String get alreadyInChat;
 
   /// No description provided for @imageUploadedSuccessfully.
   ///
@@ -2207,7 +2267,7 @@ abstract class AppLocalizations {
   /// Bottom banner when chat is closed
   ///
   /// In en, this message translates to:
-  /// **'This event chat is closed — event ended more than 24 hours ago.'**
+  /// **'This event chat is closed — event ended more than 7 days ago.'**
   String get eventChatClosedBanner;
 
   /// Snackbar when joined

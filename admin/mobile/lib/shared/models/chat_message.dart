@@ -26,6 +26,9 @@ class ChatMessage {
     required this.createdAt,
     this.editedAt,
     this.deleted = false,
+    this.deletedByName,
+    this.deletedAt,
+    this.senderRole,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) =>
@@ -41,11 +44,15 @@ class ChatMessage {
   final DateTime createdAt;
   final DateTime? editedAt;
   final bool deleted;
+  final String? deletedByName;
+  final DateTime? deletedAt;
+  final String? senderRole;
 
   Map<String, dynamic> toJson() => _$ChatMessageToJson(this);
 
   bool get isEdited => editedAt != null;
   bool get isDeleted => deleted;
+  bool get isFromOrganiser => senderRole == 'ORGANISER';
 }
 
 @JsonSerializable()

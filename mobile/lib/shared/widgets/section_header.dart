@@ -23,11 +23,12 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final titleStyle = (dense ? AppTypography.h4 : AppTypography.h3)
-        .copyWith(color: Theme.of(context).colorScheme.onSurface);
+        .copyWith(color: colors.onSurface);
 
     return Padding(
-      padding: padding ?? EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -37,7 +38,7 @@ class SectionHeader extends StatelessWidget {
               children: [
                 Text(title, style: titleStyle),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     subtitle!,
                     style: AppTypography.caption.copyWith(
@@ -50,29 +51,32 @@ class SectionHeader extends StatelessWidget {
           ),
           if (trailing != null) trailing!,
           if (onTap != null && trailing == null)
-            InkWell(
-              onTap: onTap,
-              borderRadius: AppRadius.allSm,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'See all',
-                      style: AppTypography.label.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: AppRadius.allPill,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View all',
+                        style: AppTypography.label.copyWith(
+                          color: colors.primary,
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 16,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: colors.primary,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

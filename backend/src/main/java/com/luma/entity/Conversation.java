@@ -51,6 +51,18 @@ public class Conversation {
 
     private LocalDateTime closedAt;
 
+    /// The currently pinned announcement for this conversation, if any. Only
+    /// organisers can pin in EVENT_GROUP chats. Setting to null unpins.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pinned_message_id")
+    private Message pinnedMessage;
+
+    private LocalDateTime pinnedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pinned_by_user_id")
+    private User pinnedBy;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

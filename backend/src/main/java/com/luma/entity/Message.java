@@ -40,11 +40,21 @@ public class Message {
     private String mediaUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "poll_id")
+    private Poll poll;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reply_to_id")
     private Message replyTo;
 
     @Builder.Default
     private boolean deleted = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by_id")
+    private User deletedBy;
+
+    private LocalDateTime deletedAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

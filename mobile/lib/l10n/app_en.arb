@@ -400,6 +400,14 @@
   "deleteMessage": "Delete Message",
   "deleteMessageConfirm": "Are you sure you want to delete this message?",
   "thisMessageWasDeleted": "This message was deleted",
+  "messageDeletedBy": "Message deleted by {name}",
+  "@messageDeletedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noMessagesYet": "No messages yet",
   "sendMessageToStart": "Send a message to start the conversation",
   "members": "{count} members",
@@ -410,6 +418,16 @@
       }
     }
   },
+  "reliabilityScore": "Reliability Score",
+  "pastNoShows": "Past No-shows",
+  "checkedInCount": "Checked-in",
+  "confirmParticipation": "Confirm Participation",
+  "groupsTab": "Groups",
+  "dmsTab": "DMs",
+  "noConversations": "No conversations yet",
+  "eventGroupsTab": "Event Groups",
+  "joinGroupSubtitle": "Tap to join the event community",
+  "alreadyInChat": "In Chat",
   "imageUploadedSuccessfully": "Image uploaded successfully",
   "failedToUploadImage": "Failed to upload image",
   "eventName": "Event Name",
@@ -704,7 +722,7 @@
   "@eventChatClosedSubtitle": {
     "description": "Subtitle for closed chat"
   },
-  "eventChatClosedBanner": "This event chat is closed — event ended more than 24 hours ago.",
+  "eventChatClosedBanner": "This event chat is closed — event ended more than 7 days ago.",
   "@eventChatClosedBanner": {
     "description": "Bottom banner when chat is closed"
   },

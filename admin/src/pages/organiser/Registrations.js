@@ -41,6 +41,8 @@ import {
     Search as SearchIcon,
     QrCodeScanner as QrCodeScannerIcon,
     Close as CloseIcon,
+    Block as BanIcon,
+    VolumeOff as MuteIcon,
 } from '@mui/icons-material';
 import { Html5Qrcode } from 'html5-qrcode';
 import { organiserApi } from '../../api';
@@ -61,10 +63,37 @@ import { toast } from 'react-toastify';
 const statusMap = {
     PENDING: 'warning',
     APPROVED: 'success',
+    CONFIRMED: 'success',
+    CHECKED_IN: 'info',
     REJECTED: 'danger',
     CANCELLED: 'neutral',
-    CHECKED_IN: 'info',
     WAITING_LIST: 'primary',
+    NO_SHOW: 'danger',
+};
+
+// Helper functions for fit level display
+const getFitLabel = (fitLevel) => {
+    if (!fitLevel) return 'N/A';
+    const level = fitLevel.toUpperCase();
+    if (level === 'HIGH') return 'HIGH';
+    if (level === 'MEDIUM') return 'MEDIUM';
+    if (level === 'LOW') return 'LOW';
+    return fitLevel;
+};
+
+const getFitColor = (fitLevel) => {
+    if (!fitLevel) return 'text.secondary';
+    const level = fitLevel.toUpperCase();
+    if (level === 'HIGH') return 'success.main';
+    if (level === 'MEDIUM') return 'warning.main';
+    if (level === 'LOW') return 'error.main';
+    return 'text.secondary';
+};
+
+// Helper function to format question type
+const formatQuestionType = (type) => {
+    if (!type) return '';
+    return type.replace(/_/g, ' ');
 };
 
 // Map raw backend check-in errors to friendlier copy. The code field is
@@ -411,6 +440,24 @@ const OrganiserRegistrations = () => {
         });
     };
 
+    const handleMuteAttendee = async (registration) => {
+        if (!window.confirm(`Mute ${registration.userName} in event chat?`)) return;
+        try {
+            toast.info('Feature is being wired to event chat...');
+        } catch (error) {
+            toast.error('Failed to mute attendee');
+        }
+    };
+
+    const handleBanAttendee = async (registration) => {
+        if (!window.confirm(`BAN ${registration.userName} from this event and chat?`)) return;
+        try {
+            toast.info('Feature is being wired to event chat...');
+        } catch (error) {
+            toast.error('Failed to ban attendee');
+        }
+    };
+
     const handleExport = async () => {
         if (!selectedEvent) return;
 
@@ -432,66 +479,94 @@ const OrganiserRegistrations = () => {
     const columns = [
         {
             field: 'userName',
-            headerName: 'Name',
-            flex: 1,
-            minWidth: 150,
+            headerName: 'Applicant',
+            flex: 1.5,
+            minWidth: 200,
             renderCell: (params) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar src={params.row.userAvatarUrl} sx={{ width: 32, height: 32 }}>
-                        {params.row.userName?.charAt(0)}
-                    </Avatar>
-                    <Typography variant="body2">{params.row.userName || ''}</Typography>
+                <Box sx={{ py: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar src={params.row.userAvatarUrl} sx={{ width: 32, height: 32 }}>
+                            {params.row.userName?.charAt(0)}
+                        </Avatar>
+                        <Typography variant="body2" fontWeight="bold">{params.row.userName || ''}</Typography>
+                    </Box>
+                    {(params.row.jobTitle || params.row.company) && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 5 }}>
+                            {params.row.jobTitle || 'Attendee'}{params.row.company ? ` @ ${params.row.company}` : ''}
+                        </Typography>
+                    )}
                 </Box>
             ),
         },
         {
-            field: 'userEmail',
-            headerName: 'Email',
-            flex: 1,
-            minWidth: 200,
-            valueGetter: (params) => params.row.userEmail || '',
-        },
-        {
-            field: 'ticketTypeName',
-            headerName: 'Ticket',
-            width: 160,
+            field: 'totalScore',
+            headerName: 'Signals',
+            width: 130,
             renderCell: (params) => {
-                const name = params.row.ticketTypeName;
-                const qty = params.row.quantity || 1;
-                const price = params.row.ticketTypePrice;
-                if (!name) {
-                    return <Typography variant="body2" color="text.secondary">— flat —</Typography>;
-                }
+                const score = params.row.totalScore ?? 0;
+                const color = score >= 70 ? 'success' : score >= 40 ? 'warning' : 'error';
+                const warnings = params.row.warningFlags || [];
+                const reasons = params.row.scoreReasons || [];
+
                 return (
-                    <Box>
-                        <Typography variant="body2" fontWeight="bold">{name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            x{qty}{price != null ? ` · $${Number(price).toFixed(2)}` : ''}
-                        </Typography>
-                    </Box>
+                    <Tooltip
+                        title={
+                            <Box sx={{ p: 0.5 }}>
+                                {reasons.length > 0 && (
+                                    <Box sx={{ mb: 1 }}>
+                                        <Typography variant="caption" fontWeight="bold" color="inherit">Strengths:</Typography>
+                                        {reasons.map((r, i) => <Typography key={i} variant="caption" sx={{ display: 'block' }}>• {r}</Typography>)}
+                                    </Box>
+                                )}
+                                {warnings.length > 0 && (
+                                    <Box>
+                                        <Typography variant="caption" fontWeight="bold" color="error.light">Warnings:</Typography>
+                                        {warnings.map((w, i) => <Typography key={i} variant="caption" sx={{ display: 'block', color: 'error.light' }}>• {w}</Typography>)}
+                                    </Box>
+                                )}
+                                {reasons.length === 0 && warnings.length === 0 && (
+                                    <Typography variant="caption">No signals detected</Typography>
+                                )}
+                            </Box>
+                        }
+                        arrow
+                    >
+                        <Chip
+                            label={`Score: ${score}`}
+                            color={color}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontWeight: 'bold' }}
+                        />
+                    </Tooltip>
                 );
             },
         },
         {
-            field: 'totalAmount',
-            headerName: 'Paid',
-            width: 100,
-            valueGetter: (params) => {
-                const price = parseFloat(params.row.ticketTypePrice);
-                const qty = parseInt(params.row.quantity) || 1;
-                if (!isNaN(price)) return (price * qty).toFixed(2);
-                return '0.00';
-            },
+            field: 'history',
+            headerName: 'Reputation',
+            width: 120,
             renderCell: (params) => (
-                <Typography variant="body2" fontWeight={parseFloat(params.value) > 0 ? 'bold' : 'normal'}>
-                    {parseFloat(params.value) > 0 ? `$${params.value}` : 'FREE'}
-                </Typography>
+                <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">Attend:</Typography>
+                        <Typography variant="caption" fontWeight="bold" color="success.main">
+                            {params.row.pastEventsAttended || 0}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary">No-show:</Typography>
+                        <Typography variant="caption" fontWeight="bold" color={params.row.pastNoShows > 0 ? "error.main" : "text.secondary"}>
+                            {params.row.pastNoShows || 0}
+                        </Typography>
+                    </Box>
+                </Box>
             ),
         },
         {
             field: 'status',
             headerName: 'Status',
-            width: 130,
+            width: 120,
             renderCell: (params) => (
                 <StatusChip
                     label={params.value}
@@ -500,18 +575,9 @@ const OrganiserRegistrations = () => {
             ),
         },
         {
-            field: 'createdAt',
-            headerName: 'Registered At',
-            width: 150,
-            valueFormatter: (params) => {
-                if (!params.value) return '';
-                return new Date(params.value).toLocaleDateString();
-            },
-        },
-        {
             field: 'actions',
             headerName: 'Actions',
-            width: 180,
+            width: 160,
             sortable: false,
             renderCell: (params) => (
                 <Box>
@@ -546,7 +612,7 @@ const OrganiserRegistrations = () => {
                             </Tooltip>
                         </>
                     )}
-                    {params.row.status === 'APPROVED' && !params.row.checkedInAt && (
+                    {(params.row.status === 'APPROVED' || params.row.status === 'CONFIRMED') && !params.row.checkedInAt && (
                         <Tooltip title="Check In">
                             <IconButton
                                 size="small"
@@ -556,6 +622,27 @@ const OrganiserRegistrations = () => {
                                 <CheckInIcon />
                             </IconButton>
                         </Tooltip>
+                    )}
+                    {(params.row.status === 'APPROVED' || params.row.status === 'CONFIRMED') && (
+                        <>
+                            <Tooltip title="Mute in Chat">
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleMuteAttendee(params.row)}
+                                >
+                                    <MuteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Ban from Event">
+                                <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleBanAttendee(params.row)}
+                                >
+                                    <BanIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
                     )}
                 </Box>
             ),
@@ -951,9 +1038,9 @@ const OrganiserRegistrations = () => {
             <FormDialog
                 open={answersDialog.open}
                 onClose={() => setAnswersDialog({ open: false, registration: null, answers: [] })}
-                maxWidth="sm"
+                maxWidth="md"
                 title={answersDialog.registration?.userName || 'Registration'}
-                subtitle="Registration details"
+                subtitle="Registration details & decision support"
                 icon={
                     <Avatar src={answersDialog.registration?.userAvatarUrl} sx={{ width: 40, height: 40 }}>
                         {answersDialog.registration?.userName?.charAt(0)}
@@ -990,67 +1077,343 @@ const OrganiserRegistrations = () => {
                     </>
                 }
             >
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" color="primary" gutterBottom>
-                            Contact Information
-                        </Typography>
-                        <List dense>
-                            <ListItem>
-                                <EmailIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                {/* Decision Support Dashboard */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        🎯 Decision Support Dashboard
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2.5, bgcolor: 'linear-gradient(135deg, rgba(103,58,183,0.05) 0%, rgba(63,81,181,0.05) 100%)', borderRadius: 3 }}>
+                        <Grid container spacing={3}>
+                            {/* Overall Score */}
+                            <Grid item xs={12} sm={4}>
+                                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                        RELIABILITY SCORE
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 1, mt: 1 }}>
+                                        <Typography 
+                                            variant="h2" 
+                                            fontWeight="bold" 
+                                            sx={{ 
+                                                color: (answersDialog.registration?.totalScore || 0) >= 70 ? "success.main" :
+                                                       (answersDialog.registration?.totalScore || 0) >= 40 ? "warning.main" : "error.main"
+                                            }}
+                                        >
+                                            {answersDialog.registration?.totalScore || 0}
+                                        </Typography>
+                                        <Typography variant="h6" color="text.secondary">/ 100</Typography>
+                                    </Box>
+                                    <Chip 
+                                        label={(answersDialog.registration?.totalScore || 0) >= 70 ? "Excellent" : 
+                                               (answersDialog.registration?.totalScore || 0) >= 40 ? "Good" : "Caution"}
+                                        size="small"
+                                        color={(answersDialog.registration?.totalScore || 0) >= 70 ? "success" : 
+                                              (answersDialog.registration?.totalScore || 0) >= 40 ? "warning" : "error"}
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Box>
+                            </Grid>
+
+                            {/* Key Metrics */}
+                            <Grid item xs={12} sm={8}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">📊 Event History</Typography>
+                                            <Typography variant="h5" fontWeight="bold" color="success.main">
+                                                {answersDialog.registration?.pastEventsAttended || 0}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">events checked-in</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">⚠️ No-Show Record</Typography>
+                                            <Typography 
+                                                variant="h5" 
+                                                fontWeight="bold" 
+                                                color={(answersDialog.registration?.pastNoShows || 0) > 0 ? "error.main" : "success.main"}
+                                            >
+                                                {answersDialog.registration?.pastNoShows || 0}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {(answersDialog.registration?.pastNoShows || 0) > 0 ? "previous no-shows" : "clean record ✓"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">🎯 Fit Level</Typography>
+                                            <Typography 
+                                                variant="h5" 
+                                                fontWeight="bold"
+                                                sx={{ color: getFitColor(answersDialog.registration?.fitLevel) }}
+                                            >
+                                                {getFitLabel(answersDialog.registration?.fitLevel)}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">with this event</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">✓ Verified</Typography>
+                                            <Typography variant="h5" fontWeight="bold" color="primary.main">
+                                                {answersDialog.registration?.isVerified ? "YES" : "NO"}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {answersDialog.registration?.isVerified ? "profile verified" : "not verified"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+
+                        {/* Score Breakdown & Warnings */}
+                        {(answersDialog.registration?.scoreReasons?.length > 0 || 
+                          answersDialog.registration?.warningFlags?.length > 0 ||
+                          answersDialog.registration?.scoreBreakdown) && (
+                            <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed', borderColor: 'divider' }}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <Typography variant="subtitle2" color="success.main" gutterBottom fontWeight={600}>
+                                            ✓ Positive Signals
+                                        </Typography>
+                                        {answersDialog.registration?.scoreReasons?.length > 0 ? (
+                                            answersDialog.registration?.scoreReasons?.map((r, i) => (
+                                                <Typography 
+                                                    key={i} 
+                                                    variant="body2" 
+                                                    sx={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'flex-start',
+                                                        gap: 1,
+                                                        py: 0.5,
+                                                        color: 'success.dark'
+                                                    }}
+                                                >
+                                                    <span>•</span>{r}
+                                                </Typography>
+                                            ))
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary" fontStyle="italic">No specific reasons</Typography>
+                                        )}
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Typography variant="subtitle2" color="error.main" gutterBottom fontWeight={600}>
+                                            ⚠️ Warning Flags
+                                        </Typography>
+                                        {answersDialog.registration?.warningFlags?.length > 0 ? (
+                                            answersDialog.registration?.warningFlags?.map((w, i) => (
+                                                <Typography 
+                                                    key={i} 
+                                                    variant="body2" 
+                                                    sx={{ 
+                                                        display: 'flex', 
+                                                        alignItems: 'flex-start',
+                                                        gap: 1,
+                                                        py: 0.5,
+                                                        color: 'error.main'
+                                                    }}
+                                                >
+                                                    <span>⚠</span>{w}
+                                                </Typography>
+                                            ))
+                                        ) : (
+                                            <Typography variant="body2" color="text.secondary" fontStyle="italic">No warnings ✓</Typography>
+                                        )}
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        )}
+                    </Paper>
+                </Box>
+
+                {/* Professional Profile */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        💼 Professional Profile
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+                        <Grid container spacing={2.5}>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="subtitle2" color="text.secondary">Job Title</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {answersDialog.registration?.jobTitle || 'N/A'}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="subtitle2" color="text.secondary">Company</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {answersDialog.registration?.company || 'N/A'}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="subtitle2" color="text.secondary">Industry</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {answersDialog.registration?.industry || 'N/A'}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Typography variant="subtitle2" color="text.secondary">Experience Level</Typography>
+                                <Typography variant="body1" fontWeight={600}>
+                                    {answersDialog.registration?.experienceLevel || 'N/A'}
+                                </Typography>
+                            </Grid>
+                            {answersDialog.registration?.linkedinUrl && (
+                                <Grid item xs={12}>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<Avatar src="/static/linkedin-icon.png" sx={{ width: 20, height: 20 }}/>}
+                                        href={answersDialog.registration.linkedinUrl}
+                                        target="_blank"
+                                        size="small"
+                                    >
+                                        View LinkedIn Profile
+                                    </Button>
+                                </Grid>
+                            )}
+                        </Grid>
+                    </Paper>
+                </Box>
+
+                {/* Registration Goals & Compatibility */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        🎯 Registration Goals & Compatibility
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+                        <Grid container spacing={2}>
+                            {answersDialog.registration?.registrationGoals && (
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" color="text.secondary">Goals for attending</Typography>
+                                    <Typography variant="body1" sx={{ mt: 0.5 }}>
+                                        {answersDialog.registration?.registrationGoals}
+                                    </Typography>
+                                </Grid>
+                            )}
+                            {answersDialog.registration?.expectations && (
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" color="text.secondary">Expectations</Typography>
+                                    <Typography variant="body1" sx={{ mt: 0.5 }}>
+                                        {answersDialog.registration?.expectations}
+                                    </Typography>
+                                </Grid>
+                            )}
+                            {answersDialog.registration?.compatibilityNotes && (
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" color="text.secondary">Compatibility Notes</Typography>
+                                    <Typography variant="body1" sx={{ mt: 0.5 }} fontStyle="italic">
+                                        {answersDialog.registration?.compatibilityNotes}
+                                    </Typography>
+                                </Grid>
+                            )}
+                        </Grid>
+                    </Paper>
+                </Box>
+
+                {/* Contact Information */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        📧 Contact Information
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+                        <List dense sx={{ p: 0 }}>
+                            <ListItem sx={{ px: 0 }}>
+                                <EmailIcon sx={{ mr: 2, color: 'primary.main' }} />
                                 <ListItemText
                                     primary={answersDialog.registration?.userEmail || 'N/A'}
                                     secondary="Email"
+                                    primaryTypographyProps={{ fontWeight: 500 }}
                                 />
                             </ListItem>
-                            <ListItem>
-                                <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                                <ListItemText
-                                    primary={answersDialog.registration?.userPhone || 'N/A'}
-                                    secondary="Phone"
-                                />
-                            </ListItem>
-                            <ListItem>
-                                <TimeIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                            {answersDialog.registration?.userPhone && (
+                                <ListItem sx={{ px: 0 }}>
+                                    <PhoneIcon sx={{ mr: 2, color: 'primary.main' }} />
+                                    <ListItemText
+                                        primary={answersDialog.registration?.userPhone || 'N/A'}
+                                        secondary="Phone"
+                                        primaryTypographyProps={{ fontWeight: 500 }}
+                                    />
+                                </ListItem>
+                            )}
+                            <ListItem sx={{ px: 0 }}>
+                                <TimeIcon sx={{ mr: 2, color: 'primary.main' }} />
                                 <ListItemText
                                     primary={answersDialog.registration?.createdAt
                                         ? new Date(answersDialog.registration.createdAt).toLocaleString()
                                         : 'N/A'}
                                     secondary="Registered At"
+                                    primaryTypographyProps={{ fontWeight: 500 }}
                                 />
                             </ListItem>
                         </List>
-                    </Box>
+                    </Paper>
+                </Box>
 
-                    <Divider sx={{ my: 2 }} />
-
-                    <Box>
-                        <Typography variant="subtitle2" color="primary" gutterBottom>
-                            Registration Form Answers
-                        </Typography>
+                {/* Registration Answers (Custom Questions) */}
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        📝 Registration Answers (Event-Specific Questions)
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: 'rgba(103,58,183,0.03)' }}>
                         {loadingAnswers ? (
-                            <Typography color="text.secondary">Loading answers...</Typography>
+                            <Box sx={{ textAlign: 'center', py: 4 }}>
+                                <Typography color="text.secondary">Loading answers...</Typography>
+                            </Box>
                         ) : answersDialog.answers.length > 0 ? (
-                            <List>
+                            <List sx={{ p: 0 }}>
                                 {answersDialog.answers.map((answer, index) => (
                                     <React.Fragment key={answer.id || index}>
-                                        <ListItem sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                                {answer.questionText}
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ mt: 0.5 }}>
-                                                {answer.answer || 'No answer provided'}
-                                            </Typography>
+                                        {index > 0 && <Divider />}
+                                        <ListItem sx={{ px: 0, py: 2.5 }}>
+                                            <ListItemText
+                                                primary={
+                                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
+                                                        <Typography variant="subtitle2" fontWeight={600} color="primary.main">
+                                                            Q{index + 1}. {answer.questionText || 'Question'}
+                                                        </Typography>
+                                                        {answer.isRequired && (
+                                                            <Chip 
+                                                                label="Required" 
+                                                                size="small" 
+                                                                sx={{ height: 20, fontSize: '0.7rem' }}
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                }
+                                                secondary={
+                                                    <Box>
+                                                        <Typography variant="body1" fontWeight={500} sx={{ whiteSpace: 'pre-wrap' }}>
+                                                            {answer.answer || answer.answerText || 'No answer provided'}
+                                                        </Typography>
+                                                        {answer.questionType && (
+                                                            <Chip 
+                                                                label={formatQuestionType(answer.questionType)}
+                                                                size="small"
+                                                                sx={{ mt: 1 }}
+                                                                variant="outlined"
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                }
+                                            />
                                         </ListItem>
-                                        {index < answersDialog.answers.length - 1 && <Divider />}
                                     </React.Fragment>
                                 ))}
                             </List>
                         ) : (
-                            <Typography color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                No custom questions were answered for this registration.
-                            </Typography>
+                            <Box sx={{ textAlign: 'center', py: 4 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    No custom questions for this event
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    User only filled in their profile information (Job Title, Company, etc.)
+                                </Typography>
+                            </Box>
                         )}
-                    </Box>
+                    </Paper>
+                </Box>
             </FormDialog>
 
             <ConfirmDialog

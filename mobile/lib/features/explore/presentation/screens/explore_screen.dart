@@ -2,17 +2,18 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/category.dart';
 import '../../../../shared/models/city.dart';
 import '../../../../shared/models/event.dart';
-import '../../../../shared/models/organiser_profile.dart';
 import '../../../../shared/models/event_image.dart';
+import '../../../../shared/models/organiser_profile.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../home/providers/events_provider.dart';
 
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
@@ -43,57 +44,52 @@ final hcmEventsProvider = FutureProvider<List<Event>>((ref) async {
   return response.content;
 });
 
-final searchQueryProvider = StateProvider<String>((ref) => '');
-
 IconData _getCategoryIcon(String name) {
   final lower = name.toLowerCase();
   if (lower.contains('tech') || lower.contains('technology')) {
-    return Icons.computer;
+    return Icons.computer_rounded;
   }
   if (lower.contains('ai') || lower.contains('artificial')) {
-    return Icons.psychology;
+    return Icons.psychology_rounded;
   }
   if (lower.contains('climate') || lower.contains('environment')) {
-    return Icons.eco;
+    return Icons.eco_rounded;
   }
   if (lower.contains('sport') || lower.contains('fitness')) {
-    return Icons.fitness_center;
+    return Icons.fitness_center_rounded;
   }
-  if (lower.contains('food') || lower.contains('beverage') || lower.contains('drink')) {
-    return Icons.restaurant;
+  if (lower.contains('food') ||
+      lower.contains('beverage') ||
+      lower.contains('drink')) {
+    return Icons.restaurant_rounded;
   }
   if (lower.contains('art') || lower.contains('culture')) {
-    return Icons.palette;
+    return Icons.palette_rounded;
   }
   if (lower.contains('health') || lower.contains('wellness')) {
-    return Icons.favorite;
+    return Icons.favorite_rounded;
   }
-  if (lower.contains('music')) return Icons.music_note;
+  if (lower.contains('music')) return Icons.music_note_rounded;
   if (lower.contains('crypto') || lower.contains('blockchain')) {
-    return Icons.currency_bitcoin;
+    return Icons.currency_bitcoin_rounded;
   }
   if (lower.contains('business') || lower.contains('startup')) {
-    return Icons.business;
+    return Icons.business_center_rounded;
   }
   if (lower.contains('education') || lower.contains('learning')) {
-    return Icons.school;
+    return Icons.school_rounded;
   }
   if (lower.contains('web') || lower.contains('internet')) {
-    return Icons.language;
+    return Icons.language_rounded;
   }
-  return Icons.category;
+  return Icons.category_rounded;
 }
 
-class ExploreScreen extends ConsumerStatefulWidget {
+class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
 
   @override
-  ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
-}
-
-class _ExploreScreenState extends ConsumerState<ExploreScreen> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final categories = ref.watch(categoriesProvider);
     final cities = ref.watch(citiesProvider);
@@ -101,204 +97,326 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     final hcmEvents = ref.watch(hcmEventsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textOnPrimary,
         title: Text(l10n.explore),
         actions: [
           IconButton(
-            icon: const Icon(Icons.compare_arrows),
+            icon: const Icon(Icons.compare_arrows_rounded),
             tooltip: 'Compare Events',
             onPressed: () => context.push('/compare-events'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.push('/search'),
           ),
         ],
       ),
       body: RefreshIndicator(
-        color: AppColors.primary,
         onRefresh: () async {
           ref.invalidate(categoriesProvider);
           ref.invalidate(citiesProvider);
           ref.invalidate(featuredOrganisersProvider);
           ref.invalidate(hcmEventsProvider);
+          ref.invalidate(galleryPreviewProvider);
         },
-        child: SingleChildScrollView(
+        child: ListView(
+          padding: AppSpacing.screenPadding,
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
+          children: [
+            _ExploreHero(
+              onSearch: () => context.push('/search'),
+              onCompare: () => context.push('/compare-events'),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SectionHeader(
+              title: 'City Spotlight',
+              subtitle: 'High-intent events happening now in Ho Chi Minh City',
+              onTap: () => context.push('/events?cityId=1'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _CitySpotlightCard(
+              cityName: 'Ho Chi Minh City',
+              imageUrl: _getCityImageUrl('Ho Chi Minh City'),
+              onOpenCity: () => context.push('/events?cityId=1'),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            hcmEvents.when(
+              data: (events) {
+                if (events.isEmpty) {
+                  return const EmptyState(
+                    icon: Icons.event_busy_rounded,
+                    title: 'No spotlight events',
+                    subtitle:
+                        'New city picks will appear here once organisers publish them.',
+                  );
+                }
 
-              _SectionHeader(
-                title: 'Ho Chi Minh City',
-                subtitle: l10n.popularEvents,
-                onViewAll: () => context.push('/events?cityId=1'),
-              ),
-              const SizedBox(height: 4),
-              hcmEvents.when(
-                data: (events) => events.isEmpty
-                    ? Padding(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Text(
-                          l10n.noUpcomingEventsShort,
-                          style: const TextStyle(
-                            color: AppColors.textLight,
-                            fontSize: 14,
-                          ),
+                return Column(
+                  children: events
+                      .map(
+                        (event) => EventListTile(
+                          event: event,
+                          compact: true,
+                          onTap: () {
+                            ref.read(selectedEventProvider.notifier).state =
+                                event;
+                            context.push('/event/${event.id}');
+                          },
+                          status: event.isFull
+                              ? 'Sold out'
+                              : event.isFree
+                                  ? 'Free'
+                                  : 'Book now',
+                          statusVariant: event.isFull
+                              ? StatusChipVariant.warning
+                              : event.isFree
+                                  ? StatusChipVariant.success
+                                  : StatusChipVariant.primary,
                         ),
                       )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: events.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 2),
-                        itemBuilder: (context, index) {
-                          final event = events[index];
-                          return _PopularEventCard(
-                            event: event,
-                            onTap: () {
-                              ref
-                                  .read(selectedEventProvider.notifier)
-                                  .state = event;
-                              context.push('/event/${event.id}');
-                            },
-                          );
-                        },
-                      ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-                error: (e, _) => _ErrorMessage(
-                  message: ErrorUtils.extractMessage(e),
-                  onRetry: () => ref.invalidate(hcmEventsProvider),
-                ),
+                      .toList(),
+                );
+              },
+              loading: () => const LoadingState(
+                message: 'Loading city spotlight...',
               ),
-
-              const SizedBox(height: 28),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  l10n.browseByCategory,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
+              error: (e, _) => _SectionError(
+                message: ErrorUtils.extractMessage(e),
+                onRetry: () => ref.invalidate(hcmEventsProvider),
               ),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 42,
-                child: categories.when(
-                  data: (data) => ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final category = data[index];
-                      return _CategoryChip(
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SectionHeader(
+              title: l10n.browseByCategory,
+              subtitle: 'Jump into the right event type with one tap',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            categories.when(
+              data: (data) => Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: data
+                    .map(
+                      (category) => _CategoryChip(
                         category: category,
-                        onTap: () => context
-                            .push('/events?categoryId=${category.id}'),
-                      );
-                    },
-                  ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => _ErrorMessage(
-                    message: ErrorUtils.extractMessage(e),
-                    onRetry: () => ref.invalidate(categoriesProvider),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              _SectionHeader(
-                title: l10n.cities,
-                onViewAll: () => context.push('/cities'),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 140,
-                child: cities.when(
-                  data: (data) => ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final city = data[index];
-                      return _CityCard(
-                        city: city,
-                        onTap: () => context.push('/events?cityId=${city.id}'),
-                      );
-                    },
-                  ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => _ErrorMessage(
-                    message: ErrorUtils.extractMessage(e),
-                    onRetry: () => ref.invalidate(citiesProvider),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              _SectionHeader(
-                title: 'Gallery',
-                subtitle: 'Photos from events',
-                onViewAll: () => context.push('/gallery'),
-              ),
-              const SizedBox(height: 12),
-              _GalleryPreview(),
-
-              const SizedBox(height: 28),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  l10n.featuredCalendars,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        onTap: () =>
+                            context.push('/events?categoryId=${category.id}'),
                       ),
-                ),
+                    )
+                    .toList(),
               ),
-              const SizedBox(height: 8),
-              organisers.when(
-                data: (data) => ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: data.length > 6 ? 6 : data.length,
+              loading: () => const LoadingState(
+                message: 'Loading categories...',
+              ),
+              error: (e, _) => _SectionError(
+                message: ErrorUtils.extractMessage(e),
+                onRetry: () => ref.invalidate(categoriesProvider),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SectionHeader(
+              title: l10n.cities,
+              subtitle: 'Browse event inventory by destination',
+              onTap: () => context.push('/cities'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              height: 184,
+              child: cities.when(
+                data: (data) => ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: data.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: AppSpacing.md),
                   itemBuilder: (context, index) {
-                    final organiser = data[index];
-                    return _FeaturedCalendarCard(
-                      organiser: organiser,
-                      onTap: () =>
-                          context.push('/organiser/${organiser.id}'),
+                    final city = data[index];
+                    return _CityCard(
+                      city: city,
+                      onTap: () => context.push('/events?cityId=${city.id}'),
                     );
                   },
                 ),
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: CircularProgressIndicator()),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                error: (e, _) => Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _ErrorMessage(
-                    message: ErrorUtils.extractMessage(e),
-                    onRetry: () =>
-                        ref.invalidate(featuredOrganisersProvider),
+                error: (e, _) => _HorizontalErrorCard(
+                  message: ErrorUtils.extractMessage(e),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SectionHeader(
+              title: 'Gallery',
+              subtitle: 'Recent moments from live experiences on the platform',
+              onTap: () => context.push('/gallery'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const _GalleryPreview(),
+            const SizedBox(height: AppSpacing.xl),
+            SectionHeader(
+              title: l10n.featuredCalendars,
+              subtitle: 'Trusted organisers with active event pipelines',
+              onTap: () => context.push('/organisers'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            organisers.when(
+              data: (data) {
+                if (data.isEmpty) {
+                  return const EmptyState(
+                    icon: Icons.groups_rounded,
+                    title: 'No featured organisers yet',
+                    subtitle:
+                        'Featured organiser calendars will appear here soon.',
+                  );
+                }
+
+                return AppCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: data
+                        .take(6)
+                        .map(
+                          (organiser) => _FeaturedCalendarRow(
+                            organiser: organiser,
+                            onTap: () =>
+                                context.push('/organiser/${organiser.id}'),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                );
+              },
+              loading: () => const LoadingState(
+                message: 'Loading organiser calendars...',
+              ),
+              error: (e, _) => _SectionError(
+                message: ErrorUtils.extractMessage(e),
+                onRetry: () => ref.invalidate(featuredOrganisersProvider),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxxl),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExploreHero extends StatelessWidget {
+  const _ExploreHero({
+    required this.onSearch,
+    required this.onCompare,
+  });
+
+  final VoidCallback onSearch;
+  final VoidCallback onCompare;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      radius: AppRadius.xxl,
+      border: false,
+      shadow: AppShadows.md,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F2C70),
+              AppColors.primary,
+              Color(0xFFFF7A45),
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Discover the next event worth booking.',
+                style: AppTypography.h1.copyWith(
+                  color: Colors.white,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Search cities, browse categories, compare options and move into ticket checkout with less friction.',
+                style: AppTypography.bodyLg.copyWith(
+                  color: Colors.white.withValues(alpha: 0.88),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Material(
+                color: Colors.white,
+                borderRadius: AppRadius.allPill,
+                child: InkWell(
+                  borderRadius: AppRadius.allPill,
+                  onTap: onSearch,
+                  child: Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.search_rounded,
+                          size: 20,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            'Search events, venues or organisers',
+                            style: AppTypography.body.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primarySoft,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Open Search',
+                      icon: Icons.search_rounded,
+                      variant: AppButtonVariant.primary,
+                      expanded: true,
+                      onPressed: onSearch,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Compare Events',
+                      icon: Icons.compare_arrows_rounded,
+                      variant: AppButtonVariant.tonal,
+                      expanded: true,
+                      onPressed: onCompare,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -307,262 +425,79 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.subtitle,
-    this.onViewAll,
+class _CitySpotlightCard extends StatelessWidget {
+  const _CitySpotlightCard({
+    required this.cityName,
+    required this.imageUrl,
+    required this.onOpenCity,
   });
 
-  final String title;
-  final String? subtitle;
-  final VoidCallback? onViewAll;
+  final String cityName;
+  final String? imageUrl;
+  final VoidCallback onOpenCity;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (onViewAll != null)
-            GestureDetector(
-              onTap: onViewAll,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.viewAll,
-                      style: const TextStyle(
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Stack(
+          children: [
+            SizedBox(
+              height: 220,
+              width: double.infinity,
+              child: imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl!,
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Container(
                         color: AppColors.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                      ),
+                    )
+                  : Container(
+                      decoration: const BoxDecoration(
+                        gradient: AppColors.primaryGradient,
                       ),
                     ),
-                    const SizedBox(width: 2),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppColors.primary,
-                      size: 20,
-                    ),
+            ),
+            Container(
+              height: 220,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.06),
+                    Colors.black.withValues(alpha: 0.6),
                   ],
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PopularEventCard extends StatelessWidget {
-  const _PopularEventCard({required this.event, required this.onTap});
-
-  final Event event;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final dateFormat = DateFormat('EEE h:mm a');
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 88,
-                    height: 88,
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    child: event.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: event.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => const Icon(
-                              Icons.event,
-                              color: AppColors.primary,
-                              size: 28,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.event,
-                            color: AppColors.primary,
-                            size: 28,
-                          ),
-                  ),
-                ),
-                if (event.isFull)
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.error,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        l10n.soldOut,
-                        style: const TextStyle(
-                          color: AppColors.textOnPrimary,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-
-            Expanded(
+            Positioned(
+              left: AppSpacing.xl,
+              right: AppSpacing.xl,
+              bottom: AppSpacing.xl,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: 0.15),
-                        ),
-                        child: event.organiser?.avatarUrl != null
-                            ? ClipOval(
-                                child: CachedNetworkImage(
-                                  imageUrl: event.organiser!.avatarUrl!,
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => const Icon(
-                                    Icons.person,
-                                    size: 12,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 12,
-                                color: AppColors.primary,
-                              ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.organiserName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      if (event.isFull)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.warningLight,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.bookmark,
-                                  size: 12, color: AppColors.warning),
-                              const SizedBox(width: 2),
-                              Text(
-                                l10n.soldOut,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.warning,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
                   Text(
-                    event.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.3,
+                    'What’s happening in',
+                    style: AppTypography.label.copyWith(
+                      color: Colors.white.withValues(alpha: 0.88),
                     ),
                   ),
-                  const SizedBox(height: 4),
-
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule,
-                          size: 14, color: AppColors.textLight),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          dateFormat.format(event.startDate),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: event.isFree ? AppColors.successLight : AppColors.primarySoft,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          event.isFree ? l10n.free.toUpperCase() : '\$${event.price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: event.isFree ? AppColors.success : AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    cityName,
+                    style: AppTypography.h1.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppButton(
+                    label: 'Browse City Events',
+                    icon: Icons.arrow_forward_rounded,
+                    variant: AppButtonVariant.tonal,
+                    onPressed: onOpenCity,
                   ),
                 ],
               ),
@@ -575,23 +510,29 @@ class _PopularEventCard extends StatelessWidget {
 }
 
 class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.category, required this.onTap});
+  const _CategoryChip({
+    required this.category,
+    required this.onTap,
+  });
 
   final Category category;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.allPill,
       child: InkWell(
+        borderRadius: AppRadius.allPill,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: AppRadius.allPill,
             border: Border.all(color: AppColors.borderLight),
           ),
           child: Row(
@@ -599,16 +540,15 @@ class _CategoryChip extends StatelessWidget {
             children: [
               Icon(
                 _getCategoryIcon(category.name),
-                size: 18,
+                size: 16,
                 color: AppColors.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 category.name,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.body.copyWith(
                   color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -632,84 +572,71 @@ class _CityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = _getCityImageUrl(city.name);
 
-    return GestureDetector(
+    return AppCard(
+      padding: EdgeInsets.zero,
+      radius: AppRadius.xl,
       onTap: onTap,
-      child: Container(
-        width: 150,
-        margin: const EdgeInsets.only(right: 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.primary.withValues(alpha: 0.2),
+      child: SizedBox(
+        width: 164,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.xl),
+              ),
+              child: SizedBox(
+                height: 112,
+                width: double.infinity,
+                child: imageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.primarySoft,
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.location_city_rounded,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                        ),
+                        alignment: Alignment.center,
                         child: const Icon(
-                          Icons.location_city,
-                          color: AppColors.primary,
-                          size: 40,
+                          Icons.location_city_rounded,
+                          color: Colors.white,
                         ),
                       ),
-                    )
-                  : Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.primary.withValues(alpha: 0.7),
-                            AppColors.primaryDark,
-                          ],
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.location_city,
-                        color: AppColors.textOnPrimary.withValues(alpha: 0.7),
-                        size: 40,
-                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    city.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.h4.copyWith(
+                      color: AppColors.textPrimary,
                     ),
-
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      AppColors.textPrimary.withValues(alpha: 0.6),
-                    ],
                   ),
-                ),
-              ),
-
-              Positioned(
-                left: 12,
-                bottom: 12,
-                right: 12,
-                child: Text(
-                  city.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textOnPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 4,
-                        color: AppColors.textPrimary,
-                      ),
-                    ],
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Open city calendar',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -717,16 +644,16 @@ class _CityCard extends StatelessWidget {
 }
 
 String _stripMarkdown(String text) {
-  String _first(Match m) => m.group(1) ?? '';
+  String firstMatch(Match m) => m.group(1) ?? '';
   return text
       .replaceAll(RegExp(r'#{1,6}\s*'), '')
-      .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), _first)
-      .replaceAllMapped(RegExp(r'\*(.+?)\*'), _first)
-      .replaceAllMapped(RegExp(r'__(.+?)__'), _first)
-      .replaceAllMapped(RegExp(r'_(.+?)_'), _first)
-      .replaceAllMapped(RegExp(r'~~(.+?)~~'), _first)
-      .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), _first)
-      .replaceAllMapped(RegExp(r'`(.+?)`'), _first)
+      .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), firstMatch)
+      .replaceAllMapped(RegExp(r'\*(.+?)\*'), firstMatch)
+      .replaceAllMapped(RegExp(r'__(.+?)__'), firstMatch)
+      .replaceAllMapped(RegExp(r'_(.+?)_'), firstMatch)
+      .replaceAllMapped(RegExp(r'~~(.+?)~~'), firstMatch)
+      .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), firstMatch)
+      .replaceAllMapped(RegExp(r'`(.+?)`'), firstMatch)
       .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')
       .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')
       .replaceAll(RegExp(r'\n{2,}'), '\n')
@@ -735,7 +662,9 @@ String _stripMarkdown(String text) {
 
 String? _getCityImageUrl(String name) {
   final lower = name.toLowerCase();
-  if (lower.contains('ho chi minh') || lower.contains('hcm') || lower.contains('saigon')) {
+  if (lower.contains('ho chi minh') ||
+      lower.contains('hcm') ||
+      lower.contains('saigon')) {
     return 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=400&h=250&fit=crop';
   }
   if (lower.contains('ha noi') || lower.contains('hanoi')) {
@@ -771,8 +700,8 @@ String? _getCityImageUrl(String name) {
   return null;
 }
 
-class _FeaturedCalendarCard extends StatelessWidget {
-  const _FeaturedCalendarCard({
+class _FeaturedCalendarRow extends StatelessWidget {
+  const _FeaturedCalendarRow({
     required this.organiser,
     required this.onTap,
   });
@@ -782,108 +711,87 @@ class _FeaturedCalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.1),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: AppColors.primarySoft,
+                backgroundImage:
+                    (organiser.logoUrl ?? organiser.avatarUrl) != null
+                        ? CachedNetworkImageProvider(
+                            organiser.logoUrl ?? organiser.avatarUrl!,
+                          )
+                        : null,
+                child: (organiser.logoUrl ?? organiser.avatarUrl) == null
+                    ? Text(
+                        organiser.displayName[0].toUpperCase(),
+                        style: AppTypography.h4.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : null,
               ),
-              child: (organiser.logoUrl ?? organiser.avatarUrl) != null
-                  ? ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: organiser.logoUrl ?? organiser.avatarUrl!,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Center(
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
                           child: Text(
-                            organiser.displayName[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
+                            organiser.displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.h4.copyWith(
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                      ),
-                    )
-                  : Center(
-                      child: Text(
-                        organiser.displayName[0].toUpperCase(),
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          organiser.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                        if (organiser.verified) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          const Icon(
+                            Icons.verified_rounded,
+                            size: 16,
+                            color: AppColors.primary,
                           ),
-                        ),
-                      ),
-                      if (organiser.verified) ...[
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.verified,
-                          size: 16,
-                          color: AppColors.primary,
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${organiser.eventsCount} events • ${organiser.followersCount} followers',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
                     ),
-                  ),
-                  if (organiser.bio != null && organiser.bio!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      _stripMarkdown(organiser.bio!),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
+                      '${organiser.eventsCount} events • ${organiser.followersCount} followers',
+                      style: AppTypography.caption.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    if (organiser.bio != null && organiser.bio!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        _stripMarkdown(organiser.bio!),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.body.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.textLight,
-              size: 20,
-            ),
-          ],
+              const SizedBox(width: AppSpacing.sm),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -891,6 +799,8 @@ class _FeaturedCalendarCard extends StatelessWidget {
 }
 
 class _GalleryPreview extends ConsumerWidget {
+  const _GalleryPreview();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final galleryAsync = ref.watch(galleryPreviewProvider);
@@ -898,34 +808,27 @@ class _GalleryPreview extends ConsumerWidget {
     return galleryAsync.when(
       data: (images) {
         if (images.isEmpty) {
-          return const SizedBox.shrink();
+          return const EmptyState(
+            icon: Icons.photo_library_outlined,
+            title: 'No gallery items yet',
+            subtitle: 'Event photo highlights will appear here once uploaded.',
+          );
         }
 
         return SizedBox(
-          height: 100,
-          child: ListView.builder(
+          height: 118,
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: images.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
               final image = images[index];
               return GestureDetector(
                 onTap: () => context.push('/gallery'),
-                child: Container(
-                  width: 100,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.15),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                  child: SizedBox(
+                    width: 128,
                     child: CachedNetworkImage(
                       imageUrl: image.imageUrl,
                       fit: BoxFit.cover,
@@ -934,7 +837,11 @@ class _GalleryPreview extends ConsumerWidget {
                       ),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.primarySoft,
-                        child: const Icon(Icons.broken_image, size: 24, color: AppColors.primary),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -944,48 +851,49 @@ class _GalleryPreview extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox(
-        height: 100,
-        child: Center(child: CircularProgressIndicator()),
+      loading: () => const LoadingState(
+        message: 'Loading gallery preview...',
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (e, _) => _SectionError(
+        message: ErrorUtils.extractMessage(e),
+      ),
     );
   }
 }
 
-class _ErrorMessage extends StatelessWidget {
-  const _ErrorMessage({required this.message, this.onRetry});
+class _SectionError extends StatelessWidget {
+  const _SectionError({
+    required this.message,
+    this.onRetry,
+  });
 
   final String message;
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline,
-                size: 32, color: AppColors.error),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: onRetry,
-                child: Text(l10n.retry),
-              ),
-            ],
-          ],
+    return ErrorState(
+      message: message,
+      onRetry: onRetry,
+    );
+  }
+}
+
+class _HorizontalErrorCard extends StatelessWidget {
+  const _HorizontalErrorCard({
+    required this.message,
+  });
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Center(
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
         ),
       ),
     );

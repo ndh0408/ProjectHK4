@@ -120,7 +120,13 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
             @Param("endTime") LocalDateTime endTime,
             @Param("status") RegistrationStatus status);
 
-    @Query("SELECT r FROM Registration r WHERE r.event = :event AND r.status IN :statuses")
+    @Query("SELECT r FROM Registration r WHERE r.status IN :statuses " +
+           "AND r.checkedInAt IS NULL " +
+           "AND r.event.endTime < :threshold")
+    List<Registration> findPotentiallyNoShow(@Param("threshold") LocalDateTime threshold,
+                                            @Param("statuses") List<RegistrationStatus> statuses);
+
+    @Query("SELECT r FROM Registration r WHERE r.event IN :events AND r.status IN :statuses")
     List<Registration> findByEventAndStatusIn(@Param("event") Event event, @Param("statuses") List<RegistrationStatus> statuses);
 
     @Query("SELECT r FROM Registration r WHERE r.event = :event AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")

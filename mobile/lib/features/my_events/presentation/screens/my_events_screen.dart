@@ -5,13 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration.dart';
-import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../home/providers/events_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
+import '../../../home/providers/events_provider.dart';
 
 final myPastRegistrationsProvider =
     FutureProvider.autoDispose<List<Registration>>((ref) async {
@@ -42,15 +43,18 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.myEvents),
-        ),
-        body: EmptyState(
-          icon: Icons.login,
-          title: 'Login Required',
-          subtitle: 'Please login to view your events',
-          actionLabel: 'Login',
-          onAction: () => context.push('/login'),
+        appBar: AppBar(title: Text(l10n.myEvents)),
+        backgroundColor: AppColors.background,
+        body: Padding(
+          padding: AppSpacing.screenPadding,
+          child: EmptyState(
+            icon: Icons.login_rounded,
+            title: 'Login required',
+            subtitle:
+                'Sign in to access your tickets, registration status and event history.',
+            actionLabel: 'Login',
+            onAction: () => context.push('/login'),
+          ),
         ),
       );
     }
@@ -60,25 +64,72 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
         : ref.watch(myPastRegistrationsProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(l10n.myEvents),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            padding: AppSpacing.screenPadding,
+            child: Column(
               children: [
-                _SubTabButton(
-                  label: l10n.upcomingEvents,
-                  isSelected: _subTabIndex == 0,
-                  onTap: () => setState(() => _subTabIndex = 0),
+                AppCard(
+                  background: AppColors.primarySoft,
+                  borderColor: AppColors.primary.withValues(alpha: 0.12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Your registrations',
+                              style: AppTypography.h3.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Track upcoming tickets, completed events and registration outcomes in one place.',
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.confirmation_number_outlined,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _SubTabButton(
-                  label: l10n.pastEvents,
-                  isSelected: _subTabIndex == 1,
-                  onTap: () => setState(() => _subTabIndex = 1),
+                const SizedBox(height: AppSpacing.lg),
+                AppSegmentedControl<int>(
+                  value: _subTabIndex,
+                  items: [
+                    AppSegmentItem<int>(
+                      value: 0,
+                      label: l10n.upcomingEvents,
+                    ),
+                    AppSegmentItem<int>(
+                      value: 1,
+                      label: l10n.pastEvents,
+                    ),
+                  ],
+                  onChanged: (value) => setState(() => _subTabIndex = value),
                 ),
               ],
             ),
@@ -87,21 +138,24 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
             child: registrations.when(
               data: (regs) {
                 final filtered = regs.where((r) => r.event != null).toList();
-
                 if (filtered.isEmpty) {
-                  return EmptyState(
-                    icon: _subTabIndex == 0
-                        ? Icons.event_available
-                        : Icons.history,
-                    title: _subTabIndex == 0
-                        ? l10n.noUpcomingEvents
-                        : l10n.pastEvents,
-                    subtitle: _subTabIndex == 0
-                        ? l10n.noUpcomingEventsSubtitle
-                        : l10n.noUpcomingEventsSubtitle,
-                    actionLabel: _subTabIndex == 0 ? l10n.explore : null,
-                    onAction:
-                        _subTabIndex == 0 ? () => context.push('/explore') : null,
+                  return Padding(
+                    padding: AppSpacing.screenPadding,
+                    child: EmptyState(
+                      icon: _subTabIndex == 0
+                          ? Icons.event_available_rounded
+                          : Icons.history_rounded,
+                      title: _subTabIndex == 0
+                          ? l10n.noUpcomingEvents
+                          : 'No past events yet',
+                      subtitle: _subTabIndex == 0
+                          ? l10n.noUpcomingEventsSubtitle
+                          : 'Completed events and certificates will appear here after you attend.',
+                      actionLabel: _subTabIndex == 0 ? l10n.explore : null,
+                      onAction: _subTabIndex == 0
+                          ? () => context.push('/explore')
+                          : null,
+                    ),
                   );
                 }
 
@@ -114,7 +168,12 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
                     }
                   },
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pageX,
+                      0,
+                      AppSpacing.pageX,
+                      AppSpacing.xxxl,
+                    ),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final reg = filtered[index];
@@ -126,16 +185,21 @@ class _MyEventsScreenState extends ConsumerState<MyEventsScreen> {
                   ),
                 );
               },
-              loading: () => const LoadingState(message: 'Loading your events...'),
-              error: (e, _) => ErrorState(
-                message: ErrorUtils.extractMessage(e),
-                onRetry: () {
-                  if (_subTabIndex == 0) {
-                    ref.invalidate(myFutureRegistrationsProvider);
-                  } else {
-                    ref.invalidate(myPastRegistrationsProvider);
-                  }
-                },
+              loading: () => const LoadingState(
+                message: 'Loading your registrations...',
+              ),
+              error: (e, _) => Padding(
+                padding: AppSpacing.screenPadding,
+                child: ErrorState(
+                  message: ErrorUtils.extractMessage(e),
+                  onRetry: () {
+                    if (_subTabIndex == 0) {
+                      ref.invalidate(myFutureRegistrationsProvider);
+                    } else {
+                      ref.invalidate(myPastRegistrationsProvider);
+                    }
+                  },
+                ),
               ),
             ),
           ),
@@ -154,32 +218,33 @@ class _RegistrationCard extends ConsumerWidget {
   final Registration registration;
   final bool isUpcoming;
 
-  Color _getStatusColor(RegistrationStatusEnum status) {
-    switch (status) {
+  (String, StatusChipVariant) _statusPresentation() {
+    switch (registration.status) {
       case RegistrationStatusEnum.approved:
-        return AppColors.success;
+        if (registration.isCheckedIn) {
+          return ('Checked-in', StatusChipVariant.success);
+        }
+        if (registration.requiresPayment &&
+            (registration.ticketPrice ?? registration.ticketTypePrice ?? 0) >
+                0 &&
+            registration.ticketCode == null) {
+          return ('Paid pending', StatusChipVariant.info);
+        }
+        return ('Approved', StatusChipVariant.success);
       case RegistrationStatusEnum.pending:
-        return AppColors.warning;
+        return ('Pending', StatusChipVariant.warning);
       case RegistrationStatusEnum.waitingList:
-        return AppColors.primary;
+        return ('Waitlist', StatusChipVariant.info);
       case RegistrationStatusEnum.rejected:
+        return ('Rejected', StatusChipVariant.danger);
       case RegistrationStatusEnum.cancelled:
-        return AppColors.error;
-    }
-  }
-
-  String _getStatusText(RegistrationStatusEnum status) {
-    switch (status) {
-      case RegistrationStatusEnum.approved:
-        return 'Approved';
-      case RegistrationStatusEnum.pending:
-        return 'Pending';
-      case RegistrationStatusEnum.waitingList:
-        return 'Waitlist';
-      case RegistrationStatusEnum.rejected:
-        return 'Rejected';
-      case RegistrationStatusEnum.cancelled:
-        return 'Cancelled';
+        return ('Cancelled', StatusChipVariant.neutral);
+      case RegistrationStatusEnum.confirmed:
+        return ('Confirmed', StatusChipVariant.success);
+      case RegistrationStatusEnum.checkedIn:
+        return ('Checked-in', StatusChipVariant.success);
+      case RegistrationStatusEnum.noShow:
+        return ('No-show', StatusChipVariant.danger);
     }
   }
 
@@ -188,21 +253,26 @@ class _RegistrationCard extends ConsumerWidget {
     final user = ref.read(currentUserProvider);
     final dateFormat = DateFormat('EEE, MMM d, yyyy • h:mm a');
 
-    unawaited(context.push(
-      '/ticket',
-      extra: {
-        'eventName': event.title,
-        'ticketId': registration.id,
-        'userName': user?.fullName ?? 'Attendee',
-        'eventTime': dateFormat.format(event.startDate),
-        'eventLocation': event.location,
-        'registrationId': registration.id,
-        'checkedInAt': registration.checkedInAt,
-      },
-    ),);
+    unawaited(
+      context.push(
+        '/ticket',
+        extra: {
+          'eventName': event.title,
+          'ticketId': registration.ticketCode ?? registration.id,
+          'userName': user?.fullName ?? 'Attendee',
+          'eventTime': dateFormat.format(event.startDate),
+          'eventLocation': event.location,
+          'registrationId': registration.id,
+          'checkedInAt': registration.checkedInAt,
+        },
+      ),
+    );
   }
 
-  Future<void> _sendCertificateToEmail(BuildContext context, WidgetRef ref) async {
+  Future<void> _sendCertificateToEmail(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     try {
       final api = ref.read(apiServiceProvider);
       await api.sendCertificateByEmail(registration.id);
@@ -210,7 +280,7 @@ class _RegistrationCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Certificate sent to your email!'),
+            content: Text('Certificate sent to your email'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -219,7 +289,8 @@ class _RegistrationCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send certificate: ${ErrorUtils.extractMessage(e)}'),
+            content: Text(
+                'Failed to send certificate: ${ErrorUtils.extractMessage(e)}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -228,25 +299,15 @@ class _RegistrationCard extends ConsumerWidget {
   }
 
   Future<void> _cancelRegistration(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Registration'),
-        content: Text(
+      title: 'Cancel registration',
+      message:
           'Are you sure you want to cancel your registration for "${registration.event?.title}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Yes, Cancel'),
-          ),
-        ],
-      ),
+      primaryLabel: 'Cancel registration',
+      secondaryLabel: 'Keep ticket',
+      destructive: true,
+      icon: Icons.event_busy_rounded,
     );
 
     if (confirmed != true || !context.mounted) return;
@@ -254,7 +315,6 @@ class _RegistrationCard extends ConsumerWidget {
     try {
       final api = ref.read(apiServiceProvider);
       await api.cancelRegistration(registration.id);
-
       ref.invalidate(myFutureRegistrationsProvider);
 
       if (context.mounted) {
@@ -284,177 +344,88 @@ class _RegistrationCard extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final dateFormat = DateFormat('EEE, MMM d');
-    final timeFormat = DateFormat('h:mm a');
     final canViewTicket =
-        registration.status == RegistrationStatusEnum.approved && isUpcoming;
-    final canCancel = isUpcoming &&
-        registration.status != RegistrationStatusEnum.cancelled;
-    final canGetCertificate = !isUpcoming && registration.eligibleForCertificate;
+        registration.hasValidTicket && isUpcoming;
+    final canCancel =
+        isUpcoming && registration.status != RegistrationStatusEnum.cancelled;
+    final canGetCertificate =
+        !isUpcoming && registration.eligibleForCertificate;
+    final (statusText, statusVariant) = _statusPresentation();
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () {
-          ref.read(selectedEventProvider.notifier).state = event;
-          unawaited(context.push('/event/${event.id}'));
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(registration.status)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _getStatusText(registration.status),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: _getStatusColor(registration.status),
-                      ),
-                    ),
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          EventListTile(
+            event: event,
+            compact: true,
+            margin: EdgeInsets.zero,
+            status: statusText,
+            statusVariant: statusVariant,
+            onTap: () {
+              ref.read(selectedEventProvider.notifier).state = event;
+              unawaited(context.push('/event/${event.id}'));
+            },
+          ),
+          if (registration.ticketTypeName != null ||
+              registration.quantity > 1 ||
+              registration.totalAmount > 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                if (registration.ticketTypeName != null)
+                  StatusChip(
+                    label: registration.ticketTypeName!,
+                    variant: StatusChipVariant.neutral,
                   ),
-                  const Spacer(),
-                  if (canViewTicket)
-                    TextButton.icon(
-                      onPressed: () => _viewTicket(context, ref),
-                      icon: const Icon(Icons.qr_code, size: 18),
-                      label: const Text('View Ticket'),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                event.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: AppColors.textSecondary,
+                if (registration.quantity > 1)
+                  StatusChip(
+                    label: '${registration.quantity} seats',
+                    variant: StatusChipVariant.info,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${dateFormat.format(event.startDate)} • ${timeFormat.format(event.startDate)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                if (registration.totalAmount > 0)
+                  StatusChip(
+                    label: '\$${registration.totalAmount.toStringAsFixed(2)}',
+                    variant: StatusChipVariant.primary,
                   ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      event.location,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              if (canCancel) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _cancelRegistration(context, ref),
-                    icon: const Icon(Icons.cancel_outlined, size: 18),
-                    label: const Text('Cancel Registration'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
-                    ),
-                  ),
-                ),
               ],
-              if (canGetCertificate) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _sendCertificateToEmail(context, ref),
-                    icon: const Icon(Icons.email_outlined, size: 18),
-                    label: const Text('Send Certificate to Email'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.textOnPrimary,
-                    ),
-                  ),
-                ),
-              ],
+            ),
+          ],
+          if (canViewTicket || canCancel || canGetCertificate) ...[
+            const SizedBox(height: AppSpacing.lg),
+            if (canViewTicket)
+              AppButton(
+                label: 'View ticket',
+                icon: Icons.qr_code_rounded,
+                expanded: true,
+                onPressed: () => _viewTicket(context, ref),
+              ),
+            if (canCancel) ...[
+              if (canViewTicket) const SizedBox(height: AppSpacing.md),
+              AppButton(
+                label: 'Cancel registration',
+                icon: Icons.cancel_outlined,
+                variant: AppButtonVariant.secondary,
+                expanded: true,
+                onPressed: () => _cancelRegistration(context, ref),
+              ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SubTabButton extends StatelessWidget {
-  const _SubTabButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
+            if (canGetCertificate) ...[
+              if (canViewTicket || canCancel)
+                const SizedBox(height: AppSpacing.md),
+              AppButton(
+                label: 'Send certificate to email',
+                icon: Icons.mail_outline_rounded,
+                variant: AppButtonVariant.tonal,
+                expanded: true,
+                onPressed: () => _sendCertificateToEmail(context, ref),
+              ),
+            ],
+          ],
+        ],
       ),
     );
   }

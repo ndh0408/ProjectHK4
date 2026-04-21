@@ -16,6 +16,12 @@ enum RegistrationStatusEnum {
   waitingList,
   @JsonValue('CANCELLED')
   cancelled,
+  @JsonValue('CONFIRMED')
+  confirmed,
+  @JsonValue('CHECKED_IN')
+  checkedIn,
+  @JsonValue('NO_SHOW')
+  noShow,
 }
 
 class RegistrationStatus {
@@ -47,6 +53,12 @@ class RegistrationStatus {
           return RegistrationStatusEnum.waitingList;
         case 'CANCELLED':
           return RegistrationStatusEnum.cancelled;
+        case 'CONFIRMED':
+          return RegistrationStatusEnum.confirmed;
+        case 'CHECKED_IN':
+          return RegistrationStatusEnum.checkedIn;
+        case 'NO_SHOW':
+          return RegistrationStatusEnum.noShow;
         default:
           return RegistrationStatusEnum.pending;
       }
@@ -130,6 +142,12 @@ class Registration {
           return RegistrationStatusEnum.waitingList;
         case 'CANCELLED':
           return RegistrationStatusEnum.cancelled;
+        case 'CONFIRMED':
+          return RegistrationStatusEnum.confirmed;
+        case 'CHECKED_IN':
+          return RegistrationStatusEnum.checkedIn;
+        case 'NO_SHOW':
+          return RegistrationStatusEnum.noShow;
         default:
           return RegistrationStatusEnum.pending;
       }
@@ -218,7 +236,15 @@ class Registration {
   bool get isRejected => status == RegistrationStatusEnum.rejected;
   bool get isWaiting => status == RegistrationStatusEnum.waitingList;
   bool get isCancelled => status == RegistrationStatusEnum.cancelled;
-  bool get isCheckedIn => checkedInAt != null;
+  bool get isConfirmed => status == RegistrationStatusEnum.confirmed;
+  bool get isCheckedIn => status == RegistrationStatusEnum.checkedIn;
+  bool get isNoShow => status == RegistrationStatusEnum.noShow;
+
+  /// User đã chính thức có vé (đã confirm hoặc đã check-in)
+  bool get hasValidTicket => isConfirmed || isCheckedIn;
+
+  /// User đã từng check-in thành công (dữ liệu uy tín)
+  bool get hasAttended => checkedInAt != null;
 
   DateTime get registrationDate => createdAt;
 }

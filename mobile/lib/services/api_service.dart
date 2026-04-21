@@ -242,12 +242,29 @@ class ApiService {
     String? ticketTypeId,
     int quantity = 1,
   }) async {
+    return registerForEventWithAnswersAndProfile(
+      eventId,
+      answers,
+      {},
+      ticketTypeId: ticketTypeId,
+      quantity: quantity,
+    );
+  }
+
+  Future<Registration> registerForEventWithAnswersAndProfile(
+    String eventId,
+    List<RegistrationAnswer> answers,
+    Map<String, dynamic> profileData, {
+    String? ticketTypeId,
+    int quantity = 1,
+  }) async {
     final qp = <String, dynamic>{'quantity': quantity};
     if (ticketTypeId != null) qp['ticketTypeId'] = ticketTypeId;
     final response = await _client.post<Map<String, dynamic>>(
       '/user/events/$eventId/register-with-answers',
       data: {
         'answers': answers.map((a) => a.toJson()).toList(),
+        'profileData': profileData,
       },
       queryParameters: qp,
     );
@@ -774,6 +791,40 @@ class ApiService {
 
   Future<void> deleteMessage(String messageId) async {
     await _client.delete('/user/chat/messages/$messageId');
+  }
+
+  /// Backend-side search over a conversation's message history. Mobile uses
+  /// this in the AppBar search bar so users can find messages older than
+  /// what's currently paged into memory. Returns the matching messages
+  /// newest-first, paged.
+  Future<PaginatedResponse<ChatMessage>> searchMessages(
+    String conversationId, {
+    required String query,
+    int page = 0,
+    int size = 30,
+  }) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/conversations/$conversationId/messages/search',
+      queryParameters: {'q': query, 'page': page, 'size': size},
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return PaginatedResponse<ChatMessage>.fromJson(
+      data,
+      (json) => ChatMessage.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  /// Open (or create) a support 1:1 DM between the attendee and the
+  /// event's organiser. Used by the "Contact Host" flow so attendees
+  /// message the organiser inside the normal chat thread instead of a
+  /// one-shot form.
+  Future<Conversation> contactEventOrganiser(String eventId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/chat/events/$eventId/contact-organiser',
+      data: {},
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Conversation.fromJson(data);
   }
 
   Future<void> deleteConversation(String conversationId) async {

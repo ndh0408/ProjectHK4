@@ -43,6 +43,11 @@ public class PollResponse {
     private LocalDateTime createdAt;
     private List<PollOptionResponse> options;
     private boolean hasVoted;
+    /// Option IDs the current viewer has voted on (single-choice has 1
+    /// entry, multi-choice can have several, rating polls leave this null).
+    /// Null when the response is broadcast to non-specific audience.
+    private List<UUID> votedOptionIds;
+    private Integer votedRating;
     private boolean hideResultsUntilClosed;
     private boolean resultsHidden;  // true nếu đang ẩn kết quả
     private boolean autoOpenEventStart;
@@ -62,10 +67,15 @@ public class PollResponse {
     }
 
     public static PollResponse fromEntity(Poll poll, boolean hasVoted) {
-        return fromEntity(poll, hasVoted, false);
+        return fromEntity(poll, hasVoted, false, null, null);
     }
 
     public static PollResponse fromEntity(Poll poll, boolean hasVoted, boolean hideResults) {
+        return fromEntity(poll, hasVoted, hideResults, null, null);
+    }
+
+    public static PollResponse fromEntity(Poll poll, boolean hasVoted, boolean hideResults,
+                                          List<UUID> votedOptionIds, Integer votedRating) {
         int totalVotes = poll.getTotalVotes();
         boolean resultsHidden = hideResults && poll.isHideResultsUntilClosed() && poll.getStatus() != PollStatus.CLOSED;
 
@@ -115,6 +125,8 @@ public class PollResponse {
                 .createdAt(poll.getCreatedAt())
                 .options(optionResponses)
                 .hasVoted(hasVoted)
+                .votedOptionIds(votedOptionIds)
+                .votedRating(votedRating)
                 .hideResultsUntilClosed(poll.isHideResultsUntilClosed())
                 .resultsHidden(resultsHidden)
                 .autoOpenEventStart(poll.isAutoOpenEventStart())

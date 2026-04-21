@@ -2,98 +2,133 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class PaymentCancelledScreen extends StatelessWidget {
-  final String? registrationId;
-
   const PaymentCancelledScreen({
     super.key,
     this.registrationId,
   });
 
+  final String? registrationId;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.cancel_outlined,
-                    size: 60,
-                    color: Color(0xFFF97316),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Payment Cancelled',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'You cancelled the payment process.\nNo charges have been made to your account.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppColors.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                if (registrationId != null) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.go('/my-events');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textOnPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Try Again',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+        child: Padding(
+          padding: AppSpacing.screenPadding,
+          child: Center(
+            child: AppCard(
+              padding: const EdgeInsets.all(AppSpacing.xxxl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: const BoxDecoration(
+                      color: AppColors.warningLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.hourglass_top_rounded,
+                      size: 50,
+                      color: AppColors.warning,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-                TextButton(
-                  onPressed: () => context.go('/home'),
-                  child: Text(
-                    'Back to Home',
-                    style: TextStyle(
-                      fontSize: 15,
+                  const SizedBox(height: AppSpacing.xxl),
+                  Text(
+                    l10n.paymentCancelled,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.h1.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'You left the payment flow before completion. No charge was created and your booking has not been finalized.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyLg.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.xl),
+                  const _CancelInfoRow(
+                    icon: Icons.credit_card_off_outlined,
+                    label: 'No money was captured',
+                  ),
+                  const _CancelInfoRow(
+                    icon: Icons.confirmation_number_outlined,
+                    label: 'Ticket remains unconfirmed until payment succeeds',
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  if (registrationId != null) ...[
+                    AppButton(
+                      label: 'Go to My Events',
+                      icon: Icons.event_note_outlined,
+                      expanded: true,
+                      onPressed: () => context.go('/my-events'),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  AppButton(
+                    label: 'Back to Home',
+                    variant: AppButtonVariant.secondary,
+                    expanded: true,
+                    onPressed: () => context.go('/home'),
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CancelInfoRow extends StatelessWidget {
+  const _CancelInfoRow({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: AppRadius.allMd,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.warning),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

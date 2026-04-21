@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +8,7 @@ import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
-import '../../../../shared/widgets/app_button.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
@@ -41,6 +42,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
   bool _isLoginMode = true;
   bool _showEmailForm = false;
+  // Tracks which path triggered the shared AuthLoading state so we only
+  // surface the spinner on the button the user actually tapped.
+  bool _googleInFlight = false;
+  bool _emailInFlight = false;
 
   @override
   void dispose() {
@@ -53,17 +58,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleEmailAuth() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_isLoginMode) {
-      await ref.read(authProvider.notifier).login(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
-    } else {
-      await ref.read(authProvider.notifier).register(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            fullName: _fullNameController.text.trim(),
-          );
+    setState(() => _emailInFlight = true);
+    try {
+      if (_isLoginMode) {
+        await ref.read(authProvider.notifier).login(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            );
+      } else {
+        await ref.read(authProvider.notifier).register(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              fullName: _fullNameController.text.trim(),
+            );
+      }
+    } finally {
+      if (mounted) setState(() => _emailInFlight = false);
+    }
+  }
+
+  Future<void> _handleGoogleAuth() async {
+    setState(() => _googleInFlight = true);
+    try {
+      await ref.read(authProvider.notifier).signInWithGoogle();
+    } finally {
+      if (mounted) setState(() => _googleInFlight = false);
     }
   }
 
@@ -97,90 +116,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState is AuthLoading;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: 280,
+                height: 332,
                 child: featuredEvents.when(
                   data: (events) => _EventCarousel(events: events),
                   loading: () => const _EventCarouselPlaceholder(),
                   error: (_, __) => const _EventCarouselPlaceholder(),
                 ),
               ),
-              AppSpacing.gapXxxl,
+              const SizedBox(height: AppSpacing.xxxl),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                padding: AppSpacing.screenPadding.copyWith(top: 0),
                 child: Builder(
                   builder: (context) {
                     final l10n = AppLocalizations.of(context)!;
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'luma',
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.textLight,
-                            letterSpacing: 2.5,
-                            fontWeight: FontWeight.w500,
+                          'LUMA',
+                          style: AppTypography.overline.copyWith(
+                            color: AppColors.primary,
+                            letterSpacing: 2,
                           ),
                         ),
-                        AppSpacing.gapSm,
+                        const SizedBox(height: AppSpacing.sm),
                         Text(
-                          l10n.delightfulEvents,
+                          '${l10n.delightfulEvents}\n${l10n.startHere}',
                           style: AppTypography.display.copyWith(
                             color: AppColors.textPrimary,
-                            height: 1.2,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [AppColors.primary, AppColors.accent],
-                          ).createShader(bounds),
-                          child: Text(
-                            l10n.startHere,
-                            style: AppTypography.display.copyWith(
-                              color: Colors.white,
-                              height: 1.2,
-                            ),
-                            textAlign: TextAlign.center,
                           ),
                         ),
-                        AppSpacing.gapLg,
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           l10n.loginDescription,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.body.copyWith(
+                          style: AppTypography.bodyLg.copyWith(
                             color: AppColors.textSecondary,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: const [
+                            _ValuePill(
+                              icon: Icons.confirmation_number_outlined,
+                              label: 'Tickets & QR ready',
+                            ),
+                            _ValuePill(
+                              icon: Icons.flash_on_rounded,
+                              label: 'Fast booking flow',
+                            ),
+                            _ValuePill(
+                              icon: Icons.verified_user_outlined,
+                              label: 'Trusted checkout',
+                            ),
+                          ],
                         ),
                       ],
                     );
                   },
                 ),
               ),
-              AppSpacing.gapXxxl,
+              const SizedBox(height: AppSpacing.xxl),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
                 child: _showEmailForm
                     ? _buildEmailForm(isLoading)
                     : _buildAuthButtons(isLoading),
               ),
-              AppSpacing.gapXxl,
+              const SizedBox(height: AppSpacing.xl),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
                 child: Text.rich(
                   TextSpan(
                     text: "By continuing, you agree to Luma's ",
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTypography.caption
+                        .copyWith(color: AppColors.textSecondary),
                     children: [
                       TextSpan(
                         text: 'Terms of Use',
                         style: AppTypography.caption.copyWith(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
@@ -188,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              AppSpacing.gapXxl,
+              const SizedBox(height: AppSpacing.xxxl),
             ],
           ),
         ),
@@ -198,216 +224,185 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Widget _buildAuthButtons(bool isLoading) {
     final l10n = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        AppButton(
-          label: l10n.continueWithEmail,
-          onPressed: isLoading
-              ? null
-              : () => setState(() {
-                    _showEmailForm = true;
-                    _isLoginMode = true;
-                  }),
-          size: AppButtonSize.lg,
-          expanded: true,
-        ),
-        AppSpacing.gapMd,
-        AppButton(
-          label: l10n.createAccount,
-          onPressed: isLoading
-              ? null
-              : () => setState(() {
-                    _showEmailForm = true;
-                    _isLoginMode = false;
-                  }),
-          variant: AppButtonVariant.secondary,
-          size: AppButtonSize.lg,
-          expanded: true,
-        ),
-        AppSpacing.gapLg,
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Choose how you want to continue',
+            style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Sign in to manage bookings, tickets, notifications and check-ins in one place.',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          AppButton(
+            label: l10n.continueWithEmail,
             onPressed: isLoading
                 ? null
-                : () => ref.read(authProvider.notifier).signInWithGoogle(),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 52),
-              foregroundColor: AppColors.textPrimary,
-              side: const BorderSide(color: AppColors.divider),
-              shape: RoundedRectangleBorder(borderRadius: AppRadius.allMd),
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.network(
-                        'https://www.google.com/favicon.ico',
-                        width: 20,
-                        height: 20,
-                        errorBuilder: (_, __, ___) => Text(
-                          'G',
-                          style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
-                        ),
-                      ),
-                      AppSpacing.hgapMd,
-                      Text(
-                        'Continue with Google',
-                        style: AppTypography.button.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailForm(bool isLoading) {
-    final l10n = AppLocalizations.of(context)!;
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              onPressed: () => setState(() => _showEmailForm = false),
-              icon: const Icon(Icons.arrow_back),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-            ),
-          ),
-          AppSpacing.gapLg,
-          Text(
-            _isLoginMode ? l10n.signIn : l10n.createAccount,
-            style: AppTypography.h1.copyWith(color: AppColors.textPrimary),
-          ),
-          AppSpacing.gapXxl,
-          if (!_isLoginMode) ...[
-            _buildFilledInput(
-              controller: _fullNameController,
-              label: l10n.fullName,
-              keyboardType: TextInputType.name,
-              enabled: !isLoading,
-              validator: (v) {
-                if (v == null || v.isEmpty) return l10n.pleaseEnterFullName;
-                return null;
-              },
-            ),
-            AppSpacing.gapLg,
-          ],
-          _buildFilledInput(
-            controller: _emailController,
-            label: l10n.email,
-            keyboardType: TextInputType.emailAddress,
-            enabled: !isLoading,
-            validator: (v) {
-              if (v == null || v.isEmpty) return l10n.pleaseEnterEmail;
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                return l10n.pleaseEnterValidEmail;
-              }
-              return null;
-            },
-          ),
-          AppSpacing.gapLg,
-          _buildFilledInput(
-            controller: _passwordController,
-            label: l10n.password,
-            enabled: !isLoading,
-            obscureText: _obscurePassword,
-            onSubmitted: (_) => _handleEmailAuth(),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.textLight,
-              ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            ),
-            validator: (v) {
-              if (v == null || v.isEmpty) return l10n.pleaseEnterPassword;
-              if (!_isLoginMode && v.length < 6) return l10n.passwordTooShort;
-              return null;
-            },
-          ),
-          AppSpacing.gapXxl,
-          AppButton(
-            label: _isLoginMode ? l10n.signIn : l10n.signUp,
-            onPressed: isLoading ? null : _handleEmailAuth,
-            loading: isLoading,
+                : () => setState(() {
+                      _showEmailForm = true;
+                      _isLoginMode = true;
+                    }),
             size: AppButtonSize.lg,
             expanded: true,
           ),
-          AppSpacing.gapLg,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _isLoginMode ? l10n.dontHaveAccount : l10n.alreadyHaveAccount,
-                style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-              ),
-              AppSpacing.hgapXs,
-              GestureDetector(
-                onTap: () => setState(() => _isLoginMode = !_isLoginMode),
-                child: Text(
-                  _isLoginMode ? l10n.signUp : l10n.signIn,
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: l10n.createAccount,
+            onPressed: isLoading
+                ? null
+                : () => setState(() {
+                      _showEmailForm = true;
+                      _isLoginMode = false;
+                    }),
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.lg,
+            expanded: true,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: 'Continue with Google',
+            onPressed: isLoading ? null : _handleGoogleAuth,
+            variant: AppButtonVariant.tonal,
+            size: AppButtonSize.lg,
+            expanded: true,
+            icon: Icons.g_mobiledata_rounded,
+            loading: _googleInFlight,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilledInput({
-    required TextEditingController controller,
-    required String label,
-    TextInputType? keyboardType,
-    bool enabled = true,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-    ValueChanged<String>? onSubmitted,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      textInputAction: TextInputAction.next,
-      enabled: enabled,
-      obscureText: obscureText,
-      onFieldSubmitted: onSubmitted,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: AppColors.surfaceVariant,
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.allMd,
-          borderSide: BorderSide.none,
+  Widget _buildEmailForm(bool isLoading) {
+    final l10n = AppLocalizations.of(context)!;
+    return AppCard(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () => setState(() => _showEmailForm = false),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.surfaceVariant,
+                    foregroundColor: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    _isLoginMode ? l10n.signIn : l10n.createAccount,
+                    style:
+                        AppTypography.h2.copyWith(color: AppColors.textPrimary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppSegmentedControl<bool>(
+              value: _isLoginMode,
+              items: [
+                AppSegmentItem(value: true, label: l10n.signIn),
+                AppSegmentItem(value: false, label: l10n.signUp),
+              ],
+              onChanged: (value) => setState(() => _isLoginMode = value),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            if (!_isLoginMode) ...[
+              AppTextField(
+                controller: _fullNameController,
+                label: l10n.fullName,
+                keyboardType: TextInputType.name,
+                enabled: !isLoading,
+                required: true,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return l10n.pleaseEnterFullName;
+                  return null;
+                },
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            AppTextField(
+              controller: _emailController,
+              label: l10n.email,
+              keyboardType: TextInputType.emailAddress,
+              enabled: !isLoading,
+              required: true,
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.pleaseEnterEmail;
+                if (!RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
+                  return l10n.pleaseEnterValidEmail;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppTextField(
+              controller: _passwordController,
+              label: l10n.password,
+              enabled: !isLoading,
+              obscureText: _obscurePassword,
+              required: true,
+              onSubmitted: (_) => _handleEmailAuth(),
+              suffix: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: AppColors.textLight,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.pleaseEnterPassword;
+                if (!_isLoginMode && v.length < 6) return l10n.passwordTooShort;
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            AppButton(
+              label: _isLoginMode ? l10n.signIn : l10n.signUp,
+              onPressed: isLoading ? null : _handleEmailAuth,
+              loading: _emailInFlight,
+              size: AppButtonSize.lg,
+              expanded: true,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Center(
+              child: TextButton(
+                onPressed: isLoading
+                    ? null
+                    : () => setState(() => _isLoginMode = !_isLoginMode),
+                child: Text.rich(
+                  TextSpan(
+                    style: AppTypography.caption
+                        .copyWith(color: AppColors.textSecondary),
+                    children: [
+                      TextSpan(
+                        text: _isLoginMode
+                            ? 'Need an account? '
+                            : 'Already have an account? ',
+                      ),
+                      TextSpan(
+                        text: _isLoginMode ? l10n.signUp : l10n.signIn,
+                        style: AppTypography.label.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.allMd,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.allMd,
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        suffixIcon: suffixIcon,
       ),
     );
   }
@@ -422,99 +417,101 @@ class _EventCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     if (events.isEmpty) return const _EventCarouselPlaceholder();
 
-    final List<Event> displayEvents = [];
-    if (events.length == 1) {
-      displayEvents.addAll([events[0], events[0], events[0]]);
-    } else if (events.length == 2) {
-      displayEvents.addAll([events[0], events[1], events[0]]);
-    } else {
-      displayEvents.addAll(events.take(3));
-    }
+    final displayEvents = events.take(3).toList();
 
     return Stack(
-      alignment: Alignment.center,
       children: [
-        Container(
+        const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.surfaceVariant, AppColors.surface],
+              colors: [Color(0xFF0B1120), Color(0xFF123FB1)],
             ),
           ),
         ),
-        SizedBox(
-          height: 250,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              _buildEventCard(displayEvents[0], 0),
-              _buildEventCard(displayEvents[2], 2),
-              _buildEventCard(displayEvents[1], 1),
-            ],
-          ),
+        PageView.builder(
+          controller: PageController(viewportFraction: 0.9),
+          itemCount: displayEvents.length,
+          itemBuilder: (context, index) =>
+              _buildEventCard(displayEvents[index]),
         ),
       ],
     );
   }
 
-  Widget _buildEventCard(Event event, int position) {
-    final double offsetX = (position - 1) * 90.0;
-    final double offsetY = position == 1 ? 0 : 25.0;
-    final double rotation = (position - 1) * 0.12;
-    final double scale = position == 1 ? 1.0 : 0.85;
-
-    return Transform(
-      alignment: Alignment.center,
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.001)
-        ..rotateY(rotation)
-        ..translate(offsetX, offsetY)
-        ..scale(scale),
-      child: Container(
-        width: 160,
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.allLg,
-          boxShadow: AppShadows.lg,
-        ),
-        child: ClipRRect(
-          borderRadius: AppRadius.allLg,
-          child: event.imageUrl != null && event.imageUrl!.isNotEmpty
-              ? Image.network(
-                  event.imageUrl!,
-                  width: 160,
-                  height: 200,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) =>
-                      progress == null ? child : _buildPlaceholderCard(event, position),
-                  errorBuilder: (_, __, ___) => _buildPlaceholderCard(event, position),
-                )
-              : _buildPlaceholderCard(event, position),
+  Widget _buildEventCard(Event event) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageX,
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.allXl,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            event.imageUrl != null && event.imageUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: event.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => _buildPlaceholderCard(event),
+                  )
+                : _buildPlaceholderCard(event),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.08),
+                    Colors.black.withValues(alpha: 0.18),
+                    Colors.black.withValues(alpha: 0.78),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StatusChip(
+                    label: event.category?.name ?? 'Featured event',
+                    variant: StatusChipVariant.primary,
+                  ),
+                  const Spacer(),
+                  Text(
+                    event.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.h1.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    event.organiserName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textOnPrimary70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPlaceholderCard(Event event, int index) {
-    final colors = [
-      [AppColors.primary, AppColors.secondary],
-      [AppColors.primary, AppColors.primaryDark],
-      [AppColors.secondary, AppColors.accent],
-    ];
-
+  Widget _buildPlaceholderCard(Event event) {
     return Container(
-      width: 160,
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors[index % colors.length],
-        ),
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
@@ -523,18 +520,17 @@ class _EventCarousel extends StatelessWidget {
               event.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.label.copyWith(
+              style: AppTypography.h2.copyWith(
                 color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
               ),
             ),
-            AppSpacing.gapXs,
+            const SizedBox(height: AppSpacing.xs),
             Text(
               event.organiserName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.caption.copyWith(color: AppColors.textOnPrimary70),
+              style: AppTypography.caption
+                  .copyWith(color: AppColors.textOnPrimary70),
             ),
           ],
         ),
@@ -548,62 +544,58 @@ class _EventCarouselPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.surfaceVariant, AppColors.surface],
-            ),
-          ),
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: 2,
+      itemBuilder: (_, __) => Container(
+        width: MediaQuery.of(context).size.width * 0.88,
+        margin: const EdgeInsets.fromLTRB(
+          AppSpacing.pageX,
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.sm,
         ),
-        SizedBox(
-          height: 250,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              for (int i = 0; i < 3; i++) _buildPlaceholderCard(i),
-            ],
-          ),
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.allXl,
+          color: AppColors.shimmerBase,
         ),
-      ],
+      ),
     );
   }
+}
 
-  Widget _buildPlaceholderCard(int index) {
-    final double offsetX = (index - 1) * 100.0;
-    final double offsetY = index == 1 ? 0 : 30.0;
-    final double rotation = (index - 1) * 0.15;
-    final double scale = index == 1 ? 1.0 : 0.85;
+class _ValuePill extends StatelessWidget {
+  const _ValuePill({
+    required this.icon,
+    required this.label,
+  });
 
-    final colors = [
-      [AppColors.primary, AppColors.secondary],
-      [AppColors.primary, AppColors.primaryDark],
-      [AppColors.secondary, AppColors.accent],
-    ];
+  final IconData icon;
+  final String label;
 
-    return Transform(
-      alignment: Alignment.center,
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.001)
-        ..rotateY(rotation)
-        ..translate(offsetX, offsetY)
-        ..scale(scale),
-      child: Container(
-        width: 160,
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: AppRadius.allLg,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: colors[index % colors.length],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.allPill,
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style:
+                AppTypography.caption.copyWith(color: AppColors.textSecondary),
           ),
-          boxShadow: AppShadows.lg,
-        ),
+        ],
       ),
     );
   }

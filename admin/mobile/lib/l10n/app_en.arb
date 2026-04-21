@@ -487,14 +487,30 @@
   "deleteMessage": "Delete Message",
   "deleteMessageConfirm": "Are you sure you want to delete this message?",
   "thisMessageWasDeleted": "This message was deleted",
+  "messageDeletedBy": "Message deleted by {name}",
+  "@messageDeletedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "noMessagesYet": "No messages yet",
   "sendMessageToStart": "Send a message to start the conversation",
   "members": "{count} members",
   "@members": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
+  "reliabilityScore": "Reliability Score",
+  "pastNoShows": "Past No-shows",
+  "checkedInCount": "Checked-in",
+  "groupsTab": "Groups",
+  "dmsTab": "DMs",
+  "noConversations": "No conversations",
 
   "imageUploadedSuccessfully": "Image uploaded successfully",
   "failedToUploadImage": "Failed to upload image",

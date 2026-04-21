@@ -157,6 +157,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
               replyTo: m.replyTo,
               createdAt: m.createdAt,
               deleted: true,
+              deletedByName: 'Bạn', // Optimistic update
             );
           }
           return m;
@@ -166,6 +167,20 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     } catch (e) {
       return false;
     }
+  }
+
+  void markMessageDeleted(String messageId) {
+    state = state.copyWith(
+      messages: state.messages.map((m) {
+        if (m.id == messageId) {
+          return m.copyWith(
+            deleted: true,
+            content: 'This message was deleted',
+          );
+        }
+        return m;
+      }).toList(),
+    );
   }
 
   Future<void> refresh() async {
@@ -883,6 +898,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ref.read(chatMessagesProvider(widget.conversationId).notifier)
                   .loadMessages(refresh: true);
               break;
+            case ChatEventType.messageDeleted:
+              final payload = event.message;
+              final id = payload != null ? payload['id'] as String? : null;
+              if (id != null) {
+                ref.read(chatMessagesProvider(widget.conversationId).notifier)
+                    .markMessageDeleted(id);
+              }
+              break;
             case ChatEventType.typing:
               if (event.userId != currentUser?.id && event.userName != null) {
                 setState(() {
@@ -1516,7 +1539,11 @@ class _MessageBubble extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                AppLocalizations.of(context)!.thisMessageWasDeleted,
+                                message.deletedByName != null
+                                    ? AppLocalizations.of(context)!
+                                        .messageDeletedBy(message.deletedByName!)
+                                    : AppLocalizations.of(context)!
+                                        .thisMessageWasDeleted,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontStyle: FontStyle.italic,

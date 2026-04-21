@@ -42,6 +42,10 @@ public class ConversationResponse {
         private UUID userId;
         private String fullName;
         private String avatarUrl;
+        // When this participant last marked the conversation as read. The
+        // organiser web UI uses it to decide whether the ✓✓ on an outgoing
+        // message should be tinted (all peers have seen up to that point).
+        private LocalDateTime lastReadAt;
     }
 
     public static ConversationResponse fromEntity(Conversation conversation, ConversationParticipant currentUserParticipant) {
@@ -76,6 +80,7 @@ public class ConversationResponse {
                                 .userId(p.getUser().getId())
                                 .fullName(p.getUser().getFullName())
                                 .avatarUrl(p.getUser().getAvatarUrl())
+                                .lastReadAt(p.getLastReadAt())
                                 .build())
                         .toList();
                 builder.participants(participants);

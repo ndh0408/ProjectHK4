@@ -142,6 +142,16 @@ const organiserApi = {
     createSubscriptionCheckout: (plan) => api.post(`/organiser/subscription/checkout/${plan}`),
     confirmSubscriptionPayment: (plan) => api.post(`/organiser/subscription/confirm-payment/${plan}`),
 
+    // Chat Management
+    pinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/pin`),
+    unpinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/unpin`),
+    banUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/ban/${userId}`),
+    unbanUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/unban/${userId}`),
+    muteUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/mute/${userId}`),
+    unmuteUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/unmute/${userId}`),
+    deleteAnyMessage: (messageId) => api.delete(`/organiser/chat/messages/${messageId}`),
+    searchChatMessages: (conversationId, query) => api.get(`/organiser/chat/conversations/${conversationId}/search`, { params: { query } }),
+
 };
 
 export { organiserApi };

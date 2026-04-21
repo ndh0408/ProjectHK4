@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/theme.dart';
 import '../../core/design_tokens/design_tokens.dart';
 
-enum AppButtonVariant { primary, secondary, ghost, danger }
+enum AppButtonVariant { primary, secondary, ghost, tonal, danger }
 
 enum AppButtonSize { sm, md, lg }
 
@@ -35,9 +36,26 @@ class AppButton extends StatelessWidget {
     final disabled = onPressed == null || loading;
 
     final (bg, fg, borderColor) = switch (variant) {
-      AppButtonVariant.primary => (colors.primary, Colors.white, colors.primary),
-      AppButtonVariant.secondary => (colors.surface, colors.onSurface, colors.outline),
-      AppButtonVariant.ghost => (Colors.transparent, colors.primary, Colors.transparent),
+      AppButtonVariant.primary => (
+          colors.primary,
+          Colors.white,
+          colors.primary
+        ),
+      AppButtonVariant.secondary => (
+          colors.surface,
+          colors.onSurface,
+          colors.outline
+        ),
+      AppButtonVariant.ghost => (
+          Colors.transparent,
+          colors.primary,
+          Colors.transparent
+        ),
+      AppButtonVariant.tonal => (
+          AppColors.primarySoft,
+          colors.primary,
+          AppColors.primarySoft,
+        ),
       AppButtonVariant.danger => (colors.error, Colors.white, colors.error),
     };
 
@@ -47,8 +65,14 @@ class AppButton extends StatelessWidget {
       AppButtonSize.lg => (AppSpacing.lg, AppSpacing.xxl, 15.0, 56.0),
     };
 
-    final effectiveBg = disabled ? bg.withValues(alpha: 0.5) : bg;
-    final effectiveFg = disabled ? fg.withValues(alpha: 0.5) : fg;
+    final effectiveBg = disabled ? bg.withValues(alpha: 0.55) : bg;
+    final effectiveFg = disabled ? fg.withValues(alpha: 0.65) : fg;
+    final border = switch (variant) {
+      AppButtonVariant.secondary => Border.all(color: borderColor),
+      AppButtonVariant.tonal =>
+        Border.all(color: colors.primary.withValues(alpha: 0.12)),
+      _ => null,
+    };
 
     final button = Material(
       color: effectiveBg,
@@ -61,9 +85,7 @@ class AppButton extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
           decoration: BoxDecoration(
             borderRadius: AppRadius.allMd,
-            border: variant == AppButtonVariant.secondary
-                ? Border.all(color: borderColor)
-                : null,
+            border: border,
           ),
           child: Row(
             mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
@@ -80,7 +102,8 @@ class AppButton extends StatelessWidget {
                 )
               else if (icon != null)
                 Icon(icon, size: 18, color: effectiveFg),
-              if ((loading || icon != null)) const SizedBox(width: AppSpacing.sm),
+              if ((loading || icon != null))
+                const SizedBox(width: AppSpacing.sm),
               Flexible(
                 child: Text(
                   label,

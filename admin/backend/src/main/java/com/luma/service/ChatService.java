@@ -268,6 +268,81 @@ public class ChatService {
     }
 
     @Transactional
+    public ConversationResponse pinMessage(User user, UUID conversationId, UUID messageId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+        if (!message.getConversation().getId().equals(conversationId)) {
+            throw new BadRequestException("Message does not belong to this conversation");
+        }
+        if (message.isDeleted()) {
+            throw new BadRequestException("Cannot pin a deleted message");
+        }
+
+        conversation.setPinnedMessage(message);
+        conversation.setPinnedAt(LocalDateTime.now());
+        conversation.setPinnedBy(user);
+        conversationRepository.save(conversation);
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElse(null);
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
+    @Transactional
+    public ConversationResponse unpinMessage(User user, UUID conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+
+        conversation.setPinnedMessage(null);
+        conversation.setPinnedAt(null);
+        conversation.setPinnedBy(null);
+        conversationRepository.save(conversation);
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElse(null);
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
+    @Transactional
+    public void muteAttendee(User organiser, UUID conversationId, UUID attendeeId, boolean mute) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(organiser, conversation);
+
+        User attendee = userRepository.findById(attendeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendee not found"));
+        
+        ConversationParticipant participant = participantRepository.findByConversationAndUser(conversation, attendee)
+                .orElseThrow(() -> new BadRequestException("User is not a participant of this conversation"));
+
+        participant.setMuted(mute);
+        participantRepository.save(participant);
+    }
+
+    @Transactional
+    public void banAttendee(User organiser, UUID conversationId, UUID attendeeId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(organiser, conversation);
+
+        User attendee = userRepository.findById(attendeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendee not found"));
+        
+        ConversationParticipant participant = participantRepository.findByConversationAndUser(conversation, attendee)
+                .orElseThrow(() -> new BadRequestException("User is not a participant of this conversation"));
+
+        participant.delete(); // Soft delete or physical delete based on your preference
+        participantRepository.delete(participant);
+    }
+
+    @Transactional
     public void deleteMessage(User user, UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
@@ -279,6 +354,8 @@ public class ChatService {
         UUID conversationId = message.getConversation().getId();
 
         message.setDeleted(true);
+        message.setDeletedBy(user);
+        message.setDeletedAt(LocalDateTime.now());
         message.setContent("This message was deleted");
         message.setMediaUrl(null);
         messageRepository.save(message);

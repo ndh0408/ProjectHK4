@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({
@@ -41,12 +43,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   Future<void> _onDetect(BarcodeCapture capture) async {
     if (_isProcessing) return;
 
-    final List<Barcode> barcodes = capture.barcodes;
+    final barcodes = capture.barcodes;
     if (barcodes.isEmpty) return;
 
-    final String? code = barcodes.first.rawValue;
+    final code = barcodes.first.rawValue;
     if (code == null || code.isEmpty) return;
-
     if (code == _lastScannedCode) return;
 
     setState(() {
@@ -58,9 +59,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      setState(() {
-        _isProcessing = false;
-      });
+      setState(() => _isProcessing = false);
     }
   }
 
@@ -71,43 +70,43 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     try {
       final registration = await apiService.checkInRegistration(registrationId);
 
-      if (mounted) {
-        _showResultDialog(
-          success: true,
-          title: l10n.checkInSuccess,
-          message: '${registration.userName ?? l10n.guest}\n${l10n.checkedInSuccessfully}',
-          registration: registration,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        String errorMessage = l10n.checkInFailed;
+      if (!mounted) return;
+      _showResultDialog(
+        success: true,
+        title: l10n.checkInSuccess,
+        message:
+            '${registration.userName ?? l10n.guest}\n${l10n.checkedInSuccessfully}',
+        registration: registration,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      String errorMessage = l10n.checkInFailed;
 
-        if (e is DioException) {
-          final responseData = e.response?.data;
-          if (responseData is Map<String, dynamic>) {
-            errorMessage = responseData['message'] ?? errorMessage;
-          }
+      if (error is DioException) {
+        final responseData = error.response?.data;
+        if (responseData is Map<String, dynamic>) {
+          errorMessage = responseData['message']?.toString() ?? errorMessage;
         }
-
-        if (errorMessage.contains('already been checked in')) {
-          errorMessage = l10n.alreadyCheckedIn;
-        } else if (errorMessage.contains('not found')) {
-          errorMessage = l10n.invalidQrCode;
-        } else if (errorMessage.contains('Only approved')) {
-          errorMessage = l10n.registrationNotApproved;
-        } else if (errorMessage.contains('not available yet')) {
-          errorMessage = 'Check-in is not available yet. Check-in opens 2 hours before the event starts.';
-        } else if (errorMessage.contains('period has ended')) {
-          errorMessage = 'Check-in period has ended for this event.';
-        }
-
-        _showResultDialog(
-          success: false,
-          title: l10n.checkInFailed,
-          message: errorMessage,
-        );
       }
+
+      if (errorMessage.contains('already been checked in')) {
+        errorMessage = l10n.alreadyCheckedIn;
+      } else if (errorMessage.contains('not found')) {
+        errorMessage = l10n.invalidQrCode;
+      } else if (errorMessage.contains('Only approved')) {
+        errorMessage = l10n.registrationNotApproved;
+      } else if (errorMessage.contains('not available yet')) {
+        errorMessage =
+            'Check-in opens shortly before the event starts. Please try again closer to showtime.';
+      } else if (errorMessage.contains('period has ended')) {
+        errorMessage = 'The check-in window for this event has already ended.';
+      }
+
+      _showResultDialog(
+        success: false,
+        title: l10n.checkInFailed,
+        message: errorMessage,
+      );
     }
   }
 
@@ -120,83 +119,50 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              success ? Icons.check_circle : Icons.error,
-              size: 64,
-              color: success ? AppColors.success : AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: success ? AppColors.success : AppColors.error,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            if (registration != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    if (registration.userEmail != null)
-                      _buildInfoRow(Icons.email, registration.userEmail!),
-                    if (registration.userPhone != null) ...[
-                      const SizedBox(height: 4),
-                      _buildInfoRow(Icons.phone, registration.userPhone!),
+      builder: (dialogContext) => AppDialog(
+        title: title,
+        message: message,
+        icon:
+            success ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+        iconColor: success ? AppColors.success : AppColors.error,
+        primaryLabel: AppLocalizations.of(context)!.scanNext,
+        onPrimary: () {
+          Navigator.of(dialogContext).pop();
+          setState(() => _lastScannedCode = null);
+        },
+        children: registration == null
+            ? null
+            : [
+                AppCard(
+                  background: AppColors.surfaceVariant,
+                  border: false,
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    children: [
+                      if (registration.userEmail != null)
+                        _ResultInfoRow(
+                          icon: Icons.email_outlined,
+                          value: registration.userEmail!,
+                        ),
+                      if (registration.userPhone != null) ...[
+                        if (registration.userEmail != null)
+                          const SizedBox(height: AppSpacing.sm),
+                        _ResultInfoRow(
+                          icon: Icons.phone_outlined,
+                          value: registration.userPhone!,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              setState(() {
-                _lastScannedCode = null;
-              });
-            },
-            child: Text(AppLocalizations.of(context)!.scanNext),
-          ),
-        ],
+              ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textLight),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 14)),
-      ],
     );
   }
 
   void _toggleTorch() {
     _scannerController.toggleTorch();
-    setState(() {
-      _torchEnabled = !_torchEnabled;
-    });
+    setState(() => _torchEnabled = !_torchEnabled);
   }
 
   void _switchCamera() {
@@ -211,31 +177,8 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       backgroundColor: AppColors.textPrimary,
       appBar: AppBar(
         backgroundColor: AppColors.textPrimary,
-        foregroundColor: AppColors.textOnPrimary,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.scanQrCode),
-            Text(
-              widget.eventTitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textOnPrimary.withValues(alpha: 0.7),
-                  ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(_torchEnabled ? Icons.flash_on : Icons.flash_off),
-            onPressed: _toggleTorch,
-            tooltip: l10n.toggleFlash,
-          ),
-          IconButton(
-            icon: const Icon(Icons.cameraswitch),
-            onPressed: _switchCamera,
-            tooltip: l10n.switchCamera,
-          ),
-        ],
+        foregroundColor: Colors.white,
+        title: Text(l10n.scanQrCode),
       ),
       body: Stack(
         children: [
@@ -245,30 +188,108 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           ),
           _buildScannerOverlay(),
           Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.textPrimary.withValues(alpha: 0.54),
-                  borderRadius: BorderRadius.circular(24),
+            top: AppSpacing.xl,
+            left: AppSpacing.pageX,
+            right: AppSpacing.pageX,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.58),
+                borderRadius: AppRadius.allLg,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
                 ),
-                child: Text(
-                  _isProcessing ? l10n.processing : l10n.pointCameraAtQr,
-                  style: const TextStyle(
-                    color: AppColors.textOnPrimary,
-                    fontSize: 16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.eventTitle,
+                    style: AppTypography.h3.copyWith(color: Colors.white),
                   ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Align the attendee QR inside the frame for the fastest check-in result.',
+                    style: AppTypography.body.copyWith(
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: AppSpacing.pageX,
+            right: AppSpacing.pageX,
+            bottom: AppSpacing.xxxl,
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: AppRadius.allXl,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.12),
                 ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _isProcessing
+                              ? l10n.processing
+                              : l10n.pointCameraAtQr,
+                          style: AppTypography.bodyLg.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      StatusChip(
+                        label: _isProcessing ? 'Processing' : 'Ready',
+                        variant: _isProcessing
+                            ? StatusChipVariant.warning
+                            : StatusChipVariant.success,
+                        compact: true,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ScannerActionButton(
+                          icon: _torchEnabled
+                              ? Icons.flash_on_rounded
+                              : Icons.flash_off_rounded,
+                          label: l10n.toggleFlash,
+                          onTap: _toggleTorch,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _ScannerActionButton(
+                          icon: Icons.cameraswitch_rounded,
+                          label: l10n.switchCamera,
+                          onTap: _switchCamera,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
           if (_isProcessing)
-            const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.72),
+                  borderRadius: AppRadius.allLg,
+                ),
+                child:
+                    const CircularProgressIndicator(color: AppColors.primary),
               ),
             ),
         ],
@@ -277,18 +298,34 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   }
 
   Widget _buildScannerOverlay() {
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(
-        AppColors.textPrimary.withValues(alpha: 0.54),
-        BlendMode.srcOut,
-      ),
+    return IgnorePointer(
       child: Stack(
-        fit: StackFit.expand,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.textPrimary,
-              backgroundBlendMode: BlendMode.dstOut,
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.black.withValues(alpha: 0.55),
+              BlendMode.srcOut,
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    backgroundBlendMode: BlendMode.dstOut,
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 280,
+                    height: 280,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadius.allLg,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Center(
@@ -296,13 +333,89 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               width: 280,
               height: 280,
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.allLg,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  width: 2,
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ScannerActionButton extends StatelessWidget {
+  const _ScannerActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.08),
+      borderRadius: AppRadius.allMd,
+      child: InkWell(
+        borderRadius: AppRadius.allMd,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: Colors.white),
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.label.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultInfoRow extends StatelessWidget {
+  const _ResultInfoRow({
+    required this.icon,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.textLight),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTypography.body.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

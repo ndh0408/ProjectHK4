@@ -3,14 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/city.dart';
+import '../../../../shared/widgets/app_components.dart';
 
-final citiesByContinentProvider = FutureProvider<Map<String, List<City>>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.getCitiesByContinent();
-});
+final citiesByContinentProvider = FutureProvider<Map<String, List<City>>>(
+  (ref) async {
+    final api = ref.watch(apiServiceProvider);
+    return api.getCitiesByContinent();
+  },
+);
 
 const _regionOrder = [
   'Asia',
@@ -25,92 +29,122 @@ _CityStyle _getCityStyle(String cityName) {
   final lower = cityName.toLowerCase();
 
   if (lower.contains('bangkok')) {
-    return _CityStyle(Icons.temple_buddhist, const Color(0xFFFF9800));
+    return const _CityStyle(
+      Icons.temple_buddhist_rounded,
+      Color(0xFFFF9800),
+    );
   }
   if (lower.contains('tokyo') || lower.contains('osaka')) {
-    return _CityStyle(Icons.temple_buddhist, const Color(0xFFE91E63));
+    return const _CityStyle(
+      Icons.temple_buddhist_rounded,
+      Color(0xFFE91E63),
+    );
   }
   if (lower.contains('singapore')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF9C27B0));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF9C27B0));
   }
   if (lower.contains('hong kong')) {
-    return _CityStyle(Icons.apartment, const Color(0xFF673AB7));
+    return const _CityStyle(Icons.apartment_rounded, Color(0xFF673AB7));
   }
-  if (lower.contains('ho chi minh') || lower.contains('hanoi') || lower.contains('da nang')) {
-    return _CityStyle(Icons.temple_buddhist, const Color(0xFFFF5722));
+  if (lower.contains('ho chi minh') ||
+      lower.contains('hanoi') ||
+      lower.contains('da nang')) {
+    return const _CityStyle(
+      Icons.temple_buddhist_rounded,
+      Color(0xFFFF5722),
+    );
   }
   if (lower.contains('seoul')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF3F51B5));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF3F51B5));
   }
-  if (lower.contains('mumbai') || lower.contains('delhi') || lower.contains('bengaluru')) {
-    return _CityStyle(Icons.account_balance, const Color(0xFF009688));
+  if (lower.contains('mumbai') ||
+      lower.contains('delhi') ||
+      lower.contains('bengaluru')) {
+    return const _CityStyle(
+      Icons.account_balance_rounded,
+      Color(0xFF009688),
+    );
   }
   if (lower.contains('dubai')) {
-    return _CityStyle(Icons.business, const Color(0xFFFFEB3B));
+    return const _CityStyle(Icons.business_rounded, Color(0xFFFACC15));
   }
   if (lower.contains('jakarta')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF795548));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF795548));
   }
   if (lower.contains('kuala lumpur')) {
-    return _CityStyle(Icons.business, const Color(0xFF607D8B));
+    return const _CityStyle(Icons.business_rounded, Color(0xFF607D8B));
   }
   if (lower.contains('manila')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF8BC34A));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF8BC34A));
   }
-
-  if (lower.contains('sydney') || lower.contains('melbourne') || lower.contains('brisbane')) {
-    return _CityStyle(Icons.beach_access, const Color(0xFF00BCD4));
+  if (lower.contains('sydney') ||
+      lower.contains('melbourne') ||
+      lower.contains('brisbane')) {
+    return const _CityStyle(Icons.beach_access_rounded, Color(0xFF00BCD4));
   }
   if (lower.contains('honolulu')) {
-    return _CityStyle(Icons.beach_access, const Color(0xFF4CAF50));
+    return const _CityStyle(Icons.beach_access_rounded, Color(0xFF4CAF50));
   }
-
   if (lower.contains('london')) {
-    return _CityStyle(Icons.account_balance, const Color(0xFF2196F3));
+    return const _CityStyle(
+      Icons.account_balance_rounded,
+      Color(0xFF2196F3),
+    );
   }
   if (lower.contains('paris')) {
-    return _CityStyle(Icons.castle, const Color(0xFFE91E63));
+    return const _CityStyle(Icons.castle_rounded, Color(0xFFE91E63));
   }
   if (lower.contains('berlin') || lower.contains('munich')) {
-    return _CityStyle(Icons.account_balance, const Color(0xFF9E9E9E));
+    return const _CityStyle(
+      Icons.account_balance_rounded,
+      Color(0xFF9E9E9E),
+    );
   }
   if (lower.contains('amsterdam')) {
-    return _CityStyle(Icons.directions_bike, const Color(0xFFFF9800));
+    return const _CityStyle(
+      Icons.directions_bike_rounded,
+      Color(0xFFFF9800),
+    );
   }
   if (lower.contains('barcelona') || lower.contains('madrid')) {
-    return _CityStyle(Icons.stadium, const Color(0xFFF44336));
+    return const _CityStyle(Icons.stadium_rounded, Color(0xFFF44336));
   }
   if (lower.contains('rome') || lower.contains('milan')) {
-    return _CityStyle(Icons.account_balance, const Color(0xFF4CAF50));
+    return const _CityStyle(
+      Icons.account_balance_rounded,
+      Color(0xFF4CAF50),
+    );
   }
-
   if (lower.contains('new york')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF2196F3));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF2196F3));
   }
   if (lower.contains('los angeles') || lower.contains('san francisco')) {
-    return _CityStyle(Icons.wb_sunny, const Color(0xFFFF9800));
+    return const _CityStyle(Icons.wb_sunny_rounded, Color(0xFFFF9800));
   }
   if (lower.contains('chicago')) {
-    return _CityStyle(Icons.location_city, const Color(0xFF607D8B));
+    return const _CityStyle(Icons.location_city_rounded, Color(0xFF607D8B));
   }
   if (lower.contains('toronto') || lower.contains('vancouver')) {
-    return _CityStyle(Icons.park, const Color(0xFFF44336));
+    return const _CityStyle(Icons.park_rounded, Color(0xFFF44336));
   }
   if (lower.contains('sao paulo') || lower.contains('rio')) {
-    return _CityStyle(Icons.beach_access, const Color(0xFF4CAF50));
+    return const _CityStyle(Icons.beach_access_rounded, Color(0xFF4CAF50));
   }
   if (lower.contains('mexico')) {
-    return _CityStyle(Icons.account_balance, const Color(0xFF009688));
+    return const _CityStyle(
+      Icons.account_balance_rounded,
+      Color(0xFF009688),
+    );
   }
 
-  return _CityStyle(Icons.location_city, AppColors.primary);
+  return const _CityStyle(Icons.location_city_rounded, AppColors.primary);
 }
 
 class _CityStyle {
+  const _CityStyle(this.icon, this.color);
+
   final IconData icon;
   final Color color;
-
-  const _CityStyle(this.icon, this.color);
 }
 
 class CitiesScreen extends ConsumerWidget {
@@ -118,47 +152,38 @@ class CitiesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final citiesByContinent = ref.watch(citiesByContinentProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'Cities',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+        title: Text(l10n.cities),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.pageX),
+            child: IconButton(
+              tooltip: l10n.refreshTooltip,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surfaceVariant,
+              ),
+              onPressed: () => ref.invalidate(citiesByContinentProvider),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
           ),
-        ),
+        ],
       ),
       body: citiesByContinent.when(
         data: (data) {
           if (data.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.location_off_outlined,
-                    size: 64,
-                    color: AppColors.divider,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No cities with events',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+            return EmptyState(
+              icon: Icons.location_city_outlined,
+              iconColor: AppColors.info,
+              title: 'No cities with events',
+              subtitle:
+                  'City hubs will appear here once organisers publish local events.',
+              actionLabel: l10n.refresh,
+              onAction: () => ref.invalidate(citiesByContinentProvider),
             );
           }
 
@@ -172,63 +197,97 @@ class CitiesScreen extends ConsumerWidget {
               return indexA.compareTo(indexB);
             });
 
+          final totalCities = data.values.fold<int>(
+            0,
+            (sum, cities) => sum + cities.length,
+          );
+          final totalEvents = data.values.fold<int>(
+            0,
+            (sum, cities) =>
+                sum +
+                cities.fold<int>(
+                    0, (citySum, city) => citySum + city.eventCount),
+          );
+
           return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(citiesByContinentProvider);
-            },
+            color: AppColors.primary,
+            onRefresh: () async => ref.invalidate(citiesByContinentProvider),
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageX,
+                AppSpacing.xl,
+                AppSpacing.pageX,
+                AppSpacing.massive,
+              ),
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-                  child: Text(
-                    'Discover popular events in cities around the world and subscribe to receive weekly updates.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      height: 1.4,
-                    ),
+                AppCard(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.section),
+                  borderColor: AppColors.borderLight,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: AppRadius.allLg,
+                        ),
+                        child: const Icon(
+                          Icons.travel_explore_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$totalCities cities across ${sortedRegions.length} regions',
+                              style: AppTypography.h3.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              '$totalEvents live event listings are grouped geographically for faster discovery.',
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
+                const SectionHeader(
+                  title: 'Explore by region',
+                  subtitle:
+                      'Users can jump from a world view to a city-specific event feed without extra filter setup.',
+                ),
+                const SizedBox(height: AppSpacing.lg),
                 ...sortedRegions.map((region) {
-                  final cities = data[region]!;
-                  cities.sort((a, b) => b.eventCount.compareTo(a.eventCount));
+                  final cities = [...data[region]!]
+                    ..sort((a, b) => b.eventCount.compareTo(a.eventCount));
 
                   return _RegionSection(
                     region: region,
                     cities: cities,
-                    onCityTap: (city) => context.push('/events?cityId=${city.id}'),
+                    onCityTap: (city) =>
+                        context.push('/events?cityId=${city.id}'),
                   );
                 }),
-
-                const SizedBox(height: 20),
               ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
-              Text(
-                'Failed to load cities',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => ref.invalidate(citiesByContinentProvider),
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
+        loading: () => LoadingState(message: l10n.loadingCities),
+        error: (error, _) => ErrorState(
+          message: '$error',
+          onRetry: () => ref.invalidate(citiesByContinentProvider),
         ),
       ),
     );
@@ -248,27 +307,33 @@ class _RegionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            region,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textLight,
-              letterSpacing: 0.5,
+    final totalEvents =
+        cities.fold<int>(0, (sum, city) => sum + city.eventCount);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.section),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: region,
+            subtitle: '${cities.length} cities • $totalEvents events',
+          ),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var index = 0; index < cities.length; index++)
+                  _CityListItem(
+                    city: cities[index],
+                    showDivider: index != cities.length - 1,
+                    onTap: () => onCityTap(cities[index]),
+                  ),
+              ],
             ),
           ),
-        ),
-
-        ...cities.map((city) => _CityListItem(
-          city: city,
-          onTap: () => onCityTap(city),
-        )),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -277,69 +342,89 @@ class _CityListItem extends StatelessWidget {
   const _CityListItem({
     required this.city,
     required this.onTap,
+    required this.showDivider,
   });
 
   final City city;
   final VoidCallback onTap;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
     final style = _getCityStyle(city.name);
+    final subtitle = [
+      if (city.country?.isNotEmpty == true) city.country!,
+      if (city.continent?.isNotEmpty == true) city.continent!,
+    ].join(' • ');
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: AppColors.divider,
-              width: 1,
-            ),
-          ),
-        ),
-        child: Row(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: style.color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                style.icon,
-                color: style.color,
-                size: 22,
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: style.color.withValues(alpha: 0.12),
+                      borderRadius: AppRadius.allMd,
+                    ),
+                    child: Icon(style.icon, color: style.color, size: 22),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          city.name,
+                          style: AppTypography.h4.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (subtitle.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            subtitle,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      StatusChip(
+                        label:
+                            '${city.eventCount} ${city.eventCount == 1 ? 'event' : 'events'}',
+                        variant: StatusChipVariant.primary,
+                        compact: true,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textLight,
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 14),
-
-            Expanded(
-              child: Text(
-                city.name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
+            if (showDivider)
+              const Divider(
+                height: 1,
+                indent: AppSpacing.lg + 48 + AppSpacing.md,
+                endIndent: AppSpacing.lg,
               ),
-            ),
-
-            Text(
-              '${city.eventCount} ${city.eventCount == 1 ? 'Event' : 'Events'}',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textLight,
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.textLight,
-              size: 20,
-            ),
           ],
         ),
       ),

@@ -341,7 +341,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMessages => 'No Messages';
 
   @override
-  String get noConversations => 'No Conversations';
+  String get noConversations => 'No conversations yet';
 
   @override
   String get popularEvents => 'Popular Events';
@@ -431,6 +431,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get thisMessageWasDeleted => 'This message was deleted';
 
   @override
+  String messageDeletedBy(String name) {
+    return 'Message deleted by $name';
+  }
+
+  @override
   String get noMessagesYet => 'No messages yet';
 
   @override
@@ -440,6 +445,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String members(int count) {
     return '$count members';
   }
+
+  @override
+  String get reliabilityScore => 'Reliability Score';
+
+  @override
+  String get pastNoShows => 'Past No-shows';
+
+  @override
+  String get checkedInCount => 'Checked-in';
+
+  @override
+  String get confirmParticipation => 'Confirm Participation';
+
+  @override
+  String get groupsTab => 'Groups';
+
+  @override
+  String get dmsTab => 'DMs';
+
+  @override
+  String get eventGroupsTab => 'Event Groups';
+
+  @override
+  String get joinGroupSubtitle => 'Tap to join the event community';
+
+  @override
+  String get alreadyInChat => 'In Chat';
 
   @override
   String get imageUploadedSuccessfully => 'Image uploaded successfully';
@@ -1101,7 +1133,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eventChatClosedBanner =>
-      'This event chat is closed — event ended more than 24 hours ago.';
+      'This event chat is closed — event ended more than 7 days ago.';
 
   @override
   String get joinedEventChat => 'Joined event chat';

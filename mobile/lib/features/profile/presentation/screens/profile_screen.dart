@@ -8,10 +8,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/user.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
@@ -66,8 +68,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-
-
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -96,7 +96,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorUtils.extractMessage(e, fallback: 'Failed to update profile')),
+            content: Text(ErrorUtils.extractMessage(e,
+                fallback: 'Failed to update profile')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -142,7 +143,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ErrorUtils.extractMessage(e, fallback: 'Failed to upload signature')),
+            content: Text(ErrorUtils.extractMessage(e,
+                fallback: 'Failed to upload signature')),
             backgroundColor: AppColors.error,
           ),
         );
@@ -156,23 +158,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _removeSignature() async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.removeSignature),
-        content: const Text('Are you sure you want to remove your signature?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: Text(l10n.removeSignature),
-          ),
-        ],
-      ),
+      title: l10n.removeSignature,
+      message: 'Are you sure you want to remove your signature?',
+      primaryLabel: l10n.removeSignature,
+      secondaryLabel: l10n.cancel,
+      destructive: true,
+      icon: Icons.draw_outlined,
     );
 
     if (confirmed != true) return;
@@ -212,51 +205,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     bool emailNotifications = user.emailNotificationsEnabled;
     bool eventReminders = user.emailEventReminders;
 
-    await showModalBottomSheet(
+    await AppBottomSheet.show(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.notificationPreferences,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+      title: l10n.notificationPreferences,
+      subtitle: 'Control how reminders and updates reach you.',
+      child: StatefulBuilder(
+        builder: (context, setModalState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: AppRadius.allMd,
               ),
-              const SizedBox(height: 24),
-              SwitchListTile(
+              child: SwitchListTile(
                 value: emailNotifications,
                 onChanged: (value) async {
                   setModalState(() => emailNotifications = value);
-                  await _updateEmailPreference('emailNotificationsEnabled', value);
+                  await _updateEmailPreference(
+                      'emailNotificationsEnabled', value);
                 },
                 title: Text(l10n.emailNotifications),
                 subtitle: Text(l10n.emailNotificationsDescription),
                 secondary: const Icon(Icons.email_outlined),
               ),
-              SwitchListTile(
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: AppRadius.allMd,
+              ),
+              child: SwitchListTile(
                 value: eventReminders,
                 onChanged: emailNotifications
                     ? (value) async {
                         setModalState(() => eventReminders = value);
-                        await _updateEmailPreference('emailEventReminders', value);
+                        await _updateEmailPreference(
+                            'emailEventReminders', value);
                       }
                     : null,
                 title: Text(l10n.eventReminders),
                 subtitle: Text(l10n.eventRemindersDescription),
                 secondary: const Icon(Icons.alarm_outlined),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -290,23 +284,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialog.confirm(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      primaryLabel: 'Logout',
+      secondaryLabel: 'Cancel',
+      destructive: true,
+      icon: Icons.logout_rounded,
     );
 
     if (confirmed == true) {
@@ -331,18 +316,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final user = ref.watch(currentUserProvider);
     final l10n = AppLocalizations.of(context)!;
 
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.profile)),
+        backgroundColor: AppColors.background,
+        body: Padding(
+          padding: AppSpacing.screenPadding,
+          child: EmptyState(
+            icon: Icons.person_off_outlined,
+            title: 'Profile unavailable',
+            subtitle:
+                'Sign in again to manage your account, tickets and notification preferences.',
+            actionLabel: 'Login',
+            onAction: () => context.go('/login'),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(l10n.profile),
         actions: [
           if (!_isEditing)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_outlined),
               onPressed: () => setState(() => _isEditing = true),
             )
           else
             IconButton(
-              icon: const Icon(Icons.close),
+              icon: const Icon(Icons.close_rounded),
               onPressed: () {
                 _initializeControllers();
                 setState(() => _isEditing = false);
@@ -350,238 +354,313 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: user?.avatarUrl != null
-                          ? CachedNetworkImageProvider(user!.avatarUrl!)
-                          : null,
-                      child: user?.avatarUrl == null
-                          ? Text(
-                              (user?.fullName?.isNotEmpty ?? false)
-                                  ? user!.fullName![0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(fontSize: 48),
-                            )
-                          : null,
-                    ),
-                    if (_isEditing)
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          radius: 18,
-                          child: IconButton(
-                            icon: const Icon(Icons.camera_alt, size: 18),
-                            color: AppColors.textOnPrimary,
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Photo upload coming soon!'),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: AppSpacing.screenPadding,
+          children: [
+            _buildProfileHero(user),
+            const SizedBox(height: AppSpacing.lg),
+            _buildProfileFormCard(user, l10n),
+            if (user.role == UserRole.organiser) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _SignatureSection(
+                signatureUrl: user.signatureUrl,
+                isUploading: _isUploadingSignature,
+                onUpload: _uploadSignature,
+                onRemove: _removeSignature,
               ),
-
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.fullName,
-                  prefixIcon: const Icon(Icons.person_outline),
-                ),
-                enabled: _isEditing,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return l10n.pleaseEnterFullName;
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: l10n.email,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                ),
-                enabled: false,
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: l10n.phone,
-                  prefixIcon: const Icon(Icons.phone_outlined),
-                  suffixIcon: user?.phoneVerified == true
-                      ? const Icon(Icons.verified, color: AppColors.success)
-                      : null,
-                ),
-                enabled: _isEditing,
-                keyboardType: TextInputType.phone,
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _bioController,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  hintText: 'Tell others about yourself',
-                  prefixIcon: Icon(Icons.info_outline),
-                ),
-                enabled: _isEditing,
-                maxLines: 3,
-                maxLength: 1000,
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _interestsController,
-                decoration: const InputDecoration(
-                  labelText: 'Interests',
-                  hintText: 'tech, music, travel (comma separated)',
-                  prefixIcon: Icon(Icons.favorite_outline),
-                ),
-                enabled: _isEditing,
-                maxLength: 500,
-              ),
-
-              const SizedBox(height: 8),
-
-              SwitchListTile(
-                title: const Text('Networking Visibility'),
-                subtitle: const Text('Allow others to discover and connect with you'),
-                value: _networkingVisible,
-                onChanged: _isEditing
-                    ? (value) => setState(() => _networkingVisible = value)
-                    : null,
-                contentPadding: EdgeInsets.zero,
-              ),
-
-              const SizedBox(height: 16),
-
-              if (user != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    user.role.name.toUpperCase(),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-              if (user?.role == UserRole.organiser) ...[
-                const SizedBox(height: 24),
-                _SignatureSection(
-                  signatureUrl: user?.signatureUrl,
-                  isUploading: _isUploadingSignature,
-                  onUpload: _uploadSignature,
-                  onRemove: _removeSignature,
-                ),
-              ],
-
-              if (_isEditing) ...[
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isSaving ? null : _saveProfile,
-                    child: _isSaving
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.textOnPrimary,
-                            ),
-                          )
-                        : Text(l10n.save),
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 32),
-              const Divider(),
-              const SizedBox(height: 16),
-
-              _SettingsTile(
-                icon: Icons.bookmark_outline,
-                title: l10n.savedEvents,
-                onTap: () => context.push('/saved-events'),
-              ),
-              _SettingsTile(
-                icon: Icons.local_offer_outlined,
-                title: l10n.myCoupons,
-                onTap: () => context.push('/my-coupons'),
-              ),
-              _SettingsTile(
-                icon: Icons.help_outline,
-                title: l10n.myQuestions,
-                onTap: () => context.push('/my-questions'),
-              ),
-              _SettingsTile(
-                icon: Icons.hourglass_bottom_outlined,
-                title: l10n.waitlistOffers,
-                onTap: () => context.push('/waitlist-offers'),
-              ),
-              _LanguageSettingsTile(),
-              _SettingsTile(
-                icon: Icons.notifications_outlined,
-                title: l10n.notificationPreferences,
-                onTap: () => _showNotificationPreferences(user),
-              ),
-
-              const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _handleLogout,
-                  icon: const Icon(Icons.logout, color: AppColors.error),
-                  label: Text(
-                    l10n.logout,
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.error),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
             ],
+            const SizedBox(height: AppSpacing.lg),
+            _buildSettingsCard(user, l10n),
+            const SizedBox(height: AppSpacing.xxxl),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageX,
+            AppSpacing.md,
+            AppSpacing.pageX,
+            AppSpacing.pageY,
+          ),
+          child: AppCard(
+            shadow: AppShadows.md,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isEditing)
+                  AppButton(
+                    label: l10n.save,
+                    icon: Icons.check_rounded,
+                    loading: _isSaving,
+                    size: AppButtonSize.lg,
+                    expanded: true,
+                    onPressed: _isSaving ? null : _saveProfile,
+                  ),
+                if (_isEditing) const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: l10n.logout,
+                  icon: Icons.logout_rounded,
+                  variant: AppButtonVariant.secondary,
+                  expanded: true,
+                  onPressed: _handleLogout,
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileHero(User user) {
+    return AppCard(
+      background: AppColors.primarySoft,
+      borderColor: AppColors.primary.withValues(alpha: 0.12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                backgroundImage: user.avatarUrl != null
+                    ? CachedNetworkImageProvider(user.avatarUrl!)
+                    : null,
+                child: user.avatarUrl == null
+                    ? Text(
+                        (user.fullName?.isNotEmpty ?? false)
+                            ? user.fullName![0].toUpperCase()
+                            : '?',
+                        style: AppTypography.h1.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : null,
+              ),
+              if (_isEditing)
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Material(
+                    color: AppColors.primary,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Photo upload coming soon!'),
+                          ),
+                        );
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.camera_alt_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user.fullName ?? user.email,
+                  style:
+                      AppTypography.h2.copyWith(color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  user.email,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    StatusChip(
+                      label: user.role.name.toUpperCase(),
+                      variant: StatusChipVariant.primary,
+                    ),
+                    if (user.phoneVerified)
+                      const StatusChip(
+                        label: 'Phone verified',
+                        variant: StatusChipVariant.success,
+                      ),
+                    StatusChip(
+                      label: _networkingVisible
+                          ? 'Networking visible'
+                          : 'Private profile',
+                      variant: _networkingVisible
+                          ? StatusChipVariant.info
+                          : StatusChipVariant.neutral,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileFormCard(User user, AppLocalizations l10n) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Personal information',
+            style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Keep your attendee details accurate so tickets, notifications and networking work correctly.',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          AppTextField(
+            controller: _nameController,
+            label: l10n.fullName,
+            prefixIcon: Icons.person_outline_rounded,
+            enabled: _isEditing,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return l10n.pleaseEnterFullName;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppTextField(
+            controller: _emailController,
+            label: l10n.email,
+            prefixIcon: Icons.email_outlined,
+            enabled: false,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppTextField(
+            controller: _phoneController,
+            label: l10n.phone,
+            prefixIcon: Icons.phone_outlined,
+            enabled: _isEditing,
+            keyboardType: TextInputType.phone,
+            suffix: user.phoneVerified
+                ? const Icon(Icons.verified_rounded, color: AppColors.success)
+                : null,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppTextField(
+            controller: _bioController,
+            label: 'Bio',
+            hint: 'Tell attendees and organisers a bit about you',
+            prefixIcon: Icons.info_outline_rounded,
+            enabled: _isEditing,
+            maxLines: 4,
+            maxLength: 1000,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppTextField(
+            controller: _interestsController,
+            label: 'Interests',
+            hint: 'Tech, music, travel, startup, design',
+            prefixIcon: Icons.favorite_outline_rounded,
+            enabled: _isEditing,
+            maxLength: 500,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: AppRadius.allMd,
+            ),
+            child: SwitchListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              title: Text(
+                'Networking visibility',
+                style: AppTypography.bodyLg.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'Allow other attendees to discover and connect with you.',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              value: _networkingVisible,
+              onChanged: _isEditing
+                  ? (value) => setState(() => _networkingVisible = value)
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(User user, AppLocalizations l10n) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Preferences & tools',
+            style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Access saved items, coupons, waitlist updates and account preferences.',
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _SettingsTile(
+            icon: Icons.bookmark_outline_rounded,
+            title: l10n.savedEvents,
+            onTap: () => context.push('/saved-events'),
+          ),
+          _SettingsTile(
+            icon: Icons.local_offer_outlined,
+            title: l10n.myCoupons,
+            onTap: () => context.push('/my-coupons'),
+          ),
+          _SettingsTile(
+            icon: Icons.help_outline_rounded,
+            title: l10n.myQuestions,
+            onTap: () => context.push('/my-questions'),
+          ),
+          _SettingsTile(
+            icon: Icons.hourglass_bottom_outlined,
+            title: l10n.waitlistOffers,
+            onTap: () => context.push('/waitlist-offers'),
+          ),
+          _LanguageSettingsTile(),
+          _SettingsTile(
+            icon: Icons.notifications_outlined,
+            title: l10n.notificationPreferences,
+            onTap: () => _showNotificationPreferences(user),
+          ),
+        ],
       ),
     );
   }
@@ -600,11 +679,50 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Material(
+        color: AppColors.surfaceVariant,
+        borderRadius: AppRadius.allMd,
+        child: InkWell(
+          borderRadius: AppRadius.allMd,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.allMd,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, color: AppColors.textSecondary, size: 18),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.bodyLg.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -620,16 +738,15 @@ class _LanguageSettingsTile extends ConsumerWidget {
       currentLanguage = 'Tieng Viet';
     }
 
-    return ListTile(
-      leading: const Icon(Icons.language, color: AppColors.textSecondary),
-      title: Text(l10n?.language ?? 'Language'),
-      subtitle: Text(currentLanguage),
-      trailing: const Icon(Icons.chevron_right),
+    return _SettingsTile(
+      icon: Icons.language_rounded,
+      title: '${l10n?.language ?? 'Language'} · $currentLanguage',
       onTap: () => _showLanguageDialog(context, ref, l10n),
     );
   }
 
-  void _showLanguageDialog(BuildContext context, WidgetRef ref, AppLocalizations? l10n) {
+  void _showLanguageDialog(
+      BuildContext context, WidgetRef ref, AppLocalizations? l10n) {
     final locale = ref.read(localeProvider);
 
     showDialog(
@@ -689,12 +806,13 @@ class _SignatureSection extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         side: BorderSide(color: AppColors.divider),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -728,11 +846,11 @@ class _SignatureSection extends StatelessWidget {
                     height: 120,
                     decoration: BoxDecoration(
                       color: AppColors.textOnPrimary,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                       border: Border.all(color: AppColors.divider),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
                       child: CachedNetworkImage(
                         imageUrl: signatureUrl!,
                         fit: BoxFit.contain,
@@ -740,7 +858,8 @@ class _SignatureSection extends StatelessWidget {
                           child: CircularProgressIndicator(),
                         ),
                         errorWidget: (context, url, error) => const Center(
-                          child: Icon(Icons.error_outline, color: AppColors.error),
+                          child:
+                              Icon(Icons.error_outline, color: AppColors.error),
                         ),
                       ),
                     ),
@@ -762,13 +881,13 @@ class _SignatureSection extends StatelessWidget {
             else
               InkWell(
                 onTap: isUploading ? null : onUpload,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 child: Container(
                   width: double.infinity,
                   height: 120,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
                       color: AppColors.divider,
                       style: BorderStyle.solid,

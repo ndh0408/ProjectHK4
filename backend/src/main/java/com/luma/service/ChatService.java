@@ -41,6 +41,7 @@ public class ChatService {
     private final UserRepository userRepository;
     private final BlockedUserRepository blockedUserRepository;
     private final ChatWebSocketService webSocketService;
+    private final PollVoteRepository pollVoteRepository;
 
     public PageResponse<ConversationResponse> getConversations(User user, Pageable pageable) {
         Page<Conversation> conversations = conversationRepository.findByUser(user, pageable);
@@ -272,8 +273,27 @@ public class ChatService {
 
         Page<Message> messages = messageRepository.findByConversation(conversation, pageable);
 
+        // Pre-resolve which polls on this page the viewer has already voted on,
+        // so we can mark the embedded poll snapshots accordingly without N+1.
+        Set<UUID> pollIds = messages.getContent().stream()
+                .filter(m -> m.getType() == com.luma.entity.enums.MessageType.POLL && m.getPoll() != null)
+                .map(m -> m.getPoll().getId())
+                .collect(Collectors.toSet());
+        Set<UUID> votedPollIds = pollIds.isEmpty()
+                ? Collections.emptySet()
+                : pollVoteRepository.findVotedPollIdsByUserAndPollIds(user, pollIds);
+
+        // For polls the viewer voted on, also fetch the exact options they
+        // picked so the mobile chat can highlight them.
+        java.util.Map<UUID, java.util.List<UUID>> votedOptionsByPoll = new java.util.HashMap<>();
+        for (UUID pollId : votedPollIds) {
+            Set<UUID> opts = pollVoteRepository.findVotedOptionIdsByPollAndUser(pollId, user);
+            if (!opts.isEmpty()) votedOptionsByPoll.put(pollId, new java.util.ArrayList<>(opts));
+        }
+
         List<MessageResponse> responses = messages.getContent().stream()
-                .map(MessageResponse::fromEntity)
+                .map(m -> MessageResponse.fromEntity(m, votedPollIds::contains,
+                        votedOptionsByPoll::get))
                 .toList();
 
         return PageResponse.<MessageResponse>builder()
@@ -292,8 +312,15 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
-        if (!participantRepository.existsByConversationAndUser(conversation, user)) {
-            throw new ForbiddenException("You are not a participant of this conversation");
+        ConversationParticipant sender = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElseThrow(() -> new ForbiddenException("You are not a participant of this conversation"));
+
+        if (sender.isBanned()) {
+            throw new ForbiddenException("You have been banned from this chat by the organiser");
+        }
+        if (sender.isCurrentlyMuted()) {
+            throw new ForbiddenException("You are muted in this chat until " + sender.getMutedUntil());
         }
 
         if (conversation.getClosedAt() != null) {
@@ -404,22 +431,268 @@ public class ChatService {
     }
 
     @Transactional
+    public void muteAttendee(User organiser, UUID conversationId, UUID attendeeId, boolean mute) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(organiser, conversation);
+
+        User attendee = userRepository.findById(attendeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendee not found"));
+        
+        ConversationParticipant participant = participantRepository.findByConversationAndUser(conversation, attendee)
+                .orElseThrow(() -> new BadRequestException("User is not a participant of this conversation"));
+
+        participant.setMuted(mute);
+        participantRepository.save(participant);
+        
+        // Notify via websocket or system message if needed
+    }
+
+    @Transactional
+    public void banAttendee(User organiser, UUID conversationId, UUID attendeeId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(organiser, conversation);
+
+        User attendee = userRepository.findById(attendeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Attendee not found"));
+        
+        ConversationParticipant participant = participantRepository.findByConversationAndUser(conversation, attendee)
+                .orElseThrow(() -> new BadRequestException("User is not a participant of this conversation"));
+
+        participantRepository.delete(participant);
+        
+        // Also block from re-joining this specific conversation in the future 
+        // (Logic should be added to join/register flow)
+    }
+
+    @Transactional
     public void deleteMessage(User user, UUID messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
 
-        if (!message.getSender().getId().equals(user.getId())) {
+        boolean isSender = message.getSender() != null
+                && message.getSender().getId().equals(user.getId());
+        // Organisers can moderate any message in their own event group chat.
+        boolean isOrganiserModerator = isEventOrganiser(user, message.getConversation());
+
+        if (!isSender && !isOrganiserModerator) {
             throw new ForbiddenException("You can only delete your own messages");
         }
 
         UUID conversationId = message.getConversation().getId();
 
+        // If the deleted message was the pinned announcement, unpin it too
+        // so clients don't keep rendering a dangling banner.
+        Conversation conversation = message.getConversation();
+        if (conversation.getPinnedMessage() != null
+                && conversation.getPinnedMessage().getId().equals(messageId)) {
+            conversation.setPinnedMessage(null);
+            conversation.setPinnedAt(null);
+            conversation.setPinnedBy(null);
+            conversationRepository.save(conversation);
+        }
+
         message.setDeleted(true);
+        message.setDeletedBy(user);
+        message.setDeletedAt(LocalDateTime.now());
         message.setContent("This message was deleted");
         message.setMediaUrl(null);
         messageRepository.save(message);
 
         webSocketService.broadcastMessageDeleted(conversationId, messageId);
+    }
+
+    /// True iff the user is the event organiser for this conversation's
+    /// linked event. Only EVENT_GROUP conversations have an event; for
+    /// DIRECT / GROUP chats this always returns false.
+    private boolean isEventOrganiser(User user, Conversation conversation) {
+        if (conversation == null || user == null) return false;
+        Event event = conversation.getEvent();
+        if (event == null || event.getOrganiser() == null) return false;
+        return event.getOrganiser().getId().equals(user.getId());
+    }
+
+    private void requireOrganiser(User user, Conversation conversation) {
+        if (conversation.getType() != ConversationType.EVENT_GROUP) {
+            throw new BadRequestException("Only available in event group chats");
+        }
+        if (!isEventOrganiser(user, conversation)) {
+            throw new ForbiddenException("Only the event organiser can perform this action");
+        }
+    }
+
+    @Transactional
+    public ConversationResponse pinMessage(User user, UUID conversationId, UUID messageId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+        if (!message.getConversation().getId().equals(conversationId)) {
+            throw new BadRequestException("Message does not belong to this conversation");
+        }
+        if (message.isDeleted()) {
+            throw new BadRequestException("Cannot pin a deleted message");
+        }
+
+        conversation.setPinnedMessage(message);
+        conversation.setPinnedAt(LocalDateTime.now());
+        conversation.setPinnedBy(user);
+        conversationRepository.save(conversation);
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElse(null);
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
+    @Transactional
+    public ConversationResponse unpinMessage(User user, UUID conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+
+        conversation.setPinnedMessage(null);
+        conversation.setPinnedAt(null);
+        conversation.setPinnedBy(null);
+        conversationRepository.save(conversation);
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElse(null);
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
+    @Transactional
+    public void banParticipant(User user, UUID conversationId, UUID targetUserId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+        if (targetUserId.equals(user.getId())) {
+            throw new BadRequestException("You cannot ban yourself");
+        }
+
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, target)
+                .orElseThrow(() -> new ResourceNotFoundException("User is not a participant"));
+
+        participant.setBannedAt(LocalDateTime.now());
+        participantRepository.save(participant);
+    }
+
+    @Transactional
+    public void unbanParticipant(User user, UUID conversationId, UUID targetUserId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, target)
+                .orElseThrow(() -> new ResourceNotFoundException("User is not a participant"));
+
+        participant.setBannedAt(null);
+        participantRepository.save(participant);
+    }
+
+    @Transactional
+    public void muteParticipant(User user, UUID conversationId, UUID targetUserId, int minutes) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+        requireOrganiser(user, conversation);
+        if (targetUserId.equals(user.getId())) {
+            throw new BadRequestException("You cannot mute yourself");
+        }
+
+        User target = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, target)
+                .orElseThrow(() -> new ResourceNotFoundException("User is not a participant"));
+
+        if (minutes <= 0) {
+            participant.setMutedUntil(null);
+        } else {
+            participant.setMutedUntil(LocalDateTime.now().plusMinutes(minutes));
+        }
+        participantRepository.save(participant);
+    }
+
+    public PageResponse<MessageResponse> searchMessages(
+            User user, UUID conversationId, String query, Pageable pageable) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+
+        // User must be a participant to search the history.
+        participantRepository.findByConversationAndUser(conversation, user)
+                .orElseThrow(() -> new ForbiddenException("You are not a participant"));
+
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.isEmpty()) {
+            return PageResponse.<MessageResponse>builder()
+                    .content(List.of())
+                    .page(0).size(pageable.getPageSize())
+                    .totalElements(0L).totalPages(0)
+                    .first(true).last(true)
+                    .build();
+        }
+
+        Page<Message> page = messageRepository.searchByConversation(
+                conversation, trimmed.toLowerCase(), pageable);
+
+        List<MessageResponse> content = page.getContent().stream()
+                .map(m -> MessageResponse.fromEntity(m, pid -> false))
+                .toList();
+
+        return PageResponse.<MessageResponse>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
+
+    @Transactional
+    public ConversationResponse openSupportConversationWithOrganiser(User user, UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        User organiser = event.getOrganiser();
+        if (organiser == null) {
+            throw new BadRequestException("This event has no organiser to contact");
+        }
+        if (organiser.getId().equals(user.getId())) {
+            throw new BadRequestException("You are the organiser of this event");
+        }
+
+        Conversation conversation = conversationRepository
+                .findDirectConversation(user, organiser)
+                .orElseGet(() -> createDirectConversation(user, organiser));
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElse(null);
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
+    private Conversation createDirectConversation(User a, User b) {
+        Conversation conversation = Conversation.builder()
+                .type(ConversationType.DIRECT)
+                .build();
+        conversation = conversationRepository.save(conversation);
+
+        participantRepository.save(ConversationParticipant.builder()
+                .conversation(conversation).user(a).build());
+        participantRepository.save(ConversationParticipant.builder()
+                .conversation(conversation).user(b).build());
+        return conversation;
     }
 
     @Transactional

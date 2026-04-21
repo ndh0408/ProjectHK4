@@ -15,6 +15,7 @@ import '../../features/events/presentation/screens/speaker_events_screen.dart';
 import '../../features/events/presentation/screens/ticket_screen.dart';
 import '../../features/events/presentation/screens/write_review_screen.dart';
 import '../../features/events/presentation/screens/qr_scanner_screen.dart';
+import '../../features/events/presentation/screens/registration_form_screen.dart';
 import '../../features/explore/presentation/screens/categories_screen.dart';
 import '../../features/explore/presentation/screens/cities_screen.dart';
 import '../../features/explore/presentation/screens/events_list_screen.dart';
@@ -25,10 +26,10 @@ import '../../features/explore/presentation/screens/search_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/main/presentation/screens/main_shell.dart';
 import '../../features/my_events/presentation/screens/my_events_screen.dart';
-import '../../features/notifications/presentation/screens/alerts_screen.dart';
 import '../../features/notifications/presentation/screens/luma_notifications_screen.dart';
 import '../../features/chat/presentation/screens/chat_screen.dart';
 import '../../features/chat/presentation/screens/chatbot_screen.dart';
+import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/chat/presentation/screens/event_buddies_screen.dart';
 import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -103,13 +104,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final auth = authState;
               final userId = auth is Authenticated ? auth.user.id : '';
-              return AlertsScreen(key: ValueKey('alerts_$userId'));
+              return LumaNotificationsScreen(
+                key: ValueKey('notifications_$userId'),
+              );
             },
           ),
           GoRoute(
             path: '/luma-notifications',
             name: 'luma-notifications',
             builder: (context, state) => const LumaNotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/conversations',
+            name: 'conversations',
+            builder: (context, state) => const ConversationsScreen(),
           ),
           GoRoute(
             path: '/chat/:id',
@@ -186,6 +194,29 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final eventId = state.pathParameters['id'] ?? '';
               return EventDetailScreen(eventId: eventId);
+            },
+          ),
+          GoRoute(
+            path: '/event/:id/register',
+            name: 'event-register',
+            builder: (context, state) {
+              final eventId = state.pathParameters['id'] ?? '';
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              final isFree = extra['isFree'] as bool? ?? true;
+              final ticketPrice = extra['ticketPrice'] as double?;
+              final ticketTypeId = extra['ticketTypeId'] as String?;
+              final ticketTypeName = extra['ticketTypeName'] as String?;
+              final quantity = extra['quantity'] as int? ?? 1;
+              final eventTitle = extra['eventTitle'] as String? ?? 'Event';
+              return RegistrationFormScreen(
+                eventId: eventId,
+                eventTitle: eventTitle,
+                isFree: isFree,
+                ticketPrice: ticketPrice,
+                ticketTypeId: ticketTypeId,
+                ticketTypeName: ticketTypeName,
+                quantity: quantity,
+              );
             },
           ),
           GoRoute(
@@ -306,7 +337,9 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final eventId = state.pathParameters['id'] ?? '';
               final extra = state.extra as Map<String, dynamic>? ?? {};
-              return EventScheduleScreen(eventId: eventId, eventTitle: extra['eventTitle'] as String? ?? 'Event');
+              return EventScheduleScreen(
+                  eventId: eventId,
+                  eventTitle: extra['eventTitle'] as String? ?? 'Event');
             },
           ),
           GoRoute(

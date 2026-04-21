@@ -49,6 +49,18 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(1000)")
     private String bio;
 
+    @Column(columnDefinition = "NVARCHAR(200)")
+    private String jobTitle;
+
+    @Column(columnDefinition = "NVARCHAR(200)")
+    private String company;
+
+    @Column(columnDefinition = "NVARCHAR(200)")
+    private String industry;
+
+    @Column(columnDefinition = "NVARCHAR(500)")
+    private String linkedinUrl;
+
     @Column(columnDefinition = "NVARCHAR(500)")
     private String interests;
 

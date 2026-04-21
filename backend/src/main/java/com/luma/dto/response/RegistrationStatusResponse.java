@@ -52,11 +52,15 @@ public class RegistrationStatusResponse {
         String message = switch (status) {
             case PENDING -> requiresPayment ? "Awaiting payment" : "Registration pending approval";
             case APPROVED -> "Registration approved";
+            case CONFIRMED -> "Registration confirmed";
+            case CHECKED_IN -> "Checked in";
             case REJECTED -> "Registration rejected";
             case CANCELLED -> "Registration cancelled";
+            case NO_SHOW -> "Did not attend";
             case WAITING_LIST -> waitingListPosition != null
                     ? "On waiting list (Position #" + waitingListPosition + ")"
                     : "On waiting list";
+            default -> "Unknown status";
         };
 
         return RegistrationStatusResponse.builder()

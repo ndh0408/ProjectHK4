@@ -8,7 +8,7 @@ import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/websocket_service.dart';
 import '../../../auth/providers/auth_provider.dart';
-import '../../../chat/presentation/screens/conversations_screen.dart';
+import 'package:mobile/features/chat/providers/chat_providers.dart';
 
 class UnreadCountNotifier extends StateNotifier<AsyncValue<int>> {
   UnreadCountNotifier(this._api, {bool isLoggedIn = false})
@@ -147,13 +147,71 @@ class _MainShellState extends ConsumerState<MainShell> {
         children: [Icon(icon), _buildBadge(badge)],
       );
 
+  Widget _buildNavItem({
+    required int index,
+    required String label,
+    required IconData icon,
+    required IconData activeIcon,
+    int badge = 0,
+  }) {
+    final selected = _currentIndex == index;
+    final color = selected ? AppColors.primary : AppColors.textSecondary;
+
+    return Expanded(
+      // Wrap in Material so the InkWell ripple paints above the parent
+      // Container's decoration. Without this the tap feedback is invisible
+      // because the opaque bottom-bar background covers the ripple.
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: AppRadius.allLg,
+        child: InkWell(
+          onTap: () => _onItemTapped(index),
+          borderRadius: AppRadius.allLg,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        selected ? AppColors.primarySoft : Colors.transparent,
+                    borderRadius: AppRadius.allPill,
+                  ),
+                  child: _navIcon(selected ? activeIcon : icon, badge: badge),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: color,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final unreadNotifications = ref.watch(unreadNotificationCountProvider);
     final unreadMessages = ref.watch(unreadMessageCountProvider);
 
-    ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (previous, next) {
+    ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider,
+        (previous, next) {
       next.whenData((event) {
         if (event.type == ChatEventType.newMessage) {
           ref.read(unreadMessageCountProvider.notifier).loadCount();
@@ -166,47 +224,57 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       body: widget.child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(color: AppColors.divider, width: 1),
-          ),
-          boxShadow: AppShadows.sm,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.lg,
         ),
-        child: SafeArea(
-          top: false,
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onItemTapped,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined),
-                activeIcon: const Icon(Icons.home_rounded),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: AppRadius.allXl,
+            border: Border.all(color: AppColors.borderLight),
+            boxShadow: AppShadows.md,
+          ),
+          child: Row(
+            children: [
+              _buildNavItem(
+                index: 0,
                 label: l10n.home,
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home_rounded,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.explore_outlined),
-                activeIcon: const Icon(Icons.explore_rounded),
+              _buildNavItem(
+                index: 1,
                 label: l10n.explore,
+                icon: Icons.explore_outlined,
+                activeIcon: Icons.explore_rounded,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.calendar_today_outlined),
-                activeIcon: const Icon(Icons.calendar_today_rounded),
+              _buildNavItem(
+                index: 2,
                 label: l10n.myEvents,
+                icon: Icons.confirmation_number_outlined,
+                activeIcon: Icons.confirmation_number_rounded,
               ),
-              BottomNavigationBarItem(
-                icon: _navIcon(Icons.notifications_outlined, badge: totalUnread),
-                activeIcon: _navIcon(Icons.notifications_rounded, badge: totalUnread),
+              _buildNavItem(
+                index: 3,
                 label: l10n.alerts,
+                icon: Icons.notifications_outlined,
+                activeIcon: Icons.notifications_rounded,
+                badge: totalUnread,
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.person_outline),
-                activeIcon: const Icon(Icons.person_rounded),
+              _buildNavItem(
+                index: 4,
                 label: l10n.profile,
+                icon: Icons.person_outline,
+                activeIcon: Icons.person_rounded,
               ),
             ],
           ),

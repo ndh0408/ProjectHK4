@@ -44,6 +44,24 @@ public class ConversationParticipant {
     @Builder.Default
     private boolean archived = false;
 
+    /// Timestamp the organiser banned this participant from the event chat.
+    /// Null means active; non-null blocks send + (optionally) read.
+    private LocalDateTime bannedAt;
+
+    /// Mute duration — if set in the future, the participant can still read
+    /// but their messages are rejected. Null/past means unmuted.
+    private LocalDateTime mutedUntil;
+
     @CreationTimestamp
     private LocalDateTime joinedAt;
+
+    @Transient
+    public boolean isBanned() {
+        return bannedAt != null;
+    }
+
+    @Transient
+    public boolean isCurrentlyMuted() {
+        return mutedUntil != null && mutedUntil.isAfter(LocalDateTime.now());
+    }
 }

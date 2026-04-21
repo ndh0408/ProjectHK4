@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../core/config/theme.dart';
+import '../../core/design_tokens/design_tokens.dart';
+import 'app_button.dart';
+import 'app_card.dart';
 
 class EmptyState extends StatefulWidget {
   const EmptyState({
@@ -30,7 +33,7 @@ class EmptyState extends StatefulWidget {
 class _EmptyStateState extends State<EmptyState>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
   @override
@@ -41,12 +44,15 @@ class _EmptyStateState extends State<EmptyState>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
 
     unawaited(_controller.forward());
@@ -67,70 +73,70 @@ class _EmptyStateState extends State<EmptyState>
 
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(widget.compact ? 16.0 : 32.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: iconSize * 1.5,
-                  height: iconSize * 1.5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        (widget.iconColor ?? AppColors.primary)
-                            .withValues(alpha: 0.1),
-                        (widget.iconColor ?? AppColors.primary)
-                            .withValues(alpha: 0.05),
-                      ],
+            padding: EdgeInsets.all(
+                widget.compact ? AppSpacing.lg : AppSpacing.xxxl),
+            child: AppCard(
+              padding: EdgeInsets.all(
+                  widget.compact ? AppSpacing.xl : AppSpacing.xxxl),
+              background: Theme.of(context).colorScheme.surface,
+              shadow: AppShadows.xs,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: iconSize * 1.5,
+                    height: iconSize * 1.5,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          (widget.iconColor ?? AppColors.primary)
+                              .withValues(alpha: 0.14),
+                          (widget.iconColor ?? AppColors.primary)
+                              .withValues(alpha: 0.05),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    size: iconSize,
-                    color: widget.iconColor ?? AppColors.textLight,
-                  ),
-                ),
-                SizedBox(height: widget.compact ? 12.0 : 24.0),
-
-                Text(
-                  widget.title,
-                  style: titleStyle?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: widget.compact ? 4.0 : 8.0),
-
-                Text(
-                  widget.subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-
-                if (widget.actionLabel != null && widget.onAction != null) ...[
-                  SizedBox(height: widget.compact ? 16.0 : 24.0),
-                  ElevatedButton.icon(
-                    onPressed: widget.onAction,
-                    icon: const Icon(Icons.explore, size: 18),
-                    label: Text(widget.actionLabel!),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
+                    child: Icon(
+                      widget.icon,
+                      size: iconSize,
+                      color: widget.iconColor ?? AppColors.primary,
                     ),
                   ),
+                  SizedBox(
+                      height: widget.compact ? AppSpacing.md : AppSpacing.xxl),
+                  Text(
+                    widget.title,
+                    style: titleStyle?.copyWith(fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(
+                      height: widget.compact ? AppSpacing.xs : AppSpacing.sm),
+                  Text(
+                    widget.subtitle,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (widget.actionLabel != null &&
+                      widget.onAction != null) ...[
+                    SizedBox(
+                        height: widget.compact ? AppSpacing.lg : AppSpacing.xl),
+                    AppButton(
+                      label: widget.actionLabel!,
+                      icon: Icons.explore_outlined,
+                      onPressed: widget.onAction,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -150,24 +156,30 @@ class LoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(
-            width: 48,
-            height: 48,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxxl,
+          vertical: AppSpacing.xxl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 44,
+              height: 44,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,46 +199,50 @@ class ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        child: AppCard(
+          padding: const EdgeInsets.all(AppSpacing.xxxl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 40,
+                  color: AppColors.error,
+                ),
               ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppColors.error,
+              const SizedBox(height: AppSpacing.xl),
+              Text(
+                'Something went wrong',
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Oops! Something went wrong',
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                textAlign: TextAlign.center,
               ),
+              if (onRetry != null) ...[
+                const SizedBox(height: AppSpacing.xl),
+                AppButton(
+                  label: 'Try again',
+                  variant: AppButtonVariant.secondary,
+                  icon: Icons.refresh_rounded,
+                  onPressed: onRetry,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

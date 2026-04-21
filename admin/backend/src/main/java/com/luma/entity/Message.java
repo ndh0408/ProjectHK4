@@ -46,6 +46,12 @@ public class Message {
     @Builder.Default
     private boolean deleted = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by_id")
+    private User deletedBy;
+
+    private LocalDateTime deletedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

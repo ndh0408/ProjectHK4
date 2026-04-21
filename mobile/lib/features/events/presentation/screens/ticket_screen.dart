@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/widgets/app_components.dart';
 
 class TicketScreen extends ConsumerWidget {
   const TicketScreen({
@@ -29,54 +32,60 @@ class TicketScreen extends ConsumerWidget {
   bool get isCheckedIn => checkedInAt != null;
 
   Future<void> _showTransferDialog(BuildContext context, WidgetRef ref) async {
+    if (registrationId == null || isCheckedIn) return;
+
     final controller = TextEditingController();
-    final result = await showDialog<String>(
+
+    await AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Transfer Ticket'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Enter the recipient\'s email:'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                hintText: 'recipient@example.com',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Transfer'),
+      title: 'Transfer ticket',
+      subtitle: 'Send this ticket to another attendee by email.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppTextField(
+            controller: controller,
+            label: 'Recipient email',
+            hint: 'recipient@example.com',
+            prefixIcon: Icons.mail_outline_rounded,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: 'Transfer ticket',
+            icon: Icons.swap_horiz_rounded,
+            expanded: true,
+            onPressed: () async {
+              final recipient = controller.text.trim();
+              if (recipient.isEmpty) return;
+
+              try {
+                final api = ref.read(apiServiceProvider);
+                await api.transferTicket(registrationId!, recipient);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Transfer initiated successfully'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to transfer ticket: $e'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
           ),
         ],
       ),
     );
-
-    if (result == null || result.isEmpty || registrationId == null) return;
-
-    try {
-      final api = ref.read(apiServiceProvider);
-      await api.transferTicket(registrationId!, result);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transfer initiated!'), backgroundColor: AppColors.success),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    }
   }
 
   @override
@@ -85,158 +94,228 @@ class TicketScreen extends ConsumerWidget {
     final qrData = registrationId ?? ticketId;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(l10n.ticket),
         actions: [
           if (registrationId != null && !isCheckedIn)
             IconButton(
-              icon: const Icon(Icons.swap_horiz),
+              icon: const Icon(Icons.swap_horiz_rounded),
               tooltip: 'Transfer ticket',
               onPressed: () => _showTransferDialog(context, ref),
             ),
         ],
       ),
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.textPrimary.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+      body: ListView(
+        padding: AppSpacing.screenPadding,
+        children: [
+          AppCard(
+            background:
+                isCheckedIn ? AppColors.successLight : AppColors.primarySoft,
+            borderColor: isCheckedIn
+                ? AppColors.success.withValues(alpha: 0.2)
+                : AppColors.primary.withValues(alpha: 0.12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    StatusChip(
+                      label: isCheckedIn ? l10n.checkedIn : 'Active ticket',
+                      variant: isCheckedIn
+                          ? StatusChipVariant.success
+                          : StatusChipVariant.primary,
+                      icon: isCheckedIn
+                          ? Icons.check_circle_rounded
+                          : Icons.qr_code_2_rounded,
+                    ),
+                    const Spacer(),
+                    StatusChip(
+                      label:
+                          'Ref ${ticketId.length >= 8 ? ticketId.substring(0, 8).toUpperCase() : ticketId.toUpperCase()}',
+                      variant: StatusChipVariant.neutral,
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    if (isCheckedIn) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.successLight,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.success),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.checkedIn,
-                              style: TextStyle(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  eventName,
+                  style:
+                      AppTypography.h2.copyWith(color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  userName,
+                  style: AppTypography.bodyLg.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                if (isCheckedIn) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '${l10n.checkedInAt} ${DateFormat('MMM d, yyyy h:mm a').format(checkedInAt!)}',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    borderRadius: AppRadius.allMd,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Opacity(
+                        opacity: isCheckedIn ? 0.32 : 1,
+                        child: QrImageView(
+                          data: qrData,
+                          version: QrVersions.auto,
+                          size: 220,
+                          backgroundColor: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${l10n.checkedInAt} ${DateFormat('MMM d, yyyy h:mm a').format(checkedInAt!)}',
-                        style: TextStyle(
-                          color: AppColors.success,
-                          fontSize: 12,
+                      if (isCheckedIn)
+                        Container(
+                          width: 84,
+                          height: 84,
+                          decoration: const BoxDecoration(
+                            color: AppColors.success,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.check_rounded,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
                     ],
-                    Text(
-                      eventName,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(),
-                    const SizedBox(height: 24),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Opacity(
-                          opacity: isCheckedIn ? 0.3 : 1.0,
-                          child: QrImageView(
-                            data: qrData,
-                            version: QrVersions.auto,
-                            size: 200.0,
-                          ),
-                        ),
-                        if (isCheckedIn)
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              color: AppColors.textOnPrimary,
-                              size: 48,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      userName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Ref: ${ticketId.length >= 8 ? ticketId.substring(0, 8).toUpperCase() : ticketId.toUpperCase()}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textLight,
-                          ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildInfoRow(Icons.calendar_today, eventTime),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(Icons.location_on, eventLocation),
-                  ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  isCheckedIn ? l10n.youHaveCheckedIn : l10n.showQrAtEntrance,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyLg.copyWith(
+                    color:
+                        isCheckedIn ? AppColors.success : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppCard(
+            child: Column(
+              children: [
+                _TicketMetaRow(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Date & time',
+                  value: eventTime,
+                ),
+                const Divider(height: AppSpacing.xl),
+                _TicketMetaRow(
+                  icon: Icons.location_on_outlined,
+                  label: 'Venue',
+                  value: eventLocation,
+                ),
+                const Divider(height: AppSpacing.xl),
+                _TicketMetaRow(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Attendee',
+                  value: userName,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: registrationId != null && !isCheckedIn
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pageX,
+                  AppSpacing.md,
+                  AppSpacing.pageX,
+                  AppSpacing.pageY,
+                ),
+                child: AppCard(
+                  shadow: AppShadows.md,
+                  child: AppButton(
+                    label: 'Transfer ticket',
+                    icon: Icons.swap_horiz_rounded,
+                    size: AppButtonSize.lg,
+                    expanded: true,
+                    onPressed: () => _showTransferDialog(context, ref),
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
+            )
+          : null,
+    );
+  }
+}
+
+class _TicketMetaRow extends StatelessWidget {
+  const _TicketMetaRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.primarySoft,
+            borderRadius: AppRadius.allMd,
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, size: 18, color: AppColors.primary),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                isCheckedIn ? l10n.youHaveCheckedIn : l10n.showQrAtEntrance,
-                style: TextStyle(
-                  color: isCheckedIn ? AppColors.success : AppColors.textLight,
-                  fontWeight: isCheckedIn ? FontWeight.w500 : FontWeight.normal,
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                value,
+                style: AppTypography.bodyLg.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(color: AppColors.textPrimary),
           ),
         ),
       ],

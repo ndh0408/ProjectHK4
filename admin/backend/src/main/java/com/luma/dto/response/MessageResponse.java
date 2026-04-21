@@ -26,6 +26,9 @@ public class MessageResponse {
     private LocalDateTime createdAt;
     private LocalDateTime editedAt;
     private boolean deleted;
+    private String deletedByName;
+    private LocalDateTime deletedAt;
+    private String senderRole;
 
     @Data
     @Builder
@@ -56,7 +59,10 @@ public class MessageResponse {
                 .mediaUrl(message.getMediaUrl())
                 .createdAt(message.getCreatedAt())
                 .editedAt(message.getEditedAt())
-                .deleted(message.isDeleted());
+                .deleted(message.isDeleted())
+                .deletedByName(message.getDeletedBy() != null ? message.getDeletedBy().getFullName() : null)
+                .deletedAt(message.getDeletedAt())
+                .senderRole(resolveSenderRole(message));
 
         if (message.getSender() != null) {
             builder.sender(SenderResponse.builder()
@@ -75,5 +81,17 @@ public class MessageResponse {
         }
 
         return builder.build();
+    }
+
+    private static String resolveSenderRole(Message message) {
+        if (message.getSender() == null || message.getConversation() == null) {
+            return "ATTENDEE";
+        }
+        var conversation = message.getConversation();
+        if (conversation.getEvent() == null || conversation.getEvent().getOrganiser() == null) {
+            return "ATTENDEE";
+        }
+        UUID organiserId = conversation.getEvent().getOrganiser().getId();
+        return organiserId.equals(message.getSender().getId()) ? "ORGANISER" : "ATTENDEE";
     }
 }

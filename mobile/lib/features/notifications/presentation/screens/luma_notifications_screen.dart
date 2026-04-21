@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/notification.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../main/presentation/screens/main_shell.dart';
 import 'notifications_screen.dart';
 
@@ -62,10 +65,98 @@ class _LumaNotificationsScreenState
     }
   }
 
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+  Future<void> _handleNotificationTap(AppNotification notification) async {
+    if (!notification.isRead) {
+      final success = await ref
+          .read(notificationsProvider.notifier)
+          .markAsRead(notification.id);
+      if (success) {
+        ref.read(unreadNotificationCountProvider.notifier).decrement();
+      }
+    }
+
+    if (!mounted) return;
+
+    if (notification.canReply && notification.senderId != null) {
+      await _openChatWithUser(notification.senderId!);
+      return;
+    }
+
+    final route = _routeForNotification(notification);
+    if (route != null) {
+      context.push(route);
+    }
+  }
+
+  /// Deep-link target for a notification. Each `NotificationType` routes to
+  /// the screen that shows the relevant context (waitlist offers page for
+  /// waitlist offers, my coupons for coupon applied, etc.). Falls back to
+  /// the event page when `relatedEventId` is set and no type-specific route
+  /// applies, and returns null for purely informational notifications.
+  String? _routeForNotification(AppNotification n) {
+    switch (n.type) {
+      case 'WAITLIST_OFFER':
+      case 'WAITLIST_OFFER_EXPIRED':
+        return '/waitlist-offers';
+      case 'COUPON_APPLIED':
+        return '/my-coupons';
+      case 'TICKET_TRANSFER_RECEIVED':
+      case 'TICKET_TRANSFER_ACCEPTED':
+      case 'REGISTRATION_APPROVED':
+      case 'REGISTRATION_REJECTED':
+      case 'REGISTRATION_CANCELLED':
+        return '/my-events';
+      case 'CONNECTION_REQUEST':
+      case 'CONNECTION_ACCEPTED':
+      case 'NEW_FOLLOWER':
+        return '/event-buddies';
+      case 'SEAT_LOCK_EXPIRING':
+      case 'PAYMENT':
+      case 'EVENT_REMINDER':
+      case 'EVENT_UPDATE':
+      case 'EVENT_APPROVED':
+      case 'EVENT_REJECTED':
+      case 'EVENT_CREATED':
+      case 'NEW_REGISTRATION':
+      case 'NEW_QUESTION':
+      case 'QUESTION_ANSWERED':
+      case 'BROADCAST':
+      case 'REPLY_MESSAGE':
+        if (n.relatedEventId != null) {
+          return '/event/${n.relatedEventId}';
+        }
+        return null;
+      default:
+        // WITHDRAWAL_* + SYSTEM are informational for users — no deep link.
+        if (n.relatedEventId != null) {
+          return '/event/${n.relatedEventId}';
+        }
+        return null;
+    }
+  }
+
+  String _actionLabelFor(AppNotification n) {
+    switch (n.type) {
+      case 'WAITLIST_OFFER':
+      case 'WAITLIST_OFFER_EXPIRED':
+        return 'View offer';
+      case 'COUPON_APPLIED':
+        return 'View coupons';
+      case 'TICKET_TRANSFER_RECEIVED':
+      case 'TICKET_TRANSFER_ACCEPTED':
+      case 'REGISTRATION_APPROVED':
+      case 'REGISTRATION_REJECTED':
+      case 'REGISTRATION_CANCELLED':
+        return 'View ticket';
+      case 'CONNECTION_REQUEST':
+      case 'CONNECTION_ACCEPTED':
+      case 'NEW_FOLLOWER':
+        return 'View connections';
+      case 'SEAT_LOCK_EXPIRING':
+        return 'Resume booking';
+      default:
+        return 'Open event';
+    }
   }
 
   String _formatDateHeader(DateTime dateTime) {
@@ -77,7 +168,7 @@ class _LumaNotificationsScreenState
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     if (diff < 7) return '$diff days ago';
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    return DateFormat('MMM d, yyyy').format(dateTime);
   }
 
   bool _shouldShowDateHeader(int index, List<AppNotification> notifications) {
@@ -91,139 +182,123 @@ class _LumaNotificationsScreenState
 
   IconData _getNotificationIcon(String? type) {
     switch (type) {
-      case 'EVENT_APPROVED':
-        return Icons.check_circle;
-      case 'EVENT_REJECTED':
-        return Icons.cancel;
-      case 'REGISTRATION_APPROVED':
-        return Icons.how_to_reg;
-      case 'REGISTRATION_REJECTED':
-        return Icons.person_off;
-      case 'EVENT_REMINDER':
-        return Icons.alarm;
-      case 'EVENT_UPDATE':
-        return Icons.update;
-      case 'NEW_FOLLOWER':
-        return Icons.person_add;
-      case 'QUESTION_ANSWERED':
-        return Icons.question_answer;
-      case 'BROADCAST':
-        return Icons.campaign;
+      // Event lifecycle
       case 'EVENT_CREATED':
-        return Icons.event_available;
+        return Icons.event_available_rounded;
+      case 'EVENT_APPROVED':
+        return Icons.check_circle_rounded;
+      case 'EVENT_REJECTED':
+        return Icons.cancel_rounded;
+      case 'EVENT_REMINDER':
+        return Icons.alarm_rounded;
+      case 'EVENT_UPDATE':
+        return Icons.update_rounded;
+      // Registration lifecycle
+      case 'REGISTRATION_APPROVED':
+        return Icons.confirmation_number_rounded;
+      case 'REGISTRATION_REJECTED':
+        return Icons.person_off_rounded;
+      case 'REGISTRATION_CANCELLED':
+        return Icons.event_busy_rounded;
       case 'NEW_REGISTRATION':
-        return Icons.person_add_alt_1;
+        return Icons.person_add_alt_1_rounded;
+      // Q&A
       case 'NEW_QUESTION':
-        return Icons.help_outline;
+        return Icons.chat_bubble_outline_rounded;
+      case 'QUESTION_ANSWERED':
+        return Icons.question_answer_rounded;
+      case 'REPLY_MESSAGE':
+        return Icons.reply_rounded;
+      // Social
+      case 'NEW_FOLLOWER':
+        return Icons.person_add_rounded;
+      case 'CONNECTION_REQUEST':
+        return Icons.group_add_rounded;
+      case 'CONNECTION_ACCEPTED':
+        return Icons.handshake_rounded;
+      // Waitlist
+      case 'WAITLIST_OFFER':
+        return Icons.card_giftcard_rounded;
+      case 'WAITLIST_OFFER_EXPIRED':
+        return Icons.hourglass_disabled_rounded;
+      // Tickets / commerce
+      case 'TICKET_TRANSFER_RECEIVED':
+        return Icons.move_down_rounded;
+      case 'TICKET_TRANSFER_ACCEPTED':
+        return Icons.check_circle_outline_rounded;
+      case 'COUPON_APPLIED':
+        return Icons.local_offer_rounded;
+      case 'SEAT_LOCK_EXPIRING':
+        return Icons.timer_rounded;
+      case 'PAYMENT':
+        return Icons.payment_rounded;
+      // Withdrawals
+      case 'WITHDRAWAL_REQUEST':
+        return Icons.request_quote_rounded;
+      case 'WITHDRAWAL_APPROVED':
+        return Icons.price_check_rounded;
+      case 'WITHDRAWAL_REJECTED':
+        return Icons.money_off_rounded;
+      case 'WITHDRAWAL_COMPLETED':
+        return Icons.account_balance_wallet_rounded;
+      // Misc
+      case 'BROADCAST':
+        return Icons.campaign_rounded;
+      case 'SYSTEM':
+        return Icons.info_rounded;
       default:
-        return Icons.notifications;
+        return Icons.notifications_active_rounded;
     }
   }
 
-  Color _getNotificationColor(String? type) {
+  StatusChipVariant _getNotificationVariant(String? type) {
     switch (type) {
+      // Positive outcomes → success
       case 'EVENT_APPROVED':
       case 'REGISTRATION_APPROVED':
-        return AppColors.success;
+      case 'CONNECTION_ACCEPTED':
+      case 'TICKET_TRANSFER_ACCEPTED':
+      case 'WITHDRAWAL_APPROVED':
+      case 'WITHDRAWAL_COMPLETED':
+      case 'COUPON_APPLIED':
+      case 'PAYMENT':
+        return StatusChipVariant.success;
+      // Negative outcomes → danger
       case 'EVENT_REJECTED':
       case 'REGISTRATION_REJECTED':
-        return AppColors.error;
+      case 'REGISTRATION_CANCELLED':
+      case 'WITHDRAWAL_REJECTED':
+      case 'WAITLIST_OFFER_EXPIRED':
+        return StatusChipVariant.danger;
+      // Time-sensitive → warning
       case 'EVENT_REMINDER':
-        return AppColors.warning;
-      case 'NEW_FOLLOWER':
-        return const Color(0xFF8B5CF6);
+      case 'SEAT_LOCK_EXPIRING':
+      case 'WAITLIST_OFFER':
+        return StatusChipVariant.warning;
+      // Informational → info
       case 'QUESTION_ANSWERED':
       case 'NEW_QUESTION':
-        return const Color(0xFF0EA5E9);
-      case 'BROADCAST':
-        return const Color(0xFFEAB308);
-      case 'EVENT_CREATED':
-      case 'NEW_REGISTRATION':
-        return AppColors.primary;
+      case 'EVENT_UPDATE':
+      case 'REPLY_MESSAGE':
+      case 'TICKET_TRANSFER_RECEIVED':
+      case 'WITHDRAWAL_REQUEST':
+        return StatusChipVariant.info;
       default:
-        return AppColors.primary;
+        return StatusChipVariant.primary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(notificationsProvider);
-    final hasUnread = state.notifications.any((n) => !n.isRead);
+    final unreadCount = state.notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.primary,
-        leadingWidth: 40,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, size: 22),
-          onPressed: () => context.pop(),
-        ),
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.surface,
-                    AppColors.surface.withValues(alpha: 0.9),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.notifications_active,
-                color: AppColors.primary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'LUMA',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textOnPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: AppColors.textOnPrimary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check,
-                          color: AppColors.primary,
-                          size: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    'System Notifications',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textOnPrimary.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Notifications'),
         actions: [
-          if (hasUnread)
+          if (unreadCount > 0)
             TextButton(
               onPressed: () async {
                 final success = await ref
@@ -233,341 +308,282 @@ class _LumaNotificationsScreenState
                   ref.read(unreadNotificationCountProvider.notifier).setZero();
                 }
               },
-              child: const Text(
-                'Read all',
-                style: TextStyle(color: AppColors.textOnPrimary, fontSize: 13),
-              ),
+              child: const Text('Mark all read'),
             ),
         ],
       ),
       body: state.notifications.isEmpty && state.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingState(message: 'Loading notifications...')
           : state.notifications.isEmpty
-              ? _buildEmptyState()
-              : _buildNotificationsList(state),
+              ? Padding(
+                  padding: AppSpacing.screenPadding,
+                  child: const EmptyState(
+                    icon: Icons.notifications_off_outlined,
+                    title: 'No notifications yet',
+                    subtitle:
+                        'Order updates, reminders, approvals and organiser replies will appear here.',
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(notificationsProvider.notifier).refresh(),
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: AppSpacing.screenPadding,
+                    children: [
+                      _NotificationsHero(unreadCount: unreadCount),
+                      const SizedBox(height: AppSpacing.xl),
+                      ...List.generate(state.notifications.length, (index) {
+                        final notification = state.notifications[index];
+                        final showDateHeader =
+                            _shouldShowDateHeader(index, state.notifications);
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (showDateHeader) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,
+                                  top: AppSpacing.sm,
+                                ),
+                                child: Text(
+                                  _formatDateHeader(notification.createdAt),
+                                  style: AppTypography.label.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            _NotificationCard(
+                              notification: notification,
+                              icon: _getNotificationIcon(notification.type),
+                              variant: _getNotificationVariant(
+                                notification.type,
+                              ),
+                              actionLabel:
+                                  _routeForNotification(notification) != null
+                                      ? _actionLabelFor(notification)
+                                      : null,
+                              onTap: () => _handleNotificationTap(notification),
+                              onReply: notification.canReply &&
+                                      notification.senderId != null
+                                  ? () => _openChatWithUser(
+                                        notification.senderId!,
+                                      )
+                                  : null,
+                            ),
+                          ],
+                        );
+                      }),
+                      if (state.isLoading)
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      const SizedBox(height: AppSpacing.xxxl),
+                    ],
+                  ),
+                ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+class _NotificationsHero extends StatelessWidget {
+  const _NotificationsHero({required this.unreadCount});
+
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      background: AppColors.primarySoft,
+      borderColor: AppColors.primary.withValues(alpha: 0.12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.notifications_off_outlined,
-              size: 40,
-              color: AppColors.primary.withValues(alpha: 0.5),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.notifications_active_rounded,
+              color: Colors.white,
+              size: 24,
             ),
           ),
-          const SizedBox(height: 20),
-          Text(
-            'No notifications yet',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Your notifications will appear here',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textLight,
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  unreadCount > 0
+                      ? '$unreadCount unread updates'
+                      : 'All caught up',
+                  style: AppTypography.h3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Track approvals, reminders, ticket changes and replies from organisers in one clean inbox.',
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationsList(NotificationsState state) {
-    return RefreshIndicator(
-      onRefresh: () => ref.read(notificationsProvider.notifier).refresh(),
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        itemCount: state.notifications.length + (state.isLoading ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == state.notifications.length) {
-            return const Padding(
-              padding: EdgeInsets.all(20),
-              child: Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                ),
-              ),
-            );
-          }
-
-          final notification = state.notifications[index];
-          final showDateHeader =
-              _shouldShowDateHeader(index, state.notifications);
-
-          return Column(
-            children: [
-              if (showDateHeader) _buildDateHeader(notification.createdAt),
-              _NotificationBubble(
-                notification: notification,
-                timeText: _formatTime(notification.createdAt),
-                icon: _getNotificationIcon(notification.type),
-                iconColor: _getNotificationColor(notification.type),
-                onTap: () async {
-                  if (!notification.isRead) {
-                    final success = await ref
-                        .read(notificationsProvider.notifier)
-                        .markAsRead(notification.id);
-                    if (success) {
-                      ref
-                          .read(unreadNotificationCountProvider.notifier)
-                          .decrement();
-                    }
-                  }
-
-                  if (notification.canReply && notification.senderId != null) {
-                    if (mounted) {
-                      _openChatWithUser(notification.senderId!);
-                    }
-                  } else if (notification.relatedEventId != null) {
-                    if (mounted) {
-                      context.push('/event/${notification.relatedEventId}');
-                    }
-                  }
-                },
-                onReply: notification.canReply
-                    ? () => _openChatWithUser(notification.senderId!)
-                    : null,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDateHeader(DateTime dateTime) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-          decoration: BoxDecoration(
-            color: AppColors.textLight.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            _formatDateHeader(dateTime),
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
       ),
     );
   }
 }
 
-class _NotificationBubble extends StatelessWidget {
-  const _NotificationBubble({
+class _NotificationCard extends StatelessWidget {
+  const _NotificationCard({
     required this.notification,
-    required this.timeText,
     required this.icon,
-    required this.iconColor,
+    required this.variant,
     required this.onTap,
     this.onReply,
+    this.actionLabel,
   });
 
   final AppNotification notification;
-  final String timeText;
   final IconData icon;
-  final Color iconColor;
+  final StatusChipVariant variant;
   final VoidCallback onTap;
   final VoidCallback? onReply;
+  // Label for the primary CTA button. When null, the card is informational
+  // only — no deep-link action is available for this notification type.
+  final String? actionLabel;
 
   @override
   Widget build(BuildContext context) {
     final isUnread = !notification.isRead;
+    final timeLabel = DateFormat('h:mm a').format(notification.createdAt);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      background: isUnread ? AppColors.primarySoft : AppColors.surface,
+      borderColor: isUnread
+          ? AppColors.primary.withValues(alpha: 0.14)
+          : AppColors.divider,
+      onTap: onTap,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.7),
-                ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: switch (variant) {
+                    StatusChipVariant.success => AppColors.successLight,
+                    StatusChipVariant.warning => AppColors.warningLight,
+                    StatusChipVariant.danger => AppColors.errorLight,
+                    StatusChipVariant.info => AppColors.infoLight,
+                    StatusChipVariant.primary => AppColors.primarySoft,
+                    StatusChipVariant.neutral => AppColors.neutral100,
+                  },
+                  borderRadius: AppRadius.allMd,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 18, color: _iconColorFor(variant)),
               ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.notifications_active,
-              color: AppColors.textOnPrimary,
-              size: 18,
-            ),
-          ),
-
-          Flexible(
-            child: GestureDetector(
-              onTap: onTap,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUnread
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : AppColors.surface,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(4),
-                        topRight: Radius.circular(18),
-                        bottomLeft: Radius.circular(18),
-                        bottomRight: Radius.circular(18),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.textPrimary.withValues(alpha: 0.06),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                      border: isUnread
-                          ? Border.all(
-                              color: AppColors.primary.withValues(alpha: 0.3),
-                              width: 1)
-                          : null,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: iconColor.withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(icon, size: 16, color: iconColor),
+                        Expanded(
+                          child: Text(
+                            notification.title,
+                            style: AppTypography.h4.copyWith(
+                              color: AppColors.textPrimary,
                             ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                notification.title,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: isUnread
-                                      ? FontWeight.w700
-                                      : FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          notification.body,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            height: 1.3,
                           ),
                         ),
-                        if (onReply != null) ...[
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: onReply,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.reply,
-                                      size: 14, color: AppColors.textOnPrimary),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Reply',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textOnPrimary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        const SizedBox(width: AppSpacing.sm),
+                        if (isUnread)
+                          const StatusChip(
+                            label: 'New',
+                            variant: StatusChipVariant.primary,
+                            compact: true,
                           ),
-                        ],
-                        if (notification.relatedEventId != null &&
-                            onReply == null) ...[
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.event,
-                                  size: 14, color: AppColors.primary),
-                              const SizedBox(width: 4),
-                              Text(
-                                'View Event',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              Icon(Icons.arrow_forward_ios,
-                                  size: 10, color: AppColors.primary),
-                            ],
-                          ),
-                        ],
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3, left: 4),
-                    child: Text(
-                      timeText,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textLight,
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      notification.body,
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Text(
+                timeLabel,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textMuted,
+                ),
+              ),
+              const Spacer(),
+              if (actionLabel != null)
+                AppButton(
+                  label: actionLabel!,
+                  icon: Icons.arrow_forward_rounded,
+                  variant: AppButtonVariant.tonal,
+                  onPressed: onTap,
+                ),
+              if (onReply != null) ...[
+                if (actionLabel != null) const SizedBox(width: AppSpacing.sm),
+                AppButton(
+                  label: 'Reply',
+                  icon: Icons.reply_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onReply,
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Color _iconColorFor(StatusChipVariant variant) {
+    switch (variant) {
+      case StatusChipVariant.success:
+        return AppColors.success;
+      case StatusChipVariant.warning:
+        return AppColors.warning;
+      case StatusChipVariant.danger:
+        return AppColors.error;
+      case StatusChipVariant.info:
+        return AppColors.info;
+      case StatusChipVariant.primary:
+        return AppColors.primary;
+      case StatusChipVariant.neutral:
+        return AppColors.neutral700;
+    }
   }
 }

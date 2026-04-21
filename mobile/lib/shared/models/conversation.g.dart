@@ -31,6 +31,10 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) => Conversation(
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
+      pinnedMessage: json['pinnedMessage'] == null
+          ? null
+          : PinnedMessage.fromJson(
+              json['pinnedMessage'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
@@ -47,10 +51,11 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'muted': instance.muted,
       'pinned': instance.pinned,
       'archived': instance.archived,
-      'participants': instance.participants,
+      'participants': instance.participants?.map((e) => e.toJson()).toList(),
       'participantCount': instance.participantCount,
       'closedAt': instance.closedAt?.toIso8601String(),
       'createdAt': instance.createdAt?.toIso8601String(),
+      'pinnedMessage': instance.pinnedMessage?.toJson(),
     };
 
 const _$ConversationTypeEnumMap = {
@@ -64,6 +69,9 @@ ChatParticipant _$ChatParticipantFromJson(Map<String, dynamic> json) =>
       userId: json['userId'] as String,
       fullName: json['fullName'] as String,
       avatarUrl: json['avatarUrl'] as String?,
+      lastReadAt: json['lastReadAt'] == null
+          ? null
+          : DateTime.parse(json['lastReadAt'] as String),
     );
 
 Map<String, dynamic> _$ChatParticipantToJson(ChatParticipant instance) =>
@@ -71,4 +79,29 @@ Map<String, dynamic> _$ChatParticipantToJson(ChatParticipant instance) =>
       'userId': instance.userId,
       'fullName': instance.fullName,
       'avatarUrl': instance.avatarUrl,
+      'lastReadAt': instance.lastReadAt?.toIso8601String(),
+    };
+
+PinnedMessage _$PinnedMessageFromJson(Map<String, dynamic> json) =>
+    PinnedMessage(
+      id: json['id'] as String,
+      content: json['content'] as String?,
+      senderName: json['senderName'] as String?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      pinnedAt: json['pinnedAt'] == null
+          ? null
+          : DateTime.parse(json['pinnedAt'] as String),
+      pinnedByUserId: json['pinnedByUserId'] as String?,
+    );
+
+Map<String, dynamic> _$PinnedMessageToJson(PinnedMessage instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'content': instance.content,
+      'senderName': instance.senderName,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'pinnedAt': instance.pinnedAt?.toIso8601String(),
+      'pinnedByUserId': instance.pinnedByUserId,
     };

@@ -149,8 +149,19 @@ const organiserApi = {
     canGenerateCertificates: () => api.get('/organiser/subscription/can-generate-certificates'),
     canExportExcel: () => api.get('/organiser/subscription/can-export-excel'),
     getBoostDiscount: () => api.get('/organiser/subscription/boost-discount'),
+    getBoostSubscription: () => api.get('/organiser/boosts/subscription'),
     createSubscriptionCheckout: (plan) => api.post(`/organiser/subscription/checkout/${plan}`),
     confirmSubscriptionPayment: (plan) => api.post(`/organiser/subscription/confirm-payment/${plan}`),
+
+    // Chat Management
+    pinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/pin`),
+    unpinMessage: (conversationId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/unpin`),
+    banUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/ban`),
+    unbanUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/unban`),
+    muteUser: (conversationId, userId, mute = true) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?mute=${mute}`),
+    unmuteUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?mute=false`),
+    deleteAnyMessage: (messageId) => api.delete(`/organiser/chat/messages/${messageId}`),
+    searchChatMessages: (conversationId, query) => api.get(`/organiser/chat/conversations/${conversationId}/search`, { params: { query } }),
 
 };
 

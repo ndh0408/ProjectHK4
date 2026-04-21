@@ -5,13 +5,16 @@ import 'package:intl/intl.dart';
 import 'package:mobile/l10n/app_localizations.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/utils/smart_greeting.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/registration.dart';
-import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/app_components.dart';
 import '../../../../shared/widgets/luma_logo.dart';
 import '../../../auth/providers/auth_provider.dart';
+import 'package:mobile/features/chat/providers/chat_providers.dart';
 import '../../providers/events_provider.dart';
 import '../../providers/recommendations_provider.dart';
 import '../widgets/vip_banner_carousel.dart';
@@ -21,9 +24,11 @@ import '../widgets/ai_recommendations_section.dart';
 
 enum LocationFilter { nearby, allTheWorld }
 
-final locationFilterProvider = StateProvider<LocationFilter>((ref) => LocationFilter.allTheWorld);
+final locationFilterProvider =
+    StateProvider<LocationFilter>((ref) => LocationFilter.allTheWorld);
 
-final pickedForYouEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
+final pickedForYouEventsProvider =
+    FutureProvider.autoDispose<List<Event>>((ref) async {
   ref.watch(currentUserProvider);
   final api = ref.watch(apiServiceProvider);
   final filter = ref.watch(locationFilterProvider);
@@ -37,14 +42,16 @@ final pickedForYouEventsProvider = FutureProvider.autoDispose<List<Event>>((ref)
   return response.content;
 });
 
-final upcomingEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
+final upcomingEventsProvider =
+    FutureProvider.autoDispose<List<Event>>((ref) async {
   ref.watch(currentUserProvider);
   final api = ref.watch(apiServiceProvider);
   final response = await api.getUpcomingEvents(size: 10);
   return response.content;
 });
 
-final myFutureRegistrationsProvider = FutureProvider.autoDispose<List<Registration>>((ref) async {
+final myFutureRegistrationsProvider =
+    FutureProvider.autoDispose<List<Registration>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) {
     return [];
@@ -55,19 +62,23 @@ final myFutureRegistrationsProvider = FutureProvider.autoDispose<List<Registrati
   return response.content.where((r) => r.event != null).toList();
 });
 
-final myFutureEventsProvider = FutureProvider.autoDispose<List<Event>>((ref) async {
+final myFutureEventsProvider =
+    FutureProvider.autoDispose<List<Event>>((ref) async {
   final registrations = await ref.watch(myFutureRegistrationsProvider.future);
   return registrations.map((r) => r.event!).toList();
 });
 
-final registrationByEventIdProvider = FutureProvider.autoDispose<Map<String, Registration>>((ref) async {
+final registrationByEventIdProvider =
+    FutureProvider.autoDispose<Map<String, Registration>>((ref) async {
   final registrations = await ref.watch(myFutureRegistrationsProvider.future);
   return {for (var r in registrations) r.eventId: r};
 });
 
 final registeredEventIdsProvider = Provider.autoDispose<Set<String>>((ref) {
   final myEvents = ref.watch(myFutureEventsProvider);
-  return myEvents.whenOrNull(data: (events) => events.map((e) => e.id).toSet()) ?? {};
+  return myEvents.whenOrNull(
+          data: (events) => events.map((e) => e.id).toSet()) ??
+      {};
 });
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -93,17 +104,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final myRegistrations = ref.watch(myFutureRegistrationsProvider);
     final pickedEvents = ref.watch(pickedForYouEventsProvider);
     final locationFilter = ref.watch(locationFilterProvider);
+    // Unread chat counter already drives the bottom nav Alerts badge. Mirror
+    // it here so the home chat entry point gets the same visual signal,
+    // including group chats auto-joined when registering for an event.
+    final unreadChats = ref.watch(unreadMessageCountProvider).maybeWhen(
+          data: (count) => count,
+          orElse: () => 0,
+        );
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        title: const LumaLogo(size: 30, showWordmark: true),
+        titleSpacing: AppSpacing.pageX,
+        title: const LumaLogo(size: 28, showWordmark: true),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
-            onPressed: () => context.push('/profile'),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.pageX),
+            child: _ChatActionButton(
+              unreadCount: unreadChats,
+              onPressed: () => context.push('/conversations'),
+            ),
           ),
         ],
       ),
@@ -122,29 +142,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Padding(
+                padding: AppSpacing.screenPadding.copyWith(bottom: 0),
+                child: _buildWelcomeCard(user),
+              ),
+              const SizedBox(height: AppSpacing.section),
               if (user != null) ...[
                 _buildYourEventsSection(myRegistrations.whenData(
                   (regs) => regs.map((r) => r.event!).toList(),
                 )),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.section),
               ],
-
               const VipBannerCarousel(),
-
-              const SizedBox(height: 24),
-
+              const SizedBox(height: AppSpacing.section),
               const BoostedEventsSection(),
-
-              const SizedBox(height: 24),
-
+              const SizedBox(height: AppSpacing.section),
               const TrendingEventsSection(),
-
-              const SizedBox(height: 24),
-
+              const SizedBox(height: AppSpacing.section),
               const AIRecommendationsSection(),
-
-              const SizedBox(height: 24),
-
+              const SizedBox(height: AppSpacing.section),
               _buildPickedForYouSection(pickedEvents, locationFilter),
             ],
           ),
@@ -160,69 +176,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildWelcomeCard(dynamic user) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return AppCard(
+      shadow: AppShadows.md,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            SmartGreeting.getGreetingWithName(user?.fullName),
+            style: AppTypography.h2.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            SmartGreeting.getHomeSubtitle(),
+            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              AppButton(
+                label: l10n.explore,
+                icon: Icons.explore_rounded,
+                onPressed: () => context.push('/explore'),
+                variant: AppButtonVariant.primary,
+              ),
+              AppButton(
+                label: l10n.myEvents,
+                icon: Icons.confirmation_number_outlined,
+                onPressed: () => context.push('/my-events'),
+                variant: AppButtonVariant.tonal,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildYourEventsSection(AsyncValue<List<Event>> eventsAsync) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.yourEvents,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.push('/my-events'),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.viewAll,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right, size: 18, color: AppColors.primary),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        SectionHeader(
+          title: l10n.yourEvents,
+          subtitle: 'Upcoming bookings, tickets and check-in status',
+          onTap: () => context.push('/my-events'),
         ),
-
-        const SizedBox(height: 12),
-
+        const SizedBox(height: AppSpacing.md),
         eventsAsync.when(
           data: (events) {
             if (events.isEmpty) {
               return _buildNoUpcomingEventsCard();
             }
-            return SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: events.length,
-                itemBuilder: (context, index) {
-                  return _buildYourEventCard(events[index]);
-                },
-              ),
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+              itemCount: events.length > 3 ? 3 : events.length,
+              itemBuilder: (context, index) {
+                return _buildYourEventCard(events[index]);
+              },
             );
           },
           loading: () => const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            padding: EdgeInsets.all(AppSpacing.pageX),
+            child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary)),
           ),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
             child: Text('Error: ${ErrorUtils.extractMessage(e)}'),
           ),
         ),
@@ -232,113 +259,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildNoUpcomingEventsCard() {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.event_note, color: AppColors.primary, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.noUpcomingEvents,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.noUpcomingEventsSubtitle,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildYourEventCard(Event event) {
-    return GestureDetector(
-      onTap: () {
-        ref.read(selectedEventProvider.notifier).state = event;
-        context.push('/event/${event.id}');
-      },
-      child: Container(
-        width: 280,
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.cardBorder),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+      child: AppCard(
+        background: AppColors.primarySoft,
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: event.imageUrl != null
-                  ? Image.network(
-                      event.imageUrl!,
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildEventPlaceholder(),
-                    )
-                  : _buildEventPlaceholder(),
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.14),
+                borderRadius: AppRadius.allMd,
+              ),
+              child: const Icon(Icons.event_note_rounded,
+                  color: AppColors.primary, size: 26),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    l10n.noUpcomingEvents,
+                    style:
+                        AppTypography.h4.copyWith(color: AppColors.textPrimary),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    _formatEventDate(event.startTime),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
+                    l10n.noUpcomingEventsSubtitle,
+                    style: AppTypography.body
+                        .copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -349,19 +300,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildEventPlaceholder() {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.secondary],
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Icon(Icons.event, color: AppColors.textOnPrimary),
+  Widget _buildYourEventCard(Event event) {
+    return EventListTile(
+      event: event,
+      compact: true,
+      status: 'Your ticket',
+      statusVariant: StatusChipVariant.info,
+      onTap: () {
+        ref.read(selectedEventProvider.notifier).state = event;
+        context.push('/event/${event.id}');
+      },
     );
   }
 
@@ -373,32 +321,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            l10n.pickedForYou,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
+        SectionHeader(
+          title: l10n.pickedForYou,
+          subtitle: 'Discover events with the highest booking intent',
         ),
-
-        const SizedBox(height: 8),
-
+        const SizedBox(height: AppSpacing.md),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
           child: _buildLocationFilter(locationFilter),
         ),
-
-        const SizedBox(height: 16),
-
+        const SizedBox(height: AppSpacing.lg),
         eventsAsync.when(
           data: (events) {
             if (events.isEmpty) {
               return Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppSpacing.xxxl),
                 child: EmptyState(
                   icon: Icons.event_busy,
                   title: l10n.noEventsFound,
@@ -411,17 +348,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           loading: () => const Padding(
             padding: EdgeInsets.all(48),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary)),
           ),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
             child: ErrorState(
               message: ErrorUtils.extractMessage(e),
               onRetry: () => ref.invalidate(pickedForYouEventsProvider),
             ),
           ),
         ),
-
         const SizedBox(height: 100),
       ],
     );
@@ -429,52 +366,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildLocationFilter(LocationFilter currentFilter) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        _buildFilterChip(
+    return AppSegmentedControl<LocationFilter>(
+      value: currentFilter,
+      items: [
+        AppSegmentItem(
+          value: LocationFilter.nearby,
           label: l10n.nearby,
-          isSelected: currentFilter == LocationFilter.nearby,
-          onTap: () {
-            ref.read(locationFilterProvider.notifier).state = LocationFilter.nearby;
-          },
+          icon: Icons.near_me_rounded,
         ),
-        const SizedBox(width: 8),
-        _buildFilterChip(
+        AppSegmentItem(
+          value: LocationFilter.allTheWorld,
           label: l10n.allTheWorld,
-          isSelected: currentFilter == LocationFilter.allTheWorld,
-          onTap: () {
-            ref.read(locationFilterProvider.notifier).state = LocationFilter.allTheWorld;
-          },
+          icon: Icons.public_rounded,
         ),
       ],
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppColors.textOnPrimary : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
+      onChanged: (value) {
+        ref.read(locationFilterProvider.notifier).state = value;
+      },
     );
   }
 
@@ -520,7 +428,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildDateGroup(String dateLabel, List<Event> events, Map<String, Registration> registrationMap, AppLocalizations l10n) {
+  Widget _buildDateGroup(String dateLabel, List<Event> events,
+      Map<String, Registration> registrationMap, AppLocalizations l10n) {
     String dayOfWeek = '';
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -528,10 +437,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (dateLabel == l10n.today) {
       dayOfWeek = DateFormat('EEEE', l10n.localeName).format(today);
     } else if (dateLabel == l10n.tomorrow) {
-      dayOfWeek = DateFormat('EEEE', l10n.localeName).format(today.add(const Duration(days: 1)));
+      dayOfWeek = DateFormat('EEEE', l10n.localeName)
+          .format(today.add(const Duration(days: 1)));
     } else {
       try {
-        final parsedDate = DateFormat('MMMM d', l10n.localeName).parse(dateLabel);
+        final parsedDate =
+            DateFormat('MMMM d', l10n.localeName).parse(dateLabel);
         final fullDate = DateTime(now.year, parsedDate.month, parsedDate.day);
         dayOfWeek = DateFormat('EEEE', l10n.localeName).format(fullDate);
       } catch (_) {
@@ -543,232 +454,111 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pageX,
+            AppSpacing.md,
+            AppSpacing.pageX,
+            AppSpacing.sm,
+          ),
           child: Row(
             children: [
               Text(
                 dateLabel,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+                style: AppTypography.h4.copyWith(color: AppColors.textPrimary),
               ),
               if (dayOfWeek.isNotEmpty) ...[
-                const Text(
+                Text(
                   ' / ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textLight,
-                  ),
+                  style: AppTypography.h4.copyWith(color: AppColors.textLight),
                 ),
                 Text(
                   dayOfWeek,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
-                  ),
+                  style:
+                      AppTypography.h4.copyWith(color: AppColors.textSecondary),
                 ),
               ],
             ],
           ),
         ),
-
-        ...events.map((event) => _buildEventListItem(event, registrationMap, l10n)),
-
+        ...events
+            .map((event) => _buildEventListItem(event, registrationMap, l10n)),
         const SizedBox(height: 8),
       ],
     );
   }
 
-  Widget _buildEventListItem(Event event, Map<String, Registration> registrationMap, AppLocalizations l10n) {
+  Widget _buildEventListItem(Event event,
+      Map<String, Registration> registrationMap, AppLocalizations l10n) {
     final registration = registrationMap[event.id];
 
     final isFullyRegistered = registration != null &&
-        registration.status == RegistrationStatusEnum.approved &&
+        registration.hasValidTicket &&
         !(registration.requiresPayment);
 
-    return GestureDetector(
+    return EventListTile(
+      event: event,
+      status: isFullyRegistered ? l10n.registered : null,
+      statusVariant: StatusChipVariant.success,
       onTap: () {
         ref.read(selectedEventProvider.notifier).state = event;
         context.push('/event/${event.id}');
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: event.imageUrl != null
-                      ? Image.network(
-                          event.imageUrl!,
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildListItemPlaceholder(),
-                        )
-                      : _buildListItemPlaceholder(),
+    );
+  }
+}
+
+/// Circular icon button for the chat entry point on the home AppBar. Shows
+/// a small unread counter bubble (mirroring the bottom-nav alerts badge) so
+/// users can see new messages — including event group chats auto-joined
+/// after registration — without diving into the notifications tab.
+class _ChatActionButton extends StatelessWidget {
+  const _ChatActionButton({
+    required this.unreadCount,
+    required this.onPressed,
+  });
+
+  final int unreadCount;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUnread = unreadCount > 0;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chat_bubble_outline_rounded),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.surfaceVariant,
+          ),
+          onPressed: onPressed,
+          tooltip: 'Messages',
+        ),
+        if (hasUnread)
+          Positioned(
+            top: 4,
+            right: 4,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: BoxDecoration(
+                color: AppColors.error,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: AppColors.surface, width: 2),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: AppTypography.caption.copyWith(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
                 ),
-                if (isFullyRegistered)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.surface, width: 1.5),
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        size: 12,
-                        color: AppColors.textOnPrimary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: AppColors.primarySoft,
-                        backgroundImage: event.organiser?.avatarUrl != null
-                            ? NetworkImage(event.organiser!.avatarUrl!)
-                            : null,
-                        child: event.organiser?.avatarUrl == null
-                            ? Text(
-                                (event.organiser?.fullName ?? 'U')[0].toUpperCase(),
-                                style: const TextStyle(fontSize: 10, color: AppColors.primary),
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          event.organiser?.fullName ?? 'Unknown Organiser',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isFullyRegistered)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.successLight,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_circle, size: 10, color: AppColors.success),
-                              const SizedBox(width: 3),
-                              Text(
-                                l10n.registered,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.success,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 14, color: AppColors.iconDefault),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('h:mm a').format(event.startTime),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.iconDefault),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          event.location,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
-  }
-
-  Widget _buildListItemPlaceholder() {
-    return Container(
-      width: 72,
-      height: 72,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.secondary],
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Icon(Icons.event, color: AppColors.textOnPrimary, size: 32),
-    );
-  }
-
-  String _formatEventDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final eventDay = DateTime(date.year, date.month, date.day);
-
-    if (eventDay.isAtSameMomentAs(today)) {
-      return 'Today, ${DateFormat('h:mm a').format(date)}';
-    } else if (eventDay.isAtSameMomentAs(today.add(const Duration(days: 1)))) {
-      return 'Tomorrow, ${DateFormat('h:mm a').format(date)}';
-    } else {
-      return DateFormat('MMM d, h:mm a').format(date);
-    }
   }
 }

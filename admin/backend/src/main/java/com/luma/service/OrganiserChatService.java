@@ -30,6 +30,32 @@ public class OrganiserChatService {
     private final EventRepository eventRepository;
     private final RegistrationRepository registrationRepository;
     private final UserRepository userRepository;
+    private final ChatService chatService;
+
+    @Transactional
+    public void muteAttendee(User organiser, UUID conversationId, UUID attendeeId, boolean mute) {
+        chatService.muteAttendee(organiser, conversationId, attendeeId, mute);
+    }
+
+    @Transactional
+    public void banAttendee(User organiser, UUID conversationId, UUID attendeeId) {
+        chatService.banAttendee(organiser, conversationId, attendeeId);
+    }
+
+    @Transactional
+    public void deleteAnyMessage(User organiser, UUID messageId) {
+        chatService.deleteMessage(organiser, messageId);
+    }
+
+    @Transactional
+    public ConversationResponse pinMessage(User organiser, UUID conversationId, UUID messageId) {
+        return chatService.pinMessage(organiser, conversationId, messageId);
+    }
+
+    @Transactional
+    public ConversationResponse unpinMessage(User organiser, UUID conversationId) {
+        return chatService.unpinMessage(organiser, conversationId);
+    }
 
     public PageResponse<EventBuddyResponse> getEventBuddies(User organiser, Pageable pageable) {
         Page<Event> eventPage = eventRepository.findByOrganiser(organiser, Pageable.unpaged());
