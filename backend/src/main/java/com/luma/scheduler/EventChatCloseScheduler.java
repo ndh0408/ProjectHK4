@@ -21,11 +21,20 @@ public class EventChatCloseScheduler {
     @Scheduled(fixedRate = 600_000, initialDelay = 60_000)
     @Transactional
     public void closeEndedEventChats() {
+        runCloseCheck();
+    }
+
+    /**
+     * Manual trigger for testing
+     */
+    @Transactional
+    public int runCloseCheck() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(7);
         List<Conversation> toClose = conversationRepository.findEventGroupsToClose(cutoff);
 
         if (toClose.isEmpty()) {
-            return;
+            log.info("No event chats to close (checked events ending before {})", cutoff);
+            return 0;
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -40,5 +49,6 @@ public class EventChatCloseScheduler {
         conversationRepository.saveAll(toClose);
 
         log.info("Closed {} event group chat(s) whose events ended more than 7 days ago", toClose.size());
+        return toClose.size();
     }
 }

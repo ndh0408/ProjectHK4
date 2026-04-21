@@ -450,16 +450,36 @@ public class EventBoostService {
 
     public List<Event> getFeaturedEvents() {
         List<EventBoost> featuredBoosts = boostRepository.findFeaturedBoosts(LocalDateTime.now());
-        return featuredBoosts.stream()
+        
+        // Remove duplicates - keep only the highest package boost per event
+        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.HashMap<>();
+        for (EventBoost boost : featuredBoosts) {
+            UUID eventId = boost.getEvent().getId();
+            EventBoost existing = uniqueBoosts.get(eventId);
+            
+            // Keep VIP > PREMIUM > STANDARD > BASIC
+            if (existing == null || boost.getBoostPackage().compareTo(existing.getBoostPackage()) > 0) {
+                uniqueBoosts.put(eventId, boost);
+            }
+        }
+        
+        return uniqueBoosts.values().stream()
                 .map(EventBoost::getEvent)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public List<Event> getHomeBannerEvents() {
         List<EventBoost> bannerBoosts = boostRepository.findHomeBannerBoosts(LocalDateTime.now());
-        return bannerBoosts.stream()
+        
+        // Remove duplicates - keep only one boost per event
+        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.HashMap<>();
+        for (EventBoost boost : bannerBoosts) {
+            uniqueBoosts.put(boost.getEvent().getId(), boost);
+        }
+        
+        return uniqueBoosts.values().stream()
                 .map(EventBoost::getEvent)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public boolean isEventBoosted(UUID eventId) {

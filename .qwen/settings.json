@@ -5,7 +5,11 @@
       "Bash(select-string *)",
       "Bash(npm run *)",
       "Bash(findstr *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(mvn *)",
+      "Bash(select-object *)"
     ]
   },
   "$version": 3

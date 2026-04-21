@@ -61,7 +61,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "LOWER(e.description) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Event> searchEvents(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' AND " +
            "(LOWER(e.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
@@ -71,7 +71,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "e.startTime ASC")
     Page<Event> searchEventsWithBoostPriority(@Param("query") String query, @Param("now") LocalDateTime now, Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
            "AND e.startTime BETWEEN :now AND :endDate " +
@@ -83,7 +83,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.category = :category AND e.status = 'PUBLISHED' " +
            "AND e.visibility = 'PUBLIC' AND e.startTime > :now " +
@@ -95,7 +95,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("now") LocalDateTime now,
             Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.city = :city AND e.status = 'PUBLISHED' " +
            "AND e.visibility = 'PUBLIC' AND e.startTime BETWEEN :now AND :endDate " +
@@ -170,7 +170,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "WHERE e.id = :eventId")
     java.util.Optional<Event> findByIdWithRelationships(@Param("eventId") UUID eventId);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
            "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
@@ -182,7 +182,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "AND e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' ORDER BY e.startTime DESC")
     Page<Event> findEventsBySpeakerName(@Param("speakerName") String speakerName, Pageable pageable);
 
-    @Query("SELECT e FROM Event e " +
+    @Query("SELECT DISTINCT e FROM Event e " +
            "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "WHERE e.city.country = :country AND e.status = 'PUBLISHED' " +
            "AND e.visibility = 'PUBLIC' AND e.startTime BETWEEN :now AND :endDate " +

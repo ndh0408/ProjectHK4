@@ -41,14 +41,14 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
            "b.createdAt DESC")
     List<UUID> findBoostedEventIds(@Param("now") LocalDateTime now);
 
-    @Query("SELECT b FROM EventBoost b " +
+    @Query("SELECT DISTINCT b FROM EventBoost b " +
            "WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
            "AND b.boostPackage IN ('PREMIUM', 'VIP') " +
            "ORDER BY CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 ELSE 2 END, " +
            "b.createdAt DESC")
     List<EventBoost> findFeaturedBoosts(@Param("now") LocalDateTime now);
 
-    @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")
+    @Query("SELECT DISTINCT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")
     List<EventBoost> findHomeBannerBoosts(@Param("now") LocalDateTime now);
 
     @Modifying
