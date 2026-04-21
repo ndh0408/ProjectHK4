@@ -32,6 +32,7 @@ public class ConversationResponse {
     private boolean archived;
     private List<ParticipantResponse> participants;
     private int participantCount;
+    private LocalDateTime closedAt;
     private LocalDateTime createdAt;
 
     @Data
@@ -52,6 +53,7 @@ public class ConversationResponse {
                 .imageUrl(conversation.getImageUrl())
                 .lastMessageContent(conversation.getLastMessageContent())
                 .lastMessageAt(conversation.getLastMessageAt())
+                .closedAt(conversation.getClosedAt())
                 .createdAt(conversation.getCreatedAt());
 
         if (conversation.getEvent() != null) {

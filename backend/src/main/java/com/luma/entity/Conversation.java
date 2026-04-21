@@ -49,6 +49,8 @@ public class Conversation {
 
     private LocalDateTime lastMessageAt;
 
+    private LocalDateTime closedAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

@@ -47,4 +47,10 @@ public interface ConversationRepository extends JpaRepository<Conversation, UUID
            "WHERE p.user = :user AND c.type = :type " +
            "ORDER BY c.lastMessageAt DESC NULLS LAST")
     Page<Conversation> findByUserAndType(@Param("user") User user, @Param("type") ConversationType type, Pageable pageable);
+
+    @Query("SELECT c FROM Conversation c " +
+           "WHERE c.type = 'EVENT_GROUP' " +
+           "AND c.closedAt IS NULL " +
+           "AND c.event.endTime < :cutoff")
+    java.util.List<Conversation> findEventGroupsToClose(@Param("cutoff") java.time.LocalDateTime cutoff);
 }

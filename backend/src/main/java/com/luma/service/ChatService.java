@@ -5,6 +5,7 @@ import com.luma.dto.request.SendMessageRequest;
 import com.luma.dto.response.BlockedUserResponse;
 import com.luma.dto.response.ConversationResponse;
 import com.luma.dto.response.EventBuddyResponse;
+import com.luma.dto.response.EventChatSummaryResponse;
 import com.luma.dto.response.MessageResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.*;
@@ -67,27 +68,12 @@ public class ChatService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        boolean isRegistered = registrationRepository.existsByEventAndUserAndStatus(event, user, RegistrationStatus.APPROVED);
-        boolean isOrganiser = event.getOrganiser().getId().equals(user.getId());
-
-        if (!isRegistered && !isOrganiser) {
-            throw new ForbiddenException("You must be registered for this event to access the chat");
-        }
-
         Conversation conversation = conversationRepository.findByEventAndType(event, ConversationType.EVENT_GROUP)
-                .orElseGet(() -> createEventGroupChat(event));
-
-        if (!participantRepository.existsByConversationAndUser(conversation, user)) {
-            ConversationParticipant participant = ConversationParticipant.builder()
-                    .conversation(conversation)
-                    .user(user)
-                    .build();
-            participantRepository.save(participant);
-        }
+                .orElseThrow(() -> new ForbiddenException("Join the event chat before opening it"));
 
         ConversationParticipant currentParticipant = participantRepository
                 .findByConversationAndUser(conversation, user)
-                .orElse(null);
+                .orElseThrow(() -> new ForbiddenException("Join the event chat before opening it"));
 
         return ConversationResponse.fromEntity(conversation, currentParticipant);
     }
@@ -100,6 +86,119 @@ public class ChatService {
                 .event(event)
                 .build();
         return conversationRepository.save(conversation);
+    }
+
+    public List<EventChatSummaryResponse> getEventChats(User user) {
+        List<Registration> approvedRegs = registrationRepository.findByUserAndStatus(user, RegistrationStatus.APPROVED);
+        if (approvedRegs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<UUID, Event> eventsById = new LinkedHashMap<>();
+        for (Registration reg : approvedRegs) {
+            eventsById.putIfAbsent(reg.getEvent().getId(), reg.getEvent());
+        }
+
+        List<EventChatSummaryResponse> summaries = new ArrayList<>(eventsById.size());
+        for (Event event : eventsById.values()) {
+            Conversation conversation = conversationRepository
+                    .findByEventAndType(event, ConversationType.EVENT_GROUP)
+                    .orElse(null);
+
+            ConversationParticipant participant = conversation == null
+                    ? null
+                    : participantRepository.findByConversationAndUser(conversation, user).orElse(null);
+
+            summaries.add(EventChatSummaryResponse.builder()
+                    .eventId(event.getId())
+                    .eventTitle(event.getTitle())
+                    .eventImageUrl(event.getImageUrl())
+                    .eventStartTime(event.getStartTime())
+                    .eventEndTime(event.getEndTime())
+                    .venue(event.getVenue())
+                    .conversationId(conversation != null ? conversation.getId() : null)
+                    .joined(participant != null)
+                    .closed(conversation != null && conversation.getClosedAt() != null)
+                    .closedAt(conversation != null ? conversation.getClosedAt() : null)
+                    .participantCount(conversation != null && conversation.getParticipants() != null
+                            ? conversation.getParticipants().size() : 0)
+                    .lastMessageContent(conversation != null ? conversation.getLastMessageContent() : null)
+                    .lastMessageAt(conversation != null ? conversation.getLastMessageAt() : null)
+                    .unreadCount(participant != null ? participant.getUnreadCount() : 0)
+                    .build());
+        }
+
+        summaries.sort((a, b) -> {
+            LocalDateTime aTime = a.getLastMessageAt() != null ? a.getLastMessageAt() : a.getEventStartTime();
+            LocalDateTime bTime = b.getLastMessageAt() != null ? b.getLastMessageAt() : b.getEventStartTime();
+            if (aTime == null && bTime == null) return 0;
+            if (aTime == null) return 1;
+            if (bTime == null) return -1;
+            return bTime.compareTo(aTime);
+        });
+
+        return summaries;
+    }
+
+    @Transactional
+    public EventChatSummaryResponse joinEventChat(User user, UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        boolean isRegistered = registrationRepository.existsByEventAndUserAndStatus(event, user, RegistrationStatus.APPROVED);
+        boolean isOrganiser = event.getOrganiser().getId().equals(user.getId());
+
+        if (!isRegistered && !isOrganiser) {
+            throw new ForbiddenException("You must be registered for this event to join the chat");
+        }
+
+        Conversation conversation = conversationRepository.findByEventAndType(event, ConversationType.EVENT_GROUP)
+                .orElseGet(() -> createEventGroupChat(event));
+
+        if (conversation.getClosedAt() != null) {
+            throw new BadRequestException("This event group chat has been closed");
+        }
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElseGet(() -> participantRepository.save(ConversationParticipant.builder()
+                        .conversation(conversation)
+                        .user(user)
+                        .build()));
+
+        int participantCount = (int) participantRepository.countByConversation(conversation);
+
+        return EventChatSummaryResponse.builder()
+                .eventId(event.getId())
+                .eventTitle(event.getTitle())
+                .eventImageUrl(event.getImageUrl())
+                .eventStartTime(event.getStartTime())
+                .eventEndTime(event.getEndTime())
+                .venue(event.getVenue())
+                .conversationId(conversation.getId())
+                .joined(true)
+                .closed(false)
+                .closedAt(null)
+                .participantCount(participantCount)
+                .lastMessageContent(conversation.getLastMessageContent())
+                .lastMessageAt(conversation.getLastMessageAt())
+                .unreadCount(participant.getUnreadCount())
+                .build();
+    }
+
+    @Transactional
+    public void leaveEventChat(User user, UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        Conversation conversation = conversationRepository.findByEventAndType(event, ConversationType.EVENT_GROUP)
+                .orElseThrow(() -> new ResourceNotFoundException("Event chat not found"));
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElseThrow(() -> new BadRequestException("You are not a member of this chat"));
+
+        participantRepository.delete(participant);
     }
 
     @Transactional
@@ -175,6 +274,10 @@ public class ChatService {
 
         if (!participantRepository.existsByConversationAndUser(conversation, user)) {
             throw new ForbiddenException("You are not a participant of this conversation");
+        }
+
+        if (conversation.getClosedAt() != null) {
+            throw new BadRequestException("This event group chat has been closed");
         }
 
         Message replyTo = null;

@@ -1037,4 +1037,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refresh => 'Refresh';
+
+  @override
+  String get eventChatsTab => 'Event Chats';
+
+  @override
+  String get eventChatsEmptyHint =>
+      'Register for an event to see its group chat here';
+
+  @override
+  String get eventChatsSubtitle => 'Group chat for each event you registered';
+
+  @override
+  String get joinEventChat => 'Join';
+
+  @override
+  String get openChat => 'Open chat';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get leaveGroup => 'Leave group';
+
+  @override
+  String get leaveChat => 'Leave chat';
+
+  @override
+  String get clearChat => 'Clear Chat';
+
+  @override
+  String notJoinedMembers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'members',
+      one: 'member',
+    );
+    return 'Not joined · $count $_temp0';
+  }
+
+  @override
+  String get tapToChat => 'Tap to chat';
+
+  @override
+  String get noMessagesYetTapToChat => 'No messages yet · tap to chat';
+
+  @override
+  String get eventChatClosedLabel => 'Closed';
+
+  @override
+  String get eventChatClosedSubtitle => 'Chat closed';
+
+  @override
+  String get eventChatClosedBanner =>
+      'This event chat is closed — event ended more than 24 hours ago.';
+
+  @override
+  String get joinedEventChat => 'Joined event chat';
+
+  @override
+  String get failedToJoinChat => 'Failed to join chat';
+
+  @override
+  String get failedToLeaveChat => 'Failed to leave chat';
+
+  @override
+  String get leftEventChat => 'You have left the chat';
+
+  @override
+  String get leaveEventChatTitle => 'Leave event chat?';
+
+  @override
+  String leaveEventChatMessage(String title) {
+    return 'You will stop receiving messages from \"$title\". You can rejoin any time before the chat closes.';
+  }
 }

@@ -28,6 +28,7 @@ class Conversation {
     this.archived = false,
     this.participants,
     this.participantCount,
+    this.closedAt,
     this.createdAt,
   });
 
@@ -48,7 +49,10 @@ class Conversation {
   final bool archived;
   final List<ChatParticipant>? participants;
   final int? participantCount;
+  final DateTime? closedAt;
   final DateTime? createdAt;
+
+  bool get isClosed => closedAt != null;
 
   Map<String, dynamic> toJson() => _$ConversationToJson(this);
 

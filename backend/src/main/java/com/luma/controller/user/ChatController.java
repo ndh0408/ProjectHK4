@@ -6,6 +6,7 @@ import com.luma.dto.response.ApiResponse;
 import com.luma.dto.response.BlockedUserResponse;
 import com.luma.dto.response.ConversationResponse;
 import com.luma.dto.response.EventBuddyResponse;
+import com.luma.dto.response.EventChatSummaryResponse;
 import com.luma.dto.response.MessageResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.User;
@@ -162,6 +163,34 @@ public class ChatController {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         chatService.leaveConversation(user, conversationId);
         return ResponseEntity.ok(ApiResponse.success("Conversation deleted", null));
+    }
+
+    @GetMapping("/event-chats")
+    @Operation(summary = "List event group chats for events the user has an APPROVED registration to")
+    public ResponseEntity<ApiResponse<List<EventChatSummaryResponse>>> getEventChats(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(chatService.getEventChats(user)));
+    }
+
+    @PostMapping("/event-chats/{eventId}/join")
+    @Operation(summary = "Opt in to the group chat for a registered event")
+    public ResponseEntity<ApiResponse<EventChatSummaryResponse>> joinEventChat(
+            @PathVariable UUID eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        EventChatSummaryResponse response = chatService.joinEventChat(user, eventId);
+        return ResponseEntity.ok(ApiResponse.success("Joined event chat", response));
+    }
+
+    @DeleteMapping("/event-chats/{eventId}/leave")
+    @Operation(summary = "Leave an event group chat")
+    public ResponseEntity<ApiResponse<Void>> leaveEventChat(
+            @PathVariable UUID eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        chatService.leaveEventChat(user, eventId);
+        return ResponseEntity.ok(ApiResponse.success("Left event chat", null));
     }
 
     @GetMapping("/buddies")

@@ -14,6 +14,7 @@ import '../../../../services/websocket_service.dart';
 import '../../../../shared/models/chat_message.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../providers/event_chats_provider.dart';
 
 final chatMessagesProvider = StateNotifierProvider.autoDispose
     .family<ChatMessagesNotifier, ChatMessagesState, String>((ref, conversationId) {
@@ -371,12 +372,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     bool showDot = false;
 
     if (conversation.type == ConversationType.eventGroup) {
-      subtitle = conversation.participantCount != null
-          ? AppLocalizations.of(context)!.members(conversation.participantCount!)
+      final count = conversation.participantCount;
+      subtitle = count != null
+          ? (count == 1 ? '1 member' : '$count members')
           : 'Event Group';
     } else if (conversation.type == ConversationType.group) {
-      subtitle = conversation.participantCount != null
-          ? '${conversation.participantCount} members'
+      final count = conversation.participantCount;
+      subtitle = count != null
+          ? (count == 1 ? '1 member' : '$count members')
           : 'Group Chat';
     } else {
       final otherUser = conversation.participants?.firstOrNull;
@@ -520,7 +523,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               const SizedBox(height: 4),
               Text(
                 conversation.participantCount != null
-                    ? '${conversation.participantCount} members'
+                    ? (conversation.participantCount == 1
+                        ? '1 member'
+                        : '${conversation.participantCount} members')
                     : 'Group Chat',
                 style: TextStyle(
                   fontSize: 14,
@@ -658,9 +663,57 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _confirmBlockUser(otherUser.userId, otherUser.fullName);
         }
         break;
+      case 'leave_group':
+        _confirmLeaveEventGroup(conversation);
+        break;
       case 'clear_chat':
         _confirmClearChat();
         break;
+    }
+  }
+
+  Future<void> _confirmLeaveEventGroup(Conversation? conversation) async {
+    if (conversation == null || conversation.eventId == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.leaveEventChatTitle),
+        content: Text(l10n.leaveEventChatMessage(conversation.displayName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: Text(l10n.leave),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final ok = await ref
+        .read(eventChatsProvider.notifier)
+        .leave(conversation.eventId!);
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.leftEventChat),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      context.pop();
+    } else {
+      final err = ref.read(eventChatsProvider).error ?? 'Unknown error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${l10n.failedToLeaveChat}: $err'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -1050,16 +1103,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ],
                   ),
                 ),
-              const PopupMenuItem(
-                value: 'clear_chat',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
-                    SizedBox(width: 12),
-                    Text('Clear Chat', style: TextStyle(color: AppColors.error)),
-                  ],
+              if (conversation?.type == ConversationType.eventGroup)
+                PopupMenuItem(
+                  value: 'leave_group',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.logout, size: 20, color: AppColors.error),
+                      const SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.leaveGroup,
+                        style: const TextStyle(color: AppColors.error),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                PopupMenuItem(
+                  value: 'clear_chat',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
+                      const SizedBox(width: 12),
+                      Text(
+                        AppLocalizations.of(context)!.clearChat,
+                        style: const TextStyle(color: AppColors.error),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ],
@@ -1083,9 +1154,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           if (_replyingTo != null) _buildReplyPreview(),
 
-          _buildInputBar(state.isSending),
+          if (conversation?.isClosed == true)
+            _buildClosedBanner()
+          else
+            _buildInputBar(state.isSending),
 
           if (_showEmojiPicker) _buildEmojiPicker(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClosedBanner() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lock_clock, color: AppColors.textLight, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.eventChatClosedBanner,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
+            ),
+          ),
         ],
       ),
     );

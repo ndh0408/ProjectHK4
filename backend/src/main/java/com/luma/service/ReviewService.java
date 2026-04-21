@@ -62,7 +62,11 @@ public class ReviewService {
             log.warn("AI moderation failed, saving review without moderation: {}", e.getMessage());
         }
 
-        if (review.isFlagged() && review.getToxicityScore() != null && review.getToxicityScore() >= 80) {
+        boolean hasHarmfulCategory = review.getModerationCategories() != null
+                && (review.getModerationCategories().contains("TOXIC")
+                        || review.getModerationCategories().contains("HARASSMENT")
+                        || review.getModerationCategories().contains("PROFANITY"));
+        if (review.getToxicityScore() != null && review.getToxicityScore() >= 90 && hasHarmfulCategory) {
             throw new BadRequestException("Your review contains inappropriate content. Please revise and try again. Reason: " + review.getModerationReason());
         }
 

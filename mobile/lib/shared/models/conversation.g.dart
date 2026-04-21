@@ -25,6 +25,9 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) => Conversation(
           ?.map((e) => ChatParticipant.fromJson(e as Map<String, dynamic>))
           .toList(),
       participantCount: (json['participantCount'] as num?)?.toInt(),
+      closedAt: json['closedAt'] == null
+          ? null
+          : DateTime.parse(json['closedAt'] as String),
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
@@ -46,6 +49,7 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'archived': instance.archived,
       'participants': instance.participants,
       'participantCount': instance.participantCount,
+      'closedAt': instance.closedAt?.toIso8601String(),
       'createdAt': instance.createdAt?.toIso8601String(),
     };
 

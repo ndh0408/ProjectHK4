@@ -2101,6 +2101,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh'**
   String get refresh;
+
+  /// Messages tab: event group chats
+  ///
+  /// In en, this message translates to:
+  /// **'Event Chats'**
+  String get eventChatsTab;
+
+  /// Empty state in event chats tab
+  ///
+  /// In en, this message translates to:
+  /// **'Register for an event to see its group chat here'**
+  String get eventChatsEmptyHint;
+
+  /// Subheader in event chats tab
+  ///
+  /// In en, this message translates to:
+  /// **'Group chat for each event you registered'**
+  String get eventChatsSubtitle;
+
+  /// Join event group chat button
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinEventChat;
+
+  /// Open existing chat action
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChat;
+
+  /// Leave action
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// Menu item: leave group chat
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// Menu item: leave chat
+  ///
+  /// In en, this message translates to:
+  /// **'Leave chat'**
+  String get leaveChat;
+
+  /// Clear chat menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Chat'**
+  String get clearChat;
+
+  /// Subtitle shown for event chats user has not joined
+  ///
+  /// In en, this message translates to:
+  /// **'Not joined · {count} {count, plural, =1{member} other{members}}'**
+  String notJoinedMembers(int count);
+
+  /// Hint under an empty joined chat
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to chat'**
+  String get tapToChat;
+
+  /// Hint under an empty joined chat
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet · tap to chat'**
+  String get noMessagesYetTapToChat;
+
+  /// Badge when chat is closed
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get eventChatClosedLabel;
+
+  /// Subtitle for closed chat
+  ///
+  /// In en, this message translates to:
+  /// **'Chat closed'**
+  String get eventChatClosedSubtitle;
+
+  /// Bottom banner when chat is closed
+  ///
+  /// In en, this message translates to:
+  /// **'This event chat is closed — event ended more than 24 hours ago.'**
+  String get eventChatClosedBanner;
+
+  /// Snackbar when joined
+  ///
+  /// In en, this message translates to:
+  /// **'Joined event chat'**
+  String get joinedEventChat;
+
+  /// Snackbar error joining chat
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to join chat'**
+  String get failedToJoinChat;
+
+  /// Snackbar error leaving chat
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to leave chat'**
+  String get failedToLeaveChat;
+
+  /// Snackbar after leaving
+  ///
+  /// In en, this message translates to:
+  /// **'You have left the chat'**
+  String get leftEventChat;
+
+  /// Leave chat confirm title
+  ///
+  /// In en, this message translates to:
+  /// **'Leave event chat?'**
+  String get leaveEventChatTitle;
+
+  /// Leave chat confirm message
+  ///
+  /// In en, this message translates to:
+  /// **'You will stop receiving messages from \"{title}\". You can rejoin any time before the chat closes.'**
+  String leaveEventChatMessage(String title);
 }
 
 class _AppLocalizationsDelegate

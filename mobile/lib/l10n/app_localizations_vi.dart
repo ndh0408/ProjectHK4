@@ -1035,4 +1035,73 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get refresh => 'Làm mới';
+
+  @override
+  String get eventChatsTab => 'Nhóm Sự Kiện';
+
+  @override
+  String get eventChatsEmptyHint => 'Đăng ký sự kiện để xem nhóm chat ở đây';
+
+  @override
+  String get eventChatsSubtitle =>
+      'Mỗi sự kiện bạn đã đăng ký có một nhóm chat riêng';
+
+  @override
+  String get joinEventChat => 'Tham gia';
+
+  @override
+  String get openChat => 'Mở chat';
+
+  @override
+  String get leave => 'Rời';
+
+  @override
+  String get leaveGroup => 'Rời nhóm';
+
+  @override
+  String get leaveChat => 'Rời nhóm chat';
+
+  @override
+  String get clearChat => 'Xoá tin nhắn';
+
+  @override
+  String notJoinedMembers(int count) {
+    return 'Chưa tham gia · $count thành viên';
+  }
+
+  @override
+  String get tapToChat => 'Chạm để chat';
+
+  @override
+  String get noMessagesYetTapToChat => 'Chưa có tin nhắn · chạm để bắt đầu';
+
+  @override
+  String get eventChatClosedLabel => 'Đã đóng';
+
+  @override
+  String get eventChatClosedSubtitle => 'Nhóm đã đóng';
+
+  @override
+  String get eventChatClosedBanner =>
+      'Nhóm chat đã đóng — sự kiện đã kết thúc hơn 24 giờ.';
+
+  @override
+  String get joinedEventChat => 'Đã tham gia nhóm chat';
+
+  @override
+  String get failedToJoinChat => 'Không thể tham gia nhóm chat';
+
+  @override
+  String get failedToLeaveChat => 'Không thể rời nhóm chat';
+
+  @override
+  String get leftEventChat => 'Bạn đã rời nhóm chat';
+
+  @override
+  String get leaveEventChatTitle => 'Rời nhóm chat?';
+
+  @override
+  String leaveEventChatMessage(String title) {
+    return 'Bạn sẽ không còn nhận tin nhắn từ \"$title\". Có thể tham gia lại trước khi nhóm đóng.';
+  }
 }

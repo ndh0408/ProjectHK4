@@ -19,6 +19,7 @@ import '../shared/models/registration_question.dart';
 import '../shared/models/user.dart';
 import '../shared/models/event_image.dart';
 import '../shared/models/event_buddy.dart';
+import '../shared/models/event_chat_summary.dart';
 import '../shared/models/blocked_user.dart';
 import '../shared/models/coupon.dart';
 
@@ -822,6 +823,29 @@ class ApiService {
     );
     final data = response['data'] as List<dynamic>? ?? [];
     return data.map((e) => EventBuddy.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<EventChatSummary>> getEventChats() async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/event-chats',
+    );
+    final data = response['data'] as List<dynamic>? ?? [];
+    return data
+        .map((e) => EventChatSummary.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<EventChatSummary> joinEventChat(String eventId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/chat/event-chats/$eventId/join',
+      data: {},
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return EventChatSummary.fromJson(data);
+  }
+
+  Future<void> leaveEventChat(String eventId) async {
+    await _client.delete('/user/chat/event-chats/$eventId/leave');
   }
 
   Future<Conversation> createGroupChat({

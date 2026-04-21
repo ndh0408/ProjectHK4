@@ -24,12 +24,6 @@ import {
 } from '../../components/ui';
 import { toast } from 'react-toastify';
 
-const roleStatusMap = {
-    ADMIN: 'danger',
-    ORGANISER: 'warning',
-    ATTENDEE: 'neutral',
-};
-
 const userStatusConfig = {
     ACTIVE: { status: 'success', label: 'Active' },
     INACTIVE: { status: 'neutral', label: 'Inactive' },
