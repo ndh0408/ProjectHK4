@@ -36,40 +36,38 @@ public class BoostPackageInfo {
         switch (pkg) {
             case BASIC -> {
                 features.add("✓ Priority in search results");
-                features.add("✓ 1.5x visibility boost");
+                features.add("✓ Prioritized in upcoming discovery lists");
                 features.add("✓ 7 days duration");
                 features.add("✓ \"BOOSTED\" badge on event");
-                description = "Get noticed first in search results with priority placement";
+                description = "Move above non-boosted events in search and discovery lists for 7 days";
                 badgeColor = "#3B82F6";
             }
             case STANDARD -> {
                 features.add("✓ All BASIC features");
-                features.add("✓ 2x visibility boost");
                 features.add("✓ 14 days duration");
                 features.add("✓ Featured in category listings");
+                features.add("✓ Higher placement in city listings");
                 features.add("✓ \"FEATURED\" badge on event");
-                description = "Stand out in your category with featured placement and enhanced visibility";
+                description = "Get stronger placement across search, category, and city discovery surfaces";
                 badgeColor = "#8B5CF6";
             }
             case PREMIUM -> {
                 features.add("✓ All STANDARD features");
-                features.add("✓ 3x visibility boost");
                 features.add("✓ 30 days duration");
-                features.add("✓ Featured on home page");
+                features.add("✓ Featured in the home sponsored section");
                 features.add("✓ \"PREMIUM\" badge on event");
                 features.add("★ Recommended for maximum reach");
-                description = "Maximum exposure with home page featuring and premium badge";
+                description = "Add home page featured placement on top of search and listing priority";
                 badgeColor = "#7C3AED";
             }
             case VIP -> {
                 features.add("✓ All PREMIUM features");
-                features.add("✓ 5x visibility boost");
                 features.add("✓ 30 days duration");
                 features.add("✓ Home page banner placement");
                 features.add("✓ Exclusive \"VIP\" badge");
                 features.add("★ Highest priority placement");
                 features.add("★ Best for major events");
-                description = "Ultimate visibility with exclusive banner placement and VIP treatment";
+                description = "Get the strongest placement with VIP banner exposure and top-tier discovery priority";
                 badgeColor = "#F59E0B";
             }
             default -> {

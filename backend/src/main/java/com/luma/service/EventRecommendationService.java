@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luma.dto.response.EventRecommendationResponse;
 import com.luma.dto.response.EventResponse;
 import com.luma.entity.Event;
+import com.luma.entity.EventBoost;
 import com.luma.entity.Registration;
 import com.luma.entity.User;
+import com.luma.entity.enums.BoostPackage;
 import com.luma.entity.enums.EventStatus;
 import com.luma.entity.enums.RegistrationStatus;
+import com.luma.repository.EventBoostRepository;
 import com.luma.repository.EventRepository;
 import com.luma.repository.RegistrationRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class EventRecommendationService {
 
     private final AIService aiService;
     private final EventRepository eventRepository;
+    private final EventBoostRepository eventBoostRepository;
     private final RegistrationRepository registrationRepository;
     private final ObjectMapper objectMapper;
 
@@ -46,7 +50,7 @@ public class EventRecommendationService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(3);
-        Page<Event> upcomingEvents = eventRepository.findUpcomingPublicEvents(now, endDate, PageRequest.of(0, 50));
+        Page<Event> upcomingEvents = eventRepository.findUpcomingEventsWithBoostPriority(now, endDate, PageRequest.of(0, 50));
 
         Set<UUID> registeredEventIds = userRegistrations.stream()
                 .map(r -> r.getEvent().getId())
@@ -55,6 +59,7 @@ public class EventRecommendationService {
         List<Event> candidateEvents = upcomingEvents.getContent().stream()
                 .filter(e -> !registeredEventIds.contains(e.getId()))
                 .collect(Collectors.toList());
+        Map<UUID, EventBoost> boostMap = getActiveBoostMap(candidateEvents, now);
 
         List<EventResponse> recommendedEvents;
 
@@ -71,13 +76,13 @@ public class EventRecommendationService {
                 recommendedEvents = recommendedIds.stream()
                         .map(eventMap::get)
                         .filter(Objects::nonNull)
-                        .map(this::toEventResponse)
+                        .map(event -> toEventResponse(event, boostMap))
                         .collect(Collectors.toList());
             } catch (Exception e) {
                 log.error("AI recommendation failed, falling back to default", e);
                 recommendedEvents = candidateEvents.stream()
                         .limit(limit)
-                        .map(this::toEventResponse)
+                        .map(event -> toEventResponse(event, boostMap))
                         .collect(Collectors.toList());
             }
         }
@@ -94,11 +99,12 @@ public class EventRecommendationService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(3);
-        Page<Event> upcomingEvents = eventRepository.findUpcomingPublicEvents(now, endDate, PageRequest.of(0, 30));
+        Page<Event> upcomingEvents = eventRepository.findUpcomingEventsWithBoostPriority(now, endDate, PageRequest.of(0, 30));
 
         List<Event> candidateEvents = upcomingEvents.getContent().stream()
                 .filter(e -> !e.getId().equals(eventId))
                 .collect(Collectors.toList());
+        Map<UUID, EventBoost> boostMap = getActiveBoostMap(candidateEvents, now);
 
         if (candidateEvents.isEmpty()) {
             return new ArrayList<>();
@@ -114,7 +120,7 @@ public class EventRecommendationService {
             return similarIds.stream()
                     .map(eventMap::get)
                     .filter(Objects::nonNull)
-                    .map(this::toEventResponse)
+                    .map(event -> toEventResponse(event, boostMap))
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("AI similar events failed, falling back to category match", e);
@@ -123,7 +129,7 @@ public class EventRecommendationService {
                             sourceEvent.getCategory() != null &&
                             event.getCategory().getId().equals(sourceEvent.getCategory().getId()))
                     .limit(limit)
-                    .map(this::toEventResponse)
+                    .map(event -> toEventResponse(event, boostMap))
                     .collect(Collectors.toList());
         }
     }
@@ -134,22 +140,23 @@ public class EventRecommendationService {
 
         Page<Event> boostedEvents = eventRepository.findUpcomingEventsWithBoostPriority(
                 now, endDate, PageRequest.of(0, limit * 2));
+        Map<UUID, EventBoost> boostMap = getActiveBoostMap(boostedEvents.getContent(), now);
 
         List<Event> scoredEvents = boostedEvents.getContent().stream()
                 .sorted((e1, e2) -> {
-                    int score1 = calculateHotnessScore(e1);
-                    int score2 = calculateHotnessScore(e2);
+                    int score1 = calculateHotnessScore(e1, boostMap);
+                    int score2 = calculateHotnessScore(e2, boostMap);
                     return Integer.compare(score2, score1);
                 })
                 .limit(limit)
                 .collect(Collectors.toList());
 
         return scoredEvents.stream()
-                .map(this::toEventResponse)
+                .map(event -> toEventResponse(event, boostMap))
                 .collect(Collectors.toList());
     }
 
-    private int calculateHotnessScore(Event event) {
+    private int calculateHotnessScore(Event event, Map<UUID, EventBoost> boostMap) {
         int score = 0;
 
         long registrationCount = registrationRepository.countByEventAndStatus(event, RegistrationStatus.APPROVED);
@@ -173,7 +180,49 @@ public class EventRecommendationService {
             score += 15;
         }
 
+        score += getBoostScore(boostMap.get(event.getId()));
+
         return score;
+    }
+
+    private Map<UUID, EventBoost> getActiveBoostMap(List<Event> events, LocalDateTime now) {
+        if (events.isEmpty()) {
+            return Map.of();
+        }
+
+        List<UUID> eventIds = events.stream()
+                .map(Event::getId)
+                .distinct()
+                .toList();
+
+        return eventBoostRepository.findActiveBoostsByEventIds(eventIds, now).stream()
+                .collect(Collectors.toMap(
+                        boost -> boost.getEvent().getId(),
+                        boost -> boost,
+                        (left, right) -> getBoostRank(left.getBoostPackage()) <= getBoostRank(right.getBoostPackage()) ? left : right
+                ));
+    }
+
+    private int getBoostScore(EventBoost boost) {
+        if (boost == null) {
+            return 0;
+        }
+
+        return switch (boost.getBoostPackage()) {
+            case BASIC -> 20;
+            case STANDARD -> 45;
+            case PREMIUM -> 80;
+            case VIP -> 120;
+        };
+    }
+
+    private int getBoostRank(BoostPackage boostPackage) {
+        return switch (boostPackage) {
+            case VIP -> 0;
+            case PREMIUM -> 1;
+            case STANDARD -> 2;
+            case BASIC -> 3;
+        };
     }
 
     private List<UUID> parseEventIds(String aiResponse) {
@@ -195,8 +244,8 @@ public class EventRecommendationService {
         }
     }
 
-    private EventResponse toEventResponse(Event event) {
-        return EventResponse.builder()
+    private EventResponse toEventResponse(Event event, Map<UUID, EventBoost> boostMap) {
+        EventResponse response = EventResponse.builder()
                 .id(event.getId())
                 .title(event.getTitle())
                 .description(event.getDescription())
@@ -216,5 +265,16 @@ public class EventRecommendationService {
                 .city(event.getCity() != null ?
                         com.luma.dto.response.CityResponse.fromEntity(event.getCity()) : null)
                 .build();
+
+        EventBoost boost = boostMap.get(event.getId());
+        if (boost != null) {
+            response.setIsBoosted(true);
+            response.setBoostPackage(boost.getBoostPackage().name());
+            response.setBoostBadge(boost.getBoostPackage().getBadgeText());
+        } else {
+            response.setIsBoosted(false);
+        }
+
+        return response;
     }
 }

@@ -104,7 +104,8 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public PageResponse<EventResponse> getFeaturedEvents(Pageable pageable) {
-        Page<Event> events = eventRepository.findFeaturedPublicEvents(pageable);
+        LocalDateTime now = LocalDateTime.now();
+        Page<Event> events = eventRepository.findFeaturedPublicEvents(now, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
@@ -121,7 +122,7 @@ public class EventService {
     public PageResponse<EventResponse> getEventsByCountry(String country, Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
-        Page<Event> events = eventRepository.findUpcomingEventsByCountry(country, now, endDate, pageable);
+        Page<Event> events = eventRepository.findUpcomingEventsByCountryWithBoostPriority(country, now, endDate, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 

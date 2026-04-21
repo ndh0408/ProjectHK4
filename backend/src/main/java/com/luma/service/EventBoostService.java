@@ -11,10 +11,13 @@ import com.luma.entity.User;
 import com.luma.entity.enums.BoostPackage;
 import com.luma.entity.enums.BoostStatus;
 import com.luma.entity.enums.EventStatus;
+import com.luma.entity.enums.RegistrationStatus;
 import com.luma.exception.BadRequestException;
 import com.luma.exception.ResourceNotFoundException;
 import com.luma.repository.EventBoostRepository;
 import com.luma.repository.EventRepository;
+import com.luma.repository.EventViewRepository;
+import com.luma.repository.RegistrationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,7 +40,15 @@ public class EventBoostService {
 
     private final EventBoostRepository boostRepository;
     private final EventRepository eventRepository;
+    private final EventViewRepository eventViewRepository;
+    private final RegistrationRepository registrationRepository;
     private final OrganiserSubscriptionService subscriptionService;
+
+    private static final List<RegistrationStatus> BOOST_REGISTRATION_STATUSES = List.of(
+            RegistrationStatus.PENDING,
+            RegistrationStatus.APPROVED,
+            RegistrationStatus.WAITING_LIST
+    );
 
     public List<BoostPackageInfo> getAvailablePackages() {
         return Arrays.stream(BoostPackage.values())
@@ -98,6 +109,10 @@ public class EventBoostService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        int viewsBeforeBoost = safeCount(eventViewRepository.countByEvent(event));
+        int registrationsBeforeBoost = safeCount(
+                registrationRepository.countByEventAndStatusIn(event, BOOST_REGISTRATION_STATUSES)
+        );
 
         EventBoost boost = EventBoost.builder()
                 .event(event)
@@ -109,6 +124,8 @@ public class EventBoostService {
                 .paidAt(now)
                 .startTime(now)
                 .endTime(now.plusDays(pkg.getDurationDays()))
+                .viewsBeforeBoost(viewsBeforeBoost)
+                .registrationsBeforeBoost(registrationsBeforeBoost)
                 .build();
 
         boost = boostRepository.save(boost);
@@ -331,6 +348,7 @@ public class EventBoostService {
         }
 
         existingBoost.setStatus(BoostStatus.CANCELLED);
+        existingBoost.setEndTime(LocalDateTime.now());
         boostRepository.save(existingBoost);
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
@@ -352,6 +370,13 @@ public class EventBoostService {
                 .paidAt(now)
                 .startTime(now)
                 .endTime(now.plusDays(newPackage.getDurationDays()))
+                .viewsBeforeBoost(safeCount(eventViewRepository.countByEvent(existingBoost.getEvent())))
+                .registrationsBeforeBoost(safeCount(
+                        registrationRepository.countByEventAndStatusIn(
+                                existingBoost.getEvent(),
+                                BOOST_REGISTRATION_STATUSES
+                        )
+                ))
                 .build();
 
         newBoost = boostRepository.save(newBoost);
@@ -376,6 +401,10 @@ public class EventBoostService {
         boost.setPaidAt(now);
         boost.setStartTime(now);
         boost.setEndTime(now.plusDays(boost.getBoostPackage().getDurationDays()));
+        boost.setViewsBeforeBoost(safeCount(eventViewRepository.countByEvent(boost.getEvent())));
+        boost.setRegistrationsBeforeBoost(safeCount(
+                registrationRepository.countByEventAndStatusIn(boost.getEvent(), BOOST_REGISTRATION_STATUSES)
+        ));
 
         boost = boostRepository.save(boost);
         log.info("Boost activated: {} for event {}", boostId, boost.getEvent().getId());
@@ -479,9 +508,66 @@ public class EventBoostService {
                 });
     }
 
+    private int safeCount(long count) {
+        return count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
+    }
+
+    private LocalDateTime resolveStatsWindowEnd(EventBoost boost, LocalDateTime now) {
+        if (boost.getStartTime() == null) {
+            return null;
+        }
+
+        if (boost.getStatus() == BoostStatus.CANCELLED
+                && boost.getUpdatedAt() != null
+                && boost.getUpdatedAt().isAfter(boost.getStartTime())) {
+            return boost.getUpdatedAt();
+        }
+
+        if (boost.getEndTime() != null && !boost.getEndTime().isAfter(now)) {
+            return boost.getEndTime();
+        }
+
+        return null;
+    }
+
+    private int calculateViewsDuringBoost(EventBoost boost, LocalDateTime now) {
+        if (boost.getStartTime() == null) {
+            return boost.getViewsDuringBoost();
+        }
+
+        LocalDateTime windowEnd = resolveStatsWindowEnd(boost, now);
+        long views = windowEnd == null
+                ? eventViewRepository.countByEventAndCreatedAtAfter(boost.getEvent(), boost.getStartTime())
+                : eventViewRepository.countByEventAndCreatedAtRange(boost.getEvent(), boost.getStartTime(), windowEnd);
+        return safeCount(views);
+    }
+
+    private int calculateRegistrationsDuringBoost(EventBoost boost, LocalDateTime now) {
+        if (boost.getStartTime() == null) {
+            return boost.getRegistrationsDuringBoost();
+        }
+
+        LocalDateTime windowEnd = resolveStatsWindowEnd(boost, now);
+        long registrations = windowEnd == null
+                ? registrationRepository.countByEventAndStatusInAndCreatedAtAfter(
+                        boost.getEvent(),
+                        BOOST_REGISTRATION_STATUSES,
+                        boost.getStartTime()
+                )
+                : registrationRepository.countByEventAndStatusInAndCreatedAtRange(
+                        boost.getEvent(),
+                        BOOST_REGISTRATION_STATUSES,
+                        boost.getStartTime(),
+                        windowEnd
+                );
+        return safeCount(registrations);
+    }
+
     private BoostResponse mapToResponse(EventBoost boost) {
         Event event = boost.getEvent();
         LocalDateTime now = LocalDateTime.now();
+        int viewsDuringBoost = calculateViewsDuringBoost(boost, now);
+        int registrationsDuringBoost = calculateRegistrationsDuringBoost(boost, now);
 
         int daysRemaining = 0;
         if (boost.getStatus() == BoostStatus.ACTIVE && boost.getEndTime() != null) {
@@ -504,12 +590,12 @@ public class EventBoostService {
                 .isActive(boost.isActive())
                 .daysRemaining(daysRemaining)
                 .viewsBeforeBoost(boost.getViewsBeforeBoost())
-                .viewsDuringBoost(boost.getViewsDuringBoost())
+                .viewsDuringBoost(viewsDuringBoost)
                 .clicksBeforeBoost(boost.getClicksBeforeBoost())
                 .clicksDuringBoost(boost.getClicksDuringBoost())
                 .registrationsBeforeBoost(boost.getRegistrationsBeforeBoost())
-                .registrationsDuringBoost(boost.getRegistrationsDuringBoost())
-                .conversionRate(boost.getConversionRate())
+                .registrationsDuringBoost(registrationsDuringBoost)
+                .conversionRate(viewsDuringBoost > 0 ? (double) registrationsDuringBoost / viewsDuringBoost * 100 : 0)
                 .createdAt(boost.getCreatedAt())
                 .build();
     }

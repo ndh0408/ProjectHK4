@@ -170,17 +170,26 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "WHERE e.id = :eventId")
     java.util.Optional<Event> findByIdWithRelationships(@Param("eventId") UUID eventId);
 
-    @Query("SELECT e FROM Event e WHERE e.status = 'PUBLISHED' ORDER BY e.startTime ASC")
-    Page<Event> findFeaturedPublicEvents(Pageable pageable);
+    @Query("SELECT e FROM Event e " +
+           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
+           "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
+           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
+           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
+           "e.startTime ASC")
+    Page<Event> findFeaturedPublicEvents(@Param("now") LocalDateTime now, Pageable pageable);
 
     @Query("SELECT DISTINCT e FROM Event e JOIN e.speakers s WHERE LOWER(s.name) = LOWER(:speakerName) " +
            "AND e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' ORDER BY e.startTime DESC")
     Page<Event> findEventsBySpeakerName(@Param("speakerName") String speakerName, Pageable pageable);
 
-    @Query("SELECT e FROM Event e WHERE e.city.country = :country AND e.status = 'PUBLISHED' " +
+    @Query("SELECT e FROM Event e " +
+           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
+           "WHERE e.city.country = :country AND e.status = 'PUBLISHED' " +
            "AND e.visibility = 'PUBLIC' AND e.startTime BETWEEN :now AND :endDate " +
-           "ORDER BY e.startTime ASC")
-    Page<Event> findUpcomingEventsByCountry(
+           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
+           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
+           "e.startTime ASC")
+    Page<Event> findUpcomingEventsByCountryWithBoostPriority(
             @Param("country") String country,
             @Param("now") LocalDateTime now,
             @Param("endDate") LocalDateTime endDate,

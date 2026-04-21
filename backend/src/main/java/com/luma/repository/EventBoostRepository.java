@@ -35,10 +35,17 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
     @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now")
     List<EventBoost> findActiveBoosts(@Param("now") LocalDateTime now);
 
-    @Query("SELECT b.event.id FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now ORDER BY b.boostPackage DESC")
+    @Query("SELECT b.event.id FROM EventBoost b " +
+           "WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
+           "ORDER BY CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
+           "b.createdAt DESC")
     List<UUID> findBoostedEventIds(@Param("now") LocalDateTime now);
 
-    @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now ORDER BY b.boostPackage DESC")
+    @Query("SELECT b FROM EventBoost b " +
+           "WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
+           "AND b.boostPackage IN ('PREMIUM', 'VIP') " +
+           "ORDER BY CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 ELSE 2 END, " +
+           "b.createdAt DESC")
     List<EventBoost> findFeaturedBoosts(@Param("now") LocalDateTime now);
 
     @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")

@@ -129,6 +129,17 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status IN :statuses")
     long countByEventAndStatusIn(@Param("event") Event event, @Param("statuses") List<RegistrationStatus> statuses);
 
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status IN :statuses AND r.createdAt >= :start")
+    long countByEventAndStatusInAndCreatedAtAfter(@Param("event") Event event,
+                                                  @Param("statuses") List<RegistrationStatus> statuses,
+                                                  @Param("start") LocalDateTime start);
+
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status IN :statuses AND r.createdAt >= :start AND r.createdAt < :end")
+    long countByEventAndStatusInAndCreatedAtRange(@Param("event") Event event,
+                                                  @Param("statuses") List<RegistrationStatus> statuses,
+                                                  @Param("start") LocalDateTime start,
+                                                  @Param("end") LocalDateTime end);
+
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
     long countCheckedInByEvent(@Param("event") Event event);
 

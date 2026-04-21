@@ -20,6 +20,11 @@ public interface EventViewRepository extends JpaRepository<EventView, UUID> {
 
     long countByEventAndCreatedAtAfter(Event event, LocalDateTime after);
 
+    @Query("SELECT COUNT(ev) FROM EventView ev WHERE ev.event = :event AND ev.createdAt >= :start AND ev.createdAt < :end")
+    long countByEventAndCreatedAtRange(@Param("event") Event event,
+                                       @Param("start") LocalDateTime start,
+                                       @Param("end") LocalDateTime end);
+
     @Query("SELECT COUNT(ev) FROM EventView ev WHERE ev.event.organiser.id = :organiserId")
     long countByOrganiser(@Param("organiserId") UUID organiserId);
 
