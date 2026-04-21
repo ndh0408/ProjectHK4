@@ -463,8 +463,22 @@ public class RegistrationService {
         if (code.isEmpty()) {
             throw new BadRequestException("Ticket code is required");
         }
-        Registration registration = registrationRepository.findByTicketCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("No registration found for ticket code: " + code));
+
+        // Mobile app encodes the registration UUID in the QR; USB/manual
+        // scanners typically submit the human-readable ticket code. Accept
+        // either so the organiser scan flow works with both sources.
+        Registration registration = registrationRepository.findByTicketCode(code).orElse(null);
+        if (registration == null) {
+            try {
+                UUID registrationId = UUID.fromString(code);
+                registration = registrationRepository.findById(registrationId).orElse(null);
+            } catch (IllegalArgumentException ignored) {
+                // not a UUID — fall through to not-found
+            }
+        }
+        if (registration == null) {
+            throw new ResourceNotFoundException("No registration found for ticket code: " + code);
+        }
 
         if (!registration.getEvent().getId().equals(eventId)) {
             throw new BadRequestException("This ticket does not belong to the selected event");
