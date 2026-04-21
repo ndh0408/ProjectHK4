@@ -1049,6 +1049,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventChatsSubtitle => 'Group chat for each event you registered';
 
   @override
+  String get searchEventChatsHint => 'Search event groups...';
+
+  @override
+  String get eventChatsSearchEmpty => 'No matching event groups';
+
+  @override
+  String get eventChatsSearchEmptySubtitle =>
+      'Try a different event name, venue, or keyword';
+
+  @override
   String get joinEventChat => 'Join';
 
   @override

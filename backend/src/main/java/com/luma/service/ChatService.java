@@ -65,6 +65,17 @@ public class ChatService {
                 .build();
     }
 
+    public ConversationResponse getConversation(User user, UUID conversationId) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
+
+        ConversationParticipant participant = participantRepository
+                .findByConversationAndUser(conversation, user)
+                .orElseThrow(() -> new ForbiddenException("You are not a participant of this conversation"));
+
+        return ConversationResponse.fromEntity(conversation, participant);
+    }
+
     @Transactional
     public ConversationResponse getOrCreateEventChat(User user, UUID eventId) {
         Event event = eventRepository.findById(eventId)

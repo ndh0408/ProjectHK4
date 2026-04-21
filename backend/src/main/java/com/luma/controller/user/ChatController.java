@@ -62,6 +62,15 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success(chatService.getOrCreateDirectChat(user, userId)));
     }
 
+    @GetMapping("/conversations/{conversationId}")
+    @Operation(summary = "Get a conversation by id")
+    public ResponseEntity<ApiResponse<ConversationResponse>> getConversation(
+            @PathVariable UUID conversationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(chatService.getConversation(user, conversationId)));
+    }
+
     @GetMapping("/conversations/{conversationId}/messages")
     @Operation(summary = "Get messages in a conversation")
     public ResponseEntity<ApiResponse<PageResponse<MessageResponse>>> getMessages(

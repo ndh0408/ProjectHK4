@@ -2120,6 +2120,24 @@ abstract class AppLocalizations {
   /// **'Group chat for each event you registered'**
   String get eventChatsSubtitle;
 
+  /// Search input hint in event chats tab
+  ///
+  /// In en, this message translates to:
+  /// **'Search event groups...'**
+  String get searchEventChatsHint;
+
+  /// Empty state title when event chat search has no results
+  ///
+  /// In en, this message translates to:
+  /// **'No matching event groups'**
+  String get eventChatsSearchEmpty;
+
+  /// Empty state subtitle when event chat search has no results
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different event name, venue, or keyword'**
+  String get eventChatsSearchEmptySubtitle;
+
   /// Join event group chat button
   ///
   /// In en, this message translates to:

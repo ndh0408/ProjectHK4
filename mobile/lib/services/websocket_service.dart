@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 
@@ -111,35 +110,20 @@ class WebSocketService {
 
     final wsUrl = ApiConstants.wsBaseUrl;
 
-    final stompConfig = kIsWeb
-        ? StompConfig.sockJS(
-            url: wsUrl,
-            onConnect: _onConnect,
-            onDisconnect: _onDisconnect,
-            onWebSocketError: _onError,
-            onStompError: _onStompError,
-            stompConnectHeaders: {
-              'Authorization': 'Bearer $token',
-            },
-            webSocketConnectHeaders: {
-              'Authorization': 'Bearer $token',
-            },
-            reconnectDelay: const Duration(seconds: 5),
-          )
-        : StompConfig(
-            url: wsUrl,
-            onConnect: _onConnect,
-            onDisconnect: _onDisconnect,
-            onWebSocketError: _onError,
-            onStompError: _onStompError,
-            stompConnectHeaders: {
-              'Authorization': 'Bearer $token',
-            },
-            webSocketConnectHeaders: {
-              'Authorization': 'Bearer $token',
-            },
-            reconnectDelay: const Duration(seconds: 5),
-          );
+    final stompConfig = StompConfig.sockJS(
+      url: wsUrl,
+      onConnect: _onConnect,
+      onDisconnect: _onDisconnect,
+      onWebSocketError: _onError,
+      onStompError: _onStompError,
+      stompConnectHeaders: {
+        'Authorization': 'Bearer $token',
+      },
+      webSocketConnectHeaders: {
+        'Authorization': 'Bearer $token',
+      },
+      reconnectDelay: const Duration(seconds: 5),
+    );
 
     _stompClient = StompClient(config: stompConfig);
     _stompClient!.activate();
@@ -206,6 +190,15 @@ class WebSocketService {
       callback: (frame) {
         if (frame.body != null) {
           final event = ChatEvent.fromJson(json.decode(frame.body!));
+          // If this conversation already has a topic subscription the same
+          // event will arrive from /topic/conversation.$id.  Skip the
+          // duplicate here so listeners never see it twice.
+          if (event.conversationId != null &&
+              _conversationSubs.containsKey(event.conversationId) &&
+              (event.type == ChatEventType.newMessage ||
+               event.type == ChatEventType.messageDeleted)) {
+            return;
+          }
           _eventController.add(event);
         }
       },

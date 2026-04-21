@@ -1,5 +1,6 @@
 import React, {
     useCallback,
+    useDeferredValue,
     useEffect,
     useMemo,
     useRef,
@@ -26,8 +27,6 @@ import {
     Stack,
     Tooltip,
     Typography,
-    alpha,
-    useTheme,
 } from '@mui/material';
 import {
     Chat as ChatIcon,
@@ -39,6 +38,7 @@ import {
     MoreVert as MoreIcon,
     Refresh as RefreshIcon,
     Reply as ReplyIcon,
+    Search as SearchIcon,
     Send as SendIcon,
     SentimentSatisfiedAlt as EmojiIcon,
     SignalWifi4Bar as OnlineIcon,
@@ -51,6 +51,8 @@ import { format, isSameDay, isToday, isYesterday } from 'date-fns';
 
 import chatApi from '../../api/chatApi';
 import { useAuth } from '../../context/AuthContext';
+import { PageHeader } from '../../components/ui';
+import { tokens } from '../../theme';
 
 const WS_URL = (() => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
@@ -110,6 +112,13 @@ const previewFromMessage = (message) => {
     if (message.type === 'FILE') return '📎 Tệp đính kèm';
     return message.content || '';
 };
+
+const normalizeSearchText = (value = '') =>
+    value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
 
 function useChatWebSocket({ token, onEvent }) {
     const [connected, setConnected] = useState(false);
@@ -220,68 +229,66 @@ const EmptyChat = () => (
             alignItems: 'center',
             justifyContent: 'center',
             flexDirection: 'column',
-            gap: 1.5,
+            gap: 2,
             p: 4,
-            background:
-                'radial-gradient(circle at 50% 30%, rgba(99,102,241,0.06), transparent 60%)',
+            bgcolor: tokens.surfaces.page,
         }}
     >
         <Box
             sx={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
+                width: 80,
+                height: 80,
+                borderRadius: tokens.radius.xl,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: 'primary.50',
-                color: 'primary.main',
+                background: tokens.gradient.primarySoft,
+                boxShadow: tokens.shadow.md,
             }}
         >
-            <ChatIcon sx={{ fontSize: 36 }} />
+            <ChatIcon sx={{ fontSize: 36, color: tokens.palette.primary[600] }} />
         </Box>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, color: tokens.text.strong, mt: 1 }}>
             Chọn một nhóm để bắt đầu
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320, textAlign: 'center' }}>
-            Tin nhắn mới sẽ xuất hiện tức thì qua WebSocket. Đồng bộ với ứng dụng
-            mobile.
+        <Typography variant="body2" sx={{ maxWidth: 340, textAlign: 'center', color: tokens.text.secondary, lineHeight: 1.6 }}>
+            Tin nhắn mới sẽ xuất hiện tức thì qua WebSocket. Đồng bộ realtime với ứng dụng mobile.
         </Typography>
     </Box>
 );
 
 const DateSeparator = ({ date }) => (
-    <Box sx={{ display: 'flex', justifyContent: 'center', my: 1.5 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
         <Chip
             size="small"
             label={formatDateSeparator(date)}
             sx={{
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
+                bgcolor: tokens.palette.neutral[100],
+                border: `1px solid ${tokens.borders.subtle}`,
                 fontSize: 11,
-                fontWeight: 500,
-                color: 'text.secondary',
-                height: 22,
+                fontWeight: 600,
+                color: tokens.text.muted,
+                height: 24,
+                letterSpacing: '0.02em',
             }}
         />
     </Box>
 );
 
 const TypingDots = () => (
-    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.3, ml: 0.5 }}>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4, ml: 0.5 }}>
         {[0, 1, 2].map((i) => (
             <Box
                 key={i}
                 sx={{
-                    width: 4,
-                    height: 4,
+                    width: 5,
+                    height: 5,
                     borderRadius: '50%',
-                    bgcolor: 'primary.main',
+                    bgcolor: tokens.palette.primary[500],
                     animation: 'typingBlink 1.2s infinite',
-                    animationDelay: `${i * 0.15}s`,
+                    animationDelay: `${i * 0.18}s`,
                     '@keyframes typingBlink': {
-                        '0%, 60%, 100%': { opacity: 0.3 },
+                        '0%, 60%, 100%': { opacity: 0.25 },
                         '30%': { opacity: 1 },
                     },
                 }}
@@ -298,7 +305,6 @@ const MessageBubble = ({
     onReply,
     onDelete,
 }) => {
-    const theme = useTheme();
     const [anchor, setAnchor] = useState(null);
     const openMenu = (e) => setAnchor(e.currentTarget);
     const closeMenu = () => setAnchor(null);
@@ -309,17 +315,24 @@ const MessageBubble = ({
             spacing={1}
             justifyContent={isMe ? 'flex-end' : 'flex-start'}
             alignItems="flex-end"
-            sx={{ px: 1.5, '&:hover .msg-actions': { opacity: 1 } }}
+            sx={{
+                px: { xs: 1.5, md: 2.5 },
+                '&:hover .msg-actions': { opacity: 1 },
+            }}
         >
             {!isMe && (
                 <Avatar
                     src={message.sender?.avatarUrl}
                     sx={{
-                        width: 28,
-                        height: 28,
+                        width: 32,
+                        height: 32,
                         visibility: showAvatar ? 'visible' : 'hidden',
-                        border: '2px solid',
-                        borderColor: 'background.paper',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        bgcolor: tokens.palette.primary[100],
+                        color: tokens.palette.primary[700],
+                        border: `2px solid ${tokens.surfaces.card}`,
+                        boxShadow: tokens.shadow.sm,
                     }}
                 >
                     {message.sender?.fullName?.charAt(0) || '?'}
@@ -331,12 +344,12 @@ const MessageBubble = ({
                     className="msg-actions"
                     sx={{
                         opacity: 0,
-                        transition: 'opacity 0.15s',
+                        transition: `opacity ${tokens.motion.fast}`,
                         display: 'flex',
                         alignItems: 'center',
                     }}
                 >
-                    <IconButton size="small" onClick={openMenu} sx={{ color: 'text.secondary' }}>
+                    <IconButton size="small" onClick={openMenu} sx={{ color: tokens.text.muted }}>
                         <MoreIcon fontSize="small" />
                     </IconButton>
                     <Menu anchorEl={anchor} open={!!anchor} onClose={closeMenu}>
@@ -355,7 +368,7 @@ const MessageBubble = ({
                                     onDelete?.(message);
                                     closeMenu();
                                 }}
-                                sx={{ color: 'error.main' }}
+                                sx={{ color: tokens.palette.danger[600] }}
                             >
                                 <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
                                 Xoá
@@ -365,12 +378,19 @@ const MessageBubble = ({
                 </Box>
             )}
 
-            <Box sx={{ maxWidth: '70%', minWidth: 80 }}>
+            <Box sx={{ maxWidth: { xs: '82%', lg: '65%' }, minWidth: 96 }}>
                 {!isMe && showName && (
                     <Typography
                         variant="caption"
-                        color="text.secondary"
-                        sx={{ ml: 1.5, fontWeight: 600, display: 'block' }}
+                        sx={{
+                            ml: 1.5,
+                            mb: 0.5,
+                            fontWeight: 700,
+                            display: 'block',
+                            color: tokens.palette.primary[700],
+                            fontSize: '0.7rem',
+                            letterSpacing: '0.01em',
+                        }}
                     >
                         {message.sender?.fullName || 'Unknown'}
                     </Typography>
@@ -379,32 +399,31 @@ const MessageBubble = ({
                 {message.replyTo && !message.deleted && (
                     <Box
                         sx={{
-                            px: 1.25,
+                            px: 1.5,
                             py: 0.75,
-                            mb: 0.25,
+                            mb: 0.5,
                             ml: isMe ? 'auto' : 0,
                             maxWidth: '100%',
-                            borderRadius: 1.5,
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            borderLeft: `3px solid ${theme.palette.primary.main}`,
+                            borderRadius: tokens.radius.sm,
+                            bgcolor: tokens.palette.primary[50],
+                            borderLeft: `3px solid ${tokens.palette.primary[400]}`,
                             cursor: 'default',
                         }}
                     >
                         <Typography
                             variant="caption"
-                            color="primary"
-                            sx={{ fontWeight: 600, display: 'block' }}
+                            sx={{ fontWeight: 700, display: 'block', color: tokens.palette.primary[700] }}
                         >
                             {message.replyTo.senderName || '...'}
                         </Typography>
                         <Typography
                             variant="caption"
-                            color="text.secondary"
                             sx={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical',
                                 overflow: 'hidden',
+                                color: tokens.text.secondary,
                             }}
                         >
                             {message.replyTo.content}
@@ -414,28 +433,28 @@ const MessageBubble = ({
 
                 <Box
                     sx={{
-                        px: 1.5,
-                        py: 1,
-                        borderRadius: 2.5,
-                        borderTopLeftRadius: !isMe && showAvatar ? 0.5 : 2.5,
-                        borderTopRightRadius: isMe ? 0.5 : 2.5,
+                        px: 1.75,
+                        py: 1.25,
+                        borderRadius: `${tokens.radius.lg}px`,
+                        borderTopLeftRadius: !isMe && showAvatar ? tokens.radius.xs : tokens.radius.lg,
+                        borderTopRightRadius: isMe ? tokens.radius.xs : tokens.radius.lg,
                         background: isMe
-                            ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
-                            : theme.palette.background.paper,
-                        color: isMe ? 'primary.contrastText' : 'text.primary',
-                        border: isMe ? 'none' : '1px solid',
-                        borderColor: 'divider',
+                            ? tokens.gradient.primary
+                            : tokens.surfaces.card,
+                        color: isMe ? '#fff' : tokens.text.primary,
+                        border: isMe ? 'none' : `1px solid ${tokens.borders.subtle}`,
                         wordBreak: 'break-word',
                         boxShadow: isMe
-                            ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.25)}`
-                            : '0 1px 2px rgba(0,0,0,0.04)',
+                            ? tokens.shadow.primaryGlow
+                            : tokens.shadow.xs,
                         display: 'inline-block',
+                        transition: `box-shadow ${tokens.motion.fast}`,
                     }}
                 >
                     {message.deleted ? (
                         <Typography
                             variant="body2"
-                            sx={{ fontStyle: 'italic', opacity: 0.7 }}
+                            sx={{ fontStyle: 'italic', opacity: 0.65 }}
                         >
                             Tin nhắn đã bị xoá
                         </Typography>
@@ -445,16 +464,16 @@ const MessageBubble = ({
                             src={message.mediaUrl}
                             alt=""
                             sx={{
-                                maxWidth: 240,
-                                maxHeight: 240,
-                                borderRadius: 1.5,
+                                maxWidth: 260,
+                                maxHeight: 260,
+                                borderRadius: tokens.radius.md,
                                 display: 'block',
                             }}
                         />
                     ) : (
                         <Typography
                             variant="body2"
-                            sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.4 }}
+                            sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.5 }}
                         >
                             {message.content}
                         </Typography>
@@ -466,18 +485,18 @@ const MessageBubble = ({
                     spacing={0.5}
                     alignItems="center"
                     justifyContent={isMe ? 'flex-end' : 'flex-start'}
-                    sx={{ mt: 0.25, mx: 1 }}
+                    sx={{ mt: 0.5, mx: 1.25 }}
                 >
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                    <Typography variant="caption" sx={{ fontSize: 10, color: tokens.text.muted }}>
                         {formatTimestamp(message.createdAt)}
                     </Typography>
                     {isMe && !message.deleted && (
                         <DoneAllIcon
                             sx={{
-                                fontSize: 12,
+                                fontSize: 13,
                                 color: message.readByOthers
-                                    ? 'primary.main'
-                                    : 'text.disabled',
+                                    ? tokens.palette.primary[500]
+                                    : tokens.text.disabled,
                             }}
                         />
                     )}
@@ -489,14 +508,14 @@ const MessageBubble = ({
                     className="msg-actions"
                     sx={{
                         opacity: 0,
-                        transition: 'opacity 0.15s',
+                        transition: `opacity ${tokens.motion.fast}`,
                     }}
                 >
                     <Tooltip title="Trả lời">
                         <IconButton
                             size="small"
                             onClick={() => onReply?.(message)}
-                            sx={{ color: 'text.secondary' }}
+                            sx={{ color: tokens.text.muted }}
                         >
                             <ReplyIcon fontSize="small" />
                         </IconButton>
@@ -512,31 +531,29 @@ const ReplyPreview = ({ replyingTo, onCancel }) => {
     return (
         <Box
             sx={{
-                px: 2,
-                py: 1,
+                px: 2.5,
+                py: 1.25,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1,
-                bgcolor: 'grey.50',
-                borderLeft: '3px solid',
-                borderColor: 'primary.main',
+                gap: 1.25,
+                bgcolor: tokens.palette.primary[50],
+                borderLeft: `3px solid ${tokens.palette.primary[500]}`,
             }}
         >
-            <ReplyIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+            <ReplyIcon sx={{ fontSize: 18, color: tokens.palette.primary[600] }} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="caption" color="primary" sx={{ fontWeight: 600, display: 'block' }}>
+                <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: tokens.palette.primary[700] }}>
                     Trả lời {replyingTo.sender?.fullName || ''}
                 </Typography>
                 <Typography
                     variant="caption"
-                    color="text.secondary"
                     noWrap
-                    sx={{ display: 'block' }}
+                    sx={{ display: 'block', color: tokens.text.secondary }}
                 >
                     {previewFromMessage(replyingTo)}
                 </Typography>
             </Box>
-            <IconButton size="small" onClick={onCancel}>
+            <IconButton size="small" onClick={onCancel} sx={{ color: tokens.text.muted }}>
                 <CloseIcon fontSize="small" />
             </IconButton>
         </Box>
@@ -547,7 +564,6 @@ const ReplyPreview = ({ replyingTo, onCancel }) => {
 
 const EventChats = () => {
     const { user } = useAuth();
-    const theme = useTheme();
     const token = useMemo(() => localStorage.getItem('accessToken'), []);
 
     const [chats, setChats] = useState([]);
@@ -559,6 +575,7 @@ const EventChats = () => {
     const [hasMore, setHasMore] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [draft, setDraft] = useState('');
+    const [chatSearch, setChatSearch] = useState('');
     const [sending, setSending] = useState(false);
     const [replyingTo, setReplyingTo] = useState(null);
     const [typingUsers, setTypingUsers] = useState({}); // { userId: {name, timeoutId} }
@@ -571,6 +588,7 @@ const EventChats = () => {
     const selectedIdRef = useRef(null);
     const lastTypingSentRef = useRef(0);
     const atBottomRef = useRef(true);
+    const deferredChatSearch = useDeferredValue(chatSearch);
 
     const selectedChat = chats.find((c) => c.conversationId === selectedId);
 
@@ -864,6 +882,25 @@ const EventChats = () => {
 
     const totalUnread = chats.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 
+    const filteredChats = useMemo(() => {
+        const query = normalizeSearchText(deferredChatSearch);
+        if (!query) return chats;
+
+        return chats.filter((chat) => {
+            const searchHaystack = normalizeSearchText([
+                chat.eventTitle,
+                chat.lastMessageContent,
+                chat.venue,
+                chat.joined ? 'joined da tham gia' : 'join tham gia',
+                chat.closed ? 'closed da dong' : 'open dang mo',
+            ]
+                .filter(Boolean)
+                .join(' '));
+
+            return searchHaystack.includes(query);
+        });
+    }, [chats, deferredChatSearch]);
+
     const currentTypingNames = Object.values(typingUsers)
         .filter((t) => t.conversationId === selectedId)
         .map((t) => t.name)
@@ -900,39 +937,32 @@ const EventChats = () => {
 
     return (
         <Box sx={{ height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
-            <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ mb: 2 }}
-            >
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
-                        Event Group Chats
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Nhắn tin trong nhóm chat của các sự kiện bạn tổ chức hoặc tham gia · đồng bộ realtime với mobile.
-                    </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Chip
-                        size="small"
-                        icon={connected ? <OnlineIcon sx={{ fontSize: 14 }} /> : <OfflineIcon sx={{ fontSize: 14 }} />}
-                        label={connected ? 'Realtime' : 'Disconnected'}
-                        color={connected ? 'success' : 'default'}
-                        variant="outlined"
-                        sx={{ fontWeight: 500 }}
-                    />
-                    <Tooltip title="Refresh">
-                        <IconButton onClick={loadChats} size="small">
-                            <RefreshIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    {totalUnread > 0 && (
-                        <Badge color="error" badgeContent={totalUnread} max={99} />
-                    )}
-                </Stack>
-            </Stack>
+            <PageHeader
+                title="Event Group Chats"
+                subtitle="Nhắn tin trong nhóm chat của các sự kiện bạn tổ chức hoặc tham gia · đồng bộ realtime với mobile."
+                icon={<ChatIcon />}
+                dense
+                actions={
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Chip
+                            size="small"
+                            icon={connected ? <OnlineIcon sx={{ fontSize: 14 }} /> : <OfflineIcon sx={{ fontSize: 14 }} />}
+                            label={connected ? 'Realtime' : 'Disconnected'}
+                            color={connected ? 'success' : 'default'}
+                            variant="outlined"
+                            sx={{ fontWeight: 600 }}
+                        />
+                        <Tooltip title="Refresh">
+                            <IconButton onClick={loadChats} size="small">
+                                <RefreshIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        {totalUnread > 0 && (
+                            <Badge color="error" badgeContent={totalUnread} max={99} />
+                        )}
+                    </Stack>
+                }
+            />
 
             <Paper
                 elevation={0}
@@ -940,73 +970,195 @@ const EventChats = () => {
                     flex: 1,
                     display: 'flex',
                     overflow: 'hidden',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 3,
-                    bgcolor: 'background.paper',
+                    border: `1px solid ${tokens.borders.subtle}`,
+                    borderRadius: `${tokens.radius.xl}px`,
+                    bgcolor: tokens.surfaces.card,
+                    boxShadow: tokens.shadow.sm,
                 }}
             >
                 {/* Sidebar */}
                 <Box
                     sx={{
-                        width: 340,
-                        borderRight: '1px solid',
-                        borderColor: 'divider',
+                        width: 360,
+                        borderRight: `1px solid ${tokens.borders.subtle}`,
                         display: 'flex',
                         flexDirection: 'column',
-                        bgcolor: 'background.paper',
+                        bgcolor: tokens.surfaces.card,
                     }}
                 >
                     <Stack
                         direction="row"
                         alignItems="center"
-                        spacing={1}
+                        spacing={1.25}
                         sx={{
-                            p: 2,
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, transparent)`,
+                            px: 2.5,
+                            py: 2,
+                            borderBottom: `1px solid ${tokens.borders.subtle}`,
+                            background: tokens.gradient.primarySoft,
                         }}
                     >
                         <Box
                             sx={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: 1.5,
+                                width: 36,
+                                height: 36,
+                                borderRadius: `${tokens.radius.md}px`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText',
+                                background: tokens.gradient.primary,
+                                color: '#fff',
+                                boxShadow: tokens.shadow.primaryGlow,
                             }}
                         >
                             <GroupsIcon sx={{ fontSize: 20 }} />
                         </Box>
                         <Box sx={{ flex: 1 }}>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, color: tokens.text.strong }}>
                                 Nhóm Sự Kiện
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                {chats.length} nhóm
+                            <Typography variant="caption" sx={{ color: tokens.text.muted }}>
+                                {filteredChats.length}/{chats.length} nhóm
                             </Typography>
                         </Box>
                     </Stack>
 
+                    <Box
+                        sx={{
+                            px: 2,
+                            py: 1.75,
+                            borderBottom: `1px solid ${tokens.borders.subtle}`,
+                            bgcolor: tokens.surfaces.card,
+                        }}
+                    >
+                        <Stack spacing={1.25}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 1.5,
+                                    py: 1.15,
+                                    borderRadius: `${tokens.radius.md}px`,
+                                    bgcolor: tokens.palette.neutral[50],
+                                    border: `1px solid ${tokens.borders.subtle}`,
+                                    transition: `all ${tokens.motion.fast}`,
+                                    '&:focus-within': {
+                                        bgcolor: tokens.surfaces.card,
+                                        borderColor: tokens.palette.primary[500],
+                                        boxShadow: tokens.shadow.focus,
+                                    },
+                                }}
+                            >
+                                <SearchIcon sx={{ fontSize: 18, color: tokens.text.muted }} />
+                                <InputBase
+                                    value={chatSearch}
+                                    onChange={(e) => setChatSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && filteredChats.length > 0) {
+                                            e.preventDefault();
+                                            handleSelect(filteredChats[0]);
+                                        }
+                                    }}
+                                    placeholder="Tìm nhóm theo tên, preview, trạng thái..."
+                                    sx={{
+                                        flex: 1,
+                                        fontSize: 13,
+                                        '& input::placeholder': {
+                                            color: tokens.text.muted,
+                                            opacity: 1,
+                                        },
+                                    }}
+                                />
+                                {chatSearch.trim() && (
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setChatSearch('')}
+                                        sx={{ color: tokens.text.muted }}
+                                    >
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                )}
+                            </Box>
+
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
+                            >
+                                <Typography variant="caption" sx={{ color: tokens.text.muted, fontSize: '0.7rem' }}>
+                                    {chatSearch.trim()
+                                        ? `Tìm thấy ${filteredChats.length} kết quả`
+                                        : 'Gõ để lọc nhanh · Enter để mở đầu tiên'}
+                                </Typography>
+                                {totalUnread > 0 && (
+                                    <Chip
+                                        size="small"
+                                        label={`${totalUnread} chưa đọc`}
+                                        sx={{
+                                            height: 22,
+                                            fontSize: 11,
+                                            fontWeight: 700,
+                                            bgcolor: tokens.palette.primary[50],
+                                            color: tokens.palette.primary[700],
+                                            border: `1px solid ${tokens.palette.primary[200]}`,
+                                        }}
+                                    />
+                                )}
+                            </Stack>
+                        </Stack>
+                    </Box>
+
                     <Box sx={{ flex: 1, overflowY: 'auto' }}>
                         {loadingChats ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                                <CircularProgress size={24} />
+                            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                                <CircularProgress size={24} sx={{ color: tokens.palette.primary[500] }} />
                             </Box>
                         ) : chats.length === 0 ? (
-                            <Box sx={{ p: 4, textAlign: 'center' }}>
-                                <EventIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            <Box sx={{ p: 5, textAlign: 'center' }}>
+                                <Box
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: `${tokens.radius.lg}px`,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: tokens.palette.neutral[100],
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    <EventIcon sx={{ fontSize: 28, color: tokens.text.disabled }} />
+                                </Box>
+                                <Typography variant="body2" sx={{ color: tokens.text.secondary }}>
                                     Chưa có nhóm chat sự kiện nào.
                                 </Typography>
                             </Box>
+                        ) : filteredChats.length === 0 ? (
+                            <Box sx={{ p: 5, textAlign: 'center' }}>
+                                <Box
+                                    sx={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: `${tokens.radius.lg}px`,
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: tokens.palette.neutral[100],
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    <SearchIcon sx={{ fontSize: 28, color: tokens.text.disabled }} />
+                                </Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: tokens.text.strong }}>
+                                    Không tìm thấy nhóm phù hợp
+                                </Typography>
+                                <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: tokens.text.secondary }}>
+                                    Thử tên sự kiện hoặc xoá bớt từ khoá.
+                                </Typography>
+                            </Box>
                         ) : (
-                            <List disablePadding>
-                                {chats.map((chat) => {
+                            <List disablePadding sx={{ p: 1.5 }}>
+                                {filteredChats.map((chat) => {
                                     const isSelected = chat.conversationId === selectedId;
                                     const unread = chat.unreadCount || 0;
                                     return (
@@ -1017,15 +1169,31 @@ const EventChats = () => {
                                             sx={{
                                                 alignItems: 'flex-start',
                                                 py: 1.5,
-                                                px: 2,
-                                                borderBottom: '1px solid',
-                                                borderColor: 'divider',
-                                                gap: 1,
+                                                px: 1.75,
+                                                mb: 0.75,
+                                                border: `1px solid`,
+                                                borderColor: isSelected
+                                                    ? tokens.palette.primary[200]
+                                                    : tokens.borders.subtle,
+                                                borderRadius: `${tokens.radius.lg}px`,
+                                                gap: 1.25,
+                                                backgroundColor: isSelected
+                                                    ? tokens.palette.primary[50]
+                                                    : tokens.surfaces.card,
+                                                boxShadow: isSelected
+                                                    ? tokens.shadow.md
+                                                    : tokens.shadow.xs,
+                                                transition: `all ${tokens.motion.fast}`,
+                                                '&:hover': {
+                                                    bgcolor: isSelected
+                                                        ? tokens.palette.primary[50]
+                                                        : tokens.palette.neutral[50],
+                                                    borderColor: tokens.palette.primary[200],
+                                                    boxShadow: tokens.shadow.sm,
+                                                    transform: 'translateY(-1px)',
+                                                },
                                                 '&.Mui-selected': {
-                                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                                    '&:hover': {
-                                                        bgcolor: alpha(theme.palette.primary.main, 0.12),
-                                                    },
+                                                    bgcolor: tokens.palette.primary[50],
                                                 },
                                             }}
                                         >
@@ -1040,9 +1208,8 @@ const EventChats = () => {
                                                                     width: 12,
                                                                     height: 12,
                                                                     borderRadius: '50%',
-                                                                    bgcolor: 'text.disabled',
-                                                                    border: '2px solid',
-                                                                    borderColor: 'background.paper',
+                                                                    bgcolor: tokens.text.disabled,
+                                                                    border: `2px solid ${tokens.surfaces.card}`,
                                                                 }}
                                                             />
                                                         ) : null
@@ -1052,10 +1219,11 @@ const EventChats = () => {
                                                         src={chat.eventImageUrl}
                                                         variant="rounded"
                                                         sx={{
-                                                            bgcolor: 'primary.100',
-                                                            color: 'primary.700',
-                                                            width: 44,
-                                                            height: 44,
+                                                            bgcolor: tokens.palette.primary[100],
+                                                            color: tokens.palette.primary[700],
+                                                            width: 46,
+                                                            height: 46,
+                                                            borderRadius: `${tokens.radius.md}px`,
                                                         }}
                                                     >
                                                         <EventIcon />
@@ -1078,14 +1246,18 @@ const EventChats = () => {
                                                                 overflow: 'hidden',
                                                                 textOverflow: 'ellipsis',
                                                                 whiteSpace: 'nowrap',
+                                                                color: tokens.text.strong,
                                                             }}
                                                         >
                                                             {chat.eventTitle}
                                                         </Typography>
                                                         <Typography
                                                             variant="caption"
-                                                            color={unread > 0 ? 'primary.main' : 'text.secondary'}
-                                                            sx={{ fontWeight: unread > 0 ? 600 : 400 }}
+                                                            sx={{
+                                                                fontWeight: unread > 0 ? 700 : 400,
+                                                                color: unread > 0 ? tokens.palette.primary[600] : tokens.text.muted,
+                                                                flexShrink: 0,
+                                                            }}
                                                         >
                                                             {formatSidebarTime(chat.lastMessageAt)}
                                                         </Typography>
@@ -1096,17 +1268,17 @@ const EventChats = () => {
                                                         direction="row"
                                                         alignItems="center"
                                                         spacing={1}
-                                                        sx={{ mt: 0.25 }}
+                                                        sx={{ mt: 0.5 }}
                                                     >
                                                         <Typography
                                                             variant="caption"
-                                                            color={unread > 0 ? 'text.primary' : 'text.secondary'}
                                                             sx={{
                                                                 flex: 1,
                                                                 overflow: 'hidden',
                                                                 textOverflow: 'ellipsis',
                                                                 whiteSpace: 'nowrap',
                                                                 fontWeight: unread > 0 ? 600 : 400,
+                                                                color: unread > 0 ? tokens.text.primary : tokens.text.muted,
                                                             }}
                                                         >
                                                             {chat.lastMessageContent ||
@@ -1117,17 +1289,18 @@ const EventChats = () => {
                                                         {unread > 0 && (
                                                             <Box
                                                                 sx={{
-                                                                    minWidth: 20,
-                                                                    height: 20,
-                                                                    px: 0.75,
-                                                                    borderRadius: '10px',
-                                                                    bgcolor: 'primary.main',
-                                                                    color: 'primary.contrastText',
+                                                                    minWidth: 22,
+                                                                    height: 22,
+                                                                    px: 1,
+                                                                    borderRadius: tokens.radius.pill,
+                                                                    background: tokens.gradient.primary,
+                                                                    color: '#fff',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     justifyContent: 'center',
                                                                     fontSize: 11,
                                                                     fontWeight: 700,
+                                                                    boxShadow: tokens.shadow.primaryGlow,
                                                                 }}
                                                             >
                                                                 {unread > 99 ? '99+' : unread}
@@ -1145,7 +1318,14 @@ const EventChats = () => {
                 </Box>
 
                 {/* Chat panel */}
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        bgcolor: tokens.palette.neutral[50],
+                    }}
+                >
                     {!selectedChat ? (
                         <EmptyChat />
                     ) : (
@@ -1155,45 +1335,46 @@ const EventChats = () => {
                                 alignItems="center"
                                 spacing={1.5}
                                 sx={{
-                                    px: 2.5,
-                                    py: 1.5,
-                                    borderBottom: '1px solid',
-                                    borderColor: 'divider',
-                                    bgcolor: 'background.paper',
+                                    px: 3,
+                                    py: 1.75,
+                                    borderBottom: `1px solid ${tokens.borders.subtle}`,
+                                    bgcolor: tokens.surfaces.card,
+                                    boxShadow: tokens.shadow.xs,
                                 }}
                             >
                                 <Avatar
                                     src={selectedChat.eventImageUrl}
                                     variant="rounded"
                                     sx={{
-                                        bgcolor: 'primary.100',
-                                        color: 'primary.700',
-                                        width: 40,
-                                        height: 40,
+                                        bgcolor: tokens.palette.primary[100],
+                                        color: tokens.palette.primary[700],
+                                        width: 42,
+                                        height: 42,
+                                        borderRadius: `${tokens.radius.md}px`,
                                     }}
                                 >
                                     <EventIcon />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 700, color: tokens.text.strong }} noWrap>
                                         {selectedChat.eventTitle}
                                     </Typography>
-                                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                                        <Typography variant="caption" color="text.secondary">
+                                    <Stack direction="row" alignItems="center" spacing={0.75}>
+                                        <Typography variant="caption" sx={{ color: tokens.text.muted }}>
                                             {selectedChat.participantCount || 0} thành viên
                                         </Typography>
                                         {selectedChat.closed && (
                                             <>
-                                                <Box sx={{ width: 2, height: 2, bgcolor: 'text.disabled', borderRadius: '50%' }} />
-                                                <Typography variant="caption" color="error.main">
+                                                <Box sx={{ width: 3, height: 3, bgcolor: tokens.text.disabled, borderRadius: '50%' }} />
+                                                <Typography variant="caption" sx={{ color: tokens.palette.danger[600], fontWeight: 600 }}>
                                                     Đã đóng
                                                 </Typography>
                                             </>
                                         )}
                                         {currentTypingNames.length > 0 && (
                                             <>
-                                                <Box sx={{ width: 2, height: 2, bgcolor: 'text.disabled', borderRadius: '50%' }} />
-                                                <Typography variant="caption" color="primary.main" sx={{ fontStyle: 'italic' }}>
+                                                <Box sx={{ width: 3, height: 3, bgcolor: tokens.text.disabled, borderRadius: '50%' }} />
+                                                <Typography variant="caption" sx={{ fontStyle: 'italic', color: tokens.palette.primary[600] }}>
                                                     {currentTypingNames.length === 1
                                                         ? `${currentTypingNames[0]} đang nhập`
                                                         : `${currentTypingNames.length} người đang nhập`}
@@ -1211,45 +1392,62 @@ const EventChats = () => {
                                 sx={{
                                     flex: 1,
                                     overflowY: 'auto',
-                                    py: 2,
+                                    py: 2.5,
+                                    px: { xs: 1.5, md: 2.5 },
                                     position: 'relative',
                                 }}
                             >
-                                {loadingMore && (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
-                                        <CircularProgress size={18} />
-                                    </Box>
-                                )}
-                                {loadingMessages ? (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                                        <CircularProgress size={24} />
-                                    </Box>
-                                ) : messages.length === 0 ? (
-                                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Chưa có tin nhắn. Gửi tin đầu tiên nhé!
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    <Stack spacing={0.25}>
-                                        {renderedMessages.map((item) =>
-                                            item.type === 'separator' ? (
-                                                <DateSeparator key={item.key} date={item.date} />
-                                            ) : (
-                                                <MessageBubble
-                                                    key={item.key}
-                                                    message={item.message}
-                                                    isMe={item.isMe}
-                                                    showAvatar={item.showAvatar}
-                                                    showName={item.showName}
-                                                    onReply={setReplyingTo}
-                                                    onDelete={handleDelete}
-                                                />
-                                            ),
-                                        )}
-                                        <div ref={messagesEndRef} />
-                                    </Stack>
-                                )}
+                                <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto' }}>
+                                    {loadingMore && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                                            <CircularProgress size={18} sx={{ color: tokens.palette.primary[400] }} />
+                                        </Box>
+                                    )}
+                                    {loadingMessages ? (
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                                            <CircularProgress size={28} sx={{ color: tokens.palette.primary[500] }} />
+                                        </Box>
+                                    ) : messages.length === 0 ? (
+                                        <Box sx={{ textAlign: 'center', py: 8 }}>
+                                            <Box
+                                                sx={{
+                                                    width: 64,
+                                                    height: 64,
+                                                    borderRadius: `${tokens.radius.xl}px`,
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    background: tokens.gradient.primarySoft,
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <ChatIcon sx={{ fontSize: 28, color: tokens.palette.primary[500] }} />
+                                            </Box>
+                                            <Typography variant="body2" sx={{ color: tokens.text.secondary }}>
+                                                Chưa có tin nhắn. Gửi tin đầu tiên nhé!
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        <Stack spacing={0.75}>
+                                            {renderedMessages.map((item) =>
+                                                item.type === 'separator' ? (
+                                                    <DateSeparator key={item.key} date={item.date} />
+                                                ) : (
+                                                    <MessageBubble
+                                                        key={item.key}
+                                                        message={item.message}
+                                                        isMe={item.isMe}
+                                                        showAvatar={item.showAvatar}
+                                                        showName={item.showName}
+                                                        onReply={setReplyingTo}
+                                                        onDelete={handleDelete}
+                                                    />
+                                                ),
+                                            )}
+                                            <div ref={messagesEndRef} />
+                                        </Stack>
+                                    )}
+                                </Box>
 
                                 <Fade in={showScrollDown}>
                                     <IconButton
@@ -1257,14 +1455,13 @@ const EventChats = () => {
                                         size="small"
                                         sx={{
                                             position: 'sticky',
-                                            bottom: 8,
+                                            bottom: 12,
                                             left: '50%',
                                             ml: '-20px',
-                                            bgcolor: 'background.paper',
-                                            boxShadow: 2,
-                                            border: '1px solid',
-                                            borderColor: 'divider',
-                                            '&:hover': { bgcolor: 'grey.100' },
+                                            bgcolor: tokens.surfaces.card,
+                                            boxShadow: tokens.shadow.md,
+                                            border: `1px solid ${tokens.borders.subtle}`,
+                                            '&:hover': { bgcolor: tokens.palette.neutral[50] },
                                             zIndex: 2,
                                         }}
                                     >
@@ -1279,29 +1476,40 @@ const EventChats = () => {
                                     icon={false}
                                     sx={{
                                         borderRadius: 0,
-                                        borderTop: '1px solid',
-                                        borderColor: 'divider',
+                                        borderTop: `1px solid ${tokens.borders.subtle}`,
+                                        bgcolor: tokens.palette.info[50],
+                                        color: tokens.palette.info[700],
                                     }}
                                 >
                                     Nhóm chat đã đóng. Không thể gửi tin nhắn.
                                 </Alert>
                             ) : (
-                                <Box sx={{ bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider' }}>
+                                <Box
+                                    sx={{
+                                        bgcolor: tokens.surfaces.card,
+                                        borderTop: `1px solid ${tokens.borders.subtle}`,
+                                        boxShadow: `0 -2px 8px rgba(15,23,42,0.03)`,
+                                    }}
+                                >
                                     <ReplyPreview
                                         replyingTo={replyingTo}
                                         onCancel={() => setReplyingTo(null)}
                                     />
                                     <Stack
                                         direction="row"
-                                        spacing={0.5}
+                                        spacing={1}
                                         alignItems="flex-end"
-                                        sx={{ px: 1.5, py: 1 }}
+                                        sx={{ px: 2.5, py: 1.5 }}
                                     >
                                         <Tooltip title="Emoji">
                                             <IconButton
                                                 size="small"
                                                 onClick={(e) => setEmojiAnchor(e.currentTarget)}
-                                                sx={{ color: 'text.secondary' }}
+                                                sx={{
+                                                    color: tokens.text.muted,
+                                                    bgcolor: tokens.palette.neutral[100],
+                                                    '&:hover': { bgcolor: tokens.palette.neutral[200] },
+                                                }}
                                             >
                                                 <EmojiIcon />
                                             </IconButton>
@@ -1316,10 +1524,10 @@ const EventChats = () => {
                                             <Box
                                                 sx={{
                                                     display: 'grid',
-                                                    gridTemplateColumns: 'repeat(8, 32px)',
-                                                    gap: 0.25,
-                                                    p: 1,
-                                                    maxWidth: 280,
+                                                    gridTemplateColumns: 'repeat(8, 36px)',
+                                                    gap: 0.5,
+                                                    p: 1.5,
+                                                    maxWidth: 320,
                                                 }}
                                             >
                                                 {EMOJIS.map((emoji) => (
@@ -1328,10 +1536,12 @@ const EventChats = () => {
                                                         size="small"
                                                         onClick={() => handleEmojiPick(emoji)}
                                                         sx={{
-                                                            width: 32,
-                                                            height: 32,
-                                                            fontSize: 18,
+                                                            width: 36,
+                                                            height: 36,
+                                                            fontSize: 20,
                                                             p: 0,
+                                                            borderRadius: `${tokens.radius.sm}px`,
+                                                            '&:hover': { bgcolor: tokens.palette.neutral[100] },
                                                         }}
                                                     >
                                                         {emoji}
@@ -1354,17 +1564,21 @@ const EventChats = () => {
                                             maxRows={5}
                                             sx={{
                                                 flex: 1,
-                                                px: 1.75,
-                                                py: 1,
-                                                borderRadius: 3,
-                                                bgcolor: 'grey.100',
+                                                px: 2.5,
+                                                py: 1.25,
+                                                borderRadius: `${tokens.radius.xl}px`,
+                                                bgcolor: tokens.palette.neutral[50],
                                                 fontSize: 14,
-                                                border: '1px solid',
-                                                borderColor: 'transparent',
-                                                transition: 'border-color 0.15s',
+                                                border: `1px solid ${tokens.borders.subtle}`,
+                                                transition: `all ${tokens.motion.fast}`,
                                                 '&:focus-within': {
-                                                    borderColor: 'primary.main',
-                                                    bgcolor: 'background.paper',
+                                                    borderColor: tokens.palette.primary[500],
+                                                    bgcolor: tokens.surfaces.card,
+                                                    boxShadow: tokens.shadow.focus,
+                                                },
+                                                '& input::placeholder, & textarea::placeholder': {
+                                                    color: tokens.text.muted,
+                                                    opacity: 1,
                                                 },
                                             }}
                                         />
@@ -1374,23 +1588,29 @@ const EventChats = () => {
                                                     onClick={handleSend}
                                                     disabled={!draft.trim() || sending}
                                                     sx={{
-                                                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                                                        color: 'primary.contrastText',
-                                                        width: 40,
-                                                        height: 40,
+                                                        background: tokens.gradient.primary,
+                                                        color: '#fff',
+                                                        width: 44,
+                                                        height: 44,
+                                                        borderRadius: `${tokens.radius.lg}px`,
+                                                        boxShadow: tokens.shadow.primaryGlow,
+                                                        transition: `all ${tokens.motion.fast}`,
                                                         '&:hover': {
-                                                            background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                                                            background: tokens.gradient.primary,
+                                                            filter: 'brightness(1.1)',
+                                                            boxShadow: tokens.shadow.lg,
                                                         },
                                                         '&:disabled': {
-                                                            background: 'grey.300',
-                                                            color: 'grey.500',
+                                                            background: tokens.palette.neutral[200],
+                                                            color: tokens.text.disabled,
+                                                            boxShadow: 'none',
                                                         },
                                                     }}
                                                 >
                                                     {sending ? (
                                                         <CircularProgress
                                                             size={18}
-                                                            sx={{ color: 'primary.contrastText' }}
+                                                            sx={{ color: '#fff' }}
                                                         />
                                                     ) : (
                                                         <SendIcon fontSize="small" />

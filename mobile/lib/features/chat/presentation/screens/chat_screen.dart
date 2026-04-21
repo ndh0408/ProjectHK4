@@ -65,6 +65,23 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
   final ApiService _api;
   final String _conversationId;
 
+  List<ChatMessage> _sortedUniqueMessages(Iterable<ChatMessage> messages) {
+    final byId = <String, ChatMessage>{};
+    for (final message in messages) {
+      byId[message.id] = message;
+    }
+    final merged = byId.values.toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return merged;
+  }
+
+  void _upsertMessage(ChatMessage message, {bool updateSending = false}) {
+    state = state.copyWith(
+      messages: _sortedUniqueMessages([...state.messages, message]),
+      isSending: updateSending ? false : state.isSending,
+    );
+  }
+
   Future<void> loadMessages({bool refresh = false}) async {
     if (state.isLoading) return;
     if (!refresh && !state.hasMore) return;
@@ -79,7 +96,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
 
       final allMessages = refresh
           ? newMessages
-          : [...newMessages, ...state.messages];
+          : _sortedUniqueMessages([...newMessages, ...state.messages]);
 
       state = state.copyWith(
         messages: allMessages,
@@ -111,10 +128,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
         replyToId: replyToId,
       );
 
-      state = state.copyWith(
-        messages: [...state.messages, message],
-        isSending: false,
-      );
+      _upsertMessage(message, updateSending: true);
       return true;
     } catch (e) {
       state = state.copyWith(isSending: false);
@@ -132,10 +146,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
         replyToId: replyToId,
       );
 
-      state = state.copyWith(
-        messages: [...state.messages, message],
-        isSending: false,
-      );
+      _upsertMessage(message, updateSending: true);
       return true;
     } catch (e) {
       state = state.copyWith(isSending: false);
@@ -175,9 +186,7 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
   }
 
   void addMessageFromEvent(ChatMessage message) {
-    final exists = state.messages.any((m) => m.id == message.id);
-    if (exists) return;
-    state = state.copyWith(messages: [...state.messages, message]);
+    _upsertMessage(message);
   }
 
   void markMessageDeleted(String messageId) {
@@ -218,20 +227,29 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scrollController = ScrollController();
   final _messageController = TextEditingController();
+  final _messageSearchController = TextEditingController();
   final _focusNode = FocusNode();
+  final _messageSearchFocusNode = FocusNode();
   final _imagePicker = ImagePicker();
   ChatMessage? _replyingTo;
   bool _showEmojiPicker = false;
+  bool _showMessageSearch = false;
+  bool _isLoadingConversationDetails = false;
   DateTime? _lastTypingSent;
-  List<String> _typingUserNames = [];
+  final List<String> _typingUserNames = [];
+  Conversation? _conversation;
+  Future<Conversation?>? _conversationLoadFuture;
+  String _messageSearchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    _conversation = widget.conversation;
     _scrollController.addListener(_onScroll);
     _messageController.addListener(_onTextChanged);
     Future.microtask(() async {
       ref.read(webSocketServiceProvider).subscribeToConversation(widget.conversationId);
+      await _loadConversationDetailsIfNeeded();
       await ref
           .read(chatMessagesProvider(widget.conversationId).notifier)
           .loadMessages(refresh: true);
@@ -258,7 +276,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (_) {}
     _scrollController.dispose();
     _messageController.dispose();
+    _messageSearchController.dispose();
     _focusNode.dispose();
+    _messageSearchFocusNode.dispose();
     super.dispose();
   }
 
@@ -275,6 +295,95 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _scrollController.position.minScrollExtent + 200) {
       ref.read(chatMessagesProvider(widget.conversationId).notifier).loadMessages();
     }
+  }
+
+  bool _needsConversationDetails(Conversation? conversation) {
+    if (conversation == null) return true;
+    if (conversation.participants == null) return true;
+    if (conversation.isGroup &&
+        conversation.participantCount != null &&
+        conversation.participantCount! > 0 &&
+        conversation.participants!.isEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<Conversation?> _loadConversationDetailsIfNeeded({
+    bool force = false,
+    bool showError = false,
+  }) async {
+    final current = _conversation ?? widget.conversation;
+    final shouldLoad = force || _needsConversationDetails(current);
+    if (!shouldLoad) return current;
+    if (_conversationLoadFuture != null) return _conversationLoadFuture!;
+
+    final future = _fetchConversationDetails(showError: showError);
+    _conversationLoadFuture = future;
+    try {
+      return await future;
+    } finally {
+      _conversationLoadFuture = null;
+    }
+  }
+
+  Future<Conversation?> _fetchConversationDetails({bool showError = false}) async {
+    if (mounted) {
+      setState(() => _isLoadingConversationDetails = true);
+    }
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      final conversation = await api.getConversation(widget.conversationId);
+      if (mounted) {
+        setState(() => _conversation = conversation);
+      }
+      return conversation;
+    } catch (e) {
+      if (showError && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load chat details: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return _conversation ?? widget.conversation;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingConversationDetails = false);
+      }
+    }
+  }
+
+  void _openMessageSearch() {
+    if (_showEmojiPicker) {
+      setState(() => _showEmojiPicker = false);
+    }
+    setState(() => _showMessageSearch = true);
+    Future.microtask(_messageSearchFocusNode.requestFocus);
+  }
+
+  void _closeMessageSearch() {
+    _messageSearchController.clear();
+    setState(() {
+      _showMessageSearch = false;
+      _messageSearchQuery = '';
+    });
+  }
+
+  List<ChatMessage> _filterMessages(List<ChatMessage> messages) {
+    final query = _messageSearchQuery.trim().toLowerCase();
+    if (query.isEmpty) return messages;
+
+    return messages.where((message) {
+      final content = message.content.toLowerCase();
+      final senderName = message.sender?.fullName.toLowerCase() ?? '';
+      final replyContent = message.replyTo?.content.toLowerCase() ?? '';
+      return content.contains(query) ||
+          senderName.contains(query) ||
+          replyContent.contains(query);
+    }).toList();
   }
 
   void _scrollToBottom() {
@@ -492,16 +601,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _showChatInfo(Conversation? conversation) {
-    if (conversation == null) return;
+  Future<void> _showChatInfo(Conversation? conversation) async {
+    final resolved = await _loadConversationDetailsIfNeeded(
+      force: conversation == null || _needsConversationDetails(conversation),
+      showError: true,
+    );
+    final current = resolved ?? conversation;
+    if (!mounted || current == null) return;
 
-    if (conversation.type == ConversationType.direct) {
-      final otherUser = conversation.participants?.firstOrNull;
+    if (current.type == ConversationType.direct) {
+      final otherUser = current.participants?.firstOrNull;
       if (otherUser != null) {
         context.push('/profile/${otherUser.userId}');
       }
     } else {
-      _showGroupInfoSheet(conversation);
+      _showGroupInfoSheet(current);
     }
   }
 
@@ -601,7 +715,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               const SizedBox(height: 16),
               const Divider(),
               Expanded(
-                child: conversation.participants != null
+                child: conversation.participants != null &&
+                        conversation.participants!.isNotEmpty
                     ? ListView.builder(
                         controller: scrollController,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -671,44 +786,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _handleMenuAction(String action, Conversation? conversation) {
+  Future<void> _handleMenuAction(String action, Conversation? conversation) async {
     switch (action) {
       case 'view_profile':
-        final otherUser = conversation?.participants?.firstOrNull;
+        final resolved = await _loadConversationDetailsIfNeeded(
+          force: conversation == null || _needsConversationDetails(conversation),
+          showError: true,
+        );
+        final otherUser = (resolved ?? conversation)?.participants?.firstOrNull;
+        if (!mounted) return;
         if (otherUser != null) {
           context.push('/profile/${otherUser.userId}');
         }
         break;
       case 'view_members':
-        if (conversation != null) {
-          _showGroupInfoSheet(conversation);
+        final resolved = await _loadConversationDetailsIfNeeded(
+          force: true,
+          showError: true,
+        );
+        final current = resolved ?? conversation;
+        if (current != null) {
+          _showGroupInfoSheet(current);
         }
         break;
       case 'mute':
-        _toggleMute(true);
+        await _toggleMute(true);
         break;
       case 'unmute':
-        _toggleMute(false);
+        await _toggleMute(false);
         break;
       case 'search':
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.searchComingSoon)),
-        );
+        _openMessageSearch();
         break;
       case 'media_gallery':
         _showMediaGallery();
         break;
       case 'block_user':
-        final otherUser = conversation?.participants?.firstOrNull;
+        final resolved = await _loadConversationDetailsIfNeeded(
+          force: conversation == null || _needsConversationDetails(conversation),
+          showError: true,
+        );
+        final otherUser = (resolved ?? conversation)?.participants?.firstOrNull;
         if (otherUser != null) {
-          _confirmBlockUser(otherUser.userId, otherUser.fullName);
+          await _confirmBlockUser(otherUser.userId, otherUser.fullName);
         }
         break;
       case 'leave_group':
-        _confirmLeaveEventGroup(conversation);
+        await _confirmLeaveEventGroup(conversation);
         break;
       case 'clear_chat':
-        _confirmClearChat();
+        await _confirmClearChat();
         break;
     }
   }
@@ -762,14 +889,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final api = ref.read(apiServiceProvider);
       await api.muteConversation(widget.conversationId, mute);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(mute ? 'Chat muted' : 'Chat unmuted'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      setState(() {
+        final current = _conversation ?? widget.conversation;
+        if (current != null) {
+          _conversation = current.copyWith(muted: mute);
+        }
+      });
+      await ref.read(conversationsProvider.notifier).refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mute ? l10n.muteLabel : l10n.unmuteLabel),
+          backgroundColor: AppColors.success,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -971,7 +1106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(chatMessagesProvider(widget.conversationId));
     final currentUser = ref.watch(currentUserProvider);
-    final conversation = widget.conversation;
+    final conversation = _conversation ?? widget.conversation;
 
     ref.listen(chatEventStreamProvider, (previous, next) {
       next.whenData((event) {
@@ -1204,6 +1339,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: Column(
         children: [
+          if (_isLoadingConversationDetails && conversation == null)
+            const LinearProgressIndicator(minHeight: 2),
+          if (_showMessageSearch) _buildMessageSearchBar(),
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -1211,11 +1349,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   setState(() => _showEmojiPicker = false);
                 }
               },
-              child: state.messages.isEmpty && state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : state.messages.isEmpty
-                      ? _buildEmptyState()
-                      : _buildMessagesList(state, currentUser?.id),
+              child: _buildMessagesContent(state, currentUser?.id),
             ),
           ),
 
@@ -1291,11 +1425,108 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildMessagesList(ChatMessagesState state, String? currentUserId) {
+  Widget _buildMessagesContent(ChatMessagesState state, String? currentUserId) {
+    if (state.messages.isEmpty && state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.messages.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    final filteredMessages = _filterMessages(state.messages);
+    if (_showMessageSearch && filteredMessages.isEmpty) {
+      return _buildMessageSearchEmptyState();
+    }
+
+    return _buildMessagesList(
+      state,
+      currentUserId,
+      filteredMessages,
+    );
+  }
+
+  Widget _buildMessageSearchBar() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _messageSearchController,
+                focusNode: _messageSearchFocusNode,
+                textInputAction: TextInputAction.search,
+                onChanged: (value) {
+                  setState(() => _messageSearchQuery = value);
+                },
+                decoration: InputDecoration(
+                  hintText: l10n.searchInChat,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _messageSearchQuery.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _messageSearchController.clear();
+                            setState(() => _messageSearchQuery = '');
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: _closeMessageSearch,
+              child: Text(l10n.cancel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageSearchEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(
+            Icons.search_off,
+            size: 52,
+            color: AppColors.textLight,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'No matching messages',
+            style: TextStyle(
+              fontSize: 15,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessagesList(
+    ChatMessagesState state,
+    String? currentUserId,
+    List<ChatMessage> visibleMessages,
+  ) {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: state.messages.length + (state.isLoading ? 1 : 0),
+      itemCount: visibleMessages.length + (state.isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (state.isLoading && index == 0) {
           return const Padding(
@@ -1313,9 +1544,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         final adjustedIndex = state.isLoading ? index - 1 : index;
         if (adjustedIndex < 0) return const SizedBox.shrink();
 
-        final message = state.messages[adjustedIndex];
+        final message = visibleMessages[adjustedIndex];
         final isMe = message.sender?.id == currentUserId;
-        final showDateHeader = _shouldShowDateHeader(adjustedIndex, state.messages);
+        final showDateHeader = _shouldShowDateHeader(adjustedIndex, visibleMessages);
 
         return Column(
           children: [
@@ -1363,7 +1594,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildReplyPreview() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         border: Border(
@@ -1373,6 +1604,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       child: Row(
         children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.reply_rounded,
+              size: 16,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1634,13 +1879,13 @@ class _MessageBubble extends StatelessWidget {
                       children: [
                         if (message.replyTo != null) ...[
                           Container(
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+                            margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: isMe
-                                  ? AppColors.textOnPrimary.withValues(alpha: 0.2)
+                                  ? AppColors.textOnPrimary.withValues(alpha: 0.18)
                                   : AppColors.surfaceVariant,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border(
                                 left: BorderSide(
                                   color: isMe ? AppColors.textOnPrimary : AppColors.primary,
@@ -1651,14 +1896,33 @@ class _MessageBubble extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  message.replyTo!.senderName ?? 'Unknown',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: isMe ? AppColors.textOnPrimary : AppColors.primary,
-                                  ),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.reply_rounded,
+                                      size: 12,
+                                      color: isMe
+                                          ? AppColors.textOnPrimary
+                                          : AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        message.replyTo!.senderName,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: isMe
+                                              ? AppColors.textOnPrimary
+                                              : AppColors.primary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                const SizedBox(height: 3),
                                 Text(
                                   message.replyTo!.content,
                                   style: TextStyle(

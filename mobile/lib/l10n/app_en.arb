@@ -643,6 +643,18 @@
   "@eventChatsSubtitle": {
     "description": "Subheader in event chats tab"
   },
+  "searchEventChatsHint": "Search event groups...",
+  "@searchEventChatsHint": {
+    "description": "Search input hint in event chats tab"
+  },
+  "eventChatsSearchEmpty": "No matching event groups",
+  "@eventChatsSearchEmpty": {
+    "description": "Empty state title when event chat search has no results"
+  },
+  "eventChatsSearchEmptySubtitle": "Try a different event name, venue, or keyword",
+  "@eventChatsSearchEmptySubtitle": {
+    "description": "Empty state subtitle when event chat search has no results"
+  },
   "joinEventChat": "Join",
   "@joinEventChat": {
     "description": "Join event group chat button"

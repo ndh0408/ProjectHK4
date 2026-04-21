@@ -650,6 +650,14 @@ class ApiService {
     return PaginatedResponse.fromJson(data, Conversation.fromJson);
   }
 
+  Future<Conversation> getConversation(String conversationId) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/user/chat/conversations/$conversationId',
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Conversation.fromJson(data);
+  }
+
   Future<Conversation> getEventChat(String eventId) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/chat/conversations/event/$eventId',

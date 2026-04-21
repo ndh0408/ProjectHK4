@@ -8,14 +8,11 @@ abstract final class ApiConstants {
     return 'localhost';
   }
 
-  static String get baseUrl => 'http://${_host}:8080/api';
-  // Spring endpoint is registered with .withSockJS(), so the raw-WebSocket
-  // path is /ws/websocket. /ws alone serves SockJS info/transport pages
-  // (HTTP 200 on GET) and rejects native WebSocket upgrades. On web we still
-  // use SockJS via StompConfig.sockJS, which expects the /ws base path.
-  static String get wsBaseUrl => kIsWeb
-      ? 'http://${_host}:8080/ws'
-      : 'ws://${_host}:8080/ws/websocket';
+  static String get baseUrl => 'http://$_host:8080/api';
+  // Spring endpoint is registered with .withSockJS(), and both notification
+  // and chat clients use SockJS transport. The client therefore expects the
+  // HTTP endpoint base rather than a raw ws:// URL.
+  static String get wsBaseUrl => 'http://$_host:8080/ws';
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
 

@@ -36,6 +36,27 @@ String _formatTimeHelper(DateTime? dateTime) {
   return '${dateTime.day}/${dateTime.month}';
 }
 
+String _normalizeEventChatSearch(String value) {
+  var normalized = value.toLowerCase().trim();
+  const replacements = <String, String>{
+    'a': 'àáạảãâầấậẩẫăằắặẳẵ',
+    'e': 'èéẹẻẽêềếệểễ',
+    'i': 'ìíịỉĩ',
+    'o': 'òóọỏõôồốộổỗơờớợởỡ',
+    'u': 'ùúụủũưừứựửữ',
+    'y': 'ỳýỵỷỹ',
+    'd': 'đ',
+  };
+
+  replacements.forEach((ascii, accentedChars) {
+    for (final char in accentedChars.split('')) {
+      normalized = normalized.replaceAll(char, ascii);
+    }
+  });
+
+  return normalized;
+}
+
 class AlertsScreen extends ConsumerStatefulWidget {
   const AlertsScreen({super.key});
 
@@ -48,12 +69,16 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
   late TabController _tabController;
   final _scrollController = ScrollController();
   final _messageController = TextEditingController();
+  final _chatSearchController = TextEditingController();
+  final _eventChatSearchController = TextEditingController();
   final _focusNode = FocusNode();
   final _imagePicker = ImagePicker();
   bool _showEmojiPicker = false;
   String? _selectedUserId;
   String? _selectedUserName;
   String? _selectedEventId;
+  String _chatSearchQuery = '';
+  String _eventChatSearchQuery = '';
 
   @override
   void initState() {
@@ -78,6 +103,8 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     _tabController.dispose();
     _scrollController.dispose();
     _messageController.dispose();
+    _chatSearchController.dispose();
+    _eventChatSearchController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -711,8 +738,37 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     ConversationsState conversationsState,
     NotificationsState notificationsState,
   ) {
+    final normalizedQuery = _normalizeEventChatSearch(_chatSearchQuery);
     final hasData = userQuestionGroups.isNotEmpty ||
         conversationsState.conversations.isNotEmpty;
+    final filteredQuestionEntries = normalizedQuery.isEmpty
+        ? userQuestionGroups.entries.toList()
+        : userQuestionGroups.entries.where((entry) {
+            final notifications = entry.value;
+            final latestNotification = notifications.first;
+            final haystack = _normalizeEventChatSearch([
+              latestNotification.senderName ?? 'User',
+              latestNotification.body,
+              latestNotification.relatedEventId,
+            ].whereType<String>().join(' '));
+            return haystack.contains(normalizedQuery);
+          }).toList();
+    final filteredConversations = normalizedQuery.isEmpty
+        ? conversationsState.conversations
+        : conversationsState.conversations.where((conversation) {
+            final haystack = _normalizeEventChatSearch([
+              conversation.displayName,
+              conversation.lastMessageContent,
+              conversation.eventTitle,
+              conversation.participants
+                      ?.map((participant) => participant.fullName)
+                      .join(' ') ??
+                  '',
+            ].whereType<String>().join(' '));
+            return haystack.contains(normalizedQuery);
+          }).toList();
+    final hasFilteredData =
+        filteredQuestionEntries.isNotEmpty || filteredConversations.isNotEmpty;
 
     if (!hasData && (conversationsState.isLoading || notificationsState.isLoading)) {
       return const Center(child: CircularProgressIndicator());
@@ -729,7 +785,96 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
       },
       child: ListView(
         children: [
-          ...userQuestionGroups.entries.map((entry) {
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border(
+                bottom: BorderSide(color: AppColors.divider, width: 0.5),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _chatSearchController,
+                  onChanged: (value) {
+                    setState(() => _chatSearchQuery = value);
+                  },
+                  textInputAction: TextInputAction.search,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.searchInChat,
+                    hintStyle: TextStyle(color: AppColors.textLight),
+                    prefixIcon:
+                        const Icon(Icons.search, color: AppColors.textLight),
+                    suffixIcon: _chatSearchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              _chatSearchController.clear();
+                              setState(() => _chatSearchQuery = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppColors.surfaceVariant,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                if (_chatSearchQuery.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '${filteredQuestionEntries.length + filteredConversations.length} kết quả',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (!hasFilteredData)
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.45,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    size: 46,
+                    color: AppColors.textLight,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Không tìm thấy cuộc trò chuyện phù hợp',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Thử tên người dùng hoặc nội dung tin nhắn khác',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textLight,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ...filteredQuestionEntries.map((entry) {
             final senderId = entry.key;
             final notifications = entry.value;
             final latestNotification = notifications.first;
@@ -756,7 +901,7 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
             );
           }),
 
-          ...conversationsState.conversations.map((conversation) {
+          ...filteredConversations.map((conversation) {
             return _ConversationTile(
               conversation: conversation,
               timeText: _formatTimeHelper(conversation.lastMessageAt),
@@ -1007,6 +1152,19 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
   Widget _buildEventChatsTab() {
     final state = ref.watch(eventChatsProvider);
     final l10n = AppLocalizations.of(context)!;
+    final normalizedQuery = _normalizeEventChatSearch(_eventChatSearchQuery);
+    final filteredChats = normalizedQuery.isEmpty
+        ? state.chats
+        : state.chats.where((chat) {
+            final haystack = _normalizeEventChatSearch([
+              chat.eventTitle,
+              chat.venue,
+              chat.lastMessageContent,
+              chat.joined ? 'joined da tham gia' : 'join tham gia',
+              chat.closed ? 'closed da dong' : 'open dang mo',
+            ].whereType<String>().join(' '));
+            return haystack.contains(normalizedQuery);
+          }).toList();
 
     if (state.isLoading && state.chats.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -1033,46 +1191,125 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
           decoration: BoxDecoration(
             color: AppColors.surface,
             border: Border(
               bottom: BorderSide(color: AppColors.divider, width: 0.5),
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  l10n.eventChatsSubtitle,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
+              Text(
+                l10n.eventChatsSubtitle,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _eventChatSearchController,
+                onChanged: (value) {
+                  setState(() => _eventChatSearchQuery = value);
+                },
+                textInputAction: TextInputAction.search,
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: l10n.searchEventChatsHint,
+                  hintStyle: TextStyle(color: AppColors.textLight),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.textLight),
+                  suffixIcon: _eventChatSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            _eventChatSearchController.clear();
+                            setState(() => _eventChatSearchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppColors.surfaceVariant,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
+              if (_eventChatSearchQuery.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${filteredChats.length}/${state.chats.length} nhóm',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => ref.read(eventChatsProvider.notifier).refresh(),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-              itemCount: state.chats.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final chat = state.chats[index];
-                final isJoining = state.joiningEventId == chat.eventId;
-                return _EventChatTile(
-                  chat: chat,
-                  isJoining: isJoining,
-                  onJoin: () => _joinEventChat(chat),
-                  onOpen: () => _openEventChat(chat),
-                  onLeave: () => _confirmLeaveEventChat(chat),
-                );
-              },
-            ),
+            child: filteredChats.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.48,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 48,
+                              color: AppColors.textLight,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.eventChatsSearchEmpty,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.eventChatsSearchEmptySubtitle,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textLight,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                    itemCount: filteredChats.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final chat = filteredChats[index];
+                      final isJoining = state.joiningEventId == chat.eventId;
+                      return _EventChatTile(
+                        chat: chat,
+                        isJoining: isJoining,
+                        onJoin: () => _joinEventChat(chat),
+                        onOpen: () => _openEventChat(chat),
+                        onLeave: () => _confirmLeaveEventChat(chat),
+                      );
+                    },
+                  ),
           ),
         ),
       ],

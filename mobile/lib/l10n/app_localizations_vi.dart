@@ -1047,6 +1047,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Mỗi sự kiện bạn đã đăng ký có một nhóm chat riêng';
 
   @override
+  String get searchEventChatsHint => 'Tìm nhóm chat sự kiện...';
+
+  @override
+  String get eventChatsSearchEmpty => 'Không tìm thấy nhóm phù hợp';
+
+  @override
+  String get eventChatsSearchEmptySubtitle =>
+      'Thử tên sự kiện, địa điểm hoặc từ khoá khác';
+
+  @override
   String get joinEventChat => 'Tham gia';
 
   @override
