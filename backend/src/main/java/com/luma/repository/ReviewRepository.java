@@ -19,6 +19,9 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     @Query("SELECT r FROM Review r WHERE r.event = :event AND (r.flagged = false OR r.toxicityScore < 80) ORDER BY r.createdAt DESC")
     Page<Review> findByEventOrderByCreatedAtDesc(@Param("event") Event event, Pageable pageable);
 
+    @Query("SELECT r FROM Review r WHERE r.event = :event AND (r.flagged = false OR r.toxicityScore < 80 OR r.user = :viewer) ORDER BY r.createdAt DESC")
+    Page<Review> findByEventVisibleTo(@Param("event") Event event, @Param("viewer") User viewer, Pageable pageable);
+
     Page<Review> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
     @Query("SELECT r FROM Review r WHERE r.event = :event ORDER BY r.createdAt DESC")

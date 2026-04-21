@@ -880,7 +880,8 @@ class ApiService {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/certificates/registration/$registrationId',
     );
-    return Certificate.fromJson(response);
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Certificate.fromJson(data);
   }
 
   Future<List<int>> downloadCertificate(String certificateId) async {
@@ -891,7 +892,8 @@ class ApiService {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/certificates/registration/$registrationId/send-email',
     );
-    return Certificate.fromJson(response);
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Certificate.fromJson(data);
   }
 
   Future<Registration> checkInRegistration(String registrationId) async {

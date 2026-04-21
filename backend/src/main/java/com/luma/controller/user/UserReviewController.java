@@ -49,8 +49,12 @@ public class UserReviewController {
     @Operation(summary = "Get reviews for an event")
     public ResponseEntity<ApiResponse<PageResponse<ReviewResponse>>> getEventReviews(
             @PathVariable UUID eventId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(reviewService.getEventReviews(eventId, pageable)));
+        User viewer = userDetails != null
+                ? userService.getEntityByEmail(userDetails.getUsername())
+                : null;
+        return ResponseEntity.ok(ApiResponse.success(reviewService.getEventReviews(eventId, viewer, pageable)));
     }
 
     @GetMapping("/events/{eventId}/can-review")

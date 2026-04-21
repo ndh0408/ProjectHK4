@@ -113,10 +113,17 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getEventReviews(UUID eventId, Pageable pageable) {
+        return getEventReviews(eventId, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ReviewResponse> getEventReviews(UUID eventId, User viewer, Pageable pageable) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        Page<Review> reviews = reviewRepository.findByEventOrderByCreatedAtDesc(event, pageable);
+        Page<Review> reviews = viewer != null
+                ? reviewRepository.findByEventVisibleTo(event, viewer, pageable)
+                : reviewRepository.findByEventOrderByCreatedAtDesc(event, pageable);
 
         return PageResponse.<ReviewResponse>builder()
                 .content(reviews.map(ReviewResponse::fromEntity).getContent())

@@ -65,6 +65,11 @@ public class CouponService {
 
     @Transactional(readOnly = true)
     public CouponValidationResponse validateCoupon(String code, BigDecimal orderAmount, User user, UUID eventId) {
+        return validateCoupon(code, orderAmount, user, eventId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public CouponValidationResponse validateCoupon(String code, BigDecimal orderAmount, User user, UUID eventId, UUID registrationId) {
         Coupon coupon = couponRepository.findActiveByCode(code.toUpperCase())
                 .orElse(null);
 
@@ -120,6 +125,16 @@ public class CouponService {
 
         if (coupon.getMaxUsagePerUser() != null) {
             long userUsage = couponUsageRepository.countByCouponAndUser(coupon, user);
+            // When re-validating a coupon that is already attached to the
+            // registration we are about to pay for (e.g. user tapped Retry),
+            // the existing usage row shouldn't count against the per-user
+            // quota or we would block the very same checkout we just started.
+            if (registrationId != null) {
+                var existing = couponUsageRepository.findByRegistrationId(registrationId);
+                if (existing.isPresent() && existing.get().getCoupon().getId().equals(coupon.getId())) {
+                    userUsage = Math.max(0, userUsage - 1);
+                }
+            }
             if (userUsage >= coupon.getMaxUsagePerUser()) {
                 return CouponValidationResponse.builder()
                         .valid(false)
@@ -151,8 +166,18 @@ public class CouponService {
             throw new BadRequestException("Coupon is no longer valid");
         }
 
-        if (couponUsageRepository.findByRegistrationId(registration.getId()).isPresent()) {
-            throw new BadRequestException("A coupon has already been applied to this registration");
+        // Idempotent for retries & coupon swaps while the registration is still
+        // pending payment: reuse the existing usage if the same code is being
+        // re-applied, or replace it if the user picked a different coupon.
+        var existingUsage = couponUsageRepository.findByRegistrationId(registration.getId());
+        if (existingUsage.isPresent()) {
+            CouponUsage prior = existingUsage.get();
+            if (prior.getCoupon().getId().equals(coupon.getId())) {
+                return prior;
+            }
+            couponRepository.decrementUsedCount(prior.getCoupon().getId());
+            couponUsageRepository.delete(prior);
+            couponUsageRepository.flush();
         }
 
         BigDecimal orderAmount = getOrderAmount(registration);

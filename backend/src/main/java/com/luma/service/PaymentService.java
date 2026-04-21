@@ -104,7 +104,7 @@ public class PaymentService {
         BigDecimal totalPrice = getActualPrice(registration);
 
         if (couponCode != null && !couponCode.isBlank()) {
-            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId());
+            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId(), registrationId);
             if (couponResult.isValid()) {
                 couponService.applyCoupon(couponCode, registration, user);
                 totalPrice = couponResult.getFinalAmount();
@@ -124,12 +124,18 @@ public class PaymentService {
             throw new BadRequestException("This event is free and doesn't require payment");
         }
 
+        long amountInCents = totalPrice.multiply(BigDecimal.valueOf(100)).longValue();
+
         if (paymentRepository.existsByRegistrationId(registrationId)) {
             Payment existingPayment = paymentRepository.findByRegistrationId(registrationId).get();
             if (existingPayment.getStatus() == PaymentStatus.SUCCEEDED) {
                 throw new BadRequestException("Payment has already been completed for this registration");
             }
-            if (existingPayment.getStripeClientSecret() != null) {
+            boolean amountMatches = existingPayment.getAmount() != null
+                    && existingPayment.getAmount().compareTo(totalPrice) == 0;
+            if (existingPayment.getStripeClientSecret() != null
+                    && !existingPayment.getStripeClientSecret().startsWith("cs_")
+                    && amountMatches) {
                 return PaymentIntentResponse.builder()
                         .clientSecret(existingPayment.getStripeClientSecret())
                         .paymentIntentId(existingPayment.getStripePaymentIntentId())
@@ -137,11 +143,20 @@ public class PaymentService {
                         .currency(existingPayment.getCurrency())
                         .build();
             }
+            // Coupon changed or amount drifted: cancel the stale PaymentIntent
+            // so we can mint a fresh one that matches the new total.
+            if (existingPayment.getStripePaymentIntentId() != null
+                    && !existingPayment.getStripePaymentIntentId().startsWith("cs_")) {
+                try {
+                    PaymentIntent.retrieve(existingPayment.getStripePaymentIntentId()).cancel();
+                } catch (StripeException cancelEx) {
+                    log.warn("Could not cancel stale PaymentIntent {}: {}",
+                            existingPayment.getStripePaymentIntentId(), cancelEx.getMessage());
+                }
+            }
         }
 
         try {
-            long amountInCents = totalPrice.multiply(BigDecimal.valueOf(100)).longValue();
-
             PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
                     .setAmount(amountInCents)
                     .setCurrency(defaultCurrency)
@@ -484,7 +499,7 @@ public class PaymentService {
         }
 
         if (couponCode != null && !couponCode.isBlank()) {
-            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId());
+            var couponResult = couponService.validateCoupon(couponCode, totalPrice, user, event.getId(), registrationId);
             if (couponResult.isValid()) {
                 couponService.applyCoupon(couponCode, registration, user);
                 totalPrice = couponResult.getFinalAmount();

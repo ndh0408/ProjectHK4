@@ -49,7 +49,7 @@ public class UserCouponController {
             throw new com.luma.exception.BadRequestException("Either eventId or registrationId is required");
         }
 
-        CouponValidationResponse response = couponService.validateCoupon(code, amount, user, resolvedEventId);
+        CouponValidationResponse response = couponService.validateCoupon(code, amount, user, resolvedEventId, registrationId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
