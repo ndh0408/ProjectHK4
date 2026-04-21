@@ -60,6 +60,12 @@ const adminApi = {
     getFunnelAnalytics: () => api.get('/admin/analytics/funnel'),
     getEventFunnel: (eventId) => api.get(`/admin/analytics/funnel/event/${eventId}`),
 
+    // Support requests escalated from the AI assistant
+    getSupportRequests: (params) => api.get('/admin/support-requests', { params }),
+    getSupportRequestById: (id) => api.get(`/admin/support-requests/${id}`),
+    getSupportRequestCounts: () => api.get('/admin/support-requests/counts'),
+    updateSupportRequest: (id, payload) => api.patch(`/admin/support-requests/${id}`, payload),
+
 };
 
 export default adminApi;

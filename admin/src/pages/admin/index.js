@@ -7,3 +7,4 @@ export { default as AdminCities } from './Cities';
 export { default as AdminNotifications } from './Notifications';
 export { default as AdminBoosts } from './Boosts';
 export { default as AdminRevenue } from './Revenue';
+export { default as AdminSupportRequests } from './SupportRequests';

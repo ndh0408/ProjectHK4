@@ -33,6 +33,7 @@ import {
     AttachMoney as RevenueIcon,
     Groups as UsersIcon,
     Forum as ChatIcon,
+    SupportAgent as SupportIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { tokens } from '../../theme';
@@ -68,6 +69,12 @@ const adminGroups = [
         label: 'Engagement',
         items: [
             { text: 'Notifications', icon: <NotificationsIcon />, path: '/admin/notifications' },
+        ],
+    },
+    {
+        label: 'Support',
+        items: [
+            { text: 'Support Requests', icon: <SupportIcon />, path: '/admin/support-requests' },
         ],
     },
 ];

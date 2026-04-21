@@ -22,6 +22,7 @@ import {
     AdminNotifications,
     AdminBoosts,
     AdminRevenue,
+    AdminSupportRequests,
 } from "./pages/admin";
 
 import {
@@ -61,6 +62,7 @@ function App() {
                                 <Route path="/admin/notifications" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminNotifications /></ProtectedRoute>} />
                                 <Route path="/admin/boosts" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminBoosts /></ProtectedRoute>} />
                                 <Route path="/admin/revenue" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminRevenue /></ProtectedRoute>} />
+                                <Route path="/admin/support-requests" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminSupportRequests /></ProtectedRoute>} />
                                 <Route path="/organiser/dashboard" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserDashboard /></ProtectedRoute>} />
                                 <Route path="/organiser/events" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserEvents /></ProtectedRoute>} />
                                 <Route path="/organiser/registrations" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserRegistrations /></ProtectedRoute>} />
