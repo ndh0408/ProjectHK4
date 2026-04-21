@@ -239,7 +239,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       // Opening a chat implies everything here is read — sync the global
       // unread total and the preview in the conversation list.
       ref.read(unreadMessageCountProvider.notifier).refresh();
+      // Mark as read in BOTH lists — direct/group conversations and the
+      // event-group chats tab. Each call is a no-op if the conversation
+      // isn't in that particular list.
       ref.read(conversationsProvider.notifier).markConversationRead(widget.conversationId);
+      ref.read(eventChatsProvider.notifier).markConversationRead(widget.conversationId);
       ref.read(webSocketServiceProvider).sendRead(widget.conversationId);
     });
   }

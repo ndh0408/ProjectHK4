@@ -39,6 +39,7 @@ import {
     OrganiserFunnelAnalytics,
     OrganiserCoupons,
     OrganiserSchedule,
+    OrganiserEventChats,
 } from "./pages/organiser";
 
 function App() {
@@ -68,6 +69,7 @@ function App() {
                                 <Route path="/organiser/funnel" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserFunnelAnalytics /></ProtectedRoute>} />
                                 <Route path="/organiser/coupons" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserCoupons /></ProtectedRoute>} />
                                 <Route path="/organiser/schedule" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserSchedule /></ProtectedRoute>} />
+                                <Route path="/organiser/event-chats" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserEventChats /></ProtectedRoute>} />
                                 <Route path="/organiser/registration-questions" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserRegistrationQuestions /></ProtectedRoute>} />
                                 <Route path="/organiser/profile" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserProfile /></ProtectedRoute>} />
                                 <Route path="/organiser/certificates" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserCertificates /></ProtectedRoute>} />

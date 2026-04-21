@@ -32,6 +32,7 @@ import {
     CardMembership as SubscriptionIcon,
     AttachMoney as RevenueIcon,
     Groups as UsersIcon,
+    Forum as ChatIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { tokens } from '../../theme';
@@ -87,6 +88,7 @@ const organiserGroups = [
             { text: 'Registration Form', icon: <QuizIcon />, path: '/organiser/registration-questions' },
             { text: 'Questions', icon: <QuestionsIcon />, path: '/organiser/questions' },
             { text: 'Live Polls', icon: <PollIcon />, path: '/organiser/polls' },
+            { text: 'Event Chats', icon: <ChatIcon />, path: '/organiser/event-chats' },
         ],
     },
     {

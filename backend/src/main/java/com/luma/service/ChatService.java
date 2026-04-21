@@ -92,13 +92,20 @@ public class ChatService {
 
     public List<EventChatSummaryResponse> getEventChats(User user) {
         List<Registration> approvedRegs = registrationRepository.findByUserAndStatus(user, RegistrationStatus.APPROVED);
-        if (approvedRegs.isEmpty()) {
+        List<Event> organisedEvents = eventRepository.findByOrganiserIdOrderByStartTimeDesc(user.getId());
+
+        if (approvedRegs.isEmpty() && organisedEvents.isEmpty()) {
             return Collections.emptyList();
         }
 
         Map<UUID, Event> eventsById = new LinkedHashMap<>();
         for (Registration reg : approvedRegs) {
             eventsById.putIfAbsent(reg.getEvent().getId(), reg.getEvent());
+        }
+        // Organisers can also chat in their own event groups, even without
+        // an APPROVED registration to their own event.
+        for (Event event : organisedEvents) {
+            eventsById.putIfAbsent(event.getId(), event);
         }
 
         List<EventChatSummaryResponse> summaries = new ArrayList<>(eventsById.size());

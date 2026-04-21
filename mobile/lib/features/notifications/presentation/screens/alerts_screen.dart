@@ -9,6 +9,7 @@ import '../../../../core/config/theme.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
+import '../../../../services/websocket_service.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../../shared/models/event_chat_summary.dart';
 import '../../../../shared/models/notification.dart';
@@ -347,6 +348,60 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen>
     final unreadMessages = ref.watch(unreadMessageCountProvider);
     final notificationsState = ref.watch(notificationsProvider);
     final conversationsState = ref.watch(conversationsProvider);
+
+    // Push new-message events into both conversation lists (direct + event
+    // groups) and the global unread badge, without any API round-trip.
+    ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (_, next) {
+      next.whenData((event) {
+        if (event.type != ChatEventType.newMessage) return;
+        final payload = event.message;
+        final conversationId = event.conversationId;
+        if (payload == null || conversationId == null) return;
+
+        final currentUserId = ref.read(currentUserProvider)?.id;
+        final senderId = (payload['sender'] as Map<String, dynamic>?)?['id']
+            as String?;
+        final isOwnMessage =
+            senderId != null && senderId == currentUserId;
+
+        final typeStr = payload['type'] as String?;
+        String? preview = payload['content'] as String?;
+        if (typeStr == 'IMAGE') preview = 'Sent an image';
+        if (typeStr == 'FILE') preview = 'Sent a file';
+
+        DateTime? createdAt;
+        final createdStr = payload['createdAt'] as String?;
+        if (createdStr != null) createdAt = DateTime.tryParse(createdStr);
+
+        final messageId = payload['id'] as String?;
+
+        // Apply to both lists; each no-ops if the conversation isn't there.
+        final appliedDirect = ref
+            .read(conversationsProvider.notifier)
+            .applyNewMessage(
+              conversationId: conversationId,
+              content: preview,
+              timestamp: createdAt,
+              incrementUnread: !isOwnMessage,
+              messageId: messageId,
+            );
+        final appliedEvent = ref
+            .read(eventChatsProvider.notifier)
+            .applyNewMessage(
+              conversationId: conversationId,
+              content: preview,
+              timestamp: createdAt,
+              incrementUnread: !isOwnMessage,
+              messageId: messageId,
+            );
+
+        // Only bump the global unread badge once per message, even if the
+        // conversation is in both lists (shouldn't happen, but safe).
+        if (!isOwnMessage && (appliedDirect || appliedEvent)) {
+          ref.read(unreadMessageCountProvider.notifier).increment();
+        }
+      });
+    });
 
     final totalUnread = (unreadNotifications.maybeWhen(
           data: (count) => count,

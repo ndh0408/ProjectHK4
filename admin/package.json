@@ -11,6 +11,7 @@
     "@mui/x-charts": "^6.19.1",
     "@mui/x-data-grid": "^6.19.2",
     "@mui/x-date-pickers": "^6.19.2",
+    "@stomp/stompjs": "^7.3.0",
     "@uiw/react-md-editor": "^4.0.11",
     "axios": "^1.6.5",
     "date-fns": "^2.30.0",

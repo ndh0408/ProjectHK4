@@ -55,4 +55,38 @@ class EventChatSummary {
   final String? lastMessageContent;
   final DateTime? lastMessageAt;
   final int unreadCount;
+
+  EventChatSummary copyWith({
+    String? eventId,
+    String? eventTitle,
+    String? eventImageUrl,
+    DateTime? eventStartTime,
+    DateTime? eventEndTime,
+    String? venue,
+    String? conversationId,
+    bool? joined,
+    bool? closed,
+    DateTime? closedAt,
+    int? participantCount,
+    String? lastMessageContent,
+    DateTime? lastMessageAt,
+    int? unreadCount,
+  }) {
+    return EventChatSummary(
+      eventId: eventId ?? this.eventId,
+      eventTitle: eventTitle ?? this.eventTitle,
+      eventImageUrl: eventImageUrl ?? this.eventImageUrl,
+      eventStartTime: eventStartTime ?? this.eventStartTime,
+      eventEndTime: eventEndTime ?? this.eventEndTime,
+      venue: venue ?? this.venue,
+      conversationId: conversationId ?? this.conversationId,
+      joined: joined ?? this.joined,
+      closed: closed ?? this.closed,
+      closedAt: closedAt ?? this.closedAt,
+      participantCount: participantCount ?? this.participantCount,
+      lastMessageContent: lastMessageContent ?? this.lastMessageContent,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
+  }
 }

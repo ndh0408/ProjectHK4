@@ -12,3 +12,4 @@ export { default as OrganiserPolls } from './Polls';
 export { default as OrganiserFunnelAnalytics } from './FunnelAnalytics';
 export { default as OrganiserCoupons } from './Coupons';
 export { default as OrganiserSchedule } from './Schedule';
+export { default as OrganiserEventChats } from './EventChats';
