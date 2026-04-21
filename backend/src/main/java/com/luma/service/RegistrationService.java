@@ -488,16 +488,15 @@ public class RegistrationService {
     }
 
     private void validateCheckInTime(Event event) {
+        // Only block check-ins after the event has definitively ended.
+        // Organisers frequently need to test the scanner in advance and
+        // early arrivals should not be turned away, so we don't gate on
+        // "event hasn't started yet" — only on "event is long over".
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime eventStart = event.getStartTime();
-        LocalDateTime eventEnd = event.getEndTime();
-
-        LocalDateTime checkInWindowStart = eventStart.minusHours(2);
-        LocalDateTime checkInWindowEnd = eventEnd != null ? eventEnd.plusHours(1) : eventStart.plusHours(6);
-
-        if (now.isBefore(checkInWindowStart)) {
-            throw new BadRequestException("Check-in is not available yet. Check-in opens 2 hours before the event starts.");
-        }
+        LocalDateTime eventEnd = event.getEndTime() != null
+                ? event.getEndTime()
+                : event.getStartTime().plusHours(6);
+        LocalDateTime checkInWindowEnd = eventEnd.plusHours(1);
 
         if (now.isAfter(checkInWindowEnd)) {
             throw new BadRequestException("Check-in period has ended for this event.");
