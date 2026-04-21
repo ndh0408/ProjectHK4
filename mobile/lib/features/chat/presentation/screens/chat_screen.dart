@@ -15,6 +15,7 @@ import '../../../../shared/models/chat_message.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../providers/event_chats_provider.dart';
+import 'conversations_screen.dart';
 
 final chatMessagesProvider = StateNotifierProvider.autoDispose
     .family<ChatMessagesNotifier, ChatMessagesState, String>((ref, conversationId) {
@@ -172,6 +173,32 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
   Future<void> refresh() async {
     await loadMessages(refresh: true);
   }
+
+  void addMessageFromEvent(ChatMessage message) {
+    final exists = state.messages.any((m) => m.id == message.id);
+    if (exists) return;
+    state = state.copyWith(messages: [...state.messages, message]);
+  }
+
+  void markMessageDeleted(String messageId) {
+    state = state.copyWith(
+      messages: state.messages.map((m) {
+        if (m.id == messageId) {
+          return ChatMessage(
+            id: m.id,
+            conversationId: m.conversationId,
+            type: m.type,
+            content: 'This message was deleted',
+            sender: m.sender,
+            replyTo: m.replyTo,
+            createdAt: m.createdAt,
+            deleted: true,
+          );
+        }
+        return m;
+      }).toList(),
+    );
+  }
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -203,18 +230,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _messageController.addListener(_onTextChanged);
-    Future.microtask(() {
-      ref
+    Future.microtask(() async {
+      ref.read(webSocketServiceProvider).subscribeToConversation(widget.conversationId);
+      await ref
           .read(chatMessagesProvider(widget.conversationId).notifier)
           .loadMessages(refresh: true);
-      ref.read(webSocketServiceProvider).subscribeToConversation(widget.conversationId);
-
+      if (!mounted) return;
+      // Opening a chat implies everything here is read — sync the global
+      // unread total and the preview in the conversation list.
+      ref.read(unreadMessageCountProvider.notifier).refresh();
+      ref.read(conversationsProvider.notifier).markConversationRead(widget.conversationId);
       ref.read(webSocketServiceProvider).sendRead(widget.conversationId);
     });
   }
 
   @override
   void dispose() {
+    // Drop the room subscription so we don't leak subscribers across navigations.
+    try {
+      ref
+          .read(webSocketServiceProvider)
+          .unsubscribeFromConversation(widget.conversationId);
+    } catch (_) {}
     _scrollController.dispose();
     _messageController.dispose();
     _focusNode.dispose();
@@ -384,7 +421,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } else {
       final otherUser = conversation.participants?.firstOrNull;
       if (otherUser != null) {
-        final isOnline = ref.watch(webSocketServiceProvider).isUserOnline(otherUser.userId);
+        final isOnline = ref.watch(userOnlineStatusProvider(otherUser.userId));
         if (isOnline) {
           subtitle = 'Online';
           subtitleColor = Colors.greenAccent;
@@ -930,33 +967,52 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     ref.listen(chatEventStreamProvider, (previous, next) {
       next.whenData((event) {
-        if (event.conversationId == widget.conversationId) {
-          switch (event.type) {
-            case ChatEventType.newMessage:
-              ref.read(chatMessagesProvider(widget.conversationId).notifier)
-                  .loadMessages(refresh: true);
-              break;
-            case ChatEventType.typing:
-              if (event.userId != currentUser?.id && event.userName != null) {
-                setState(() {
-                  if (!_typingUserNames.contains(event.userName)) {
-                    _typingUserNames.add(event.userName!);
-                  }
-                });
-                Future.delayed(const Duration(seconds: 3), () {
-                  if (mounted) {
-                    setState(() {
-                      _typingUserNames.remove(event.userName);
-                    });
-                  }
-                });
+        if (event.conversationId != widget.conversationId) return;
+        final notifier =
+            ref.read(chatMessagesProvider(widget.conversationId).notifier);
+        switch (event.type) {
+          case ChatEventType.newMessage:
+            final payload = event.message;
+            if (payload == null) return;
+            try {
+              final msg = ChatMessage.fromJson(payload);
+              notifier.addMessageFromEvent(msg);
+              // Auto-scroll if the event came from someone else
+              if (msg.sender?.id != currentUser?.id) {
+                Future.delayed(const Duration(milliseconds: 50), _scrollToBottom);
               }
-              break;
-            case ChatEventType.read:
-              break;
-            default:
-              break;
-          }
+            } catch (_) {
+              // Fallback only if the payload is malformed
+              notifier.loadMessages(refresh: true);
+            }
+            break;
+          case ChatEventType.messageDeleted:
+            final payload = event.message;
+            final id = payload != null ? payload['id'] as String? : null;
+            if (id != null) {
+              notifier.markMessageDeleted(id);
+            }
+            break;
+          case ChatEventType.typing:
+            if (event.userId != currentUser?.id && event.userName != null) {
+              setState(() {
+                if (!_typingUserNames.contains(event.userName)) {
+                  _typingUserNames.add(event.userName!);
+                }
+              });
+              Future.delayed(const Duration(seconds: 3), () {
+                if (mounted) {
+                  setState(() {
+                    _typingUserNames.remove(event.userName);
+                  });
+                }
+              });
+            }
+            break;
+          case ChatEventType.read:
+            break;
+          default:
+            break;
         }
       });
     });
@@ -1658,10 +1714,15 @@ class _MessageBubble extends StatelessWidget {
                           )
                         else
                           Text(
-                            message.content,
+                            message.deleted
+                                ? AppLocalizations.of(context)!.messageDeletedBody
+                                : message.content,
                             style: TextStyle(
                               fontSize: 14,
                               color: isMe ? AppColors.textOnPrimary : AppColors.textPrimary,
+                              fontStyle: message.deleted
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
                             ),
                           ),
                       ],

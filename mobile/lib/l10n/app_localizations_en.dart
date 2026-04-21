@@ -1112,4 +1112,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String leaveEventChatMessage(String title) {
     return 'You will stop receiving messages from \"$title\". You can rejoin any time before the chat closes.';
   }
+
+  @override
+  String get messagePreviewImage => 'Sent an image';
+
+  @override
+  String get messagePreviewFile => 'Sent a file';
+
+  @override
+  String get messageDeletedBody => 'This message was deleted';
 }

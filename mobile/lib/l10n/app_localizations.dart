@@ -2227,6 +2227,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You will stop receiving messages from \"{title}\". You can rejoin any time before the chat closes.'**
   String leaveEventChatMessage(String title);
+
+  /// Conversation list preview for image message
+  ///
+  /// In en, this message translates to:
+  /// **'Sent an image'**
+  String get messagePreviewImage;
+
+  /// Conversation list preview for file message
+  ///
+  /// In en, this message translates to:
+  /// **'Sent a file'**
+  String get messagePreviewFile;
+
+  /// Replaces content of a deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'This message was deleted'**
+  String get messageDeletedBody;
 }
 
 class _AppLocalizationsDelegate

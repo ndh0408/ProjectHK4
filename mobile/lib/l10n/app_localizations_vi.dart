@@ -1104,4 +1104,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String leaveEventChatMessage(String title) {
     return 'Bạn sẽ không còn nhận tin nhắn từ \"$title\". Có thể tham gia lại trước khi nhóm đóng.';
   }
+
+  @override
+  String get messagePreviewImage => 'Đã gửi ảnh';
+
+  @override
+  String get messagePreviewFile => 'Đã gửi tệp';
+
+  @override
+  String get messageDeletedBody => 'Tin nhắn đã bị xoá';
 }

@@ -80,10 +80,16 @@ class ChatEvent {
 
 class WebSocketService {
   StompClient? _stompClient;
-  final List<StompUnsubscribe> _subscriptions = [];
   bool _isConnected = false;
   String? _authToken;
-  String? _userEmail;
+
+  // Intent: conversations this client wants real-time updates for.
+  // Survives reconnects so we can resubscribe after a dropped connection.
+  final Set<String> _desiredConversations = {};
+  // Live subscription handles; cleared on disconnect (connection is dead).
+  final Map<String, StompUnsubscribe> _conversationSubs = {};
+  StompUnsubscribe? _presenceSub;
+  StompUnsubscribe? _userQueueSub;
 
   final _eventController = StreamController<ChatEvent>.broadcast();
   Stream<ChatEvent> get eventStream => _eventController.stream;
@@ -97,12 +103,11 @@ class WebSocketService {
   bool get isConnected => _isConnected;
   Map<String, bool> get onlineUsers => Map.unmodifiable(_onlineUsers);
 
-  void connect(String token, {String? userEmail}) {
+  void connect(String token) {
     if (_isConnected && _authToken == token) return;
 
     _authToken = token;
-    _userEmail = userEmail;
-    disconnect();
+    disconnect(keepDesired: true);
 
     final wsUrl = ApiConstants.wsBaseUrl;
 
@@ -144,18 +149,23 @@ class WebSocketService {
     _isConnected = true;
     _connectionController.add(true);
 
-    _subscribeToPresence();
+    _subscribePresence();
+    _subscribeUserQueue();
 
-    // Auto-subscribe to user queue for global message notifications
-    if (_userEmail != null) {
-      subscribeToUserQueue(_userEmail!);
+    // Replay all previously-desired conversation subscriptions
+    for (final conversationId in _desiredConversations) {
+      _subscribeConversationInternal(conversationId);
     }
   }
 
   void _onDisconnect(StompFrame frame) {
     _isConnected = false;
     _connectionController.add(false);
-    _clearSubscriptions();
+    // Stomp connection is dead — drop handles so we don't try to unsubscribe
+    // on the next reconnect. _desiredConversations stays intact for replay.
+    _conversationSubs.clear();
+    _presenceSub = null;
+    _userQueueSub = null;
   }
 
   void _onError(dynamic error) {
@@ -168,10 +178,10 @@ class WebSocketService {
     _connectionController.add(false);
   }
 
-  void _subscribeToPresence() {
+  void _subscribePresence() {
     if (_stompClient == null || !_isConnected) return;
-
-    final sub = _stompClient!.subscribe(
+    _presenceSub?.call();
+    _presenceSub = _stompClient!.subscribe(
       destination: '/topic/presence',
       callback: (frame) {
         if (frame.body != null) {
@@ -181,13 +191,37 @@ class WebSocketService {
         }
       },
     );
-    _subscriptions.add(sub);
+  }
+
+  void _subscribeUserQueue() {
+    if (_stompClient == null || !_isConnected) return;
+    _userQueueSub?.call();
+    // Spring user destinations: client subscribes to /user/queue/... and
+    // Spring resolves the authenticated principal from the STOMP session.
+    // Do NOT include the username in the path — the server sends via
+    // convertAndSendToUser(email, "/queue/messages", ...), which routes
+    // internally to /queue/messages-user<sessionId>.
+    _userQueueSub = _stompClient!.subscribe(
+      destination: '/user/queue/messages',
+      callback: (frame) {
+        if (frame.body != null) {
+          final event = ChatEvent.fromJson(json.decode(frame.body!));
+          _eventController.add(event);
+        }
+      },
+    );
   }
 
   void subscribeToConversation(String conversationId) {
-    if (_stompClient == null || !_isConnected) return;
+    _desiredConversations.add(conversationId);
+    _subscribeConversationInternal(conversationId);
+  }
 
-    final sub = _stompClient!.subscribe(
+  void _subscribeConversationInternal(String conversationId) {
+    if (_stompClient == null || !_isConnected) return;
+    if (_conversationSubs.containsKey(conversationId)) return;
+
+    final unsub = _stompClient!.subscribe(
       destination: '/topic/conversation.$conversationId',
       callback: (frame) {
         if (frame.body != null) {
@@ -197,22 +231,13 @@ class WebSocketService {
         }
       },
     );
-    _subscriptions.add(sub);
+    _conversationSubs[conversationId] = unsub;
   }
 
-  void subscribeToUserQueue(String userEmail) {
-    if (_stompClient == null || !_isConnected) return;
-
-    final sub = _stompClient!.subscribe(
-      destination: '/user/$userEmail/queue/messages',
-      callback: (frame) {
-        if (frame.body != null) {
-          final event = ChatEvent.fromJson(json.decode(frame.body!));
-          _eventController.add(event);
-        }
-      },
-    );
-    _subscriptions.add(sub);
+  void unsubscribeFromConversation(String conversationId) {
+    _desiredConversations.remove(conversationId);
+    final unsub = _conversationSubs.remove(conversationId);
+    unsub?.call();
   }
 
   void _handlePresenceEvent(ChatEvent event) {
@@ -273,20 +298,18 @@ class WebSocketService {
     return _onlineUsers[userId] ?? false;
   }
 
-  void _clearSubscriptions() {
-    for (final unsub in _subscriptions) {
-      unsub();
-    }
-    _subscriptions.clear();
-  }
-
-  void disconnect() {
-    _clearSubscriptions();
+  void disconnect({bool keepDesired = false}) {
+    _conversationSubs.clear();
+    _presenceSub = null;
+    _userQueueSub = null;
     _stompClient?.deactivate();
     _stompClient = null;
     _isConnected = false;
     _typingUsers.clear();
     _onlineUsers.clear();
+    if (!keepDesired) {
+      _desiredConversations.clear();
+    }
   }
 
   void dispose() {
@@ -304,7 +327,7 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
     if (next is Authenticated) {
       final token = await storage.read(key: StorageKeys.accessToken);
       if (token != null) {
-        service.connect(token, userEmail: next.user.email);
+        service.connect(token);
       }
     } else {
       service.disconnect();
@@ -312,11 +335,9 @@ final webSocketServiceProvider = Provider<WebSocketService>((ref) {
   }, fireImmediately: true);
 
   Future.microtask(() async {
-    final authState = ref.read(authProvider);
     final token = await storage.read(key: StorageKeys.accessToken);
     if (token != null) {
-      final email = authState is Authenticated ? authState.user.email : null;
-      service.connect(token, userEmail: email);
+      service.connect(token);
     }
   });
 
@@ -337,7 +358,10 @@ final wsConnectionStatusProvider = StreamProvider<bool>((ref) {
   return service.connectionStream;
 });
 
+// Re-evaluates whenever any chat event arrives (which includes ONLINE/OFFLINE),
+// so widgets watching it get live rebuilds when presence changes.
 final userOnlineStatusProvider = Provider.family<bool, String>((ref, userId) {
+  ref.watch(chatEventStreamProvider);
   final service = ref.watch(webSocketServiceProvider);
   return service.isUserOnline(userId);
 });

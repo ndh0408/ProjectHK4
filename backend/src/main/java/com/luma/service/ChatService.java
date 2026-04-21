@@ -22,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -292,6 +294,7 @@ public class ChatService {
                 .content(request.getContent())
                 .mediaUrl(request.getMediaUrl())
                 .replyTo(replyTo)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         message = messageRepository.save(message);
@@ -310,7 +313,19 @@ public class ChatService {
 
         MessageResponse response = MessageResponse.fromEntity(message);
 
-        webSocketService.broadcastNewMessage(conversation, response);
+        // Broadcast only after the DB commit so receivers that refetch on the
+        // WS event see the persisted row.
+        Conversation conv = conversation;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    webSocketService.broadcastNewMessage(conv, response);
+                }
+            });
+        } else {
+            webSocketService.broadcastNewMessage(conv, response);
+        }
 
         return response;
     }

@@ -782,5 +782,12 @@
   "@leaveEventChatMessage": {
     "description": "Leave chat confirm message",
     "placeholders": { "title": { "type": "String" } }
-  }
+  },
+
+  "messagePreviewImage": "Sent an image",
+  "@messagePreviewImage": { "description": "Conversation list preview for image message" },
+  "messagePreviewFile": "Sent a file",
+  "@messagePreviewFile": { "description": "Conversation list preview for file message" },
+  "messageDeletedBody": "This message was deleted",
+  "@messageDeletedBody": { "description": "Replaces content of a deleted message" }
 }

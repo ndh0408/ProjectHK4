@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../services/websocket_service.dart';
 import '../../../../shared/models/conversation.dart';
@@ -11,6 +12,23 @@ import '../../../../shared/models/notification.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
+
+/// Translate backend-generated sentinel strings ("Sent an image", "Sent a
+/// file", "This message was deleted") that live in `lastMessageContent`
+/// into the user's current locale. Leaves user-typed content alone.
+String? _localizedPreview(BuildContext context, String? raw) {
+  if (raw == null) return null;
+  final l10n = AppLocalizations.of(context)!;
+  switch (raw) {
+    case 'Sent an image':
+      return l10n.messagePreviewImage;
+    case 'Sent a file':
+      return l10n.messagePreviewFile;
+    case 'This message was deleted':
+      return l10n.messageDeletedBody;
+  }
+  return raw;
+}
 
 final conversationsProvider = StateNotifierProvider.autoDispose<
     ConversationsNotifier, ConversationsState>((ref) {
@@ -164,6 +182,60 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
       return false;
     }
   }
+
+  /// Zero out the unread count for one conversation (called when the user
+  /// opens the chat and has just marked it as read on the server).
+  void markConversationRead(String conversationId) {
+    final idx =
+        state.conversations.indexWhere((c) => c.id == conversationId);
+    if (idx < 0) return;
+    final current = state.conversations[idx];
+    if (current.unreadCount == 0) return;
+    final updated = current.copyWith(unreadCount: 0);
+    final next = [...state.conversations];
+    next[idx] = updated;
+    state = state.copyWith(conversations: next);
+  }
+
+  // Avoids double-applying a message that arrives both on /topic/... and
+  // /user/queue/messages (the server publishes to both channels).
+  final Set<String> _appliedMessageIds = <String>{};
+
+  /// Update the conversation preview with a new incoming message without
+  /// a full API reload. Bumps the conversation to the top, updates the last
+  /// message, and increments unread count when applicable. Returns false if
+  /// the message was already applied (duplicate broadcast) so callers can
+  /// skip their own side-effects (e.g. bumping the global unread badge).
+  bool applyNewMessage({
+    required String conversationId,
+    required String? content,
+    required DateTime? timestamp,
+    required bool incrementUnread,
+    String? messageId,
+  }) {
+    if (messageId != null) {
+      if (_appliedMessageIds.contains(messageId)) return false;
+      _appliedMessageIds.add(messageId);
+      if (_appliedMessageIds.length > 512) {
+        _appliedMessageIds.clear();
+      }
+    }
+    final idx =
+        state.conversations.indexWhere((c) => c.id == conversationId);
+    if (idx < 0) return false;
+    final current = state.conversations[idx];
+    final updated = current.copyWith(
+      lastMessageContent: content ?? current.lastMessageContent,
+      lastMessageAt: timestamp ?? current.lastMessageAt,
+      unreadCount:
+          incrementUnread ? current.unreadCount + 1 : current.unreadCount,
+    );
+    final next = [...state.conversations];
+    next.removeAt(idx);
+    next.insert(0, updated);
+    state = state.copyWith(conversations: next);
+    return true;
+  }
 }
 
 class ConversationsScreen extends ConsumerStatefulWidget {
@@ -231,14 +303,48 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     final notificationsState = ref.watch(notificationsProvider);
     final buddiesState = ref.watch(eventBuddiesProvider);
 
-    // Listen to WebSocket chat events for real-time updates
+    // Listen to WebSocket chat events for real-time updates.
+    // Apply the event payload directly so we don't round-trip through HTTP
+    // on every new message.
     ref.listen<AsyncValue<ChatEvent>>(chatEventStreamProvider, (previous, next) {
       next.whenData((event) {
-        if (event.type == ChatEventType.newMessage) {
-          // Refresh conversations list to show latest message
-          ref.read(conversationsProvider.notifier).loadConversations(refresh: true);
-          // Update unread message count
-          ref.read(unreadMessageCountProvider.notifier).loadCount();
+        if (event.type != ChatEventType.newMessage) return;
+        final payload = event.message;
+        final conversationId = event.conversationId;
+        if (payload == null || conversationId == null) return;
+
+        final currentUserId = ref.read(currentUserProvider)?.id;
+        final sender = payload['sender'] as Map<String, dynamic>?;
+        final senderId = sender?['id'] as String?;
+        final isOwnMessage = senderId != null && senderId == currentUserId;
+
+        final l10n = AppLocalizations.of(context)!;
+        final rawContent = payload['content'] as String?;
+        final typeStr = payload['type'] as String?;
+        String? preview = rawContent;
+        if (typeStr == 'IMAGE') {
+          preview = l10n.messagePreviewImage;
+        } else if (typeStr == 'FILE') {
+          preview = l10n.messagePreviewFile;
+        }
+
+        final createdAtStr = payload['createdAt'] as String?;
+        DateTime? createdAt;
+        if (createdAtStr != null) {
+          createdAt = DateTime.tryParse(createdAtStr);
+        }
+
+        final messageId = payload['id'] as String?;
+        final applied = ref.read(conversationsProvider.notifier).applyNewMessage(
+              conversationId: conversationId,
+              content: preview,
+              timestamp: createdAt,
+              incrementUnread: !isOwnMessage,
+              messageId: messageId,
+            );
+
+        if (applied && !isOwnMessage) {
+          ref.read(unreadMessageCountProvider.notifier).increment();
         }
       });
     });
@@ -1387,7 +1493,9 @@ class _ConversationTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          conversation.lastMessageContent ?? 'No messages yet',
+                          _localizedPreview(
+                              context, conversation.lastMessageContent) ??
+                              AppLocalizations.of(context)!.noMessagesYet,
                           style: TextStyle(
                             fontSize: 14,
                             color:

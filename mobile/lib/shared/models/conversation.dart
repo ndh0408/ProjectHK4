@@ -54,6 +54,44 @@ class Conversation {
 
   bool get isClosed => closedAt != null;
 
+  Conversation copyWith({
+    String? id,
+    ConversationType? type,
+    String? name,
+    String? imageUrl,
+    String? eventId,
+    String? eventTitle,
+    String? lastMessageContent,
+    DateTime? lastMessageAt,
+    int? unreadCount,
+    bool? muted,
+    bool? pinned,
+    bool? archived,
+    List<ChatParticipant>? participants,
+    int? participantCount,
+    DateTime? closedAt,
+    DateTime? createdAt,
+  }) {
+    return Conversation(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      eventId: eventId ?? this.eventId,
+      eventTitle: eventTitle ?? this.eventTitle,
+      lastMessageContent: lastMessageContent ?? this.lastMessageContent,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      unreadCount: unreadCount ?? this.unreadCount,
+      muted: muted ?? this.muted,
+      pinned: pinned ?? this.pinned,
+      archived: archived ?? this.archived,
+      participants: participants ?? this.participants,
+      participantCount: participantCount ?? this.participantCount,
+      closedAt: closedAt ?? this.closedAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   Map<String, dynamic> toJson() => _$ConversationToJson(this);
 
   String get displayName {
