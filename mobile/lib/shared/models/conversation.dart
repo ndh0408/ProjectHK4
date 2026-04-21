@@ -52,6 +52,7 @@ class Conversation {
   final int? participantCount;
   final DateTime? closedAt;
   final DateTime? createdAt;
+
   /// Organiser-pinned announcement sitting at the top of the chat. Null when
   /// nothing is pinned. Attendees see it read-only; only organisers can
   /// pin/unpin (handled on the web admin).
@@ -117,13 +118,44 @@ class Conversation {
   }
 
   String? get displayImage {
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return imageUrl;
+    final resolvedImage = _nonEmpty(imageUrl);
+    if (resolvedImage != null) {
+      return resolvedImage;
+    }
+    if (type == ConversationType.direct && participants != null) {
+      for (final participant in participants!) {
+        final avatar = _nonEmpty(participant.avatarUrl);
+        if (avatar != null) {
+          return avatar;
+        }
+      }
     }
     return null;
   }
 
-  bool get isGroup => type == ConversationType.eventGroup || type == ConversationType.group;
+  String get displayAvatarLabel {
+    final candidates = <String?>[
+      name,
+      eventTitle,
+      ...?participants?.map((participant) => participant.fullName),
+    ];
+    for (final candidate in candidates) {
+      final normalized = _nonEmpty(candidate);
+      if (normalized != null) {
+        return normalized[0].toUpperCase();
+      }
+    }
+    return isGroup ? 'G' : '?';
+  }
+
+  bool get isGroup =>
+      type == ConversationType.eventGroup || type == ConversationType.group;
+
+  static String? _nonEmpty(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 }
 
 @JsonSerializable()
@@ -141,6 +173,7 @@ class ChatParticipant {
   final String userId;
   final String fullName;
   final String? avatarUrl;
+
   /// When this participant last marked the conversation as read. Used by the
   /// message bubble to decide whether to show ✓ (sent) or ✓✓ (read) on the
   /// current user's own messages.

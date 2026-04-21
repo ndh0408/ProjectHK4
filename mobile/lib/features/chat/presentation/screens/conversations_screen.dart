@@ -10,11 +10,9 @@ import '../../../../services/websocket_service.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/registration.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_card.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart'; // for myFutureRegistrationsProvider
-import 'package:mobile/features/chat/providers/chat_providers.dart';
+import '../providers/event_chats_provider.dart';
 
 String? _localizedPreview(BuildContext context, String? raw) {
   if (raw == null) return null;
@@ -95,8 +93,10 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
         final sortedList = [...newConversations];
         sortedList.sort((a, b) {
           if (a.pinned != b.pinned) return b.pinned ? -1 : 1;
-          final timeA = a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final timeB = b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final timeA =
+              a.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final timeB =
+              b.lastMessageAt ?? DateTime.fromMillisecondsSinceEpoch(0);
           return timeB.compareTo(timeA);
         });
 
@@ -109,7 +109,8 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
       }
     } catch (e) {
       if (mounted) {
-        state = state.copyWith(isLoading: false, error: 'Failed to load conversations');
+        state = state.copyWith(
+            isLoading: false, error: 'Failed to load conversations');
       }
     }
   }
@@ -140,7 +141,8 @@ class ConversationsNotifier extends StateNotifier<ConversationsState> {
     final updated = current.copyWith(
       lastMessageContent: content ?? current.lastMessageContent,
       lastMessageAt: timestamp ?? current.lastMessageAt,
-      unreadCount: incrementUnread ? current.unreadCount + 1 : current.unreadCount,
+      unreadCount:
+          incrementUnread ? current.unreadCount + 1 : current.unreadCount,
     );
     final next = [...state.conversations];
     next.removeAt(idx);
@@ -154,7 +156,8 @@ class ConversationsScreen extends ConsumerStatefulWidget {
   const ConversationsScreen({super.key});
 
   @override
-  ConsumerState<ConversationsScreen> createState() => _ConversationsScreenState();
+  ConsumerState<ConversationsScreen> createState() =>
+      _ConversationsScreenState();
 }
 
 class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
@@ -167,11 +170,14 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
         ref.read(conversationsProvider.notifier).loadConversations();
       }
     });
-    Future.microtask(() => ref.read(conversationsProvider.notifier).loadConversations(refresh: true));
+    Future.microtask(() => ref
+        .read(conversationsProvider.notifier)
+        .loadConversations(refresh: true));
   }
 
   @override
@@ -179,6 +185,60 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openConversation(Conversation conversation) async {
+    await context.push('/chat/${conversation.id}', extra: conversation);
+  }
+
+  Future<void> _openJoinedEventConversation({
+    required String eventId,
+    required ConversationsState state,
+  }) async {
+    final conversation = state.conversations.cast<Conversation?>().firstWhere(
+          (c) => c?.eventId == eventId,
+          orElse: () => null,
+        );
+    if (conversation == null || !mounted) return;
+    await _openConversation(conversation);
+  }
+
+  Future<void> _joinOrOpenEventGroup({
+    required Event event,
+    required bool alreadyJoined,
+    required ConversationsState conversationsState,
+  }) async {
+    if (alreadyJoined) {
+      await _openJoinedEventConversation(
+        eventId: event.id,
+        state: conversationsState,
+      );
+      return;
+    }
+
+    try {
+      final joined = await ref.read(eventChatsProvider.notifier).join(event.id);
+      if (!mounted || joined == null) return;
+      await ref.read(conversationsProvider.notifier).refresh();
+      if (!mounted) return;
+      await ref.read(eventChatsProvider.notifier).refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.joinedEventChat)),
+      );
+      await _openJoinedEventConversation(
+        eventId: event.id,
+        state: ref.read(conversationsProvider),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not join: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -193,14 +253,17 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
           final payload = eventData['message'];
           final conversationId = eventData['conversationId'] as String?;
           if (payload != null && conversationId != null) {
-            final isMe = payload['sender']?['id'] == ref.read(currentUserProvider)?.id;
+            final isMe =
+                payload['sender']?['id'] == ref.read(currentUserProvider)?.id;
             ref.read(conversationsProvider.notifier).applyNewMessage(
-              conversationId: conversationId,
-              content: payload['content'],
-              timestamp: payload['createdAt'] != null ? DateTime.tryParse(payload['createdAt']) : DateTime.now(),
-              incrementUnread: !isMe,
-              messageId: payload['id'],
-            );
+                  conversationId: conversationId,
+                  content: payload['content'],
+                  timestamp: payload['createdAt'] != null
+                      ? DateTime.tryParse(payload['createdAt'])
+                      : DateTime.now(),
+                  incrementUnread: !isMe,
+                  messageId: payload['id'],
+                );
           }
         }
       });
@@ -221,11 +284,16 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
             indicatorWeight: 3,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
             tabs: const [
-              Tab(icon: Icon(Icons.chat_bubble_outline, size: 20), text: 'Chats'),
-              Tab(icon: Icon(Icons.groups_outlined, size: 20), text: 'Join Groups'),
+              Tab(
+                  icon: Icon(Icons.chat_bubble_outline, size: 20),
+                  text: 'Chats'),
+              Tab(
+                  icon: Icon(Icons.groups_outlined, size: 20),
+                  text: 'Join Groups'),
             ],
           ),
         ),
@@ -308,15 +376,19 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
   Widget _buildEventGroupsTab() {
     final myEventsAsync = ref.watch(myFutureRegistrationsProvider);
     final state = ref.watch(conversationsProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final eventChatsState = ref.watch(eventChatsProvider);
 
     return myEventsAsync.when(
       data: (registrations) {
-        final successfulRegs = registrations.where((r) =>
-          r.status == RegistrationStatusEnum.approved ||
-          r.status == RegistrationStatusEnum.confirmed ||
-          r.status == RegistrationStatusEnum.checkedIn
-        ).toList();
+        final eventChatsById = {
+          for (final chat in eventChatsState.chats) chat.eventId: chat,
+        };
+        final successfulRegs = registrations
+            .where((r) =>
+                r.status == RegistrationStatusEnum.approved ||
+                r.status == RegistrationStatusEnum.confirmed ||
+                r.status == RegistrationStatusEnum.checkedIn)
+            .toList();
 
         if (successfulRegs.isEmpty) {
           return Center(
@@ -372,12 +444,18 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
             final event = reg.event;
             if (event == null) return const SizedBox.shrink();
 
-            final alreadyJoined = state.conversations.any((c) => c.eventId == event.id);
+            final eventChat = eventChatsById[event.id];
+            final alreadyJoined = eventChat?.joined ??
+                state.conversations.any((c) => c.eventId == event.id);
+            final isJoining = eventChatsState.joiningEventId == event.id;
+            final imageUrl = (event.imageUrl?.trim().isNotEmpty ?? false)
+                ? event.imageUrl!
+                : eventChat?.eventImageUrl;
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: alreadyJoined 
+                color: alreadyJoined
                     ? AppColors.success.withValues(alpha: 0.05)
                     : AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
@@ -389,15 +467,13 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                 ),
               ),
               child: InkWell(
-                onTap: alreadyJoined
-                    ? () {
-                        final conv = state.conversations.firstWhere(
-                          (c) => c.eventId == event.id,
-                          orElse: () => state.conversations.first,
-                        );
-                        context.push('/chat/${conv.id}', extra: conv);
-                      }
-                    : () => context.push('/event/${event.id}'),
+                onTap: isJoining
+                    ? null
+                    : () => _joinOrOpenEventGroup(
+                          event: event,
+                          alreadyJoined: alreadyJoined,
+                          conversationsState: state,
+                        ),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -408,11 +484,12 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                         child: SizedBox(
                           width: 64,
                           height: 64,
-                          child: event.imageUrl != null && event.imageUrl!.isNotEmpty
+                          child: imageUrl != null && imageUrl.isNotEmpty
                               ? Image.network(
-                                  event.imageUrl!,
+                                  imageUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => _EventAvatar(event: event),
+                                  errorBuilder: (_, __, ___) =>
+                                      _EventAvatar(event: event),
                                 )
                               : _EventAvatar(event: event),
                         ),
@@ -447,17 +524,37 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    alreadyJoined ? Icons.check_circle : Icons.add_circle_outline,
-                                    size: 12,
-                                    color: alreadyJoined ? AppColors.success : AppColors.primary,
-                                  ),
+                                  if (isJoining)
+                                    SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    )
+                                  else
+                                    Icon(
+                                      alreadyJoined
+                                          ? Icons.check_circle
+                                          : Icons.add_circle_outline,
+                                      size: 12,
+                                      color: alreadyJoined
+                                          ? AppColors.success
+                                          : AppColors.primary,
+                                    ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
-                                      alreadyJoined ? 'Joined' : 'Join Group',
+                                      isJoining
+                                          ? 'Joining...'
+                                          : alreadyJoined
+                                              ? 'Joined'
+                                              : 'Join Group',
                                       style: AppTypography.caption.copyWith(
-                                        color: alreadyJoined ? AppColors.success : AppColors.primary,
+                                        color: alreadyJoined
+                                            ? AppColors.success
+                                            : AppColors.primary,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -468,33 +565,13 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                           ],
                         ),
                       ),
-                      if (!alreadyJoined)
-                        IconButton(
-                          onPressed: () async {
-                            try {
-                              final conversation = await ref
-                                  .read(apiServiceProvider)
-                                  .joinEventChat(event.id);
-                              if (mounted) {
-                                ref.read(conversationsProvider.notifier).refresh();
-                                context.push(
-                                    '/chat/${conversation.conversationId}',
-                                    extra: conversation);
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Could not join: $e'),
-                                    backgroundColor: AppColors.error,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                          color: AppColors.primary,
-                        ),
+                      Icon(
+                        alreadyJoined
+                            ? Icons.arrow_forward_ios
+                            : Icons.touch_app,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
                     ],
                   ),
                 ),
@@ -510,7 +587,8 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
           children: [
             Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('Error: $err', style: AppTypography.body.copyWith(color: AppColors.error)),
+            Text('Error: $err',
+                style: AppTypography.body.copyWith(color: AppColors.error)),
           ],
         ),
       ),
@@ -543,13 +621,14 @@ class _ConversationTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: hasUnread 
+        color: hasUnread
             ? AppColors.primary.withValues(alpha: 0.05)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
-        onTap: () => context.push('/chat/${conversation.id}', extra: conversation),
+        onTap: () =>
+            context.push('/chat/${conversation.id}', extra: conversation),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -566,11 +645,19 @@ class _ConversationTile extends StatelessWidget {
                         : null,
                     child: conversation.displayImage == null ||
                             conversation.displayImage!.isEmpty
-                        ? Icon(
-                            conversation.isGroup ? Icons.groups : Icons.person,
-                            color: AppColors.textSecondary,
-                            size: 28,
-                          )
+                        ? conversation.isGroup
+                            ? Icon(
+                                Icons.groups,
+                                color: AppColors.textSecondary,
+                                size: 28,
+                              )
+                            : Text(
+                                conversation.displayAvatarLabel,
+                                style: AppTypography.h4.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
                         : null,
                   ),
                   if (conversation.pinned)
@@ -636,8 +723,11 @@ class _ConversationTile extends StatelessWidget {
                         Text(
                           _formatTime(conversation.lastMessageAt),
                           style: AppTypography.caption.copyWith(
-                            color: hasUnread ? AppColors.primary : AppColors.textLight,
-                            fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                            color: hasUnread
+                                ? AppColors.primary
+                                : AppColors.textLight,
+                            fontWeight:
+                                hasUnread ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -655,12 +745,16 @@ class _ConversationTile extends StatelessWidget {
                         ],
                         Expanded(
                           child: Text(
-                            _localizedPreview(context, conversation.lastMessageContent) ?? '',
+                            _localizedPreview(
+                                    context, conversation.lastMessageContent) ??
+                                '',
                             style: AppTypography.body.copyWith(
-                              color: hasUnread 
-                                  ? AppColors.textPrimary 
+                              color: hasUnread
+                                  ? AppColors.textPrimary
                                   : AppColors.textSecondary,
-                              fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: hasUnread
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -678,7 +772,8 @@ class _ConversationTile extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.3),
+                                  color:
+                                      AppColors.primary.withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -709,7 +804,7 @@ class _ConversationTile extends StatelessWidget {
     if (dt == null) return '';
     final now = DateTime.now();
     final diff = now.difference(dt);
-    
+
     if (diff.inMinutes < 1) return 'Now';
     if (diff.inHours < 1) return '${diff.inMinutes}m';
     if (diff.inDays < 1) {

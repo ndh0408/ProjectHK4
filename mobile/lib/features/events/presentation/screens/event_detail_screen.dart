@@ -312,7 +312,38 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   label: 'Confirm Attendance',
                   icon: Icons.check_circle_outline,
                   onPressed: () async {
-                    // TODO: Call confirm registration API
+                    try {
+                      // Get registration ID from regStatus
+                      if (regStatus.registrationId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Registration ID not found')),
+                        );
+                        return;
+                      }
+                      
+                      final api = ref.read(apiServiceProvider);
+                      await api.confirmRegistration(regStatus.registrationId!);
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Attendance confirmed! See you at the event.'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                        // Refresh the registration status
+                        ref.invalidate(registrationStatusProvider(widget.eventId));
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to confirm: ${e.toString()}'),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    }
                   },
                 ),
               ],

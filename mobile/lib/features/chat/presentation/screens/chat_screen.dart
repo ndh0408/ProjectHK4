@@ -537,7 +537,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _startDirectChat(String userId, String fullName) async {
     if (userId == ref.read(currentUserProvider)?.id) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -545,7 +545,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     try {
-      final conversation = await ref.read(apiServiceProvider).getDirectChat(userId);
+      final conversation =
+          await ref.read(apiServiceProvider).getDirectChat(userId);
       if (mounted) {
         Navigator.pop(context); // close loader
         context.push('/chat/${conversation.id}', extra: conversation);
@@ -898,18 +899,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
-                  image: conversation.imageUrl != null
+                  image: conversation.displayImage != null
                       ? DecorationImage(
-                          image: NetworkImage(conversation.imageUrl!),
+                          image: NetworkImage(conversation.displayImage!),
                           fit: BoxFit.cover,
                         )
                       : null,
                 ),
-                child: conversation.imageUrl == null
+                child: conversation.displayImage == null
                     ? Icon(
                         conversation.type == ConversationType.eventGroup
                             ? Icons.groups
-                            : Icons.group,
+                            : conversation.type == ConversationType.group
+                                ? Icons.group
+                                : Icons.person,
                         size: 40,
                         color: AppColors.primary,
                       )
@@ -998,7 +1001,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               icon: const Icon(Icons.chat_bubble_outline),
                               onPressed: () {
                                 Navigator.pop(context);
-                                _startDirectChat(participant.userId, participant.fullName);
+                                _startDirectChat(
+                                    participant.userId, participant.fullName);
                               },
                             ),
                             onTap: () {
@@ -1670,7 +1674,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, size: 16, color: AppColors.textLight),
+            const Icon(Icons.chevron_right,
+                size: 16, color: AppColors.textLight),
           ],
         ),
       ),
@@ -1679,8 +1684,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _scrollToMessage(String messageId) {
     final state = ref.read(chatMessagesProvider(widget.conversationId));
-    final indexInList =
-        state.messages.indexWhere((m) => m.id == messageId);
+    final indexInList = state.messages.indexWhere((m) => m.id == messageId);
 
     if (indexInList == -1) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1822,7 +1826,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   setState(() => _messageSearchQuery = value);
                   _searchDebounce.run(() {
                     ref
-                        .read(chatMessagesProvider(widget.conversationId).notifier)
+                        .read(chatMessagesProvider(widget.conversationId)
+                            .notifier)
                         .searchMessages(value);
                   });
                 },
@@ -1899,15 +1904,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
         final message = visibleMessages[messageIndex];
         final isMe = message.sender?.id == currentUserId;
-        final showDateHeader = !isSearch &&
-            _shouldShowDateHeader(messageIndex, visibleMessages);
+        final showDateHeader =
+            !isSearch && _shouldShowDateHeader(messageIndex, visibleMessages);
 
         bool readByOthers = false;
         if (isMe) {
           final convo = _conversation ?? widget.conversation;
-          final others = convo?.participants
-                  ?.where((p) => p.userId != currentUserId) ??
-              const <ChatParticipant>[];
+          final others =
+              convo?.participants?.where((p) => p.userId != currentUserId) ??
+                  const <ChatParticipant>[];
           for (final p in others) {
             final lastRead = p.lastReadAt;
             if (lastRead != null && !lastRead.isBefore(message.createdAt)) {
@@ -1927,7 +1932,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               readByOthers: readByOthers,
               onAvatarTap: () {
                 if (!isMe && message.sender != null) {
-                  _startDirectChat(message.sender!.id, message.sender!.fullName);
+                  _startDirectChat(
+                      message.sender!.id, message.sender!.fullName);
                 }
               },
               onReply: () {
@@ -1948,7 +1954,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       },
     );
   }
-
 
   Widget _buildDateHeader(DateTime dateTime) {
     return Container(
@@ -2216,7 +2221,8 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -2305,7 +2311,8 @@ class _MessageBubble extends StatelessWidget {
                           padding: EdgeInsets.only(right: 4, bottom: 2),
                           child: _OrganiserBadge(),
                         ),
-                      if (message.type == MessageType.poll && message.poll != null)
+                      if (message.type == MessageType.poll &&
+                          message.poll != null)
                         ConstrainedBox(
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.78,
@@ -2391,7 +2398,8 @@ class _MessageBubble extends StatelessWidget {
                                         Expanded(
                                           child: Text(
                                             message.replyTo!.senderName,
-                                            style: AppTypography.caption.copyWith(
+                                            style:
+                                                AppTypography.caption.copyWith(
                                               fontWeight: FontWeight.w700,
                                               color: isMe
                                                   ? AppColors.textOnPrimary
@@ -2575,7 +2583,8 @@ class _TypingDotsState extends State<_TypingDots>
             mainAxisSize: MainAxisSize.min,
             children: List.generate(3, (i) {
               final t = (_controller.value - (i * 0.2)) % 1.0;
-              final scale = 0.4 + 0.6 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
+              final scale =
+                  0.4 + 0.6 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 1.5),
                 child: Container(

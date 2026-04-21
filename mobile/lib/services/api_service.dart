@@ -272,6 +272,16 @@ class ApiService {
     return Registration.fromJson(data);
   }
 
+  /// Confirm attendance for approved registration (FREE events)
+  Future<Registration> confirmRegistration(String registrationId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/events/registrations/$registrationId/confirm',
+    );
+    final data = response['data'] as Map<String, dynamic>? ?? response;
+    return Registration.fromJson(data);
+  }
+
+  /// Cancel registration
   Future<void> cancelRegistration(String registrationId) async {
     await _client.delete('/user/events/registrations/$registrationId');
   }

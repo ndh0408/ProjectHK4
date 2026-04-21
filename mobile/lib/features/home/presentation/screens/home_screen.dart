@@ -62,6 +62,18 @@ final myFutureRegistrationsProvider =
   return response.content.where((r) => r.event != null).toList();
 });
 
+final myPastRegistrationsProvider =
+    FutureProvider.autoDispose<List<Registration>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    return [];
+  }
+
+  final api = ref.watch(apiServiceProvider);
+  final response = await api.getMyRegistrations(upcoming: false);
+  return response.content.where((r) => r.event != null).toList();
+});
+
 final myFutureEventsProvider =
     FutureProvider.autoDispose<List<Event>>((ref) async {
   final registrations = await ref.watch(myFutureRegistrationsProvider.future);

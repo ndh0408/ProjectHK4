@@ -14,18 +14,6 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
 
-final myPastRegistrationsProvider =
-    FutureProvider.autoDispose<List<Registration>>((ref) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) {
-    return [];
-  }
-
-  final api = ref.watch(apiServiceProvider);
-  final response = await api.getMyRegistrations(upcoming: false);
-  return response.content;
-});
-
 class MyEventsScreen extends ConsumerStatefulWidget {
   const MyEventsScreen({super.key});
 
