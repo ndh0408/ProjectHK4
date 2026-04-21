@@ -1,6 +1,7 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,12 +13,33 @@ import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
 
-const stripePublishableKey = 'pk_test_51Sxd7VGtkdFFe1B5SLNRHhqdiHxfwGJlqdJeLADAsTB0DgxJsKQeYC9tQZ8HgjyUpzkMYEWdowoLJT7Sk3AeNLKp00aDdwCReQ';
+const _stripeKeyFromEnv = String.fromEnvironment(
+  'STRIPE_PUBLISHABLE_KEY',
+  defaultValue: '',
+);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Stripe.publishableKey = stripePublishableKey;
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('No .env file loaded (${e.runtimeType}); relying on --dart-define');
+  }
+
+  final stripePublishableKey = _stripeKeyFromEnv.isNotEmpty
+      ? _stripeKeyFromEnv
+      : (dotenv.maybeGet('STRIPE_PUBLISHABLE_KEY') ?? '');
+
+  if (stripePublishableKey.isNotEmpty) {
+    Stripe.publishableKey = stripePublishableKey;
+    await Stripe.instance.applySettings();
+  } else {
+    debugPrint(
+      'WARNING: STRIPE_PUBLISHABLE_KEY not set. Copy admin/mobile/.env.example to admin/mobile/.env '
+      'or pass --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_... so Payment Sheet can load.',
+    );
+  }
 
   if (!kIsWeb) {
     await SystemChrome.setPreferredOrientations([

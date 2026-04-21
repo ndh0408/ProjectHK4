@@ -6,3 +6,6 @@
 /android/app/profile
 /android/app/release
 /android/local.properties
+
+# Secrets — ship .env.example, keep real .env local
+.env
