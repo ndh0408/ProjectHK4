@@ -24,6 +24,9 @@ public class UserAIAssistantController {
     private final AIAssistantService assistantService;
     private final UserService userService;
 
+    private static final int MAX_MESSAGE_LENGTH = 1000;
+    private static final int MAX_HISTORY_MESSAGES = 20;
+
     @PostMapping("/chat")
     @Operation(summary = "Chat with AI assistant — detects intent, queries DB, generates natural response")
     public ResponseEntity<ApiResponse<Map<String, Object>>> chat(
@@ -33,6 +36,10 @@ public class UserAIAssistantController {
         if (message == null || message.isBlank()) {
             throw new com.luma.exception.BadRequestException("Message is required");
         }
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new com.luma.exception.BadRequestException(
+                    "Message too long (" + message.length() + " chars). Max " + MAX_MESSAGE_LENGTH + ".");
+        }
 
         User user = userDetails != null
                 ? userService.getEntityByEmail(userDetails.getUsername())
@@ -41,8 +48,16 @@ public class UserAIAssistantController {
         // Extract conversation history if provided
         @SuppressWarnings("unchecked")
         List<Map<String, String>> history = (List<Map<String, String>>) body.get("history");
+        if (history != null && history.size() > MAX_HISTORY_MESSAGES) {
+            // Keep only the tail — protects against clients sending unbounded transcripts.
+            history = history.subList(history.size() - MAX_HISTORY_MESSAGES, history.size());
+        }
 
-        Map<String, Object> result = assistantService.chat(message, user, history);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> sessionContext = body.get("context") instanceof Map<?, ?> raw
+                ? (Map<String, Object>) raw : null;
+
+        Map<String, Object> result = assistantService.chat(message, user, history, sessionContext);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

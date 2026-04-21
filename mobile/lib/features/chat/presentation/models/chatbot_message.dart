@@ -8,6 +8,9 @@ class ChatbotMessage {
   final int? dataPointsUsed;
   final List<ChatbotEvent>? events;
   final List<String>? suggestions;
+  final List<ChatbotTicket>? tickets;
+  final List<ChatbotTicketType>? ticketTypes;
+  final String? supportRequestId;
   final bool isLoading;
 
   ChatbotMessage({
@@ -20,6 +23,9 @@ class ChatbotMessage {
     this.dataPointsUsed,
     this.events,
     this.suggestions,
+    this.tickets,
+    this.ticketTypes,
+    this.supportRequestId,
     this.isLoading = false,
   });
 
@@ -43,6 +49,9 @@ class ChatbotMessage {
     DateTime? timestamp,
     List<ChatbotEvent>? events,
     List<String>? suggestions,
+    List<ChatbotTicket>? tickets,
+    List<ChatbotTicketType>? ticketTypes,
+    String? supportRequestId,
   }) {
     return ChatbotMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -54,6 +63,9 @@ class ChatbotMessage {
       dataPointsUsed: dataPointsUsed,
       events: events,
       suggestions: suggestions,
+      tickets: tickets,
+      ticketTypes: ticketTypes,
+      supportRequestId: supportRequestId,
     );
   }
 
@@ -102,6 +114,85 @@ class ChatbotEvent {
       price: (json['price'] as num?)?.toDouble(),
       approvedAttendees: json['approvedAttendees'] as int?,
       imageUrl: json['imageUrl'] as String?,
+    );
+  }
+}
+
+/// Ticket payload returned by TICKET_QR and CANCEL_REGISTRATION intents.
+class ChatbotTicket {
+  final String registrationId;
+  final String? ticketCode;
+  final String? status;
+  final bool checkedIn;
+  final String? eventId;
+  final String? eventTitle;
+  final String? startTime;
+  final String? venue;
+  final String? address;
+  final String? city;
+  final String? imageUrl;
+
+  ChatbotTicket({
+    required this.registrationId,
+    this.ticketCode,
+    this.status,
+    this.checkedIn = false,
+    this.eventId,
+    this.eventTitle,
+    this.startTime,
+    this.venue,
+    this.address,
+    this.city,
+    this.imageUrl,
+  });
+
+  factory ChatbotTicket.fromJson(Map<String, dynamic> json) {
+    return ChatbotTicket(
+      registrationId: json['registrationId']?.toString() ?? '',
+      ticketCode: json['ticketCode'] as String?,
+      status: json['status'] as String?,
+      checkedIn: json['checkedIn'] == true,
+      eventId: json['eventId']?.toString(),
+      eventTitle: json['eventTitle'] as String?,
+      startTime: json['startTime'] as String?,
+      venue: json['venue'] as String?,
+      address: json['address'] as String?,
+      city: json['city'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+    );
+  }
+}
+
+/// Ticket type option for BOOK_TICKET intent — user picks one to continue to
+/// checkout.
+class ChatbotTicketType {
+  final String id;
+  final String name;
+  final String? description;
+  final double price;
+  final int available;
+  final bool soldOut;
+  final int? maxPerOrder;
+
+  ChatbotTicketType({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.price,
+    required this.available,
+    required this.soldOut,
+    this.maxPerOrder,
+  });
+
+  factory ChatbotTicketType.fromJson(Map<String, dynamic> json) {
+    return ChatbotTicketType(
+      id: json['id']?.toString() ?? '',
+      name: json['name'] as String? ?? 'Ticket',
+      description: json['description'] as String?,
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      available: (json['available'] as num?)?.toInt() ?? 0,
+      soldOut: json['soldOut'] == true,
+      maxPerOrder: (json['maxPerOrder'] as num?)?.toInt(),
     );
   }
 }

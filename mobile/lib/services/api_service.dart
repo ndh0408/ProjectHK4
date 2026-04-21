@@ -1168,6 +1168,7 @@ class ApiService {
   Future<Map<String, dynamic>> askChatbot(
     String message, {
     List<Map<String, String>>? history,
+    Map<String, dynamic>? sessionContext,
     CancelToken? cancelToken,
   }) async {
     final requestData = <String, dynamic>{
@@ -1175,6 +1176,9 @@ class ApiService {
     };
     if (history != null && history.isNotEmpty) {
       requestData['history'] = history;
+    }
+    if (sessionContext != null && sessionContext.isNotEmpty) {
+      requestData['context'] = sessionContext;
     }
     final response = await _client.post<Map<String, dynamic>>(
       '/user/assistant/chat',

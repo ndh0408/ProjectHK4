@@ -47,6 +47,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     Page<Registration> findByUser(User user, Pageable pageable);
 
+    Page<Registration> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+
     Page<Registration> findByEvent(Event event, Pageable pageable);
 
     Page<Registration> findByEventAndStatus(Event event, RegistrationStatus status, Pageable pageable);

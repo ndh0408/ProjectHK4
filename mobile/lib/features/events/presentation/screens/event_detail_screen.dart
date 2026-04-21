@@ -21,6 +21,7 @@ import '../../../home/providers/events_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../chat/presentation/providers/chatbot_provider.dart';
 import '../../../explore/presentation/providers/comparison_provider.dart';
 import 'contact_host_screen.dart';
 import 'payment_screen.dart';
@@ -73,7 +74,20 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     super.initState();
     Future.microtask(() {
       ref.read(apiServiceProvider).trackEventView(widget.eventId);
+      // Let the chatbot resolve pronouns like "this", "cái này", "nó" to
+      // the event currently on screen without the user retyping the name.
+      ref.read(chatbotProvider.notifier).setActiveEvent(widget.eventId);
     });
+  }
+
+  @override
+  void dispose() {
+    // Best-effort clear — if the user jumps to another event, that screen
+    // will overwrite this. Guard against the provider being torn down.
+    try {
+      ref.read(chatbotProvider.notifier).setActiveEvent(null);
+    } catch (_) {}
+    super.dispose();
   }
 
   Future<void> _register(Event event) async {
@@ -1259,38 +1273,23 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
                   ],
 
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => context.push(
-                            '/event/${event.id}/polls',
-                            extra: {'eventTitle': event.title},
-                          ),
-                          icon: const Icon(Icons.poll, size: 18),
-                          label: const Text('Live Polls'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
+                  // Live polls now appear directly inside the event group
+                  // chat so attendees can vote without leaving the chat —
+                  // the dedicated Polls entry point was removed.
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push(
+                        '/event/${event.id}/schedule',
+                        extra: {'eventTitle': event.title},
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => context.push(
-                            '/event/${event.id}/schedule',
-                            extra: {'eventTitle': event.title},
-                          ),
-                          icon: const Icon(Icons.calendar_month, size: 18),
-                          label: const Text('Schedule'),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
+                      icon: const Icon(Icons.calendar_month, size: 18),
+                      label: const Text('Schedule'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                    ],
+                    ),
                   ),
 
                   const SizedBox(height: 24),

@@ -23,6 +23,32 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
   static const _maxStored = 50;
   static const _historyContextWindow = 10;
 
+  /// Lightweight context the backend uses to resolve pronouns like
+  /// "this event", "cái này". Mobile updates this as the user navigates.
+  String? _activeEventId;
+  String? _activeRegistrationId;
+  final List<String> _lastEventIds = [];
+
+  /// Called by screens (event detail, my-tickets) so the bot can answer
+  /// "là gì", "bao nhiêu" without the user retyping the name.
+  void setActiveEvent(String? eventId) {
+    _activeEventId = eventId;
+  }
+
+  void setActiveRegistration(String? registrationId) {
+    _activeRegistrationId = registrationId;
+  }
+
+  Map<String, dynamic> _buildSessionContext() {
+    final ctx = <String, dynamic>{};
+    if (_activeEventId != null) ctx['activeEventId'] = _activeEventId;
+    if (_activeRegistrationId != null) {
+      ctx['activeRegistrationId'] = _activeRegistrationId;
+    }
+    if (_lastEventIds.isNotEmpty) ctx['lastEventIds'] = _lastEventIds;
+    return ctx;
+  }
+
   /// True while the backend is processing a message. UI should block
   /// the send button to prevent duplicate requests.
   bool get isThinking {
@@ -195,17 +221,55 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
       final response = await _api.askChatbot(
         prompt,
         history: history,
+        sessionContext: _buildSessionContext(),
         cancelToken: token,
       );
 
       final events = <ChatbotEvent>[];
+      final tickets = <ChatbotTicket>[];
+      final ticketTypes = <ChatbotTicketType>[];
+      String? supportRequestId;
+
       final data = response['data'];
-      if (data is Map<String, dynamic> && data['events'] is List) {
-        for (final e in data['events'] as List) {
-          if (e is Map<String, dynamic>) {
-            events.add(ChatbotEvent.fromJson(e));
+      if (data is Map<String, dynamic>) {
+        if (data['events'] is List) {
+          for (final e in data['events'] as List) {
+            if (e is Map<String, dynamic>) {
+              events.add(ChatbotEvent.fromJson(e));
+            }
           }
         }
+        // EVENT_DETAILS returns a single "event" — render it as a 1-item list.
+        if (data['event'] is Map<String, dynamic>) {
+          events.add(ChatbotEvent.fromJson(data['event'] as Map<String, dynamic>));
+        }
+        if (data['tickets'] is List) {
+          for (final t in data['tickets'] as List) {
+            if (t is Map<String, dynamic>) {
+              tickets.add(ChatbotTicket.fromJson(t));
+            }
+          }
+        }
+        if (data['registration'] is Map<String, dynamic>) {
+          tickets.add(ChatbotTicket.fromJson(data['registration'] as Map<String, dynamic>));
+        }
+        if (data['ticketTypes'] is List) {
+          for (final t in data['ticketTypes'] as List) {
+            if (t is Map<String, dynamic>) {
+              ticketTypes.add(ChatbotTicketType.fromJson(t));
+            }
+          }
+        }
+        if (data['supportRequestId'] != null) {
+          supportRequestId = data['supportRequestId'].toString();
+        }
+      }
+
+      // Remember the last batch of events so follow-up references resolve.
+      if (events.isNotEmpty) {
+        _lastEventIds
+          ..clear()
+          ..addAll(events.map((e) => e.id).where((id) => id.isNotEmpty));
       }
 
       List<String>? suggestions;
@@ -222,6 +286,9 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
         data: (response['data'] as Map<String, dynamic>?) ?? const {},
         dataPointsUsed: response['dataPointsUsed'] as int? ?? 0,
         events: events.isNotEmpty ? events : null,
+        tickets: tickets.isNotEmpty ? tickets : null,
+        ticketTypes: ticketTypes.isNotEmpty ? ticketTypes : null,
+        supportRequestId: supportRequestId,
         suggestions: suggestions,
       );
 
@@ -302,7 +369,10 @@ class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
   }
 }
 
-final chatbotProvider = StateNotifierProvider.autoDispose<ChatbotNotifier,
+/// Kept alive across screens so other features (event detail, my-tickets)
+/// can prime the session context ("user is currently viewing event X") and
+/// the bot can answer follow-up questions without the user retyping.
+final chatbotProvider = StateNotifierProvider<ChatbotNotifier,
     AsyncValue<List<ChatbotMessage>>>((ref) {
   final api = ref.watch(apiServiceProvider);
   return ChatbotNotifier(api);

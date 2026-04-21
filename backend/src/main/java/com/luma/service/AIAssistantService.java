@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luma.entity.Bookmark;
 import com.luma.entity.Event;
 import com.luma.entity.Registration;
+import com.luma.entity.SupportRequest;
 import com.luma.entity.User;
+import com.luma.entity.enums.RegistrationStatus;
 import com.luma.repository.BookmarkRepository;
 import com.luma.repository.CategoryRepository;
 import com.luma.repository.CityRepository;
@@ -37,6 +39,9 @@ public class AIAssistantService {
     private final CityRepository cityRepository;
     private final BookmarkRepository bookmarkRepository;
     private final RegistrationRepository registrationRepository;
+    private final com.luma.repository.TicketTypeRepository ticketTypeRepository;
+    private final PaymentService paymentService;
+    private final com.luma.service.SupportRequestService supportRequestService;
 
     @Value("${groq.model:llama-3.3-70b-versatile}")
     private String model;
@@ -46,8 +51,14 @@ public class AIAssistantService {
 
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @org.springframework.transaction.annotation.Transactional
     public Map<String, Object> chat(String userMessage, User user, List<Map<String, String>> conversationHistory) {
+        return chat(userMessage, user, conversationHistory, null);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public Map<String, Object> chat(String userMessage, User user, List<Map<String, String>> conversationHistory,
+                                    Map<String, Object> sessionContext) {
         boolean vietnamese = isVietnamese(userMessage);
 
         if (apiKey == null || apiKey.isBlank()) {
@@ -56,7 +67,7 @@ public class AIAssistantService {
         }
 
         try {
-            Map<String, Object> intent = detectIntent(userMessage);
+            Map<String, Object> intent = detectIntent(userMessage, sessionContext);
             String intentType = (String) intent.getOrDefault("intent", "GENERAL_QUERY");
             log.info("AI Assistant intent={} user={} vi={}", intentType,
                     user != null ? user.getId() : "anonymous", vietnamese);
@@ -89,9 +100,10 @@ public class AIAssistantService {
                         suggestionsFor("AUTH_REQUIRED", vietnamese));
             }
 
-            Map<String, Object> retrievedData = executeFunction(intentType, intent, user);
+            Map<String, Object> retrievedData = executeFunction(intentType, intent, user, sessionContext,
+                    userMessage, conversationHistory);
             String naturalResponse = generateResponse(userMessage, intentType, retrievedData,
-                    conversationHistory, user, vietnamese);
+                    conversationHistory, user, vietnamese, sessionContext);
 
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("response", naturalResponse);
@@ -412,11 +424,19 @@ public class AIAssistantService {
 
     // ───────────────────────────── Intent classifier ─────────────────────────────
 
-    private Map<String, Object> detectIntent(String userMessage) {
+    private Map<String, Object> detectIntent(String userMessage, Map<String, Object> sessionContext) {
+        String contextHint = "";
+        if (sessionContext != null && !sessionContext.isEmpty()) {
+            try {
+                contextHint = "\n            Current session context (use it to resolve pronouns like \"this\", \"nó\", \"cái này\"):\n            "
+                        + objectMapper.writeValueAsString(sessionContext) + "\n";
+            } catch (Exception ignored) { /* non-fatal */ }
+        }
+
         String systemPrompt = """
             You are an intent classifier for the LUMA event marketplace assistant.
             Analyze the user message (English OR Vietnamese) and return ONLY valid JSON (no markdown).
-
+            %s
             Available intents:
             - SEARCH_EVENTS: find events by keyword/category/city/venue/address
             - RECOMMEND_EVENTS: ask for personalized event recommendations
@@ -425,9 +445,14 @@ public class AIAssistantService {
             - EVENT_PRICE_QUERY: ask about price ranges or free events overall
             - UPCOMING_EVENTS: ask what's happening soon / this week / this weekend
             - SEARCH_BY_SPEAKER: ask about events by a specific speaker / artist / host
-            - EVENT_DETAILS: ask for full details about ONE specific event (by title or keyword)
+            - EVENT_DETAILS: ask for full details about ONE specific event (by title, keyword, or via session context "this event")
             - COMPARE_EVENTS: compare two or more specific events side-by-side
-            - REGISTRATION_HELP: how to register / buy tickets / check-in / cancel / refund questions
+            - REGISTRATION_HELP: how to register / buy tickets / check-in questions (general "how to" questions)
+            - BOOK_TICKET: user wants to BUY/REGISTER for a specific event right now — often right after viewing one
+            - CHECK_PAYMENT: "did my payment go through", "đã trừ tiền chưa có vé", "payment status", "my order status"
+            - TICKET_QR: "show my QR", "my ticket code", "check-in code", "vé tôi đâu", "mã QR"
+            - CANCEL_REGISTRATION: "cancel my ticket", "huỷ vé", "refund", "I don't want to attend anymore"
+            - ESCALATE: "I need a human", "contact support", "liên hệ hỗ trợ", repeated complaints the bot can't resolve, billing disputes
             - MY_REGISTRATIONS: ask about events the user has already registered for
             - MY_BOOKMARKS: ask about events the user has saved/bookmarked
             - GREETING: hello, hi, thanks, bye, xin chào, cảm ơn
@@ -435,13 +460,15 @@ public class AIAssistantService {
 
             Response schema:
             {
-              "intent": "SEARCH_EVENTS|RECOMMEND_EVENTS|LIST_CATEGORIES|LIST_CITIES|EVENT_PRICE_QUERY|UPCOMING_EVENTS|SEARCH_BY_SPEAKER|EVENT_DETAILS|COMPARE_EVENTS|REGISTRATION_HELP|MY_REGISTRATIONS|MY_BOOKMARKS|GREETING|OFF_TOPIC",
+              "intent": "SEARCH_EVENTS|RECOMMEND_EVENTS|LIST_CATEGORIES|LIST_CITIES|EVENT_PRICE_QUERY|UPCOMING_EVENTS|SEARCH_BY_SPEAKER|EVENT_DETAILS|COMPARE_EVENTS|REGISTRATION_HELP|BOOK_TICKET|CHECK_PAYMENT|TICKET_QR|CANCEL_REGISTRATION|ESCALATE|MY_REGISTRATIONS|MY_BOOKMARKS|GREETING|OFF_TOPIC",
               "keyword": "extracted keyword or null",
               "category": "extracted category name or null",
               "city": "extracted city name or null",
               "venue": "extracted venue/address/street or null",
               "speaker": "extracted speaker/artist name or null",
               "eventTitles": ["title A", "title B"] or null,
+              "registrationId": "UUID if user referenced a specific ticket/order or null",
+              "escalationCategory": "PAYMENT_ISSUE|REFUND|TICKET_MISSING|ACCOUNT|EVENT_INFO|OTHER or null",
               "limit": 5
             }
 
@@ -476,9 +503,24 @@ public class AIAssistantService {
             "Xin chào" → {"intent":"GREETING","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
             "Free events under $20" → {"intent":"EVENT_PRICE_QUERY","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
             "Sự kiện có phí bao nhiêu?" → {"intent":"EVENT_PRICE_QUERY","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "Book me a ticket to TechFest" → {"intent":"BOOK_TICKET","keyword":"TechFest","category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":1}
+            "Mua 2 vé cho Music Festival" → {"intent":"BOOK_TICKET","keyword":"Music Festival","category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":1}
+            "Đăng ký cho tôi" (after viewing an event) → {"intent":"BOOK_TICKET","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":1}
+            "Did my payment go through?" → {"intent":"CHECK_PAYMENT","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"registrationId":null,"limit":5}
+            "Đã trừ tiền nhưng chưa thấy vé" → {"intent":"CHECK_PAYMENT","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"registrationId":null,"escalationCategory":"PAYMENT_ISSUE","limit":5}
+            "Trạng thái đơn hàng của tôi" → {"intent":"CHECK_PAYMENT","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"registrationId":null,"limit":5}
+            "Show me my QR code" → {"intent":"TICKET_QR","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "Mã QR vé của tôi" → {"intent":"TICKET_QR","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "Gửi lại email vé" → {"intent":"TICKET_QR","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "Cancel my ticket" → {"intent":"CANCEL_REGISTRATION","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"registrationId":null,"limit":5}
+            "Tôi muốn huỷ vé" → {"intent":"CANCEL_REGISTRATION","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "Huỷ đơn hàng" → {"intent":"CANCEL_REGISTRATION","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
+            "I need a human agent" → {"intent":"ESCALATE","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"escalationCategory":"OTHER","limit":5}
+            "Liên hệ CSKH" → {"intent":"ESCALATE","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"escalationCategory":"OTHER","limit":5}
+            "Bạn không hiểu, cho tôi nói chuyện với người thật" → {"intent":"ESCALATE","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"escalationCategory":"OTHER","limit":5}
             "What is 2+2?" → {"intent":"OFF_TOPIC","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
             "Tell me about Python" → {"intent":"OFF_TOPIC","keyword":null,"category":null,"city":null,"venue":null,"speaker":null,"eventTitles":null,"limit":5}
-            """;
+            """.formatted(contextHint);
 
         String response = callGroqApi(systemPrompt, userMessage, 200, 0.2, null);
         try {
@@ -493,7 +535,9 @@ public class AIAssistantService {
 
     // ───────────────────────────── Function execution ─────────────────────────────
 
-    private Map<String, Object> executeFunction(String intentType, Map<String, Object> intent, User user) {
+    private Map<String, Object> executeFunction(String intentType, Map<String, Object> intent, User user,
+                                                 Map<String, Object> sessionContext, String userMessage,
+                                                 List<Map<String, String>> conversationHistory) {
         Map<String, Object> result = new LinkedHashMap<>();
         Integer limit = intent.get("limit") instanceof Number n ? n.intValue() : 5;
 
@@ -697,6 +741,139 @@ public class AIAssistantService {
                 ));
             }
 
+            case "BOOK_TICKET" -> {
+                // Resolve which event to book: explicit keyword > session context.
+                String keyword = (String) intent.get("keyword");
+                Event target = resolveEventForBooking(keyword, sessionContext);
+                if (target == null) {
+                    result.put("needEventSelection", true);
+                    // Offer some upcoming events the user can pick from.
+                    List<Event> upcoming = eventRepository.findUpcomingPublicEvents(
+                            LocalDateTime.now(), LocalDateTime.now().plusMonths(3),
+                            PageRequest.of(0, 5)).getContent();
+                    result.put("events", summarizeEvents(upcoming));
+                } else {
+                    result.put("event", detailedEvent(target));
+                    List<com.luma.entity.TicketType> ticketTypes =
+                            ticketTypeRepository.findAvailableByEventId(target.getId());
+                    result.put("ticketTypes", summarizeTicketTypes(ticketTypes));
+                    result.put("ticketTypeCount", ticketTypes.size());
+                    if (user == null) result.put("requiresAuth", true);
+                }
+            }
+
+            case "CHECK_PAYMENT" -> {
+                if (user == null) {
+                    result.put("requiresAuth", true);
+                    break;
+                }
+                UUID registrationId = parseUuid(intent.get("registrationId"));
+                if (registrationId == null) registrationId = parseUuid(sessionContextGet(sessionContext, "activeRegistrationId"));
+
+                if (registrationId != null) {
+                    try {
+                        result.put("payment", paymentService.getPaymentByRegistrationId(registrationId, user));
+                        result.put("count", 1);
+                    } catch (Exception e) {
+                        log.warn("Failed to load payment for registration {}: {}", registrationId, e.getMessage());
+                        result.put("payment", null);
+                        result.put("error", e.getMessage());
+                    }
+                } else {
+                    // Fall back to the user's 3 most recent registrations so they can pick.
+                    List<Registration> recent = registrationRepository
+                            .findByUserOrderByCreatedAtDesc(user, PageRequest.of(0, 3))
+                            .getContent();
+                    List<Map<String, Object>> summaries = recent.stream()
+                            .map(this::summarizeRegistrationPayment)
+                            .toList();
+                    result.put("registrations", summaries);
+                    result.put("count", summaries.size());
+                }
+            }
+
+            case "TICKET_QR" -> {
+                if (user == null) {
+                    result.put("requiresAuth", true);
+                    break;
+                }
+                List<Registration> approved = registrationRepository
+                        .findUpcomingRegistrationsByUser(user, PageRequest.of(0, 10))
+                        .stream()
+                        .filter(r -> r.getTicketCode() != null && !r.getTicketCode().isBlank())
+                        .toList();
+                List<Map<String, Object>> tickets = approved.stream()
+                        .map(this::summarizeTicket)
+                        .toList();
+                result.put("tickets", tickets);
+                result.put("count", tickets.size());
+            }
+
+            case "CANCEL_REGISTRATION" -> {
+                if (user == null) {
+                    result.put("requiresAuth", true);
+                    break;
+                }
+                UUID registrationId = parseUuid(intent.get("registrationId"));
+                if (registrationId == null) registrationId = parseUuid(sessionContextGet(sessionContext, "activeRegistrationId"));
+
+                if (registrationId != null) {
+                    // User has already picked which ticket — expose it for the UI
+                    // confirmation card. Actual cancellation still goes through
+                    // the existing DELETE endpoint (two-step flow).
+                    Registration reg = registrationRepository.findById(registrationId).orElse(null);
+                    if (reg != null && reg.getUser() != null && reg.getUser().getId().equals(user.getId())) {
+                        result.put("registration", summarizeTicket(reg));
+                        result.put("cancellable", reg.getStatus() != RegistrationStatus.CANCELLED
+                                && (reg.getEvent().getStartTime() == null
+                                        || reg.getEvent().getStartTime().isAfter(LocalDateTime.now())));
+                    }
+                } else {
+                    // Offer the list so the user can pick which one to cancel.
+                    List<Registration> upcoming = registrationRepository
+                            .findUpcomingRegistrationsByUser(user, PageRequest.of(0, 10))
+                            .stream()
+                            .filter(r -> r.getStatus() != RegistrationStatus.CANCELLED)
+                            .toList();
+                    result.put("tickets", upcoming.stream().map(this::summarizeTicket).toList());
+                    result.put("count", upcoming.size());
+                }
+            }
+
+            case "ESCALATE" -> {
+                // Create a support request capturing the last 10 turns of the
+                // conversation so a human agent can pick up with context.
+                if (user == null) {
+                    result.put("requiresAuth", true);
+                    break;
+                }
+                SupportRequest.Category category = parseCategory((String) intent.get("escalationCategory"));
+                List<Map<String, String>> tail = trimTranscript(conversationHistory);
+                Event relatedEvent = resolveEventFromContext(sessionContext);
+                Registration relatedReg = null;
+                UUID relatedRegId = parseUuid(sessionContextGet(sessionContext, "activeRegistrationId"));
+                if (relatedRegId != null) {
+                    relatedReg = registrationRepository.findById(relatedRegId).orElse(null);
+                    if (relatedReg != null && (relatedReg.getUser() == null
+                            || !relatedReg.getUser().getId().equals(user.getId()))) {
+                        relatedReg = null; // don't leak someone else's ticket
+                    }
+                }
+                SupportRequest created = supportRequestService.escalateFromChat(
+                        user,
+                        "Chatbot escalation",
+                        truncate(userMessage, 2000),
+                        category,
+                        tail,
+                        relatedEvent,
+                        relatedReg
+                );
+                result.put("supportRequestId", created.getId());
+                result.put("category", created.getCategory().name());
+                result.put("createdAt", created.getCreatedAt() != null
+                        ? created.getCreatedAt().toString() : null);
+            }
+
             case "MY_REGISTRATIONS" -> {
                 List<Event> events = registrationRepository
                         .findUpcomingRegistrationsByUser(user, PageRequest.of(0, limit))
@@ -753,6 +930,13 @@ public class AIAssistantService {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         List<Map<String, Object>> list = new ArrayList<>();
         for (Event e : events) {
+            Integer capacity = e.getCapacity();
+            int approved = e.getApprovedCount();
+            // Hide sold-out events from discovery results — nothing the user
+            // can do with them, and the bot should never suggest registering
+            // for an event that's already full.
+            if (capacity != null && capacity > 0 && approved >= capacity) continue;
+
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("id", e.getId());
             m.put("title", e.getTitle());
@@ -761,7 +945,9 @@ public class AIAssistantService {
             m.put("city", e.getCity() != null ? e.getCity().getName() : null);
             m.put("category", e.getCategory() != null ? e.getCategory().getName() : null);
             m.put("price", e.getTicketPrice() != null ? e.getTicketPrice() : 0);
-            m.put("approvedAttendees", e.getApprovedCount());
+            m.put("approvedAttendees", approved);
+            m.put("capacity", capacity);
+            m.put("spotsRemaining", capacity != null ? Math.max(0, capacity - approved) : null);
             m.put("imageUrl", e.getImageUrl());
             list.add(m);
         }
@@ -800,10 +986,104 @@ public class AIAssistantService {
         return s.length() <= max ? s : s.substring(0, max) + "…";
     }
 
+    /// Compact projection of TicketType for the BOOK_TICKET card.
+    private List<Map<String, Object>> summarizeTicketTypes(List<com.luma.entity.TicketType> ticketTypes) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (com.luma.entity.TicketType t : ticketTypes) {
+            int available = Math.max(0, t.getQuantity() - t.getSoldCount());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", t.getId());
+            m.put("name", t.getName());
+            m.put("description", t.getDescription());
+            m.put("price", t.getPrice() != null ? t.getPrice() : java.math.BigDecimal.ZERO);
+            m.put("available", available);
+            m.put("soldOut", available <= 0);
+            m.put("maxPerOrder", t.getMaxPerOrder());
+            list.add(m);
+        }
+        return list;
+    }
+
+    /// Small ticket projection used by TICKET_QR and CANCEL_REGISTRATION — we
+    /// expose the raw `ticketCode` so the mobile can render a QR locally with
+    /// qr_flutter (no extra round-trip to the backend).
+    private Map<String, Object> summarizeTicket(Registration r) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("registrationId", r.getId());
+        m.put("ticketCode", r.getTicketCode());
+        m.put("status", r.getStatus() != null ? r.getStatus().name() : null);
+        m.put("checkedIn", r.getCheckedInAt() != null);
+        m.put("checkedInAt", r.getCheckedInAt() != null ? r.getCheckedInAt().format(dtf) : null);
+        Event e = r.getEvent();
+        if (e != null) {
+            m.put("eventId", e.getId());
+            m.put("eventTitle", e.getTitle());
+            m.put("startTime", e.getStartTime() != null ? e.getStartTime().format(dtf) : null);
+            m.put("venue", e.getVenue());
+            m.put("address", e.getAddress());
+            m.put("city", e.getCity() != null ? e.getCity().getName() : null);
+            m.put("imageUrl", e.getImageUrl());
+        }
+        return m;
+    }
+
+    private Map<String, Object> summarizeRegistrationPayment(Registration r) {
+        Map<String, Object> m = summarizeTicket(r);
+        if (r.getUser() != null) {
+            try {
+                m.put("payment", paymentService.getPaymentByRegistrationId(r.getId(), r.getUser()));
+            } catch (Exception ignored) {
+                m.put("payment", null);
+            }
+        }
+        return m;
+    }
+
+    private UUID parseUuid(Object raw) {
+        if (raw == null) return null;
+        try { return UUID.fromString(raw.toString()); }
+        catch (Exception e) { return null; }
+    }
+
+    private Object sessionContextGet(Map<String, Object> ctx, String key) {
+        return ctx == null ? null : ctx.get(key);
+    }
+
+    private SupportRequest.Category parseCategory(String raw) {
+        if (raw == null) return SupportRequest.Category.OTHER;
+        try { return SupportRequest.Category.valueOf(raw.trim().toUpperCase()); }
+        catch (Exception e) { return SupportRequest.Category.OTHER; }
+    }
+
+    /// Keep the last 10 non-empty turns for the support transcript — more
+    /// than that is almost never useful and just bloats the database row.
+    private List<Map<String, String>> trimTranscript(List<Map<String, String>> history) {
+        if (history == null || history.isEmpty()) return List.of();
+        int start = Math.max(0, history.size() - 10);
+        return history.subList(start, history.size());
+    }
+
+    private Event resolveEventFromContext(Map<String, Object> sessionContext) {
+        UUID eventId = parseUuid(sessionContextGet(sessionContext, "activeEventId"));
+        if (eventId == null) return null;
+        return eventRepository.findById(eventId).orElse(null);
+    }
+
+    private Event resolveEventForBooking(String keyword, Map<String, Object> sessionContext) {
+        if (keyword != null && !keyword.isBlank()) {
+            List<Event> match = eventRepository.searchEventsByKeyword(
+                    keyword, LocalDateTime.now(), PageRequest.of(0, 1));
+            if (!match.isEmpty()) return match.get(0);
+        }
+        return resolveEventFromContext(sessionContext);
+    }
+
     // ───────────────────────────── Response generation ─────────────────────────────
 
     private String generateResponse(String userMessage, String intentType, Map<String, Object> data,
-                                    List<Map<String, String>> conversationHistory, User user, boolean vietnamese) {
+                                    List<Map<String, String>> conversationHistory, User user, boolean vietnamese,
+                                    Map<String, Object> sessionContext) {
         String langInstruction = vietnamese
                 ? "Respond in **Vietnamese** (the user wrote in Vietnamese)."
                 : "Respond in **English** (the user wrote in English).";
@@ -860,6 +1140,15 @@ public class AIAssistantService {
                 .append(sanitizeForPrompt(userMessage))
                 .append("\n<<<END_USER_INPUT>>>\n\n");
         userPrompt.append("Intent classified as: ").append(intentType).append("\n\n");
+        if (sessionContext != null && !sessionContext.isEmpty()) {
+            userPrompt.append("Session context (resolves pronouns like \"this\", \"cái này\"):\n");
+            try {
+                userPrompt.append(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(sessionContext));
+            } catch (Exception e) {
+                userPrompt.append(sessionContext.toString());
+            }
+            userPrompt.append("\n\n");
+        }
         userPrompt.append("=== DATA RETRIEVED FROM DATABASE ===\n");
         try {
             userPrompt.append(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(data));
@@ -912,6 +1201,21 @@ public class AIAssistantService {
             case "REGISTRATION_HELP" -> vi
                     ? List.of("Vé của tôi", "Hoàn tiền thế nào", "Check-in thế nào", "Sự kiện sắp tới")
                     : List.of("My tickets", "Refund process", "How to check in", "Upcoming events");
+            case "BOOK_TICKET" -> vi
+                    ? List.of("Xem vé của tôi", "So sánh giá", "Có voucher không", "Huỷ đơn")
+                    : List.of("My tickets", "Compare prices", "Got any coupons?", "Cancel order");
+            case "CHECK_PAYMENT" -> vi
+                    ? List.of("Xem mã QR vé", "Huỷ đơn", "Gặp CSKH", "Đơn hàng khác")
+                    : List.of("Show my QR", "Cancel order", "Contact support", "Other orders");
+            case "TICKET_QR" -> vi
+                    ? List.of("Hướng dẫn check-in", "Sự kiện tương tự", "Gửi lại email vé", "Huỷ vé")
+                    : List.of("How to check in", "Similar events", "Resend ticket email", "Cancel ticket");
+            case "CANCEL_REGISTRATION" -> vi
+                    ? List.of("Chính sách hoàn tiền", "Gặp CSKH", "Xem vé của tôi", "Sự kiện thay thế")
+                    : List.of("Refund policy", "Contact support", "My tickets", "Alternative events");
+            case "ESCALATE" -> vi
+                    ? List.of("Xem đơn hàng", "Gửi lại vé qua email", "Sự kiện sắp tới", "FAQ")
+                    : List.of("View my orders", "Resend ticket email", "Upcoming events", "FAQ");
             case "LIST_CATEGORIES" -> vi
                     ? List.of("Sự kiện công nghệ", "Sự kiện âm nhạc", "Sự kiện ẩm thực", "Sự kiện thể thao")
                     : List.of("Tech events", "Music events", "Food events", "Sport events");

@@ -27,9 +27,15 @@ public class RateLimitConfig {
     @Value("${rate-limit.api.requests-per-minute:100}")
     private int apiRequestsPerMinute;
 
+    /// LLM endpoint gets a much tighter budget than the generic API bucket
+    /// — every hit costs Groq tokens and there is no database cache yet.
+    @Value("${rate-limit.assistant.requests-per-minute:15}")
+    private int assistantRequestsPerMinute;
+
     private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> registerBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
+    private final Map<String, Bucket> assistantBuckets = new ConcurrentHashMap<>();
 
     public boolean isEnabled() {
         return enabled;
@@ -45,6 +51,10 @@ public class RateLimitConfig {
 
     public Bucket getApiBucket(String ipAddress) {
         return apiBuckets.computeIfAbsent(ipAddress, this::createApiBucket);
+    }
+
+    public Bucket getAssistantBucket(String key) {
+        return assistantBuckets.computeIfAbsent(key, this::createAssistantBucket);
     }
 
     private Bucket createLoginBucket(String key) {
@@ -71,6 +81,14 @@ public class RateLimitConfig {
         return Bucket.builder().addLimit(limit).build();
     }
 
+    private Bucket createAssistantBucket(String key) {
+        Bandwidth limit = Bandwidth.classic(
+                assistantRequestsPerMinute,
+                Refill.greedy(assistantRequestsPerMinute, Duration.ofMinutes(1))
+        );
+        return Bucket.builder().addLimit(limit).build();
+    }
+
     public void cleanupOldBuckets() {
         if (loginBuckets.size() > 10000) {
             loginBuckets.clear();
@@ -80,6 +98,9 @@ public class RateLimitConfig {
         }
         if (apiBuckets.size() > 10000) {
             apiBuckets.clear();
+        }
+        if (assistantBuckets.size() > 10000) {
+            assistantBuckets.clear();
         }
     }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/config/theme.dart';
@@ -455,6 +456,42 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                 ),
               ),
             ),
+          if (message.tickets != null && message.tickets!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final ticket in message.tickets!)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _ChatbotTicketCard(
+                          ticket: ticket,
+                          allowCancel: message.intent == 'CANCEL_REGISTRATION',
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          if (message.ticketTypes != null && message.ticketTypes!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: _ChatbotTicketTypePicker(
+                  ticketTypes: message.ticketTypes!,
+                  eventId: _extractEventIdFromData(message),
+                ),
+              ),
+            ),
+          if (message.supportRequestId != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: _SupportEscalationCard(requestId: message.supportRequestId!),
+            ),
           Padding(
             padding: EdgeInsets.only(
               top: 2,
@@ -473,6 +510,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         ],
       ),
     );
+  }
+
+  String? _extractEventIdFromData(ChatbotMessage message) {
+    final data = message.data;
+    if (data is Map<String, dynamic>) {
+      final event = data['event'];
+      if (event is Map<String, dynamic>) return event['id']?.toString();
+    }
+    return null;
   }
 
   void _showMessageActions(ChatbotMessage message) {
@@ -1172,6 +1218,474 @@ class _PriceBadge extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: isPaid ? AppColors.primary : AppColors.success,
         ),
+      ),
+    );
+  }
+}
+
+/// Ticket card used by TICKET_QR (show QR) and CANCEL_REGISTRATION (offer
+/// a Cancel action on upcoming tickets). We render the QR locally from the
+/// raw `ticketCode` so no extra backend round-trip is needed.
+class _ChatbotTicketCard extends ConsumerStatefulWidget {
+  const _ChatbotTicketCard({
+    required this.ticket,
+    this.allowCancel = false,
+  });
+
+  final ChatbotTicket ticket;
+  final bool allowCancel;
+
+  @override
+  ConsumerState<_ChatbotTicketCard> createState() => _ChatbotTicketCardState();
+}
+
+class _ChatbotTicketCardState extends ConsumerState<_ChatbotTicketCard> {
+  bool _cancelling = false;
+  bool _cancelled = false;
+
+  String _formatDate(String? iso) {
+    if (iso == null) return '';
+    try {
+      return DateFormat('EEE, MMM d · HH:mm').format(DateTime.parse(iso));
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  Future<void> _confirmCancel() async {
+    final isVi = Localizations.localeOf(context).languageCode == 'vi';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isVi ? 'Huỷ vé?' : 'Cancel ticket?'),
+        content: Text(isVi
+            ? 'Bạn sẽ mất chỗ cho sự kiện này. Nếu đã thanh toán, hoàn tiền xử lý theo chính sách BTC.'
+            : "You'll lose your spot. If you've paid, the refund follows the organiser's policy."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(isVi ? 'Giữ vé' : 'Keep ticket'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(isVi ? 'Huỷ vé' : 'Cancel'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _cancelling = true);
+    try {
+      await ref.read(apiServiceProvider).cancelRegistration(widget.ticket.registrationId);
+      if (!mounted) return;
+      setState(() {
+        _cancelling = false;
+        _cancelled = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isVi ? 'Đã huỷ vé' : 'Ticket cancelled'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _cancelling = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isVi ? 'Không huỷ được: $e' : 'Failed to cancel: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isVi = Localizations.localeOf(context).languageCode == 'vi';
+    final ticket = widget.ticket;
+    final hasCode = ticket.ticketCode != null && ticket.ticketCode!.isNotEmpty;
+    final cancelled = _cancelled || ticket.status == 'CANCELLED';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (hasCode && !cancelled)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: QrImageView(
+                      data: ticket.ticketCode!,
+                      version: QrVersions.auto,
+                      size: 72,
+                      padding: EdgeInsets.zero,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ticket.eventTitle ?? (isVi ? 'Sự kiện' : 'Event'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (ticket.startTime != null) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            const Icon(Icons.schedule, size: 12, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                _formatDate(ticket.startTime),
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (ticket.venue != null || ticket.city != null) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 12, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Expanded(
+                              child: Text(
+                                [ticket.venue, ticket.city].whereType<String>().join(' · '),
+                                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (hasCode) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                ticket.ticketCode!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              iconSize: 16,
+                              tooltip: isVi ? 'Sao chép mã vé' : 'Copy ticket code',
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: ticket.ticketCode!));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text(isVi ? 'Đã sao chép' : 'Copied'),
+                                  duration: const Duration(seconds: 1),
+                                ));
+                              },
+                              icon: const Icon(Icons.copy_rounded),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                if (ticket.checkedIn)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isVi ? 'Đã check-in' : 'Checked in',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.success,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else if (cancelled)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isVi ? 'Đã huỷ' : 'Cancelled',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                if (ticket.eventId != null)
+                  TextButton.icon(
+                    onPressed: () => context.push('/event/${ticket.eventId}'),
+                    icon: const Icon(Icons.open_in_new, size: 14),
+                    label: Text(
+                      isVi ? 'Xem' : 'View',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(0, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                if (widget.allowCancel && !cancelled && !ticket.checkedIn)
+                  TextButton.icon(
+                    onPressed: _cancelling ? null : _confirmCancel,
+                    icon: _cancelling
+                        ? const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.cancel_outlined, size: 14, color: AppColors.error),
+                    label: Text(
+                      isVi ? 'Huỷ' : 'Cancel',
+                      style: const TextStyle(fontSize: 12, color: AppColors.error),
+                    ),
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(0, 28),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ticket-type picker shown when the bot classifies BOOK_TICKET. Each tier
+/// tapping dispatches the user to the event detail page where the real
+/// payment flow runs — we don't replicate checkout inside the chat (yet).
+class _ChatbotTicketTypePicker extends StatelessWidget {
+  const _ChatbotTicketTypePicker({
+    required this.ticketTypes,
+    required this.eventId,
+  });
+
+  final List<ChatbotTicketType> ticketTypes;
+  final String? eventId;
+
+  @override
+  Widget build(BuildContext context) {
+    final isVi = Localizations.localeOf(context).languageCode == 'vi';
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.neutral200),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.confirmation_number_outlined, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                isVi ? 'Chọn loại vé' : 'Pick a ticket',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (final type in ticketTypes) ...[
+            _TicketTypeRow(
+              type: type,
+              onTap: type.soldOut || eventId == null
+                  ? null
+                  : () => context.push('/event/$eventId'),
+            ),
+            const SizedBox(height: 6),
+          ],
+          if (eventId != null)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => context.push('/event/$eventId'),
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: Text(isVi ? 'Tiếp tục đăng ký' : 'Continue to register'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TicketTypeRow extends StatelessWidget {
+  const _TicketTypeRow({required this.type, required this.onTap});
+
+  final ChatbotTicketType type;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isVi = Localizations.localeOf(context).languageCode == 'vi';
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: type.soldOut ? AppColors.neutral100 : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: type.soldOut ? AppColors.neutral200 : AppColors.primary.withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    type.name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: type.soldOut ? AppColors.textSecondary : AppColors.textPrimary,
+                    ),
+                  ),
+                  if (type.description != null && type.description!.isNotEmpty)
+                    Text(
+                      type.description!,
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    type.soldOut
+                        ? (isVi ? 'Hết vé' : 'Sold out')
+                        : (isVi
+                            ? 'Còn ${type.available} vé'
+                            : '${type.available} available'),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: type.soldOut ? AppColors.error : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              type.price > 0
+                  ? '\$${type.price.toStringAsFixed(0)}'
+                  : (isVi ? 'Miễn phí' : 'Free'),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: type.price > 0 ? AppColors.primary : AppColors.success,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SupportEscalationCard extends StatelessWidget {
+  const _SupportEscalationCard({required this.requestId});
+
+  final String requestId;
+
+  @override
+  Widget build(BuildContext context) {
+    final isVi = Localizations.localeOf(context).languageCode == 'vi';
+    final shortId = requestId.length > 8 ? requestId.substring(0, 8) : requestId;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.support_agent, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isVi ? 'Đã gửi yêu cầu hỗ trợ' : 'Support request created',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isVi
+                      ? 'Mã yêu cầu: #$shortId — CSKH sẽ liên hệ bạn sớm nhất.'
+                      : 'Ticket #$shortId — our team will follow up shortly.',
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
