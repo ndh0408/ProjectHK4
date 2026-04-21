@@ -279,7 +279,9 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     @Query("SELECT e FROM Event e WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
            "AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(e.venue) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(e.address) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND e.startTime > :now")
     List<Event> searchEventsByKeyword(@Param("keyword") String keyword,
                                        @Param("now") LocalDateTime now,

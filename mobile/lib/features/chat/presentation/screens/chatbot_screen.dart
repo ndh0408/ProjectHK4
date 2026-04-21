@@ -444,7 +444,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 8),
               child: SizedBox(
-                height: 230,
+                height: 278,
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
@@ -1036,6 +1036,29 @@ class _ChatbotEventCardState extends ConsumerState<_ChatbotEventCard> {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ),
+          // Primary register CTA
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+            child: SizedBox(
+              width: double.infinity,
+              height: 32,
+              child: FilledButton.icon(
+                onPressed: () => context.push('/event/${event.id}'),
+                icon: const Icon(Icons.confirmation_number_outlined, size: 14),
+                label: Text(
+                  isVi ? 'Đăng ký' : 'Register',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ),
           ),
