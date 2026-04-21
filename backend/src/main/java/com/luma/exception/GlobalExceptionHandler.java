@@ -68,9 +68,40 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        // Hibernate/JDBC include the full SQL + schema in getMessage() — log
+        // the detail server-side but return a sanitized message to clients
+        // so we don't leak table/column/constraint names.
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .error("DataIntegrityViolation: {}", ex.getMostSpecificCause() != null
+                        ? ex.getMostSpecificCause().getMessage() : ex.getMessage());
+        String msg = "The data you submitted conflicts with an existing record or a validation rule.";
+        Throwable root = ex.getMostSpecificCause();
+        if (root != null) {
+            String rm = root.getMessage();
+            if (rm != null) {
+                String low = rm.toLowerCase();
+                if (low.contains("check")) {
+                    msg = "One of the fields has a value that is not allowed by the system.";
+                } else if (low.contains("unique") || low.contains("duplicate")) {
+                    msg = "This record already exists.";
+                } else if (low.contains("foreign key")) {
+                    msg = "Referenced record not found or still in use.";
+                } else if (low.contains("cannot insert") && low.contains("null")) {
+                    msg = "A required field was left empty.";
+                }
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
+        org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class)
+                .error("Unhandled exception", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An error occurred: " + ex.getMessage()));
+                .body(ApiResponse.error("An unexpected error occurred. Please try again."));
     }
 }
