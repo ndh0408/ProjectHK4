@@ -684,7 +684,28 @@ class ApiService {
       queryParameters: {'page': page, 'size': size},
     );
     final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
-    return PaginatedResponse.fromJson(data, ChatMessage.fromJson);
+    // Parse items individually so a single malformed message (e.g. a poll
+    // snapshot with unexpected shape) doesn't wipe the whole chat history.
+    final rawContent = data['content'];
+    final items = <ChatMessage>[];
+    if (rawContent is List) {
+      for (final item in rawContent) {
+        if (item is! Map<String, dynamic>) continue;
+        try {
+          items.add(ChatMessage.fromJson(item));
+        } catch (e, stack) {
+          // ignore: avoid_print
+          print('[chat] skipped unparseable message: $e\n$stack');
+        }
+      }
+    }
+    return PaginatedResponse<ChatMessage>(
+      content: items,
+      totalElements: data['totalElements'] as int? ?? items.length,
+      totalPages: data['totalPages'] as int? ?? 1,
+      number: data['page'] as int? ?? data['number'] as int? ?? 0,
+      size: data['size'] as int? ?? items.length,
+    );
   }
 
   Future<ChatMessage> sendMessage(

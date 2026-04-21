@@ -1,5 +1,6 @@
 package com.luma.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.luma.entity.Poll;
 import com.luma.entity.enums.PollStatus;
 import com.luma.entity.enums.PollType;
@@ -27,6 +28,10 @@ public class PollResponse {
     private String question;
     private PollType type;
     private PollStatus status;
+    /// Keep the JSON key as "isActive" — Jackson's default strips the "is"
+    /// prefix from boolean getters, which breaks the mobile PollSnapshot
+    /// parser that expects "isActive".
+    @JsonProperty("isActive")
     private boolean isActive;
     private int totalVotes;
     private Integer maxRating;

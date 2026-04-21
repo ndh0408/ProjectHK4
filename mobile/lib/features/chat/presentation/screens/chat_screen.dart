@@ -15,6 +15,7 @@ import '../../../../shared/models/chat_message.dart';
 import '../../../../shared/models/conversation.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../providers/event_chats_provider.dart';
+import '../widgets/poll_message_card.dart';
 import 'conversations_screen.dart';
 
 final chatMessagesProvider = StateNotifierProvider.autoDispose
@@ -189,6 +190,76 @@ class ChatMessagesNotifier extends StateNotifier<ChatMessagesState> {
     _upsertMessage(message);
   }
 
+  /// Merge a poll snapshot update (from `/topic/event.X.polls`) into any
+  /// chat message that embeds the same poll, so the bubble stays live.
+  void applyPollUpdate(Map<String, dynamic> pollJson) {
+    final pollId = pollJson['id'] as String?;
+    if (pollId == null) return;
+
+    PollSnapshot? parsed;
+    try {
+      // Build a PollSnapshot from the raw PollResponse payload. We preserve
+      // the viewer-local `hasVoted` because the broadcast does not know the
+      // subscriber identity.
+      parsed = PollSnapshot(
+        id: pollId,
+        eventId: pollJson['eventId'] as String? ?? '',
+        question: pollJson['question'] as String? ?? '',
+        type: pollJson['type'] as String? ?? 'SINGLE_CHOICE',
+        status: pollJson['status'] as String? ?? 'ACTIVE',
+        isActive: pollJson['isActive'] as bool? ?? pollJson['active'] as bool? ?? false,
+        totalVotes: (pollJson['totalVotes'] as num?)?.toInt() ?? 0,
+        maxRating: (pollJson['maxRating'] as num?)?.toInt(),
+        closesAt: pollJson['closesAt'] == null
+            ? null
+            : DateTime.tryParse(pollJson['closesAt'].toString()),
+        closedAt: pollJson['closedAt'] == null
+            ? null
+            : DateTime.tryParse(pollJson['closedAt'].toString()),
+        options: ((pollJson['options'] as List<dynamic>?) ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map((o) => PollSnapshotOption(
+                  id: o['id'] as String,
+                  text: o['text'] as String? ?? '',
+                  voteCount: (o['voteCount'] as num?)?.toInt() ?? 0,
+                  percentage: (o['percentage'] as num?)?.toDouble() ?? 0.0,
+                  displayOrder: (o['displayOrder'] as num?)?.toInt() ?? 0,
+                ))
+            .toList(),
+        hasVoted: false,
+        hideResultsUntilClosed:
+            pollJson['hideResultsUntilClosed'] as bool? ?? false,
+        resultsHidden: pollJson['resultsHidden'] as bool? ?? false,
+      );
+    } catch (_) {
+      return;
+    }
+
+    final updated = state.messages.map((m) {
+      if (m.poll?.id == pollId) {
+        // Preserve whether THIS client has voted — broadcasts can't carry it.
+        return m.copyWith(
+          poll: parsed!.copyWith(hasVoted: m.poll!.hasVoted),
+        );
+      }
+      return m;
+    }).toList();
+
+    state = state.copyWith(messages: updated);
+  }
+
+  /// Apply a local snapshot edit (e.g. optimistic hasVoted=true) without
+  /// touching any other poll.
+  void applyLocalPollChange(String pollId, PollSnapshot updated) {
+    final next = state.messages.map((m) {
+      if (m.poll?.id == pollId) {
+        return m.copyWith(poll: updated);
+      }
+      return m;
+    }).toList();
+    state = state.copyWith(messages: next);
+  }
+
   void markMessageDeleted(String messageId) {
     state = state.copyWith(
       messages: state.messages.map((m) {
@@ -254,6 +325,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .read(chatMessagesProvider(widget.conversationId).notifier)
           .loadMessages(refresh: true);
       if (!mounted) return;
+      // For event group chats, also follow the event's poll topic so the
+      // inline poll cards auto-refresh when anyone votes or the poll closes.
+      final eventId = (_conversation ?? widget.conversation)?.eventId;
+      if (eventId != null) {
+        ref.read(webSocketServiceProvider).subscribeToEventPolls(eventId);
+      }
       // Opening a chat implies everything here is read — sync the global
       // unread total and the preview in the conversation list.
       ref.read(unreadMessageCountProvider.notifier).refresh();
@@ -273,6 +350,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref
           .read(webSocketServiceProvider)
           .unsubscribeFromConversation(widget.conversationId);
+      final eventId = (_conversation ?? widget.conversation)?.eventId;
+      if (eventId != null) {
+        ref.read(webSocketServiceProvider).unsubscribeFromEventPolls(eventId);
+      }
     } catch (_) {}
     _scrollController.dispose();
     _messageController.dispose();
@@ -1108,6 +1189,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUser = ref.watch(currentUserProvider);
     final conversation = _conversation ?? widget.conversation;
 
+    ref.listen(pollEventStreamProvider, (previous, next) {
+      next.whenData((payload) {
+        ref
+            .read(chatMessagesProvider(widget.conversationId).notifier)
+            .applyPollUpdate(payload);
+      });
+    });
+
     ref.listen(chatEventStreamProvider, (previous, next) {
       next.whenData((event) {
         if (event.conversationId != widget.conversationId) return;
@@ -1430,6 +1519,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (state.messages.isEmpty && state.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text(
+              state.error!,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => ref
+                  .read(chatMessagesProvider(widget.conversationId).notifier)
+                  .loadMessages(refresh: true),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (state.messages.isEmpty) {
       return _buildEmptyState();
     }
@@ -1562,6 +1675,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onDelete: isMe && !message.isDeleted
                   ? () => _deleteMessage(message.id)
                   : null,
+              onPollVoted: (updated) {
+                ref
+                    .read(chatMessagesProvider(widget.conversationId).notifier)
+                    .applyLocalPollChange(updated.id, updated);
+              },
             ),
           ],
         );
@@ -1797,6 +1915,7 @@ class _MessageBubble extends StatelessWidget {
     required this.timeText,
     required this.onReply,
     this.onDelete,
+    this.onPollVoted,
   });
 
   final ChatMessage message;
@@ -1804,6 +1923,7 @@ class _MessageBubble extends StatelessWidget {
   final String timeText;
   final VoidCallback onReply;
   final VoidCallback? onDelete;
+  final PollVoted? onPollVoted;
 
   @override
   Widget build(BuildContext context) {
@@ -1853,6 +1973,17 @@ class _MessageBubble extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (message.type == MessageType.poll && message.poll != null)
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.78,
+                      ),
+                      child: PollMessageCard(
+                        poll: message.poll!,
+                        onVoted: (updated) => onPollVoted?.call(updated),
+                      ),
+                    )
+                  else
                   Container(
                     constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.7,
