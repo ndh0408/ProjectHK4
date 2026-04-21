@@ -452,8 +452,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         final errorMsg = e.error.localizedMessage ?? e.error.message ?? 'Payment failed';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMsg),
+            content: Text('Stripe [${e.error.code}]: $errorMsg'),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 8),
           ),
         );
       }
@@ -465,8 +466,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(ErrorUtils.extractMessage(e, fallback: 'Payment failed')),
+          content: Text(ErrorUtils.extractMessage(e, fallback: e.toString())),
           backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 8),
         ),
       );
     }

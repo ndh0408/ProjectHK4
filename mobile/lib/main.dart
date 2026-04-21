@@ -12,10 +12,13 @@ import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
 
-// Stripe key is passed via --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_xxx at build time
+// Default to the shared test key so `flutter run` without --dart-define still
+// lets Stripe Payment Sheet initialise. Override via:
+//   --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_your_key
 const stripePublishableKey = String.fromEnvironment(
   'STRIPE_PUBLISHABLE_KEY',
-  defaultValue: '',
+  defaultValue:
+      'pk_test_51Sxd7VGtkdFFe1B5SLNRHhqdiHxfwGJlqdJeLADAsTB0DgxJsKQeYC9tQZ8HgjyUpzkMYEWdowoLJT7Sk3AeNLKp00aDdwCReQ',
 );
 
 void main() async {
@@ -23,6 +26,7 @@ void main() async {
 
   if (stripePublishableKey.isNotEmpty) {
     Stripe.publishableKey = stripePublishableKey;
+    await Stripe.instance.applySettings();
   }
 
   if (!kIsWeb) {
