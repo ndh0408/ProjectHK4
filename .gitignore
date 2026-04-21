@@ -76,3 +76,11 @@ mobile/android/.gradle/
 test-*.png
 test-*.jpg
 
+# ===================================
+# Temp & backup files - NEVER commit
+# ===================================
+*.bak
+_tmp_*
+*.tmp.sql
+Clear
+
