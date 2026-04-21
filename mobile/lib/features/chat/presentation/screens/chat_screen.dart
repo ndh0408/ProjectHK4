@@ -641,8 +641,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           );
                         },
                       )
-                    : const Center(
-                        child: Text('No members found'),
+                    : Center(
+                        child: Text(AppLocalizations.of(context)!.noMembersFound),
                       ),
               ),
             ],
@@ -692,7 +692,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         break;
       case 'search':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Search coming soon')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.searchComingSoon)),
         );
         break;
       case 'media_gallery':
@@ -783,47 +783,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _confirmClearChat() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Chat'),
-        content: const Text('Are you sure you want to clear all messages? This action cannot be undone.'),
+        title: Text(l10n.clearChat),
+        content: Text(l10n.clearChatConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Clear'),
+            child: Text(l10n.clearLabel),
           ),
         ],
       ),
     );
 
     if (confirm == true) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Clear chat coming soon')),
+        SnackBar(content: Text(l10n.clearChatComingSoon)),
       );
     }
   }
 
   Future<void> _confirmBlockUser(String userId, String userName) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Block User'),
-        content: Text('Are you sure you want to block $userName? They will no longer be able to message you.'),
+        title: Text(l10n.blockUserTitle),
+        content: Text(l10n.blockUserConfirm(userName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.warning),
-            child: const Text('Block'),
+            child: Text(l10n.block),
           ),
         ],
       ),
@@ -836,7 +839,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$userName has been blocked'),
+              content: Text(l10n.userBlockedSnack(userName)),
               backgroundColor: AppColors.success,
             ),
           );
@@ -846,7 +849,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to block user: $e'),
+              content: Text(l10n.failedToBlockUser(e.toString())),
               backgroundColor: AppColors.error,
             ),
           );
@@ -856,12 +859,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _showMediaGallery() {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.read(chatMessagesProvider(widget.conversationId));
     final mediaMessages = state.messages.where((m) => m.mediaUrl != null).toList();
 
     if (mediaMessages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No media in this chat')),
+        SnackBar(content: Text(l10n.noMediaInChat)),
       );
       return;
     }
@@ -890,11 +894,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Media & Files',
-                  style: TextStyle(
+                  l10n.mediaAndFiles,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1087,111 +1091,114 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             IconButton(
               onPressed: () => context.push('/event/${conversation!.eventId}'),
               icon: const Icon(Icons.event, size: 22),
-              tooltip: 'View Event',
+              tooltip: AppLocalizations.of(context)!.viewEventTooltip,
             ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert, size: 22),
             onSelected: (value) => _handleMenuAction(value, conversation),
-            itemBuilder: (context) => [
-              if (conversation?.type == ConversationType.direct)
-                const PopupMenuItem(
-                  value: 'view_profile',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person_outline, size: 20),
-                      SizedBox(width: 12),
-                      Text('View Profile'),
-                    ],
-                  ),
-                ),
-              if (conversation?.isGroup == true)
-                const PopupMenuItem(
-                  value: 'view_members',
-                  child: Row(
-                    children: [
-                      Icon(Icons.group_outlined, size: 20),
-                      SizedBox(width: 12),
-                      Text('View Members'),
-                    ],
-                  ),
-                ),
-              PopupMenuItem(
-                value: conversation?.muted == true ? 'unmute' : 'mute',
-                child: Row(
-                  children: [
-                    Icon(
-                      conversation?.muted == true
-                          ? Icons.notifications_active_outlined
-                          : Icons.notifications_off_outlined,
-                      size: 20,
+            itemBuilder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return [
+                if (conversation?.type == ConversationType.direct)
+                  PopupMenuItem(
+                    value: 'view_profile',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person_outline, size: 20),
+                        const SizedBox(width: 12),
+                        Text(l10n.viewProfile),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Text(conversation?.muted == true ? 'Unmute' : 'Mute'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'search',
-                child: Row(
-                  children: [
-                    Icon(Icons.search, size: 20),
-                    SizedBox(width: 12),
-                    Text('Search in Chat'),
-                  ],
-                ),
-              ),
-              if (conversation?.type == ConversationType.direct)
-                const PopupMenuItem(
-                  value: 'media_gallery',
-                  child: Row(
-                    children: [
-                      Icon(Icons.photo_library_outlined, size: 20),
-                      SizedBox(width: 12),
-                      Text('Media & Files'),
-                    ],
                   ),
-                ),
-              const PopupMenuDivider(),
-              if (conversation?.type == ConversationType.direct)
-                const PopupMenuItem(
-                  value: 'block_user',
-                  child: Row(
-                    children: [
-                      Icon(Icons.block, size: 20, color: AppColors.warning),
-                      SizedBox(width: 12),
-                      Text('Block User', style: TextStyle(color: AppColors.warning)),
-                    ],
+                if (conversation?.isGroup == true)
+                  PopupMenuItem(
+                    value: 'view_members',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.group_outlined, size: 20),
+                        const SizedBox(width: 12),
+                        Text(l10n.viewMembers),
+                      ],
+                    ),
                   ),
-                ),
-              if (conversation?.type == ConversationType.eventGroup)
                 PopupMenuItem(
-                  value: 'leave_group',
+                  value: conversation?.muted == true ? 'unmute' : 'mute',
                   child: Row(
                     children: [
-                      const Icon(Icons.logout, size: 20, color: AppColors.error),
-                      const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.leaveGroup,
-                        style: const TextStyle(color: AppColors.error),
+                      Icon(
+                        conversation?.muted == true
+                            ? Icons.notifications_active_outlined
+                            : Icons.notifications_off_outlined,
+                        size: 20,
                       ),
-                    ],
-                  ),
-                )
-              else
-                PopupMenuItem(
-                  value: 'clear_chat',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
                       const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)!.clearChat,
-                        style: const TextStyle(color: AppColors.error),
-                      ),
+                      Text(conversation?.muted == true ? l10n.unmuteLabel : l10n.muteLabel),
                     ],
                   ),
                 ),
-            ],
+                PopupMenuItem(
+                  value: 'search',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search, size: 20),
+                      const SizedBox(width: 12),
+                      Text(l10n.searchInChat),
+                    ],
+                  ),
+                ),
+                if (conversation?.type == ConversationType.direct)
+                  PopupMenuItem(
+                    value: 'media_gallery',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.photo_library_outlined, size: 20),
+                        const SizedBox(width: 12),
+                        Text(l10n.mediaAndFiles),
+                      ],
+                    ),
+                  ),
+                const PopupMenuDivider(),
+                if (conversation?.type == ConversationType.direct)
+                  PopupMenuItem(
+                    value: 'block_user',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.block, size: 20, color: AppColors.warning),
+                        const SizedBox(width: 12),
+                        Text(l10n.blockUserTitle, style: const TextStyle(color: AppColors.warning)),
+                      ],
+                    ),
+                  ),
+                if (conversation?.type == ConversationType.eventGroup)
+                  PopupMenuItem(
+                    value: 'leave_group',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.logout, size: 20, color: AppColors.error),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.leaveGroup,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  PopupMenuItem(
+                    value: 'clear_chat',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_sweep_outlined, size: 20, color: AppColors.error),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.clearChat,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
+                      ],
+                    ),
+                  ),
+              ];
+            },
           ),
         ],
       ),

@@ -1113,4 +1113,584 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get messageDeletedBody => 'Tin nhắn đã bị xoá';
+
+  @override
+  String get close => 'Đóng';
+
+  @override
+  String get edit => 'Sửa';
+
+  @override
+  String get block => 'Chặn';
+
+  @override
+  String get unblock => 'Bỏ chặn';
+
+  @override
+  String get connectAction => 'Kết nối';
+
+  @override
+  String get disconnectAction => 'Ngắt kết nối';
+
+  @override
+  String get transferAction => 'Chuyển';
+
+  @override
+  String get addAction => 'Thêm';
+
+  @override
+  String get decline => 'Từ chối';
+
+  @override
+  String get accept => 'Chấp nhận';
+
+  @override
+  String get yes => 'Có';
+
+  @override
+  String get no => 'Không';
+
+  @override
+  String get clearLabel => 'Xoá';
+
+  @override
+  String get all => 'Tất cả';
+
+  @override
+  String get tryAgain => 'Thử lại';
+
+  @override
+  String get unknown => 'Không rõ';
+
+  @override
+  String get errorLabel => 'Lỗi';
+
+  @override
+  String get comingSoon => 'Sắp ra mắt!';
+
+  @override
+  String get createAction => 'Tạo';
+
+  @override
+  String get messagesTitle => 'Tin nhắn';
+
+  @override
+  String get chatsTab => 'Trò chuyện';
+
+  @override
+  String get buddiesTab => 'Bạn sự kiện';
+
+  @override
+  String get lumaTab => 'LUMA';
+
+  @override
+  String get createGroupAction => 'Tạo nhóm';
+
+  @override
+  String get createGroupChatTitle => 'Tạo nhóm chat';
+
+  @override
+  String get groupNameLabel => 'Tên nhóm';
+
+  @override
+  String get groupNamePlaceholder => 'Tên nhóm';
+
+  @override
+  String get groupNameHint => 'Nhập tên nhóm...';
+
+  @override
+  String get pleaseSelectMember => 'Vui lòng chọn ít nhất 1 thành viên';
+
+  @override
+  String get pleaseSelect2Buddies => 'Vui lòng chọn ít nhất 2 bạn để tạo nhóm';
+
+  @override
+  String get pleaseEnterGroupName => 'Vui lòng nhập tên nhóm';
+
+  @override
+  String get groupCreatedSnack => 'Đã tạo nhóm thành công!';
+
+  @override
+  String groupCreatedNamed(String name) {
+    return 'Đã tạo nhóm \"$name\" thành công!';
+  }
+
+  @override
+  String get searchBuddiesHint => 'Tìm bạn sự kiện...';
+
+  @override
+  String get exploreEventsAction => 'Khám phá sự kiện';
+
+  @override
+  String get clearFiltersAction => 'Xoá bộ lọc';
+
+  @override
+  String get clearAllAction => 'Xoá tất cả';
+
+  @override
+  String get noMembersFound => 'Không tìm thấy thành viên';
+
+  @override
+  String get noMediaInChat => 'Không có media trong nhóm này';
+
+  @override
+  String get viewProfile => 'Xem hồ sơ';
+
+  @override
+  String get viewMembers => 'Xem thành viên';
+
+  @override
+  String get searchInChat => 'Tìm trong chat';
+
+  @override
+  String get mediaAndFiles => 'Media & Tệp';
+
+  @override
+  String get viewEventTooltip => 'Xem sự kiện';
+
+  @override
+  String get blockUserTitle => 'Chặn người dùng';
+
+  @override
+  String blockUserConfirm(String name) {
+    return 'Bạn có chắc muốn chặn $name? Người này sẽ không thể nhắn tin cho bạn nữa.';
+  }
+
+  @override
+  String userBlockedSnack(String name) {
+    return 'Đã chặn $name';
+  }
+
+  @override
+  String failedToBlockUser(String error) {
+    return 'Chặn người dùng thất bại: $error';
+  }
+
+  @override
+  String get searchComingSoon => 'Tìm kiếm sắp ra mắt';
+
+  @override
+  String get clearChatConfirm =>
+      'Bạn có chắc muốn xoá tất cả tin nhắn? Không thể hoàn tác.';
+
+  @override
+  String get clearChatComingSoon => 'Xoá toàn bộ chat sắp ra mắt';
+
+  @override
+  String get deleteConversationTitle => 'Xoá cuộc trò chuyện?';
+
+  @override
+  String get deleteConversationMessage =>
+      'Thao tác này sẽ xoá cuộc trò chuyện khỏi danh sách. Không thể hoàn tác.';
+
+  @override
+  String get failedToPinConversation => 'Ghim cuộc trò chuyện thất bại';
+
+  @override
+  String get failedToUnpinConversation => 'Bỏ ghim cuộc trò chuyện thất bại';
+
+  @override
+  String get failedToArchiveConversation => 'Lưu trữ cuộc trò chuyện thất bại';
+
+  @override
+  String get failedToUnarchiveConversation => 'Bỏ lưu trữ thất bại';
+
+  @override
+  String get lumaAssistantTitle => 'Trợ lý LUMA';
+
+  @override
+  String get aiPoweredEventDiscovery => 'Khám phá sự kiện bằng AI';
+
+  @override
+  String get clearChatTooltip => 'Xoá lịch sử chat';
+
+  @override
+  String errorWithDetails(String error) {
+    return 'Lỗi: $error';
+  }
+
+  @override
+  String get networkingTitle => 'Kết nối';
+
+  @override
+  String get requestsTab => 'Yêu cầu';
+
+  @override
+  String get refreshTooltip => 'Làm mới';
+
+  @override
+  String get noPendingRequests => 'Không có yêu cầu chờ';
+
+  @override
+  String get wantsToConnect => 'Muốn kết nối';
+
+  @override
+  String requestSentTo(String name) {
+    return 'Đã gửi yêu cầu đến $name!';
+  }
+
+  @override
+  String get connectionAcceptedSnack => 'Đã chấp nhận kết nối!';
+
+  @override
+  String get eventBuddiesTitle => 'Bạn sự kiện';
+
+  @override
+  String get discoverAndMatch => 'Khám phá & Ghép đôi';
+
+  @override
+  String get googleCalendarTitle => 'Google Calendar';
+
+  @override
+  String get couldNotOpenGoogleAuth => 'Không thể mở trang xác thực Google';
+
+  @override
+  String get googleCalendarConnected => 'Đã kết nối Google Calendar!';
+
+  @override
+  String get googleCalendarDisconnected => 'Đã ngắt kết nối Google Calendar';
+
+  @override
+  String get eventRemovedFromCalendar => 'Đã gỡ sự kiện khỏi Google Calendar';
+
+  @override
+  String failedToConnect(String error) {
+    return 'Kết nối thất bại: $error';
+  }
+
+  @override
+  String syncedEventsToCalendar(int count) {
+    return 'Đã đồng bộ $count sự kiện lên Google Calendar';
+  }
+
+  @override
+  String get enterAuthCodeTitle => 'Nhập mã xác thực';
+
+  @override
+  String get authorizationCodeLabel => 'Mã xác thực';
+
+  @override
+  String get disconnectGoogleCalendar => 'Ngắt kết nối Google Calendar';
+
+  @override
+  String get syncAllAction => 'Đồng bộ tất cả';
+
+  @override
+  String get profileUpdatedSnack => 'Đã cập nhật hồ sơ';
+
+  @override
+  String get signatureRemovedSnack => 'Đã xoá chữ ký';
+
+  @override
+  String get removeSignatureConfirm => 'Bạn có chắc muốn xoá chữ ký?';
+
+  @override
+  String get logoutTitle => 'Đăng xuất';
+
+  @override
+  String get logoutConfirmMessage => 'Bạn có chắc muốn đăng xuất?';
+
+  @override
+  String get photoUploadComingSoon => 'Tải ảnh sắp ra mắt!';
+
+  @override
+  String get bioLabel => 'Giới thiệu';
+
+  @override
+  String get bioHint => 'Nói về bản thân bạn';
+
+  @override
+  String get interestsLabel => 'Sở thích';
+
+  @override
+  String get interestsHint => 'tech, âm nhạc, du lịch (cách nhau bởi dấu phẩy)';
+
+  @override
+  String get networkingVisibility => 'Hiển thị trong Networking';
+
+  @override
+  String get allowOthersDiscover =>
+      'Cho phép người khác tìm thấy và kết nối với bạn';
+
+  @override
+  String get markAllAsRead => 'Đánh dấu tất cả đã đọc';
+
+  @override
+  String get waitlistOffersTooltip => 'Ưu đãi danh sách chờ';
+
+  @override
+  String get imageUploadComingSoon => 'Tải ảnh sắp ra mắt!';
+
+  @override
+  String failedToPickImage(String error) {
+    return 'Chọn ảnh thất bại: $error';
+  }
+
+  @override
+  String failedToSendMessage(String error) {
+    return 'Gửi tin nhắn thất bại: $error';
+  }
+
+  @override
+  String replyFromUser(String name) {
+    return 'Trả lời từ $name';
+  }
+
+  @override
+  String get typeYourAnswerHint => 'Nhập câu trả lời...';
+
+  @override
+  String get chatDeletedSnack => 'Đã xoá chat';
+
+  @override
+  String get deleteChatTitle => 'Xoá chat';
+
+  @override
+  String get deleteChatConfirmLong =>
+      'Bạn có chắc muốn xoá chat này? Không thể hoàn tác.';
+
+  @override
+  String get notificationsTitle => 'Thông báo';
+
+  @override
+  String get waitlistOffersTitle => 'Ưu đãi danh sách chờ';
+
+  @override
+  String get declineOfferTitle => 'Từ chối ưu đãi';
+
+  @override
+  String get offerAcceptedSnack => 'Đã chấp nhận ưu đãi! Bạn đã được đăng ký.';
+
+  @override
+  String get offerDeclinedSnack => 'Đã từ chối ưu đãi.';
+
+  @override
+  String failedToAcceptOffer(String error) {
+    return 'Chấp nhận ưu đãi thất bại: $error';
+  }
+
+  @override
+  String failedGeneric(String error) {
+    return 'Thất bại: $error';
+  }
+
+  @override
+  String get loginRequiredTitle => 'Cần đăng nhập';
+
+  @override
+  String get loginRequiredMessage =>
+      'Vui lòng đăng nhập để xem sự kiện của bạn';
+
+  @override
+  String get certificateSentSnack => 'Đã gửi chứng chỉ tới email của bạn!';
+
+  @override
+  String failedToSendCertificate(String error) {
+    return 'Gửi chứng chỉ thất bại: $error';
+  }
+
+  @override
+  String get registrationCancelledSnack => 'Đã huỷ đăng ký';
+
+  @override
+  String failedToCancelRegistration(String error) {
+    return 'Huỷ thất bại: $error';
+  }
+
+  @override
+  String get cancelRegistrationTitle => 'Huỷ đăng ký';
+
+  @override
+  String get cancelRegistrationConfirm =>
+      'Bạn có chắc muốn huỷ đăng ký? Không thể hoàn tác.';
+
+  @override
+  String get yesCancel => 'Có, huỷ';
+
+  @override
+  String get viewTicket => 'Xem vé';
+
+  @override
+  String get sendCertificateToEmail => 'Gửi chứng chỉ qua email';
+
+  @override
+  String get ticketLabel => 'Vé';
+
+  @override
+  String get quantityLabel => 'Số lượng';
+
+  @override
+  String get totalLabel => 'Tổng';
+
+  @override
+  String get subtotalLabel => 'Tạm tính';
+
+  @override
+  String get unitPriceQtyLabel => 'Đơn giá × Số lượng';
+
+  @override
+  String get haveCouponCode => 'Có mã giảm giá?';
+
+  @override
+  String get enterCodeHint => 'Nhập mã';
+
+  @override
+  String get registrationDeadlineLabel => 'Hạn đăng ký';
+
+  @override
+  String get livePollsLabel => 'Bình chọn trực tiếp';
+
+  @override
+  String get scheduleLabel => 'Lịch trình';
+
+  @override
+  String get removedFromComparison => 'Đã bỏ khỏi so sánh';
+
+  @override
+  String addedToComparison(int count) {
+    return 'Đã thêm vào so sánh ($count/4)';
+  }
+
+  @override
+  String get maxEventsComparison => 'Tối đa 4 sự kiện để so sánh';
+
+  @override
+  String failedToValidateLabel(String error) {
+    return 'Xác thực thất bại: $error';
+  }
+
+  @override
+  String get transferTicketTitle => 'Chuyển vé';
+
+  @override
+  String get transferInitiatedSnack => 'Đã khởi tạo chuyển vé!';
+
+  @override
+  String get recipientEmailHint => 'nguoinhan@example.com';
+
+  @override
+  String get transferTicketTooltip => 'Chuyển vé';
+
+  @override
+  String get registeredForSession => 'Đã đăng ký phiên!';
+
+  @override
+  String get noSessionsAvailable => 'Chưa có phiên nào';
+
+  @override
+  String get addToMySchedule => 'Thêm vào lịch của tôi';
+
+  @override
+  String scheduleWithName(String name) {
+    return 'Lịch trình - $name';
+  }
+
+  @override
+  String pollsWithName(String name) {
+    return 'Bình chọn — $name';
+  }
+
+  @override
+  String get failedToSubmitPolls => 'Gửi bình chọn thất bại. Vui lòng thử lại.';
+
+  @override
+  String get noEventsTitle => 'Chưa có sự kiện';
+
+  @override
+  String get eventComparisonTitle => 'So sánh sự kiện';
+
+  @override
+  String get browseEventsAction => 'Xem sự kiện';
+
+  @override
+  String get noDataAvailable => 'Không có dữ liệu';
+
+  @override
+  String get noMoreEventsAvailable => 'Không còn sự kiện';
+
+  @override
+  String get calendarSyncComingSoon => 'Đồng bộ lịch sắp ra mắt!';
+
+  @override
+  String get failedToLoadProfile => 'Tải hồ sơ thất bại';
+
+  @override
+  String get shareAction => 'Chia sẻ';
+
+  @override
+  String get reportAction => 'Báo cáo';
+
+  @override
+  String get reportSubmittedSnack => 'Đã gửi báo cáo';
+
+  @override
+  String get subscribedToCityUpdates => 'Đã đăng ký nhận cập nhật thành phố!';
+
+  @override
+  String get noOrganisersAvailable => 'Không có nhà tổ chức';
+
+  @override
+  String get noCategoriesAvailable => 'Không có danh mục';
+
+  @override
+  String get compareEventsTooltip => 'So sánh sự kiện';
+
+  @override
+  String get searchEventsHint => 'Tìm sự kiện...';
+
+  @override
+  String get galleryTitle => 'Thư viện';
+
+  @override
+  String get failedToLoadCategories => 'Tải danh mục thất bại';
+
+  @override
+  String get viewEventLabel => 'Xem sự kiện';
+
+  @override
+  String couponCodeCopied(String code) {
+    return 'Đã sao chép mã: $code';
+  }
+
+  @override
+  String get useThisCoupon => 'Dùng mã này';
+
+  @override
+  String get backOnlineSyncing => 'Đã kết nối lại! Đang đồng bộ...';
+
+  @override
+  String get userLabel => 'Người dùng';
+
+  @override
+  String get muteLabel => 'Tắt thông báo';
+
+  @override
+  String get unmuteLabel => 'Bật thông báo';
+
+  @override
+  String get clearAction => 'Xoá';
+
+  @override
+  String get noLabel => 'Không';
+
+  @override
+  String get clearChatAction => 'Xoá toàn bộ';
+
+  @override
+  String get allEvents => 'Tất cả sự kiện';
+
+  @override
+  String get allEventsFilter => 'Tất cả sự kiện';
+
+  @override
+  String get conversationPinned => 'Đã ghim cuộc trò chuyện';
+
+  @override
+  String get conversationUnpinned => 'Đã bỏ ghim cuộc trò chuyện';
+
+  @override
+  String get conversationArchived => 'Đã lưu trữ cuộc trò chuyện';
+
+  @override
+  String get conversationUnarchived => 'Đã bỏ lưu trữ cuộc trò chuyện';
 }

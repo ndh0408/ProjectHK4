@@ -354,10 +354,11 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
       orElse: () => false,
     );
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: Text(l10n.messagesTitle),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textOnPrimary,
         elevation: 0,
@@ -365,7 +366,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
           IconButton(
             onPressed: () => context.push('/create-group'),
             icon: const Icon(Icons.group_add),
-            tooltip: 'Create Group',
+            tooltip: l10n.createGroupAction,
           ),
         ],
         bottom: TabBar(
@@ -381,7 +382,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                 children: [
                   const Icon(Icons.chat_bubble_outline, size: 16),
                   const SizedBox(width: 4),
-                  const Text('Chats', style: TextStyle(fontSize: 13)),
+                  Text(l10n.chatsTab, style: const TextStyle(fontSize: 13)),
                   if (state.conversations.any((c) => c.unreadCount > 0)) ...[
                     const SizedBox(width: 4),
                     Container(
@@ -402,7 +403,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                 children: [
                   const Icon(Icons.people, size: 16),
                   const SizedBox(width: 4),
-                  const Text('Buddies', style: TextStyle(fontSize: 13)),
+                  Text(l10n.buddiesTab, style: const TextStyle(fontSize: 13)),
                   if (buddiesState.buddies.isNotEmpty) ...[
                     const SizedBox(width: 4),
                     Container(
@@ -426,7 +427,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                 children: [
                   const Icon(Icons.notifications, size: 16),
                   const SizedBox(width: 4),
-                  const Text('LUMA', style: TextStyle(fontSize: 13)),
+                  Text(l10n.lumaTab, style: const TextStyle(fontSize: 13)),
                   if (hasUnreadNotifications) ...[
                     const SizedBox(width: 4),
                     Container(
@@ -546,7 +547,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.read(eventBuddiesProvider.notifier).refresh(),
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -593,7 +594,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
               ElevatedButton.icon(
                 onPressed: () => context.go('/explore'),
                 icon: const Icon(Icons.explore),
-                label: const Text('Explore Events'),
+                label: Text(AppLocalizations.of(context)!.exploreEventsAction),
               ),
             ],
           ),
@@ -618,7 +619,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                   ref.read(eventBuddiesProvider.notifier).setSearchQuery(value);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search buddies...',
+                  hintText: AppLocalizations.of(context)!.searchBuddiesHint,
                   hintStyle: TextStyle(color: AppColors.textLight),
                   prefixIcon: const Icon(Icons.search, color: AppColors.textLight),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -649,7 +650,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: FilterChip(
-                          label: const Text('All Events'),
+                          label: Text(AppLocalizations.of(context)!.allEvents),
                           selected: state.filterEventId == null,
                           onSelected: (_) {
                             ref.read(eventBuddiesProvider.notifier).setEventFilter(null);
@@ -717,7 +718,10 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
                     _searchController.clear();
                     ref.read(eventBuddiesProvider.notifier).clearFilters();
                   },
-                  child: const Text('Clear filters', style: TextStyle(fontSize: 12)),
+                  child: Text(
+                    AppLocalizations.of(context)!.clearFiltersAction,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -859,18 +863,24 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
       await api.pinConversation(conversation.id, !conversation.pinned);
       ref.read(conversationsProvider.notifier).refresh();
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(conversation.pinned ? 'Conversation unpinned' : 'Conversation pinned'),
+            content: Text(conversation.pinned
+                ? l10n.conversationUnpinned
+                : l10n.conversationPinned),
             duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to ${conversation.pinned ? 'unpin' : 'pin'} conversation'),
+            content: Text(conversation.pinned
+                ? l10n.failedToUnpinConversation
+                : l10n.failedToPinConversation),
             backgroundColor: AppColors.error,
           ),
         );
@@ -884,18 +894,24 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
       await api.archiveConversation(conversation.id, !conversation.archived);
       ref.read(conversationsProvider.notifier).refresh();
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(conversation.archived ? 'Conversation unarchived' : 'Conversation archived'),
+            content: Text(conversation.archived
+                ? l10n.conversationUnarchived
+                : l10n.conversationArchived),
             duration: const Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to ${conversation.archived ? 'unarchive' : 'archive'} conversation'),
+            content: Text(conversation.archived
+                ? l10n.failedToUnarchiveConversation
+                : l10n.failedToArchiveConversation),
             backgroundColor: AppColors.error,
           ),
         );
@@ -910,9 +926,9 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
       ref.read(conversationsProvider.notifier).refresh();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conversation deleted'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.conversationDeleted),
+            duration: const Duration(seconds: 2),
           ),
         );
       }

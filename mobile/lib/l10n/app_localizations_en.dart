@@ -1121,4 +1121,589 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get messageDeletedBody => 'This message was deleted';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get connectAction => 'Connect';
+
+  @override
+  String get disconnectAction => 'Disconnect';
+
+  @override
+  String get transferAction => 'Transfer';
+
+  @override
+  String get addAction => 'Add';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get clearLabel => 'Clear';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get errorLabel => 'Error';
+
+  @override
+  String get comingSoon => 'Coming soon!';
+
+  @override
+  String get createAction => 'Create';
+
+  @override
+  String get messagesTitle => 'Messages';
+
+  @override
+  String get chatsTab => 'Chats';
+
+  @override
+  String get buddiesTab => 'Buddies';
+
+  @override
+  String get lumaTab => 'LUMA';
+
+  @override
+  String get createGroupAction => 'Create Group';
+
+  @override
+  String get createGroupChatTitle => 'Create Group Chat';
+
+  @override
+  String get groupNameLabel => 'Group Name';
+
+  @override
+  String get groupNamePlaceholder => 'Group name';
+
+  @override
+  String get groupNameHint => 'Enter group name...';
+
+  @override
+  String get pleaseSelectMember => 'Please select at least 1 member';
+
+  @override
+  String get pleaseSelect2Buddies =>
+      'Please select at least 2 buddies to create a group';
+
+  @override
+  String get pleaseEnterGroupName => 'Please enter a group name';
+
+  @override
+  String get groupCreatedSnack => 'Group created successfully!';
+
+  @override
+  String groupCreatedNamed(String name) {
+    return 'Group \"$name\" created successfully!';
+  }
+
+  @override
+  String get searchBuddiesHint => 'Search buddies...';
+
+  @override
+  String get exploreEventsAction => 'Explore Events';
+
+  @override
+  String get clearFiltersAction => 'Clear filters';
+
+  @override
+  String get clearAllAction => 'Clear All';
+
+  @override
+  String get noMembersFound => 'No members found';
+
+  @override
+  String get noMediaInChat => 'No media in this chat';
+
+  @override
+  String get viewProfile => 'View Profile';
+
+  @override
+  String get viewMembers => 'View Members';
+
+  @override
+  String get searchInChat => 'Search in Chat';
+
+  @override
+  String get mediaAndFiles => 'Media & Files';
+
+  @override
+  String get viewEventTooltip => 'View Event';
+
+  @override
+  String get blockUserTitle => 'Block User';
+
+  @override
+  String blockUserConfirm(String name) {
+    return 'Are you sure you want to block $name? They will no longer be able to message you.';
+  }
+
+  @override
+  String userBlockedSnack(String name) {
+    return '$name has been blocked';
+  }
+
+  @override
+  String failedToBlockUser(String error) {
+    return 'Failed to block user: $error';
+  }
+
+  @override
+  String get searchComingSoon => 'Search coming soon';
+
+  @override
+  String get clearChatConfirm =>
+      'Are you sure you want to clear all messages? This action cannot be undone.';
+
+  @override
+  String get clearChatComingSoon => 'Clear chat coming soon';
+
+  @override
+  String get deleteConversationTitle => 'Delete conversation?';
+
+  @override
+  String get deleteConversationMessage =>
+      'This will remove the conversation from your list. This action cannot be undone.';
+
+  @override
+  String get failedToPinConversation => 'Failed to pin conversation';
+
+  @override
+  String get failedToUnpinConversation => 'Failed to unpin conversation';
+
+  @override
+  String get failedToArchiveConversation => 'Failed to archive conversation';
+
+  @override
+  String get failedToUnarchiveConversation =>
+      'Failed to unarchive conversation';
+
+  @override
+  String get lumaAssistantTitle => 'LUMA Assistant';
+
+  @override
+  String get aiPoweredEventDiscovery => 'AI-powered event discovery';
+
+  @override
+  String get clearChatTooltip => 'Clear chat';
+
+  @override
+  String errorWithDetails(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get networkingTitle => 'Networking';
+
+  @override
+  String get requestsTab => 'Requests';
+
+  @override
+  String get refreshTooltip => 'Refresh';
+
+  @override
+  String get noPendingRequests => 'No pending requests';
+
+  @override
+  String get wantsToConnect => 'Wants to connect';
+
+  @override
+  String requestSentTo(String name) {
+    return 'Request sent to $name!';
+  }
+
+  @override
+  String get connectionAcceptedSnack => 'Connection accepted!';
+
+  @override
+  String get eventBuddiesTitle => 'Event Buddies';
+
+  @override
+  String get discoverAndMatch => 'Discover & Match';
+
+  @override
+  String get googleCalendarTitle => 'Google Calendar';
+
+  @override
+  String get couldNotOpenGoogleAuth =>
+      'Could not open Google authorization page';
+
+  @override
+  String get googleCalendarConnected =>
+      'Google Calendar connected successfully!';
+
+  @override
+  String get googleCalendarDisconnected => 'Google Calendar disconnected';
+
+  @override
+  String get eventRemovedFromCalendar => 'Event removed from Google Calendar';
+
+  @override
+  String failedToConnect(String error) {
+    return 'Failed to connect: $error';
+  }
+
+  @override
+  String syncedEventsToCalendar(int count) {
+    return 'Synced $count events to Google Calendar';
+  }
+
+  @override
+  String get enterAuthCodeTitle => 'Enter Authorization Code';
+
+  @override
+  String get authorizationCodeLabel => 'Authorization Code';
+
+  @override
+  String get disconnectGoogleCalendar => 'Disconnect Google Calendar';
+
+  @override
+  String get syncAllAction => 'Sync All';
+
+  @override
+  String get profileUpdatedSnack => 'Profile updated successfully';
+
+  @override
+  String get signatureRemovedSnack => 'Signature removed';
+
+  @override
+  String get removeSignatureConfirm =>
+      'Are you sure you want to remove your signature?';
+
+  @override
+  String get logoutTitle => 'Logout';
+
+  @override
+  String get logoutConfirmMessage => 'Are you sure you want to logout?';
+
+  @override
+  String get photoUploadComingSoon => 'Photo upload coming soon!';
+
+  @override
+  String get bioLabel => 'Bio';
+
+  @override
+  String get bioHint => 'Tell others about yourself';
+
+  @override
+  String get interestsLabel => 'Interests';
+
+  @override
+  String get interestsHint => 'tech, music, travel (comma separated)';
+
+  @override
+  String get networkingVisibility => 'Networking Visibility';
+
+  @override
+  String get allowOthersDiscover =>
+      'Allow others to discover and connect with you';
+
+  @override
+  String get markAllAsRead => 'Mark all as read';
+
+  @override
+  String get waitlistOffersTooltip => 'Waitlist Offers';
+
+  @override
+  String get imageUploadComingSoon => 'Image upload coming soon!';
+
+  @override
+  String failedToPickImage(String error) {
+    return 'Failed to pick image: $error';
+  }
+
+  @override
+  String failedToSendMessage(String error) {
+    return 'Failed to send message: $error';
+  }
+
+  @override
+  String replyFromUser(String name) {
+    return 'Reply from $name';
+  }
+
+  @override
+  String get typeYourAnswerHint => 'Type your answer...';
+
+  @override
+  String get chatDeletedSnack => 'Chat deleted';
+
+  @override
+  String get deleteChatTitle => 'Delete Chat';
+
+  @override
+  String get deleteChatConfirmLong =>
+      'Are you sure you want to delete this chat? This action cannot be undone.';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get waitlistOffersTitle => 'Waitlist Offers';
+
+  @override
+  String get declineOfferTitle => 'Decline Offer';
+
+  @override
+  String get offerAcceptedSnack => 'Offer accepted! You are now registered.';
+
+  @override
+  String get offerDeclinedSnack => 'Offer declined.';
+
+  @override
+  String failedToAcceptOffer(String error) {
+    return 'Failed to accept offer: $error';
+  }
+
+  @override
+  String failedGeneric(String error) {
+    return 'Failed: $error';
+  }
+
+  @override
+  String get loginRequiredTitle => 'Login Required';
+
+  @override
+  String get loginRequiredMessage => 'Please login to view your events';
+
+  @override
+  String get certificateSentSnack => 'Certificate sent to your email!';
+
+  @override
+  String failedToSendCertificate(String error) {
+    return 'Failed to send certificate: $error';
+  }
+
+  @override
+  String get registrationCancelledSnack =>
+      'Registration cancelled successfully';
+
+  @override
+  String failedToCancelRegistration(String error) {
+    return 'Failed to cancel: $error';
+  }
+
+  @override
+  String get cancelRegistrationTitle => 'Cancel Registration';
+
+  @override
+  String get cancelRegistrationConfirm =>
+      'Are you sure you want to cancel this registration? This action cannot be undone.';
+
+  @override
+  String get yesCancel => 'Yes, Cancel';
+
+  @override
+  String get viewTicket => 'View Ticket';
+
+  @override
+  String get sendCertificateToEmail => 'Send Certificate to Email';
+
+  @override
+  String get ticketLabel => 'Ticket';
+
+  @override
+  String get quantityLabel => 'Quantity';
+
+  @override
+  String get totalLabel => 'Total';
+
+  @override
+  String get subtotalLabel => 'Subtotal';
+
+  @override
+  String get unitPriceQtyLabel => 'Unit price × Qty';
+
+  @override
+  String get haveCouponCode => 'Have a coupon code?';
+
+  @override
+  String get enterCodeHint => 'Enter code';
+
+  @override
+  String get registrationDeadlineLabel => 'Registration Deadline';
+
+  @override
+  String get livePollsLabel => 'Live Polls';
+
+  @override
+  String get scheduleLabel => 'Schedule';
+
+  @override
+  String get removedFromComparison => 'Removed from comparison';
+
+  @override
+  String addedToComparison(int count) {
+    return 'Added to comparison ($count/4)';
+  }
+
+  @override
+  String get maxEventsComparison => 'Maximum 4 events for comparison';
+
+  @override
+  String failedToValidateLabel(String error) {
+    return 'Failed to validate: $error';
+  }
+
+  @override
+  String get transferTicketTitle => 'Transfer Ticket';
+
+  @override
+  String get transferInitiatedSnack => 'Transfer initiated!';
+
+  @override
+  String get recipientEmailHint => 'recipient@example.com';
+
+  @override
+  String get transferTicketTooltip => 'Transfer ticket';
+
+  @override
+  String get registeredForSession => 'Registered for session!';
+
+  @override
+  String get noSessionsAvailable => 'No sessions available';
+
+  @override
+  String get addToMySchedule => 'Add to My Schedule';
+
+  @override
+  String scheduleWithName(String name) {
+    return 'Schedule - $name';
+  }
+
+  @override
+  String pollsWithName(String name) {
+    return 'Polls — $name';
+  }
+
+  @override
+  String get failedToSubmitPolls => 'Failed to submit polls. Please try again.';
+
+  @override
+  String get noEventsTitle => 'No Events';
+
+  @override
+  String get eventComparisonTitle => 'Event Comparison';
+
+  @override
+  String get browseEventsAction => 'Browse Events';
+
+  @override
+  String get noDataAvailable => 'No data available';
+
+  @override
+  String get noMoreEventsAvailable => 'No more events available';
+
+  @override
+  String get calendarSyncComingSoon => 'Calendar sync coming soon!';
+
+  @override
+  String get failedToLoadProfile => 'Failed to load profile';
+
+  @override
+  String get shareAction => 'Share';
+
+  @override
+  String get reportAction => 'Report';
+
+  @override
+  String get reportSubmittedSnack => 'Report submitted';
+
+  @override
+  String get subscribedToCityUpdates => 'Subscribed to city updates!';
+
+  @override
+  String get noOrganisersAvailable => 'No organisers available';
+
+  @override
+  String get noCategoriesAvailable => 'No categories available';
+
+  @override
+  String get compareEventsTooltip => 'Compare Events';
+
+  @override
+  String get searchEventsHint => 'Search events...';
+
+  @override
+  String get galleryTitle => 'Gallery';
+
+  @override
+  String get failedToLoadCategories => 'Failed to load categories';
+
+  @override
+  String get viewEventLabel => 'View Event';
+
+  @override
+  String couponCodeCopied(String code) {
+    return 'Coupon code copied: $code';
+  }
+
+  @override
+  String get useThisCoupon => 'Use this coupon';
+
+  @override
+  String get backOnlineSyncing => 'Back online! Syncing data...';
+
+  @override
+  String get userLabel => 'User';
+
+  @override
+  String get muteLabel => 'Mute';
+
+  @override
+  String get unmuteLabel => 'Unmute';
+
+  @override
+  String get clearAction => 'Clear';
+
+  @override
+  String get noLabel => 'No';
+
+  @override
+  String get clearChatAction => 'Clear Chat';
+
+  @override
+  String get allEvents => 'All Events';
+
+  @override
+  String get allEventsFilter => 'All Events';
+
+  @override
+  String get conversationPinned => 'Conversation pinned';
+
+  @override
+  String get conversationUnpinned => 'Conversation unpinned';
+
+  @override
+  String get conversationArchived => 'Conversation archived';
+
+  @override
+  String get conversationUnarchived => 'Conversation unarchived';
 }

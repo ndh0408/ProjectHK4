@@ -2245,6 +2245,1074 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This message was deleted'**
   String get messageDeletedBody;
+
+  /// close
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// edit
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// block
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// unblock
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// connectAction
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get connectAction;
+
+  /// disconnectAction
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get disconnectAction;
+
+  /// transferAction
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get transferAction;
+
+  /// addAction
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addAction;
+
+  /// decline
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// accept
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// yes
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// no
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// clearLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearLabel;
+
+  /// all
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// tryAgain
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// errorLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorLabel;
+
+  /// comingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon!'**
+  String get comingSoon;
+
+  /// createAction
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createAction;
+
+  /// messagesTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messagesTitle;
+
+  /// chatsTab
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatsTab;
+
+  /// buddiesTab
+  ///
+  /// In en, this message translates to:
+  /// **'Buddies'**
+  String get buddiesTab;
+
+  /// lumaTab
+  ///
+  /// In en, this message translates to:
+  /// **'LUMA'**
+  String get lumaTab;
+
+  /// createGroupAction
+  ///
+  /// In en, this message translates to:
+  /// **'Create Group'**
+  String get createGroupAction;
+
+  /// createGroupChatTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Create Group Chat'**
+  String get createGroupChatTitle;
+
+  /// groupNameLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Group Name'**
+  String get groupNameLabel;
+
+  /// groupNamePlaceholder
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupNamePlaceholder;
+
+  /// groupNameHint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter group name...'**
+  String get groupNameHint;
+
+  /// pleaseSelectMember
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least 1 member'**
+  String get pleaseSelectMember;
+
+  /// pleaseSelect2Buddies
+  ///
+  /// In en, this message translates to:
+  /// **'Please select at least 2 buddies to create a group'**
+  String get pleaseSelect2Buddies;
+
+  /// pleaseEnterGroupName
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a group name'**
+  String get pleaseEnterGroupName;
+
+  /// groupCreatedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Group created successfully!'**
+  String get groupCreatedSnack;
+
+  /// groupCreatedNamed
+  ///
+  /// In en, this message translates to:
+  /// **'Group \"{name}\" created successfully!'**
+  String groupCreatedNamed(String name);
+
+  /// searchBuddiesHint
+  ///
+  /// In en, this message translates to:
+  /// **'Search buddies...'**
+  String get searchBuddiesHint;
+
+  /// exploreEventsAction
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Events'**
+  String get exploreEventsAction;
+
+  /// clearFiltersAction
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFiltersAction;
+
+  /// clearAllAction
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearAllAction;
+
+  /// noMembersFound
+  ///
+  /// In en, this message translates to:
+  /// **'No members found'**
+  String get noMembersFound;
+
+  /// noMediaInChat
+  ///
+  /// In en, this message translates to:
+  /// **'No media in this chat'**
+  String get noMediaInChat;
+
+  /// viewProfile
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get viewProfile;
+
+  /// viewMembers
+  ///
+  /// In en, this message translates to:
+  /// **'View Members'**
+  String get viewMembers;
+
+  /// searchInChat
+  ///
+  /// In en, this message translates to:
+  /// **'Search in Chat'**
+  String get searchInChat;
+
+  /// mediaAndFiles
+  ///
+  /// In en, this message translates to:
+  /// **'Media & Files'**
+  String get mediaAndFiles;
+
+  /// viewEventTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'View Event'**
+  String get viewEventTooltip;
+
+  /// blockUserTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Block User'**
+  String get blockUserTitle;
+
+  /// blockUserConfirm
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to block {name}? They will no longer be able to message you.'**
+  String blockUserConfirm(String name);
+
+  /// userBlockedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has been blocked'**
+  String userBlockedSnack(String name);
+
+  /// failedToBlockUser
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to block user: {error}'**
+  String failedToBlockUser(String error);
+
+  /// searchComingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Search coming soon'**
+  String get searchComingSoon;
+
+  /// clearChatConfirm
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all messages? This action cannot be undone.'**
+  String get clearChatConfirm;
+
+  /// clearChatComingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chat coming soon'**
+  String get clearChatComingSoon;
+
+  /// deleteConversationTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Delete conversation?'**
+  String get deleteConversationTitle;
+
+  /// deleteConversationMessage
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove the conversation from your list. This action cannot be undone.'**
+  String get deleteConversationMessage;
+
+  /// failedToPinConversation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pin conversation'**
+  String get failedToPinConversation;
+
+  /// failedToUnpinConversation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to unpin conversation'**
+  String get failedToUnpinConversation;
+
+  /// failedToArchiveConversation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to archive conversation'**
+  String get failedToArchiveConversation;
+
+  /// failedToUnarchiveConversation
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to unarchive conversation'**
+  String get failedToUnarchiveConversation;
+
+  /// lumaAssistantTitle
+  ///
+  /// In en, this message translates to:
+  /// **'LUMA Assistant'**
+  String get lumaAssistantTitle;
+
+  /// aiPoweredEventDiscovery
+  ///
+  /// In en, this message translates to:
+  /// **'AI-powered event discovery'**
+  String get aiPoweredEventDiscovery;
+
+  /// clearChatTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chat'**
+  String get clearChatTooltip;
+
+  /// errorWithDetails
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorWithDetails(String error);
+
+  /// networkingTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Networking'**
+  String get networkingTitle;
+
+  /// requestsTab
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get requestsTab;
+
+  /// refreshTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refreshTooltip;
+
+  /// noPendingRequests
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get noPendingRequests;
+
+  /// wantsToConnect
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to connect'**
+  String get wantsToConnect;
+
+  /// requestSentTo
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent to {name}!'**
+  String requestSentTo(String name);
+
+  /// connectionAcceptedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Connection accepted!'**
+  String get connectionAcceptedSnack;
+
+  /// eventBuddiesTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Event Buddies'**
+  String get eventBuddiesTitle;
+
+  /// discoverAndMatch
+  ///
+  /// In en, this message translates to:
+  /// **'Discover & Match'**
+  String get discoverAndMatch;
+
+  /// googleCalendarTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar'**
+  String get googleCalendarTitle;
+
+  /// couldNotOpenGoogleAuth
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Google authorization page'**
+  String get couldNotOpenGoogleAuth;
+
+  /// googleCalendarConnected
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar connected successfully!'**
+  String get googleCalendarConnected;
+
+  /// googleCalendarDisconnected
+  ///
+  /// In en, this message translates to:
+  /// **'Google Calendar disconnected'**
+  String get googleCalendarDisconnected;
+
+  /// eventRemovedFromCalendar
+  ///
+  /// In en, this message translates to:
+  /// **'Event removed from Google Calendar'**
+  String get eventRemovedFromCalendar;
+
+  /// failedToConnect
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to connect: {error}'**
+  String failedToConnect(String error);
+
+  /// syncedEventsToCalendar
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {count} events to Google Calendar'**
+  String syncedEventsToCalendar(int count);
+
+  /// enterAuthCodeTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Authorization Code'**
+  String get enterAuthCodeTitle;
+
+  /// authorizationCodeLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization Code'**
+  String get authorizationCodeLabel;
+
+  /// disconnectGoogleCalendar
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect Google Calendar'**
+  String get disconnectGoogleCalendar;
+
+  /// syncAllAction
+  ///
+  /// In en, this message translates to:
+  /// **'Sync All'**
+  String get syncAllAction;
+
+  /// profileUpdatedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully'**
+  String get profileUpdatedSnack;
+
+  /// signatureRemovedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Signature removed'**
+  String get signatureRemovedSnack;
+
+  /// removeSignatureConfirm
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove your signature?'**
+  String get removeSignatureConfirm;
+
+  /// logoutTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logoutTitle;
+
+  /// logoutConfirmMessage
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to logout?'**
+  String get logoutConfirmMessage;
+
+  /// photoUploadComingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Photo upload coming soon!'**
+  String get photoUploadComingSoon;
+
+  /// bioLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bioLabel;
+
+  /// bioHint
+  ///
+  /// In en, this message translates to:
+  /// **'Tell others about yourself'**
+  String get bioHint;
+
+  /// interestsLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Interests'**
+  String get interestsLabel;
+
+  /// interestsHint
+  ///
+  /// In en, this message translates to:
+  /// **'tech, music, travel (comma separated)'**
+  String get interestsHint;
+
+  /// networkingVisibility
+  ///
+  /// In en, this message translates to:
+  /// **'Networking Visibility'**
+  String get networkingVisibility;
+
+  /// allowOthersDiscover
+  ///
+  /// In en, this message translates to:
+  /// **'Allow others to discover and connect with you'**
+  String get allowOthersDiscover;
+
+  /// markAllAsRead
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllAsRead;
+
+  /// waitlistOffersTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist Offers'**
+  String get waitlistOffersTooltip;
+
+  /// imageUploadComingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Image upload coming soon!'**
+  String get imageUploadComingSoon;
+
+  /// failedToPickImage
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pick image: {error}'**
+  String failedToPickImage(String error);
+
+  /// failedToSendMessage
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send message: {error}'**
+  String failedToSendMessage(String error);
+
+  /// replyFromUser
+  ///
+  /// In en, this message translates to:
+  /// **'Reply from {name}'**
+  String replyFromUser(String name);
+
+  /// typeYourAnswerHint
+  ///
+  /// In en, this message translates to:
+  /// **'Type your answer...'**
+  String get typeYourAnswerHint;
+
+  /// chatDeletedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get chatDeletedSnack;
+
+  /// deleteChatTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Chat'**
+  String get deleteChatTitle;
+
+  /// deleteChatConfirmLong
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this chat? This action cannot be undone.'**
+  String get deleteChatConfirmLong;
+
+  /// notificationsTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// waitlistOffersTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Waitlist Offers'**
+  String get waitlistOffersTitle;
+
+  /// declineOfferTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Decline Offer'**
+  String get declineOfferTitle;
+
+  /// offerAcceptedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Offer accepted! You are now registered.'**
+  String get offerAcceptedSnack;
+
+  /// offerDeclinedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Offer declined.'**
+  String get offerDeclinedSnack;
+
+  /// failedToAcceptOffer
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to accept offer: {error}'**
+  String failedToAcceptOffer(String error);
+
+  /// failedGeneric
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String failedGeneric(String error);
+
+  /// loginRequiredTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Login Required'**
+  String get loginRequiredTitle;
+
+  /// loginRequiredMessage
+  ///
+  /// In en, this message translates to:
+  /// **'Please login to view your events'**
+  String get loginRequiredMessage;
+
+  /// certificateSentSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Certificate sent to your email!'**
+  String get certificateSentSnack;
+
+  /// failedToSendCertificate
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send certificate: {error}'**
+  String failedToSendCertificate(String error);
+
+  /// registrationCancelledSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Registration cancelled successfully'**
+  String get registrationCancelledSnack;
+
+  /// failedToCancelRegistration
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to cancel: {error}'**
+  String failedToCancelRegistration(String error);
+
+  /// cancelRegistrationTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Registration'**
+  String get cancelRegistrationTitle;
+
+  /// cancelRegistrationConfirm
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this registration? This action cannot be undone.'**
+  String get cancelRegistrationConfirm;
+
+  /// yesCancel
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Cancel'**
+  String get yesCancel;
+
+  /// viewTicket
+  ///
+  /// In en, this message translates to:
+  /// **'View Ticket'**
+  String get viewTicket;
+
+  /// sendCertificateToEmail
+  ///
+  /// In en, this message translates to:
+  /// **'Send Certificate to Email'**
+  String get sendCertificateToEmail;
+
+  /// ticketLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket'**
+  String get ticketLabel;
+
+  /// quantityLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantityLabel;
+
+  /// totalLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get totalLabel;
+
+  /// subtotalLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotalLabel;
+
+  /// unitPriceQtyLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Unit price × Qty'**
+  String get unitPriceQtyLabel;
+
+  /// haveCouponCode
+  ///
+  /// In en, this message translates to:
+  /// **'Have a coupon code?'**
+  String get haveCouponCode;
+
+  /// enterCodeHint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter code'**
+  String get enterCodeHint;
+
+  /// registrationDeadlineLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Deadline'**
+  String get registrationDeadlineLabel;
+
+  /// livePollsLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Live Polls'**
+  String get livePollsLabel;
+
+  /// scheduleLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get scheduleLabel;
+
+  /// removedFromComparison
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from comparison'**
+  String get removedFromComparison;
+
+  /// addedToComparison
+  ///
+  /// In en, this message translates to:
+  /// **'Added to comparison ({count}/4)'**
+  String addedToComparison(int count);
+
+  /// maxEventsComparison
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum 4 events for comparison'**
+  String get maxEventsComparison;
+
+  /// failedToValidateLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to validate: {error}'**
+  String failedToValidateLabel(String error);
+
+  /// transferTicketTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Ticket'**
+  String get transferTicketTitle;
+
+  /// transferInitiatedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer initiated!'**
+  String get transferInitiatedSnack;
+
+  /// recipientEmailHint
+  ///
+  /// In en, this message translates to:
+  /// **'recipient@example.com'**
+  String get recipientEmailHint;
+
+  /// transferTicketTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer ticket'**
+  String get transferTicketTooltip;
+
+  /// registeredForSession
+  ///
+  /// In en, this message translates to:
+  /// **'Registered for session!'**
+  String get registeredForSession;
+
+  /// noSessionsAvailable
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions available'**
+  String get noSessionsAvailable;
+
+  /// addToMySchedule
+  ///
+  /// In en, this message translates to:
+  /// **'Add to My Schedule'**
+  String get addToMySchedule;
+
+  /// scheduleWithName
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule - {name}'**
+  String scheduleWithName(String name);
+
+  /// pollsWithName
+  ///
+  /// In en, this message translates to:
+  /// **'Polls — {name}'**
+  String pollsWithName(String name);
+
+  /// failedToSubmitPolls
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to submit polls. Please try again.'**
+  String get failedToSubmitPolls;
+
+  /// noEventsTitle
+  ///
+  /// In en, this message translates to:
+  /// **'No Events'**
+  String get noEventsTitle;
+
+  /// eventComparisonTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Event Comparison'**
+  String get eventComparisonTitle;
+
+  /// browseEventsAction
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Events'**
+  String get browseEventsAction;
+
+  /// noDataAvailable
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noDataAvailable;
+
+  /// noMoreEventsAvailable
+  ///
+  /// In en, this message translates to:
+  /// **'No more events available'**
+  String get noMoreEventsAvailable;
+
+  /// calendarSyncComingSoon
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar sync coming soon!'**
+  String get calendarSyncComingSoon;
+
+  /// failedToLoadProfile
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load profile'**
+  String get failedToLoadProfile;
+
+  /// shareAction
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareAction;
+
+  /// reportAction
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportAction;
+
+  /// reportSubmittedSnack
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted'**
+  String get reportSubmittedSnack;
+
+  /// subscribedToCityUpdates
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed to city updates!'**
+  String get subscribedToCityUpdates;
+
+  /// noOrganisersAvailable
+  ///
+  /// In en, this message translates to:
+  /// **'No organisers available'**
+  String get noOrganisersAvailable;
+
+  /// noCategoriesAvailable
+  ///
+  /// In en, this message translates to:
+  /// **'No categories available'**
+  String get noCategoriesAvailable;
+
+  /// compareEventsTooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Compare Events'**
+  String get compareEventsTooltip;
+
+  /// searchEventsHint
+  ///
+  /// In en, this message translates to:
+  /// **'Search events...'**
+  String get searchEventsHint;
+
+  /// galleryTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get galleryTitle;
+
+  /// failedToLoadCategories
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load categories'**
+  String get failedToLoadCategories;
+
+  /// viewEventLabel
+  ///
+  /// In en, this message translates to:
+  /// **'View Event'**
+  String get viewEventLabel;
+
+  /// couponCodeCopied
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon code copied: {code}'**
+  String couponCodeCopied(String code);
+
+  /// useThisCoupon
+  ///
+  /// In en, this message translates to:
+  /// **'Use this coupon'**
+  String get useThisCoupon;
+
+  /// backOnlineSyncing
+  ///
+  /// In en, this message translates to:
+  /// **'Back online! Syncing data...'**
+  String get backOnlineSyncing;
+
+  /// userLabel
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get userLabel;
+
+  /// muteLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get muteLabel;
+
+  /// unmuteLabel
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get unmuteLabel;
+
+  /// clearAction
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearAction;
+
+  /// noLabel
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get noLabel;
+
+  /// clearChatAction
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Chat'**
+  String get clearChatAction;
+
+  /// allEvents
+  ///
+  /// In en, this message translates to:
+  /// **'All Events'**
+  String get allEvents;
+
+  /// allEventsFilter
+  ///
+  /// In en, this message translates to:
+  /// **'All Events'**
+  String get allEventsFilter;
+
+  /// conversationPinned
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation pinned'**
+  String get conversationPinned;
+
+  /// conversationUnpinned
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation unpinned'**
+  String get conversationUnpinned;
+
+  /// conversationArchived
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation archived'**
+  String get conversationArchived;
+
+  /// conversationUnarchived
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation unarchived'**
+  String get conversationUnarchived;
 }
 
 class _AppLocalizationsDelegate

@@ -1,28 +1,23 @@
 {
   "@@locale": "vi",
-
   "appName": "LUMA",
   "home": "Trang chủ",
   "explore": "Khám phá",
   "myEvents": "Sự kiện của tôi",
   "alerts": "Thông báo",
   "profile": "Hồ sơ",
-
   "yourEvents": "Sự kiện của bạn",
   "viewAll": "Xem tất cả",
   "pickedForYou": "Dành cho bạn",
   "nearby": "Gần đây",
   "allTheWorld": "Toàn thế giới",
-
   "noUpcomingEvents": "Không có sự kiện sắp tới",
   "noUpcomingEventsSubtitle": "Các sự kiện bạn tổ chức hoặc tham gia sẽ hiển thị ở đây.",
   "noEventsFound": "Không tìm thấy sự kiện",
   "tryChangingFilter": "Thử thay đổi bộ lọc vị trí",
-
   "today": "Hôm nay",
   "tomorrow": "Ngày mai",
   "registered": "Đã đăng ký",
-
   "login": "Đăng nhập",
   "logout": "Đăng xuất",
   "email": "Email",
@@ -32,28 +27,23 @@
   "dontHaveAccount": "Chưa có tài khoản?",
   "signUp": "Đăng ký",
   "orContinueWith": "Hoặc tiếp tục với",
-
   "settings": "Cài đặt",
   "language": "Ngôn ngữ",
   "english": "Tiếng Anh",
   "vietnamese": "Tiếng Việt",
-
   "notifications": "Thông báo",
   "messages": "Tin nhắn",
   "send": "Gửi",
   "typeMessage": "Nhập tin nhắn...",
-
   "delete": "Xóa",
   "cancel": "Hủy",
   "confirm": "Xác nhận",
   "error": "Lỗi",
   "retry": "Thử lại",
   "loading": "Đang tải...",
-
   "contactHost": "Liên hệ người tổ chức",
   "register": "Đăng ký",
   "unregister": "Hủy đăng ký",
-
   "eventDetails": "Chi tiết sự kiện",
   "about": "Giới thiệu",
   "location": "Địa điểm",
@@ -62,12 +52,10 @@
   "guests": "Khách mời",
   "askQuestion": "Đặt câu hỏi",
   "askLuma": "Hỏi LUMA",
-
   "editProfile": "Chỉnh sửa hồ sơ",
   "fullName": "Họ và tên",
   "phone": "Số điện thoại",
   "save": "Lưu",
-
   "createEvent": "Tạo sự kiện",
   "eventTitle": "Tên sự kiện",
   "description": "Mô tả",
@@ -77,16 +65,13 @@
   "price": "Giá",
   "free": "Miễn phí",
   "paid": "Có phí",
-
   "pending": "Đang chờ",
   "approved": "Đã duyệt",
   "rejected": "Từ chối",
-
   "deleteChat": "Xóa cuộc trò chuyện",
   "deleteChatConfirm": "Bạn có chắc muốn xóa cuộc trò chuyện này?",
   "chatDeleted": "Đã xóa cuộc trò chuyện",
   "conversationDeleted": "Đã xóa hội thoại",
-
   "continueWithEmail": "Tiếp tục với Email",
   "createAccount": "Tạo tài khoản",
   "signIn": "Đăng nhập",
@@ -102,7 +87,6 @@
   "upcomingEvents": "Sự kiện sắp tới",
   "pastEvents": "Sự kiện đã qua",
   "searchEvents": "Tìm kiếm sự kiện",
-
   "categories": "Danh mục",
   "organisers": "Người tổ chức",
   "cities": "Thành phố",
@@ -127,13 +111,11 @@
   "noNotifications": "Không có thông báo",
   "noMessages": "Không có tin nhắn",
   "noConversations": "Không có hội thoại",
-
   "popularEvents": "Sự kiện phổ biến",
   "browseByCategory": "Duyệt theo danh mục",
   "featuredCalendars": "Lịch nổi bật",
   "noUpcomingEventsShort": "Không có sự kiện sắp tới",
   "soldOut": "Hết vé",
-
   "confirmRegistration": "Xác nhận đăng ký",
   "joinWaitlist": "Tham gia danh sách chờ",
   "youAreRegistered": "Bạn đã đăng ký",
@@ -154,14 +136,12 @@
   "registrations": "Đăng ký",
   "openMaps": "Mở bản đồ",
   "tapToOpenInMaps": "Nhấn để mở trong bản đồ",
-
   "deleteMessage": "Xóa tin nhắn",
   "deleteMessageConfirm": "Bạn có chắc muốn xóa tin nhắn này?",
   "thisMessageWasDeleted": "Tin nhắn này đã bị xóa",
   "noMessagesYet": "Chưa có tin nhắn",
   "sendMessageToStart": "Gửi tin nhắn để bắt đầu cuộc trò chuyện",
   "members": "{count} thành viên",
-
   "imageUploadedSuccessfully": "Tải ảnh lên thành công",
   "failedToUploadImage": "Tải ảnh lên thất bại",
   "eventName": "Tên sự kiện",
@@ -209,7 +189,6 @@
   "pleaseUpdateAndResubmit": "Vui lòng cập nhật sự kiện và lưu để gửi lại duyệt.",
   "pleaseEnterEventTitle": "Vui lòng nhập tên sự kiện",
   "pleaseSelectStartAndEndTime": "Vui lòng chọn thời gian bắt đầu và kết thúc",
-
   "completePayment": "Hoàn tất thanh toán",
   "newWindowOpened": "Một cửa sổ mới đã mở để thanh toán.",
   "afterCompletingPayment": "Sau khi hoàn tất thanh toán:",
@@ -235,23 +214,19 @@
   "testMode": "Chế độ thử nghiệm",
   "useTestCard": "Dùng thẻ test: 4242 4242 4242 4242",
   "testCardExpiry": "Hết hạn: Ngày tương lai | CVC: 3 số bất kỳ",
-
   "alreadyRegistered": "Bạn đã đăng ký sự kiện này rồi!",
   "successfullyRegistered": "Đăng ký thành công!",
   "addedToWaitlistSuccessfully": "Đã thêm vào danh sách chờ!",
   "loadingQuestions": "Đang tải câu hỏi...",
   "noQuestions": "Không có câu hỏi",
-  "noQuestionsSubtitle": "Không có câu hỏi đăng ký cho sự kiện này.",
+  "noQuestionsSubtitle": "Các câu hỏi bạn đặt về sự kiện sẽ xuất hiện ở đây",
   "fillOutFormToComplete": "Vui lòng điền form dưới đây để hoàn tất đăng ký.",
   "enterYourAnswer": "Nhập câu trả lời",
   "submitRegistration": "Gửi đăng ký",
   "continueToPayment": "Tiếp tục thanh toán",
-
-  "contactHost": "Liên hệ người tổ chức",
   "pleaseEnterYourQuestion": "Vui lòng nhập câu hỏi",
   "questionSentSuccessfully": "Gửi câu hỏi thành công!",
   "enterQuestionForHost": "Vui lòng nhập câu hỏi cho người tổ chức...",
-
   "eventDescription": "Mô tả sự kiện",
   "write": "Viết",
   "preview": "Xem trước",
@@ -277,7 +252,6 @@
   "contact": "Liên hệ",
   "share": "Chia sẻ",
   "download": "Tải xuống",
-
   "reviews": "Đánh giá",
   "writeReview": "Viết đánh giá",
   "rating": "Xếp hạng",
@@ -296,24 +270,20 @@
   "ratingVeryGood": "Rất tốt",
   "ratingExcellent": "Xuất sắc",
   "reviewsCount": "{count} đánh giá",
-
   "signature": "Chữ ký",
   "uploadSignature": "Tải lên chữ ký",
   "signatureDescription": "Chữ ký của bạn sẽ xuất hiện trên các chứng chỉ bạn cấp",
   "signatureUploaded": "Đã tải lên chữ ký thành công",
   "removeSignature": "Xóa chữ ký",
   "tapToUploadSignature": "Nhấn để tải lên chữ ký của bạn",
-
   "addToCalendar": "Thêm vào lịch",
   "couldNotOpenCalendar": "Không thể mở ứng dụng lịch",
-
   "emailNotifications": "Thông báo qua Email",
   "emailNotificationsDescription": "Nhận cập nhật quan trọng qua email",
   "eventReminders": "Nhắc nhở sự kiện",
   "eventRemindersDescription": "Nhận email nhắc nhở trước sự kiện",
   "notificationPreferences": "Tùy chọn thông báo",
   "emailPreferencesUpdated": "Đã cập nhật tùy chọn email",
-
   "scanQrCode": "Quét mã QR",
   "pointCameraAtQr": "Hướng camera vào mã QR của người tham dự",
   "processing": "Đang xử lý...",
@@ -331,26 +301,20 @@
   "checkedInAt": "Check-in lúc",
   "showQrAtEntrance": "Đưa mã QR này ở lối vào",
   "youHaveCheckedIn": "Bạn đã check-in sự kiện này",
-
   "savedEvents": "Sự kiện đã lưu",
   "noSavedEvents": "Chưa có sự kiện đã lưu",
   "noSavedEventsSubtitle": "Đánh dấu các sự kiện bạn quan tâm để tìm lại chúng ở đây",
   "addedToSaved": "Đã thêm vào danh sách lưu",
   "removedFromSaved": "Đã xóa khỏi danh sách lưu",
   "remove": "Xóa",
-  "save": "Lưu",
   "saved": "Đã lưu",
-
   "myQuestions": "Câu hỏi của tôi",
-  "noQuestionsSubtitle": "Các câu hỏi bạn đặt về sự kiện sẽ xuất hiện ở đây",
   "answered": "Đã trả lời",
   "answer": "Trả lời",
-
   "theme": "Giao diện",
   "lightMode": "Sáng",
   "darkMode": "Tối",
   "systemDefault": "Theo hệ thống",
-
   "reportReview": "Báo cáo đánh giá",
   "selectReason": "Chọn lý do báo cáo",
   "additionalDetails": "Chi tiết bổ sung",
@@ -365,13 +329,11 @@
   "reasonHarassment": "Quấy rối",
   "reasonOffTopic": "Không liên quan",
   "reasonOther": "Khác",
-
   "myCoupons": "Mã Giảm Giá",
   "noCouponsAvailable": "Chưa Có Mã Giảm Giá",
   "checkBackLaterForOffers": "Quay lại sau để nhận ưu đãi độc quyền",
   "failedToLoadCoupons": "Không thể tải mã giảm giá",
   "refresh": "Làm mới",
-
   "eventChatsTab": "Nhóm Sự Kiện",
   "eventChatsEmptyHint": "Đăng ký sự kiện để xem nhóm chat ở đây",
   "eventChatsSubtitle": "Mỗi sự kiện bạn đã đăng ký có một nhóm chat riêng",
@@ -382,7 +344,13 @@
   "leaveChat": "Rời nhóm chat",
   "clearChat": "Xoá tin nhắn",
   "notJoinedMembers": "Chưa tham gia · {count} thành viên",
-  "@notJoinedMembers": { "placeholders": { "count": { "type": "int" } } },
+  "@notJoinedMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tapToChat": "Chạm để chat",
   "noMessagesYetTapToChat": "Chưa có tin nhắn · chạm để bắt đầu",
   "eventChatClosedLabel": "Đã đóng",
@@ -394,9 +362,826 @@
   "leftEventChat": "Bạn đã rời nhóm chat",
   "leaveEventChatTitle": "Rời nhóm chat?",
   "leaveEventChatMessage": "Bạn sẽ không còn nhận tin nhắn từ \"{title}\". Có thể tham gia lại trước khi nhóm đóng.",
-  "@leaveEventChatMessage": { "placeholders": { "title": { "type": "String" } } },
-
+  "@leaveEventChatMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "messagePreviewImage": "Đã gửi ảnh",
   "messagePreviewFile": "Đã gửi tệp",
-  "messageDeletedBody": "Tin nhắn đã bị xoá"
+  "messageDeletedBody": "Tin nhắn đã bị xoá",
+  "close": "Đóng",
+  "@close": {
+    "description": "close"
+  },
+  "edit": "Sửa",
+  "@edit": {
+    "description": "edit"
+  },
+  "block": "Chặn",
+  "@block": {
+    "description": "block"
+  },
+  "unblock": "Bỏ chặn",
+  "@unblock": {
+    "description": "unblock"
+  },
+  "connectAction": "Kết nối",
+  "@connectAction": {
+    "description": "connectAction"
+  },
+  "disconnectAction": "Ngắt kết nối",
+  "@disconnectAction": {
+    "description": "disconnectAction"
+  },
+  "transferAction": "Chuyển",
+  "@transferAction": {
+    "description": "transferAction"
+  },
+  "addAction": "Thêm",
+  "@addAction": {
+    "description": "addAction"
+  },
+  "decline": "Từ chối",
+  "@decline": {
+    "description": "decline"
+  },
+  "accept": "Chấp nhận",
+  "@accept": {
+    "description": "accept"
+  },
+  "yes": "Có",
+  "@yes": {
+    "description": "yes"
+  },
+  "no": "Không",
+  "@no": {
+    "description": "no"
+  },
+  "clearLabel": "Xoá",
+  "@clearLabel": {
+    "description": "clearLabel"
+  },
+  "all": "Tất cả",
+  "@all": {
+    "description": "all"
+  },
+  "tryAgain": "Thử lại",
+  "@tryAgain": {
+    "description": "tryAgain"
+  },
+  "unknown": "Không rõ",
+  "@unknown": {
+    "description": "unknown"
+  },
+  "errorLabel": "Lỗi",
+  "@errorLabel": {
+    "description": "errorLabel"
+  },
+  "comingSoon": "Sắp ra mắt!",
+  "@comingSoon": {
+    "description": "comingSoon"
+  },
+  "createAction": "Tạo",
+  "@createAction": {
+    "description": "createAction"
+  },
+  "messagesTitle": "Tin nhắn",
+  "@messagesTitle": {
+    "description": "messagesTitle"
+  },
+  "chatsTab": "Trò chuyện",
+  "@chatsTab": {
+    "description": "chatsTab"
+  },
+  "buddiesTab": "Bạn sự kiện",
+  "@buddiesTab": {
+    "description": "buddiesTab"
+  },
+  "lumaTab": "LUMA",
+  "@lumaTab": {
+    "description": "lumaTab"
+  },
+  "createGroupAction": "Tạo nhóm",
+  "@createGroupAction": {
+    "description": "createGroupAction"
+  },
+  "createGroupChatTitle": "Tạo nhóm chat",
+  "@createGroupChatTitle": {
+    "description": "createGroupChatTitle"
+  },
+  "groupNameLabel": "Tên nhóm",
+  "@groupNameLabel": {
+    "description": "groupNameLabel"
+  },
+  "groupNamePlaceholder": "Tên nhóm",
+  "@groupNamePlaceholder": {
+    "description": "groupNamePlaceholder"
+  },
+  "groupNameHint": "Nhập tên nhóm...",
+  "@groupNameHint": {
+    "description": "groupNameHint"
+  },
+  "pleaseSelectMember": "Vui lòng chọn ít nhất 1 thành viên",
+  "@pleaseSelectMember": {
+    "description": "pleaseSelectMember"
+  },
+  "pleaseSelect2Buddies": "Vui lòng chọn ít nhất 2 bạn để tạo nhóm",
+  "@pleaseSelect2Buddies": {
+    "description": "pleaseSelect2Buddies"
+  },
+  "pleaseEnterGroupName": "Vui lòng nhập tên nhóm",
+  "@pleaseEnterGroupName": {
+    "description": "pleaseEnterGroupName"
+  },
+  "groupCreatedSnack": "Đã tạo nhóm thành công!",
+  "@groupCreatedSnack": {
+    "description": "groupCreatedSnack"
+  },
+  "groupCreatedNamed": "Đã tạo nhóm \"{name}\" thành công!",
+  "@groupCreatedNamed": {
+    "description": "groupCreatedNamed",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchBuddiesHint": "Tìm bạn sự kiện...",
+  "@searchBuddiesHint": {
+    "description": "searchBuddiesHint"
+  },
+  "exploreEventsAction": "Khám phá sự kiện",
+  "@exploreEventsAction": {
+    "description": "exploreEventsAction"
+  },
+  "clearFiltersAction": "Xoá bộ lọc",
+  "@clearFiltersAction": {
+    "description": "clearFiltersAction"
+  },
+  "clearAllAction": "Xoá tất cả",
+  "@clearAllAction": {
+    "description": "clearAllAction"
+  },
+  "noMembersFound": "Không tìm thấy thành viên",
+  "@noMembersFound": {
+    "description": "noMembersFound"
+  },
+  "noMediaInChat": "Không có media trong nhóm này",
+  "@noMediaInChat": {
+    "description": "noMediaInChat"
+  },
+  "viewProfile": "Xem hồ sơ",
+  "@viewProfile": {
+    "description": "viewProfile"
+  },
+  "viewMembers": "Xem thành viên",
+  "@viewMembers": {
+    "description": "viewMembers"
+  },
+  "searchInChat": "Tìm trong chat",
+  "@searchInChat": {
+    "description": "searchInChat"
+  },
+  "mediaAndFiles": "Media & Tệp",
+  "@mediaAndFiles": {
+    "description": "mediaAndFiles"
+  },
+  "viewEventTooltip": "Xem sự kiện",
+  "@viewEventTooltip": {
+    "description": "viewEventTooltip"
+  },
+  "blockUserTitle": "Chặn người dùng",
+  "@blockUserTitle": {
+    "description": "blockUserTitle"
+  },
+  "blockUserConfirm": "Bạn có chắc muốn chặn {name}? Người này sẽ không thể nhắn tin cho bạn nữa.",
+  "@blockUserConfirm": {
+    "description": "blockUserConfirm",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userBlockedSnack": "Đã chặn {name}",
+  "@userBlockedSnack": {
+    "description": "userBlockedSnack",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToBlockUser": "Chặn người dùng thất bại: {error}",
+  "@failedToBlockUser": {
+    "description": "failedToBlockUser",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchComingSoon": "Tìm kiếm sắp ra mắt",
+  "@searchComingSoon": {
+    "description": "searchComingSoon"
+  },
+  "clearChatConfirm": "Bạn có chắc muốn xoá tất cả tin nhắn? Không thể hoàn tác.",
+  "@clearChatConfirm": {
+    "description": "clearChatConfirm"
+  },
+  "clearChatComingSoon": "Xoá toàn bộ chat sắp ra mắt",
+  "@clearChatComingSoon": {
+    "description": "clearChatComingSoon"
+  },
+  "deleteConversationTitle": "Xoá cuộc trò chuyện?",
+  "@deleteConversationTitle": {
+    "description": "deleteConversationTitle"
+  },
+  "deleteConversationMessage": "Thao tác này sẽ xoá cuộc trò chuyện khỏi danh sách. Không thể hoàn tác.",
+  "@deleteConversationMessage": {
+    "description": "deleteConversationMessage"
+  },
+  "failedToPinConversation": "Ghim cuộc trò chuyện thất bại",
+  "@failedToPinConversation": {
+    "description": "failedToPinConversation"
+  },
+  "failedToUnpinConversation": "Bỏ ghim cuộc trò chuyện thất bại",
+  "@failedToUnpinConversation": {
+    "description": "failedToUnpinConversation"
+  },
+  "failedToArchiveConversation": "Lưu trữ cuộc trò chuyện thất bại",
+  "@failedToArchiveConversation": {
+    "description": "failedToArchiveConversation"
+  },
+  "failedToUnarchiveConversation": "Bỏ lưu trữ thất bại",
+  "@failedToUnarchiveConversation": {
+    "description": "failedToUnarchiveConversation"
+  },
+  "lumaAssistantTitle": "Trợ lý LUMA",
+  "@lumaAssistantTitle": {
+    "description": "lumaAssistantTitle"
+  },
+  "aiPoweredEventDiscovery": "Khám phá sự kiện bằng AI",
+  "@aiPoweredEventDiscovery": {
+    "description": "aiPoweredEventDiscovery"
+  },
+  "clearChatTooltip": "Xoá lịch sử chat",
+  "@clearChatTooltip": {
+    "description": "clearChatTooltip"
+  },
+  "errorWithDetails": "Lỗi: {error}",
+  "@errorWithDetails": {
+    "description": "errorWithDetails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "networkingTitle": "Kết nối",
+  "@networkingTitle": {
+    "description": "networkingTitle"
+  },
+  "requestsTab": "Yêu cầu",
+  "@requestsTab": {
+    "description": "requestsTab"
+  },
+  "refreshTooltip": "Làm mới",
+  "@refreshTooltip": {
+    "description": "refreshTooltip"
+  },
+  "noPendingRequests": "Không có yêu cầu chờ",
+  "@noPendingRequests": {
+    "description": "noPendingRequests"
+  },
+  "wantsToConnect": "Muốn kết nối",
+  "@wantsToConnect": {
+    "description": "wantsToConnect"
+  },
+  "requestSentTo": "Đã gửi yêu cầu đến {name}!",
+  "@requestSentTo": {
+    "description": "requestSentTo",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionAcceptedSnack": "Đã chấp nhận kết nối!",
+  "@connectionAcceptedSnack": {
+    "description": "connectionAcceptedSnack"
+  },
+  "eventBuddiesTitle": "Bạn sự kiện",
+  "@eventBuddiesTitle": {
+    "description": "eventBuddiesTitle"
+  },
+  "discoverAndMatch": "Khám phá & Ghép đôi",
+  "@discoverAndMatch": {
+    "description": "discoverAndMatch"
+  },
+  "googleCalendarTitle": "Google Calendar",
+  "@googleCalendarTitle": {
+    "description": "googleCalendarTitle"
+  },
+  "couldNotOpenGoogleAuth": "Không thể mở trang xác thực Google",
+  "@couldNotOpenGoogleAuth": {
+    "description": "couldNotOpenGoogleAuth"
+  },
+  "googleCalendarConnected": "Đã kết nối Google Calendar!",
+  "@googleCalendarConnected": {
+    "description": "googleCalendarConnected"
+  },
+  "googleCalendarDisconnected": "Đã ngắt kết nối Google Calendar",
+  "@googleCalendarDisconnected": {
+    "description": "googleCalendarDisconnected"
+  },
+  "eventRemovedFromCalendar": "Đã gỡ sự kiện khỏi Google Calendar",
+  "@eventRemovedFromCalendar": {
+    "description": "eventRemovedFromCalendar"
+  },
+  "failedToConnect": "Kết nối thất bại: {error}",
+  "@failedToConnect": {
+    "description": "failedToConnect",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedEventsToCalendar": "Đã đồng bộ {count} sự kiện lên Google Calendar",
+  "@syncedEventsToCalendar": {
+    "description": "syncedEventsToCalendar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "enterAuthCodeTitle": "Nhập mã xác thực",
+  "@enterAuthCodeTitle": {
+    "description": "enterAuthCodeTitle"
+  },
+  "authorizationCodeLabel": "Mã xác thực",
+  "@authorizationCodeLabel": {
+    "description": "authorizationCodeLabel"
+  },
+  "disconnectGoogleCalendar": "Ngắt kết nối Google Calendar",
+  "@disconnectGoogleCalendar": {
+    "description": "disconnectGoogleCalendar"
+  },
+  "syncAllAction": "Đồng bộ tất cả",
+  "@syncAllAction": {
+    "description": "syncAllAction"
+  },
+  "profileUpdatedSnack": "Đã cập nhật hồ sơ",
+  "@profileUpdatedSnack": {
+    "description": "profileUpdatedSnack"
+  },
+  "signatureRemovedSnack": "Đã xoá chữ ký",
+  "@signatureRemovedSnack": {
+    "description": "signatureRemovedSnack"
+  },
+  "removeSignatureConfirm": "Bạn có chắc muốn xoá chữ ký?",
+  "@removeSignatureConfirm": {
+    "description": "removeSignatureConfirm"
+  },
+  "logoutTitle": "Đăng xuất",
+  "@logoutTitle": {
+    "description": "logoutTitle"
+  },
+  "logoutConfirmMessage": "Bạn có chắc muốn đăng xuất?",
+  "@logoutConfirmMessage": {
+    "description": "logoutConfirmMessage"
+  },
+  "photoUploadComingSoon": "Tải ảnh sắp ra mắt!",
+  "@photoUploadComingSoon": {
+    "description": "photoUploadComingSoon"
+  },
+  "bioLabel": "Giới thiệu",
+  "@bioLabel": {
+    "description": "bioLabel"
+  },
+  "bioHint": "Nói về bản thân bạn",
+  "@bioHint": {
+    "description": "bioHint"
+  },
+  "interestsLabel": "Sở thích",
+  "@interestsLabel": {
+    "description": "interestsLabel"
+  },
+  "interestsHint": "tech, âm nhạc, du lịch (cách nhau bởi dấu phẩy)",
+  "@interestsHint": {
+    "description": "interestsHint"
+  },
+  "networkingVisibility": "Hiển thị trong Networking",
+  "@networkingVisibility": {
+    "description": "networkingVisibility"
+  },
+  "allowOthersDiscover": "Cho phép người khác tìm thấy và kết nối với bạn",
+  "@allowOthersDiscover": {
+    "description": "allowOthersDiscover"
+  },
+  "markAllAsRead": "Đánh dấu tất cả đã đọc",
+  "@markAllAsRead": {
+    "description": "markAllAsRead"
+  },
+  "waitlistOffersTooltip": "Ưu đãi danh sách chờ",
+  "@waitlistOffersTooltip": {
+    "description": "waitlistOffersTooltip"
+  },
+  "imageUploadComingSoon": "Tải ảnh sắp ra mắt!",
+  "@imageUploadComingSoon": {
+    "description": "imageUploadComingSoon"
+  },
+  "failedToPickImage": "Chọn ảnh thất bại: {error}",
+  "@failedToPickImage": {
+    "description": "failedToPickImage",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSendMessage": "Gửi tin nhắn thất bại: {error}",
+  "@failedToSendMessage": {
+    "description": "failedToSendMessage",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "replyFromUser": "Trả lời từ {name}",
+  "@replyFromUser": {
+    "description": "replyFromUser",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "typeYourAnswerHint": "Nhập câu trả lời...",
+  "@typeYourAnswerHint": {
+    "description": "typeYourAnswerHint"
+  },
+  "chatDeletedSnack": "Đã xoá chat",
+  "@chatDeletedSnack": {
+    "description": "chatDeletedSnack"
+  },
+  "deleteChatTitle": "Xoá chat",
+  "@deleteChatTitle": {
+    "description": "deleteChatTitle"
+  },
+  "deleteChatConfirmLong": "Bạn có chắc muốn xoá chat này? Không thể hoàn tác.",
+  "@deleteChatConfirmLong": {
+    "description": "deleteChatConfirmLong"
+  },
+  "notificationsTitle": "Thông báo",
+  "@notificationsTitle": {
+    "description": "notificationsTitle"
+  },
+  "waitlistOffersTitle": "Ưu đãi danh sách chờ",
+  "@waitlistOffersTitle": {
+    "description": "waitlistOffersTitle"
+  },
+  "declineOfferTitle": "Từ chối ưu đãi",
+  "@declineOfferTitle": {
+    "description": "declineOfferTitle"
+  },
+  "offerAcceptedSnack": "Đã chấp nhận ưu đãi! Bạn đã được đăng ký.",
+  "@offerAcceptedSnack": {
+    "description": "offerAcceptedSnack"
+  },
+  "offerDeclinedSnack": "Đã từ chối ưu đãi.",
+  "@offerDeclinedSnack": {
+    "description": "offerDeclinedSnack"
+  },
+  "failedToAcceptOffer": "Chấp nhận ưu đãi thất bại: {error}",
+  "@failedToAcceptOffer": {
+    "description": "failedToAcceptOffer",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedGeneric": "Thất bại: {error}",
+  "@failedGeneric": {
+    "description": "failedGeneric",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginRequiredTitle": "Cần đăng nhập",
+  "@loginRequiredTitle": {
+    "description": "loginRequiredTitle"
+  },
+  "loginRequiredMessage": "Vui lòng đăng nhập để xem sự kiện của bạn",
+  "@loginRequiredMessage": {
+    "description": "loginRequiredMessage"
+  },
+  "certificateSentSnack": "Đã gửi chứng chỉ tới email của bạn!",
+  "@certificateSentSnack": {
+    "description": "certificateSentSnack"
+  },
+  "failedToSendCertificate": "Gửi chứng chỉ thất bại: {error}",
+  "@failedToSendCertificate": {
+    "description": "failedToSendCertificate",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registrationCancelledSnack": "Đã huỷ đăng ký",
+  "@registrationCancelledSnack": {
+    "description": "registrationCancelledSnack"
+  },
+  "failedToCancelRegistration": "Huỷ thất bại: {error}",
+  "@failedToCancelRegistration": {
+    "description": "failedToCancelRegistration",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelRegistrationTitle": "Huỷ đăng ký",
+  "@cancelRegistrationTitle": {
+    "description": "cancelRegistrationTitle"
+  },
+  "cancelRegistrationConfirm": "Bạn có chắc muốn huỷ đăng ký? Không thể hoàn tác.",
+  "@cancelRegistrationConfirm": {
+    "description": "cancelRegistrationConfirm"
+  },
+  "yesCancel": "Có, huỷ",
+  "@yesCancel": {
+    "description": "yesCancel"
+  },
+  "viewTicket": "Xem vé",
+  "@viewTicket": {
+    "description": "viewTicket"
+  },
+  "sendCertificateToEmail": "Gửi chứng chỉ qua email",
+  "@sendCertificateToEmail": {
+    "description": "sendCertificateToEmail"
+  },
+  "ticketLabel": "Vé",
+  "@ticketLabel": {
+    "description": "ticketLabel"
+  },
+  "quantityLabel": "Số lượng",
+  "@quantityLabel": {
+    "description": "quantityLabel"
+  },
+  "totalLabel": "Tổng",
+  "@totalLabel": {
+    "description": "totalLabel"
+  },
+  "subtotalLabel": "Tạm tính",
+  "@subtotalLabel": {
+    "description": "subtotalLabel"
+  },
+  "unitPriceQtyLabel": "Đơn giá × Số lượng",
+  "@unitPriceQtyLabel": {
+    "description": "unitPriceQtyLabel"
+  },
+  "haveCouponCode": "Có mã giảm giá?",
+  "@haveCouponCode": {
+    "description": "haveCouponCode"
+  },
+  "enterCodeHint": "Nhập mã",
+  "@enterCodeHint": {
+    "description": "enterCodeHint"
+  },
+  "registrationDeadlineLabel": "Hạn đăng ký",
+  "@registrationDeadlineLabel": {
+    "description": "registrationDeadlineLabel"
+  },
+  "livePollsLabel": "Bình chọn trực tiếp",
+  "@livePollsLabel": {
+    "description": "livePollsLabel"
+  },
+  "scheduleLabel": "Lịch trình",
+  "@scheduleLabel": {
+    "description": "scheduleLabel"
+  },
+  "removedFromComparison": "Đã bỏ khỏi so sánh",
+  "@removedFromComparison": {
+    "description": "removedFromComparison"
+  },
+  "addedToComparison": "Đã thêm vào so sánh ({count}/4)",
+  "@addedToComparison": {
+    "description": "addedToComparison",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maxEventsComparison": "Tối đa 4 sự kiện để so sánh",
+  "@maxEventsComparison": {
+    "description": "maxEventsComparison"
+  },
+  "failedToValidateLabel": "Xác thực thất bại: {error}",
+  "@failedToValidateLabel": {
+    "description": "failedToValidateLabel",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transferTicketTitle": "Chuyển vé",
+  "@transferTicketTitle": {
+    "description": "transferTicketTitle"
+  },
+  "transferInitiatedSnack": "Đã khởi tạo chuyển vé!",
+  "@transferInitiatedSnack": {
+    "description": "transferInitiatedSnack"
+  },
+  "recipientEmailHint": "nguoinhan@example.com",
+  "@recipientEmailHint": {
+    "description": "recipientEmailHint"
+  },
+  "transferTicketTooltip": "Chuyển vé",
+  "@transferTicketTooltip": {
+    "description": "transferTicketTooltip"
+  },
+  "registeredForSession": "Đã đăng ký phiên!",
+  "@registeredForSession": {
+    "description": "registeredForSession"
+  },
+  "noSessionsAvailable": "Chưa có phiên nào",
+  "@noSessionsAvailable": {
+    "description": "noSessionsAvailable"
+  },
+  "addToMySchedule": "Thêm vào lịch của tôi",
+  "@addToMySchedule": {
+    "description": "addToMySchedule"
+  },
+  "scheduleWithName": "Lịch trình - {name}",
+  "@scheduleWithName": {
+    "description": "scheduleWithName",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pollsWithName": "Bình chọn — {name}",
+  "@pollsWithName": {
+    "description": "pollsWithName",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSubmitPolls": "Gửi bình chọn thất bại. Vui lòng thử lại.",
+  "@failedToSubmitPolls": {
+    "description": "failedToSubmitPolls"
+  },
+  "noEventsTitle": "Chưa có sự kiện",
+  "@noEventsTitle": {
+    "description": "noEventsTitle"
+  },
+  "eventComparisonTitle": "So sánh sự kiện",
+  "@eventComparisonTitle": {
+    "description": "eventComparisonTitle"
+  },
+  "browseEventsAction": "Xem sự kiện",
+  "@browseEventsAction": {
+    "description": "browseEventsAction"
+  },
+  "noDataAvailable": "Không có dữ liệu",
+  "@noDataAvailable": {
+    "description": "noDataAvailable"
+  },
+  "noMoreEventsAvailable": "Không còn sự kiện",
+  "@noMoreEventsAvailable": {
+    "description": "noMoreEventsAvailable"
+  },
+  "calendarSyncComingSoon": "Đồng bộ lịch sắp ra mắt!",
+  "@calendarSyncComingSoon": {
+    "description": "calendarSyncComingSoon"
+  },
+  "failedToLoadProfile": "Tải hồ sơ thất bại",
+  "@failedToLoadProfile": {
+    "description": "failedToLoadProfile"
+  },
+  "shareAction": "Chia sẻ",
+  "@shareAction": {
+    "description": "shareAction"
+  },
+  "reportAction": "Báo cáo",
+  "@reportAction": {
+    "description": "reportAction"
+  },
+  "reportSubmittedSnack": "Đã gửi báo cáo",
+  "@reportSubmittedSnack": {
+    "description": "reportSubmittedSnack"
+  },
+  "subscribedToCityUpdates": "Đã đăng ký nhận cập nhật thành phố!",
+  "@subscribedToCityUpdates": {
+    "description": "subscribedToCityUpdates"
+  },
+  "noOrganisersAvailable": "Không có nhà tổ chức",
+  "@noOrganisersAvailable": {
+    "description": "noOrganisersAvailable"
+  },
+  "noCategoriesAvailable": "Không có danh mục",
+  "@noCategoriesAvailable": {
+    "description": "noCategoriesAvailable"
+  },
+  "compareEventsTooltip": "So sánh sự kiện",
+  "@compareEventsTooltip": {
+    "description": "compareEventsTooltip"
+  },
+  "searchEventsHint": "Tìm sự kiện...",
+  "@searchEventsHint": {
+    "description": "searchEventsHint"
+  },
+  "galleryTitle": "Thư viện",
+  "@galleryTitle": {
+    "description": "galleryTitle"
+  },
+  "failedToLoadCategories": "Tải danh mục thất bại",
+  "@failedToLoadCategories": {
+    "description": "failedToLoadCategories"
+  },
+  "viewEventLabel": "Xem sự kiện",
+  "@viewEventLabel": {
+    "description": "viewEventLabel"
+  },
+  "couponCodeCopied": "Đã sao chép mã: {code}",
+  "@couponCodeCopied": {
+    "description": "couponCodeCopied",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "useThisCoupon": "Dùng mã này",
+  "@useThisCoupon": {
+    "description": "useThisCoupon"
+  },
+  "backOnlineSyncing": "Đã kết nối lại! Đang đồng bộ...",
+  "@backOnlineSyncing": {
+    "description": "backOnlineSyncing"
+  },
+  "userLabel": "Người dùng",
+  "@userLabel": {
+    "description": "userLabel"
+  },
+  "muteLabel": "Tắt thông báo",
+  "@muteLabel": {
+    "description": "muteLabel"
+  },
+  "unmuteLabel": "Bật thông báo",
+  "@unmuteLabel": {
+    "description": "unmuteLabel"
+  },
+  "clearAction": "Xoá",
+  "@clearAction": {
+    "description": "clearAction"
+  },
+  "noLabel": "Không",
+  "@noLabel": {
+    "description": "noLabel"
+  },
+  "clearChatAction": "Xoá toàn bộ",
+  "@clearChatAction": {
+    "description": "clearChatAction"
+  },
+  "allEvents": "Tất cả sự kiện",
+  "@allEvents": {
+    "description": "allEvents"
+  },
+  "allEventsFilter": "Tất cả sự kiện",
+  "@allEventsFilter": {
+    "description": "allEventsFilter"
+  },
+  "conversationPinned": "Đã ghim cuộc trò chuyện",
+  "@conversationPinned": {
+    "description": "conversationPinned"
+  },
+  "conversationUnpinned": "Đã bỏ ghim cuộc trò chuyện",
+  "@conversationUnpinned": {
+    "description": "conversationUnpinned"
+  },
+  "conversationArchived": "Đã lưu trữ cuộc trò chuyện",
+  "@conversationArchived": {
+    "description": "conversationArchived"
+  },
+  "conversationUnarchived": "Đã bỏ lưu trữ cuộc trò chuyện",
+  "@conversationUnarchived": {
+    "description": "conversationUnarchived"
+  }
 }

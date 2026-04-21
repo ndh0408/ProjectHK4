@@ -1,441 +1,353 @@
 {
   "@@locale": "en",
-
   "appName": "LUMA",
   "@appName": {
     "description": "The app name"
   },
-
   "home": "Home",
   "@home": {
     "description": "Home tab label"
   },
-
   "explore": "Explore",
   "@explore": {
     "description": "Explore tab label"
   },
-
   "myEvents": "My Events",
   "@myEvents": {
     "description": "My Events tab label"
   },
-
   "alerts": "Alerts",
   "@alerts": {
     "description": "Alerts tab label"
   },
-
   "profile": "Profile",
   "@profile": {
     "description": "Profile tab label"
   },
-
   "yourEvents": "Your Events",
   "@yourEvents": {
     "description": "Your Events section title"
   },
-
   "viewAll": "View All",
   "@viewAll": {
     "description": "View all button text"
   },
-
   "pickedForYou": "Picked for You",
   "@pickedForYou": {
     "description": "Picked for You section title"
   },
-
   "nearby": "Nearby",
   "@nearby": {
     "description": "Nearby filter option"
   },
-
   "allTheWorld": "All the World",
   "@allTheWorld": {
     "description": "All the World filter option"
   },
-
   "noUpcomingEvents": "No Upcoming Events",
   "@noUpcomingEvents": {
     "description": "No upcoming events title"
   },
-
   "noUpcomingEventsSubtitle": "Events you are hosting or going to will show up here.",
   "@noUpcomingEventsSubtitle": {
     "description": "No upcoming events subtitle"
   },
-
   "noEventsFound": "No events found",
   "@noEventsFound": {
     "description": "No events found message"
   },
-
   "tryChangingFilter": "Try changing the location filter",
   "@tryChangingFilter": {
     "description": "Try changing filter suggestion"
   },
-
   "today": "Today",
   "@today": {
     "description": "Today label"
   },
-
   "tomorrow": "Tomorrow",
   "@tomorrow": {
     "description": "Tomorrow label"
   },
-
   "registered": "Registered",
   "@registered": {
     "description": "Registered badge text"
   },
-
   "login": "Login",
   "@login": {
     "description": "Login button text"
   },
-
   "logout": "Logout",
   "@logout": {
     "description": "Logout button text"
   },
-
   "email": "Email",
   "@email": {
     "description": "Email field label"
   },
-
   "password": "Password",
   "@password": {
     "description": "Password field label"
   },
-
   "welcomeBack": "Welcome Back",
   "@welcomeBack": {
     "description": "Welcome back title"
   },
-
   "signInToContinue": "Sign in to continue",
   "@signInToContinue": {
     "description": "Sign in subtitle"
   },
-
   "dontHaveAccount": "Don't have an account?",
   "@dontHaveAccount": {
     "description": "Don't have account text"
   },
-
   "signUp": "Sign Up",
   "@signUp": {
     "description": "Sign up link/button"
   },
-
   "orContinueWith": "Or continue with",
   "@orContinueWith": {
     "description": "Or continue with text"
   },
-
   "settings": "Settings",
   "@settings": {
     "description": "Settings title"
   },
-
   "language": "Language",
   "@language": {
     "description": "Language setting"
   },
-
   "english": "English",
   "@english": {
     "description": "English language name"
   },
-
   "vietnamese": "Vietnamese",
   "@vietnamese": {
     "description": "Vietnamese language name"
   },
-
   "notifications": "Notifications",
   "@notifications": {
     "description": "Notifications title"
   },
-
   "messages": "Messages",
   "@messages": {
     "description": "Messages tab"
   },
-
   "send": "Send",
   "@send": {
     "description": "Send button"
   },
-
   "typeMessage": "Type a message...",
   "@typeMessage": {
     "description": "Type message placeholder"
   },
-
   "delete": "Delete",
   "@delete": {
     "description": "Delete action"
   },
-
   "cancel": "Cancel",
   "@cancel": {
     "description": "Cancel action"
   },
-
   "confirm": "Confirm",
   "@confirm": {
     "description": "Confirm action"
   },
-
   "error": "Error",
   "@error": {
     "description": "Error title"
   },
-
   "retry": "Retry",
   "@retry": {
     "description": "Retry action"
   },
-
   "loading": "Loading...",
   "@loading": {
     "description": "Loading text"
   },
-
   "contactHost": "Contact Host",
   "@contactHost": {
     "description": "Contact host button"
   },
-
   "register": "Register",
   "@register": {
     "description": "Register button"
   },
-
   "unregister": "Unregister",
   "@unregister": {
     "description": "Unregister button"
   },
-
   "eventDetails": "Event Details",
   "@eventDetails": {
     "description": "Event details title"
   },
-
   "about": "About",
   "@about": {
     "description": "About section"
   },
-
   "location": "Location",
   "@location": {
     "description": "Location label"
   },
-
   "dateAndTime": "Date & Time",
   "@dateAndTime": {
     "description": "Date and time label"
   },
-
   "host": "Host",
   "@host": {
     "description": "Host label"
   },
-
   "guests": "Guests",
   "@guests": {
     "description": "Guests label"
   },
-
   "askQuestion": "Ask a Question",
   "@askQuestion": {
     "description": "Ask question button"
   },
-
   "askLuma": "Ask LUMA",
   "@askLuma": {
     "description": "Ask LUMA AI assistant FAB label"
   },
-
   "editProfile": "Edit Profile",
   "@editProfile": {
     "description": "Edit profile button"
   },
-
   "fullName": "Full Name",
   "@fullName": {
     "description": "Full name field"
   },
-
   "phone": "Phone",
   "@phone": {
     "description": "Phone field"
   },
-
   "save": "Save",
   "@save": {
     "description": "Save button"
   },
-
   "createEvent": "Create Event",
   "@createEvent": {
     "description": "Create event button"
   },
-
   "eventTitle": "Event Title",
   "@eventTitle": {
     "description": "Event title field"
   },
-
   "description": "Description",
   "@description": {
     "description": "Description field"
   },
-
   "startDate": "Start Date",
   "@startDate": {
     "description": "Start date field"
   },
-
   "endDate": "End Date",
   "@endDate": {
     "description": "End date field"
   },
-
   "capacity": "Capacity",
   "@capacity": {
     "description": "Capacity field"
   },
-
   "price": "Price",
   "@price": {
     "description": "Price field"
   },
-
   "free": "Free",
   "@free": {
     "description": "Free price label"
   },
-
   "paid": "Paid",
   "@paid": {
     "description": "Paid label"
   },
-
   "pending": "Pending",
   "@pending": {
     "description": "Pending status"
   },
-
   "approved": "Approved",
   "@approved": {
     "description": "Approved status"
   },
-
   "rejected": "Rejected",
   "@rejected": {
     "description": "Rejected status"
   },
-
   "deleteChat": "Delete Chat",
   "@deleteChat": {
     "description": "Delete chat dialog title"
   },
-
   "deleteChatConfirm": "Are you sure you want to delete this chat?",
   "@deleteChatConfirm": {
     "description": "Delete chat confirmation message"
   },
-
   "chatDeleted": "Chat deleted",
   "@chatDeleted": {
     "description": "Chat deleted message"
   },
-
   "conversationDeleted": "Conversation deleted",
   "@conversationDeleted": {
     "description": "Conversation deleted message"
   },
-
   "continueWithEmail": "Continue with Email",
   "@continueWithEmail": {
     "description": "Continue with email button"
   },
-
   "createAccount": "Create Account",
   "@createAccount": {
     "description": "Create account button"
   },
-
   "signIn": "Sign In",
   "@signIn": {
     "description": "Sign in button"
   },
-
   "alreadyHaveAccount": "Already have an account?",
   "@alreadyHaveAccount": {
     "description": "Already have account text"
   },
-
   "delightfulEvents": "Delightful events",
   "@delightfulEvents": {
     "description": "Login screen title"
   },
-
   "startHere": "start here",
   "@startHere": {
     "description": "Login screen subtitle"
   },
-
   "loginDescription": "Discover events, subscribe to calendars and manage events you are going to.",
   "@loginDescription": {
     "description": "Login screen description"
   },
-
   "pleaseEnterEmail": "Please enter your email",
   "@pleaseEnterEmail": {
     "description": "Email validation message"
   },
-
   "pleaseEnterValidEmail": "Please enter a valid email",
   "@pleaseEnterValidEmail": {
     "description": "Invalid email validation message"
   },
-
   "pleaseEnterPassword": "Please enter your password",
   "@pleaseEnterPassword": {
     "description": "Password validation message"
   },
-
   "passwordTooShort": "Password must be at least 6 characters",
   "@passwordTooShort": {
     "description": "Password too short validation message"
   },
-
   "pleaseEnterFullName": "Please enter your full name",
   "@pleaseEnterFullName": {
     "description": "Full name validation message"
   },
-
   "upcomingEvents": "Upcoming Events",
   "@upcomingEvents": {
     "description": "Upcoming events section"
   },
-
   "pastEvents": "Past Events",
   "@pastEvents": {
     "description": "Past events section"
   },
-
   "searchEvents": "Search events",
   "@searchEvents": {
     "description": "Search events placeholder"
   },
-
   "categories": "Categories",
   "organisers": "Organisers",
   "cities": "Cities",
@@ -460,13 +372,11 @@
   "noNotifications": "No Notifications",
   "noMessages": "No Messages",
   "noConversations": "No Conversations",
-
   "popularEvents": "Popular Events",
   "browseByCategory": "Browse by Category",
   "featuredCalendars": "Featured Calendars",
   "noUpcomingEventsShort": "No upcoming events",
   "soldOut": "Sold Out",
-
   "confirmRegistration": "Confirm Registration",
   "joinWaitlist": "Join Waitlist",
   "youAreRegistered": "You are registered",
@@ -487,7 +397,6 @@
   "registrations": "Registrations",
   "openMaps": "Open Maps",
   "tapToOpenInMaps": "Tap to open in Maps",
-
   "deleteMessage": "Delete Message",
   "deleteMessageConfirm": "Are you sure you want to delete this message?",
   "thisMessageWasDeleted": "This message was deleted",
@@ -496,10 +405,11 @@
   "members": "{count} members",
   "@members": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "imageUploadedSuccessfully": "Image uploaded successfully",
   "failedToUploadImage": "Failed to upload image",
   "eventName": "Event Name",
@@ -547,7 +457,6 @@
   "pleaseUpdateAndResubmit": "Please update your event and save to resubmit for approval.",
   "pleaseEnterEventTitle": "Please enter event title",
   "pleaseSelectStartAndEndTime": "Please select start and end time",
-
   "completePayment": "Complete Payment",
   "newWindowOpened": "A new window has opened for payment.",
   "afterCompletingPayment": "After completing payment:",
@@ -573,23 +482,19 @@
   "testMode": "Test Mode",
   "useTestCard": "Use test card: 4242 4242 4242 4242",
   "testCardExpiry": "Exp: Any future date | CVC: Any 3 digits",
-
   "alreadyRegistered": "You are already registered for this event!",
   "successfullyRegistered": "Successfully registered!",
   "addedToWaitlistSuccessfully": "Added to waitlist successfully!",
   "loadingQuestions": "Loading questions...",
   "noQuestions": "No Questions",
-  "noQuestionsSubtitle": "There are no registration questions for this event.",
+  "noQuestionsSubtitle": "Questions you ask about events will appear here",
   "fillOutFormToComplete": "Please fill out the form below to complete your registration.",
   "enterYourAnswer": "Enter your answer",
   "submitRegistration": "Submit Registration",
   "continueToPayment": "Continue to Payment",
-
-  "contactHost": "Contact Host",
   "pleaseEnterYourQuestion": "Please enter your question",
   "questionSentSuccessfully": "Question sent successfully!",
   "enterQuestionForHost": "Please enter your question for the host...",
-
   "eventDescription": "Event Description",
   "write": "Write",
   "preview": "Preview",
@@ -613,14 +518,15 @@
   "characters": "{count} characters",
   "@characters": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "describeYourEvent": "Describe your event...",
   "contact": "Contact",
   "share": "Share",
   "download": "Download",
-
   "reviews": "Reviews",
   "writeReview": "Write Review",
   "rating": "Rating",
@@ -641,27 +547,25 @@
   "reviewsCount": "{count} reviews",
   "@reviewsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "signature": "Signature",
   "uploadSignature": "Upload Signature",
   "signatureDescription": "Your signature will appear on certificates you issue",
   "signatureUploaded": "Signature uploaded successfully",
   "removeSignature": "Remove Signature",
   "tapToUploadSignature": "Tap to upload your signature",
-
   "addToCalendar": "Add to Calendar",
   "couldNotOpenCalendar": "Could not open calendar app",
-
   "emailNotifications": "Email Notifications",
   "emailNotificationsDescription": "Receive important updates via email",
   "eventReminders": "Event Reminders",
   "eventRemindersDescription": "Get email reminders before your events",
   "notificationPreferences": "Notification Preferences",
   "emailPreferencesUpdated": "Email preferences updated",
-
   "scanQrCode": "Scan QR Code",
   "pointCameraAtQr": "Point camera at attendee's QR code",
   "processing": "Processing...",
@@ -679,26 +583,20 @@
   "checkedInAt": "Checked in at",
   "showQrAtEntrance": "Show this QR code at the entrance",
   "youHaveCheckedIn": "You have checked in to this event",
-
   "savedEvents": "Saved Events",
   "noSavedEvents": "No Saved Events",
   "noSavedEventsSubtitle": "Bookmark events you're interested in to find them here later",
   "addedToSaved": "Added to saved events",
   "removedFromSaved": "Removed from saved events",
   "remove": "Remove",
-  "save": "Save",
   "saved": "Saved",
-
   "myQuestions": "My Questions",
-  "noQuestionsSubtitle": "Questions you ask about events will appear here",
   "answered": "Answered",
   "answer": "Answer",
-
   "theme": "Theme",
   "lightMode": "Light",
   "darkMode": "Dark",
   "systemDefault": "System Default",
-
   "reportReview": "Report Review",
   "selectReason": "Select a reason for reporting",
   "additionalDetails": "Additional Details",
@@ -713,7 +611,6 @@
   "reasonHarassment": "Harassment",
   "reasonOffTopic": "Off Topic",
   "reasonOther": "Other",
-
   "myCoupons": "My Coupons",
   "@myCoupons": {
     "description": "My Coupons screen title"
@@ -734,60 +631,922 @@
   "@refresh": {
     "description": "Refresh button"
   },
-
   "eventChatsTab": "Event Chats",
-  "@eventChatsTab": { "description": "Messages tab: event group chats" },
+  "@eventChatsTab": {
+    "description": "Messages tab: event group chats"
+  },
   "eventChatsEmptyHint": "Register for an event to see its group chat here",
-  "@eventChatsEmptyHint": { "description": "Empty state in event chats tab" },
+  "@eventChatsEmptyHint": {
+    "description": "Empty state in event chats tab"
+  },
   "eventChatsSubtitle": "Group chat for each event you registered",
-  "@eventChatsSubtitle": { "description": "Subheader in event chats tab" },
+  "@eventChatsSubtitle": {
+    "description": "Subheader in event chats tab"
+  },
   "joinEventChat": "Join",
-  "@joinEventChat": { "description": "Join event group chat button" },
+  "@joinEventChat": {
+    "description": "Join event group chat button"
+  },
   "openChat": "Open chat",
-  "@openChat": { "description": "Open existing chat action" },
+  "@openChat": {
+    "description": "Open existing chat action"
+  },
   "leave": "Leave",
-  "@leave": { "description": "Leave action" },
+  "@leave": {
+    "description": "Leave action"
+  },
   "leaveGroup": "Leave group",
-  "@leaveGroup": { "description": "Menu item: leave group chat" },
+  "@leaveGroup": {
+    "description": "Menu item: leave group chat"
+  },
   "leaveChat": "Leave chat",
-  "@leaveChat": { "description": "Menu item: leave chat" },
+  "@leaveChat": {
+    "description": "Menu item: leave chat"
+  },
   "clearChat": "Clear Chat",
-  "@clearChat": { "description": "Clear chat menu item" },
+  "@clearChat": {
+    "description": "Clear chat menu item"
+  },
   "notJoinedMembers": "Not joined · {count} {count, plural, =1{member} other{members}}",
   "@notJoinedMembers": {
     "description": "Subtitle shown for event chats user has not joined",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "tapToChat": "Tap to chat",
-  "@tapToChat": { "description": "Hint under an empty joined chat" },
+  "@tapToChat": {
+    "description": "Hint under an empty joined chat"
+  },
   "noMessagesYetTapToChat": "No messages yet · tap to chat",
-  "@noMessagesYetTapToChat": { "description": "Hint under an empty joined chat" },
+  "@noMessagesYetTapToChat": {
+    "description": "Hint under an empty joined chat"
+  },
   "eventChatClosedLabel": "Closed",
-  "@eventChatClosedLabel": { "description": "Badge when chat is closed" },
+  "@eventChatClosedLabel": {
+    "description": "Badge when chat is closed"
+  },
   "eventChatClosedSubtitle": "Chat closed",
-  "@eventChatClosedSubtitle": { "description": "Subtitle for closed chat" },
+  "@eventChatClosedSubtitle": {
+    "description": "Subtitle for closed chat"
+  },
   "eventChatClosedBanner": "This event chat is closed — event ended more than 24 hours ago.",
-  "@eventChatClosedBanner": { "description": "Bottom banner when chat is closed" },
+  "@eventChatClosedBanner": {
+    "description": "Bottom banner when chat is closed"
+  },
   "joinedEventChat": "Joined event chat",
-  "@joinedEventChat": { "description": "Snackbar when joined" },
+  "@joinedEventChat": {
+    "description": "Snackbar when joined"
+  },
   "failedToJoinChat": "Failed to join chat",
-  "@failedToJoinChat": { "description": "Snackbar error joining chat" },
+  "@failedToJoinChat": {
+    "description": "Snackbar error joining chat"
+  },
   "failedToLeaveChat": "Failed to leave chat",
-  "@failedToLeaveChat": { "description": "Snackbar error leaving chat" },
+  "@failedToLeaveChat": {
+    "description": "Snackbar error leaving chat"
+  },
   "leftEventChat": "You have left the chat",
-  "@leftEventChat": { "description": "Snackbar after leaving" },
+  "@leftEventChat": {
+    "description": "Snackbar after leaving"
+  },
   "leaveEventChatTitle": "Leave event chat?",
-  "@leaveEventChatTitle": { "description": "Leave chat confirm title" },
+  "@leaveEventChatTitle": {
+    "description": "Leave chat confirm title"
+  },
   "leaveEventChatMessage": "You will stop receiving messages from \"{title}\". You can rejoin any time before the chat closes.",
   "@leaveEventChatMessage": {
     "description": "Leave chat confirm message",
-    "placeholders": { "title": { "type": "String" } }
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
-
   "messagePreviewImage": "Sent an image",
-  "@messagePreviewImage": { "description": "Conversation list preview for image message" },
+  "@messagePreviewImage": {
+    "description": "Conversation list preview for image message"
+  },
   "messagePreviewFile": "Sent a file",
-  "@messagePreviewFile": { "description": "Conversation list preview for file message" },
+  "@messagePreviewFile": {
+    "description": "Conversation list preview for file message"
+  },
   "messageDeletedBody": "This message was deleted",
-  "@messageDeletedBody": { "description": "Replaces content of a deleted message" }
+  "@messageDeletedBody": {
+    "description": "Replaces content of a deleted message"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "close"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "edit"
+  },
+  "block": "Block",
+  "@block": {
+    "description": "block"
+  },
+  "unblock": "Unblock",
+  "@unblock": {
+    "description": "unblock"
+  },
+  "connectAction": "Connect",
+  "@connectAction": {
+    "description": "connectAction"
+  },
+  "disconnectAction": "Disconnect",
+  "@disconnectAction": {
+    "description": "disconnectAction"
+  },
+  "transferAction": "Transfer",
+  "@transferAction": {
+    "description": "transferAction"
+  },
+  "addAction": "Add",
+  "@addAction": {
+    "description": "addAction"
+  },
+  "decline": "Decline",
+  "@decline": {
+    "description": "decline"
+  },
+  "accept": "Accept",
+  "@accept": {
+    "description": "accept"
+  },
+  "yes": "Yes",
+  "@yes": {
+    "description": "yes"
+  },
+  "no": "No",
+  "@no": {
+    "description": "no"
+  },
+  "clearLabel": "Clear",
+  "@clearLabel": {
+    "description": "clearLabel"
+  },
+  "all": "All",
+  "@all": {
+    "description": "all"
+  },
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "tryAgain"
+  },
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "unknown"
+  },
+  "errorLabel": "Error",
+  "@errorLabel": {
+    "description": "errorLabel"
+  },
+  "comingSoon": "Coming soon!",
+  "@comingSoon": {
+    "description": "comingSoon"
+  },
+  "createAction": "Create",
+  "@createAction": {
+    "description": "createAction"
+  },
+  "messagesTitle": "Messages",
+  "@messagesTitle": {
+    "description": "messagesTitle"
+  },
+  "chatsTab": "Chats",
+  "@chatsTab": {
+    "description": "chatsTab"
+  },
+  "buddiesTab": "Buddies",
+  "@buddiesTab": {
+    "description": "buddiesTab"
+  },
+  "lumaTab": "LUMA",
+  "@lumaTab": {
+    "description": "lumaTab"
+  },
+  "createGroupAction": "Create Group",
+  "@createGroupAction": {
+    "description": "createGroupAction"
+  },
+  "createGroupChatTitle": "Create Group Chat",
+  "@createGroupChatTitle": {
+    "description": "createGroupChatTitle"
+  },
+  "groupNameLabel": "Group Name",
+  "@groupNameLabel": {
+    "description": "groupNameLabel"
+  },
+  "groupNamePlaceholder": "Group name",
+  "@groupNamePlaceholder": {
+    "description": "groupNamePlaceholder"
+  },
+  "groupNameHint": "Enter group name...",
+  "@groupNameHint": {
+    "description": "groupNameHint"
+  },
+  "pleaseSelectMember": "Please select at least 1 member",
+  "@pleaseSelectMember": {
+    "description": "pleaseSelectMember"
+  },
+  "pleaseSelect2Buddies": "Please select at least 2 buddies to create a group",
+  "@pleaseSelect2Buddies": {
+    "description": "pleaseSelect2Buddies"
+  },
+  "pleaseEnterGroupName": "Please enter a group name",
+  "@pleaseEnterGroupName": {
+    "description": "pleaseEnterGroupName"
+  },
+  "groupCreatedSnack": "Group created successfully!",
+  "@groupCreatedSnack": {
+    "description": "groupCreatedSnack"
+  },
+  "groupCreatedNamed": "Group \"{name}\" created successfully!",
+  "@groupCreatedNamed": {
+    "description": "groupCreatedNamed",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchBuddiesHint": "Search buddies...",
+  "@searchBuddiesHint": {
+    "description": "searchBuddiesHint"
+  },
+  "exploreEventsAction": "Explore Events",
+  "@exploreEventsAction": {
+    "description": "exploreEventsAction"
+  },
+  "clearFiltersAction": "Clear filters",
+  "@clearFiltersAction": {
+    "description": "clearFiltersAction"
+  },
+  "clearAllAction": "Clear All",
+  "@clearAllAction": {
+    "description": "clearAllAction"
+  },
+  "noMembersFound": "No members found",
+  "@noMembersFound": {
+    "description": "noMembersFound"
+  },
+  "noMediaInChat": "No media in this chat",
+  "@noMediaInChat": {
+    "description": "noMediaInChat"
+  },
+  "viewProfile": "View Profile",
+  "@viewProfile": {
+    "description": "viewProfile"
+  },
+  "viewMembers": "View Members",
+  "@viewMembers": {
+    "description": "viewMembers"
+  },
+  "searchInChat": "Search in Chat",
+  "@searchInChat": {
+    "description": "searchInChat"
+  },
+  "mediaAndFiles": "Media & Files",
+  "@mediaAndFiles": {
+    "description": "mediaAndFiles"
+  },
+  "viewEventTooltip": "View Event",
+  "@viewEventTooltip": {
+    "description": "viewEventTooltip"
+  },
+  "blockUserTitle": "Block User",
+  "@blockUserTitle": {
+    "description": "blockUserTitle"
+  },
+  "blockUserConfirm": "Are you sure you want to block {name}? They will no longer be able to message you.",
+  "@blockUserConfirm": {
+    "description": "blockUserConfirm",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userBlockedSnack": "{name} has been blocked",
+  "@userBlockedSnack": {
+    "description": "userBlockedSnack",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToBlockUser": "Failed to block user: {error}",
+  "@failedToBlockUser": {
+    "description": "failedToBlockUser",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchComingSoon": "Search coming soon",
+  "@searchComingSoon": {
+    "description": "searchComingSoon"
+  },
+  "clearChatConfirm": "Are you sure you want to clear all messages? This action cannot be undone.",
+  "@clearChatConfirm": {
+    "description": "clearChatConfirm"
+  },
+  "clearChatComingSoon": "Clear chat coming soon",
+  "@clearChatComingSoon": {
+    "description": "clearChatComingSoon"
+  },
+  "deleteConversationTitle": "Delete conversation?",
+  "@deleteConversationTitle": {
+    "description": "deleteConversationTitle"
+  },
+  "deleteConversationMessage": "This will remove the conversation from your list. This action cannot be undone.",
+  "@deleteConversationMessage": {
+    "description": "deleteConversationMessage"
+  },
+  "failedToPinConversation": "Failed to pin conversation",
+  "@failedToPinConversation": {
+    "description": "failedToPinConversation"
+  },
+  "failedToUnpinConversation": "Failed to unpin conversation",
+  "@failedToUnpinConversation": {
+    "description": "failedToUnpinConversation"
+  },
+  "failedToArchiveConversation": "Failed to archive conversation",
+  "@failedToArchiveConversation": {
+    "description": "failedToArchiveConversation"
+  },
+  "failedToUnarchiveConversation": "Failed to unarchive conversation",
+  "@failedToUnarchiveConversation": {
+    "description": "failedToUnarchiveConversation"
+  },
+  "lumaAssistantTitle": "LUMA Assistant",
+  "@lumaAssistantTitle": {
+    "description": "lumaAssistantTitle"
+  },
+  "aiPoweredEventDiscovery": "AI-powered event discovery",
+  "@aiPoweredEventDiscovery": {
+    "description": "aiPoweredEventDiscovery"
+  },
+  "clearChatTooltip": "Clear chat",
+  "@clearChatTooltip": {
+    "description": "clearChatTooltip"
+  },
+  "errorWithDetails": "Error: {error}",
+  "@errorWithDetails": {
+    "description": "errorWithDetails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "networkingTitle": "Networking",
+  "@networkingTitle": {
+    "description": "networkingTitle"
+  },
+  "requestsTab": "Requests",
+  "@requestsTab": {
+    "description": "requestsTab"
+  },
+  "refreshTooltip": "Refresh",
+  "@refreshTooltip": {
+    "description": "refreshTooltip"
+  },
+  "noPendingRequests": "No pending requests",
+  "@noPendingRequests": {
+    "description": "noPendingRequests"
+  },
+  "wantsToConnect": "Wants to connect",
+  "@wantsToConnect": {
+    "description": "wantsToConnect"
+  },
+  "requestSentTo": "Request sent to {name}!",
+  "@requestSentTo": {
+    "description": "requestSentTo",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionAcceptedSnack": "Connection accepted!",
+  "@connectionAcceptedSnack": {
+    "description": "connectionAcceptedSnack"
+  },
+  "eventBuddiesTitle": "Event Buddies",
+  "@eventBuddiesTitle": {
+    "description": "eventBuddiesTitle"
+  },
+  "discoverAndMatch": "Discover & Match",
+  "@discoverAndMatch": {
+    "description": "discoverAndMatch"
+  },
+  "googleCalendarTitle": "Google Calendar",
+  "@googleCalendarTitle": {
+    "description": "googleCalendarTitle"
+  },
+  "couldNotOpenGoogleAuth": "Could not open Google authorization page",
+  "@couldNotOpenGoogleAuth": {
+    "description": "couldNotOpenGoogleAuth"
+  },
+  "googleCalendarConnected": "Google Calendar connected successfully!",
+  "@googleCalendarConnected": {
+    "description": "googleCalendarConnected"
+  },
+  "googleCalendarDisconnected": "Google Calendar disconnected",
+  "@googleCalendarDisconnected": {
+    "description": "googleCalendarDisconnected"
+  },
+  "eventRemovedFromCalendar": "Event removed from Google Calendar",
+  "@eventRemovedFromCalendar": {
+    "description": "eventRemovedFromCalendar"
+  },
+  "failedToConnect": "Failed to connect: {error}",
+  "@failedToConnect": {
+    "description": "failedToConnect",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "syncedEventsToCalendar": "Synced {count} events to Google Calendar",
+  "@syncedEventsToCalendar": {
+    "description": "syncedEventsToCalendar",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "enterAuthCodeTitle": "Enter Authorization Code",
+  "@enterAuthCodeTitle": {
+    "description": "enterAuthCodeTitle"
+  },
+  "authorizationCodeLabel": "Authorization Code",
+  "@authorizationCodeLabel": {
+    "description": "authorizationCodeLabel"
+  },
+  "disconnectGoogleCalendar": "Disconnect Google Calendar",
+  "@disconnectGoogleCalendar": {
+    "description": "disconnectGoogleCalendar"
+  },
+  "syncAllAction": "Sync All",
+  "@syncAllAction": {
+    "description": "syncAllAction"
+  },
+  "profileUpdatedSnack": "Profile updated successfully",
+  "@profileUpdatedSnack": {
+    "description": "profileUpdatedSnack"
+  },
+  "signatureRemovedSnack": "Signature removed",
+  "@signatureRemovedSnack": {
+    "description": "signatureRemovedSnack"
+  },
+  "removeSignatureConfirm": "Are you sure you want to remove your signature?",
+  "@removeSignatureConfirm": {
+    "description": "removeSignatureConfirm"
+  },
+  "logoutTitle": "Logout",
+  "@logoutTitle": {
+    "description": "logoutTitle"
+  },
+  "logoutConfirmMessage": "Are you sure you want to logout?",
+  "@logoutConfirmMessage": {
+    "description": "logoutConfirmMessage"
+  },
+  "photoUploadComingSoon": "Photo upload coming soon!",
+  "@photoUploadComingSoon": {
+    "description": "photoUploadComingSoon"
+  },
+  "bioLabel": "Bio",
+  "@bioLabel": {
+    "description": "bioLabel"
+  },
+  "bioHint": "Tell others about yourself",
+  "@bioHint": {
+    "description": "bioHint"
+  },
+  "interestsLabel": "Interests",
+  "@interestsLabel": {
+    "description": "interestsLabel"
+  },
+  "interestsHint": "tech, music, travel (comma separated)",
+  "@interestsHint": {
+    "description": "interestsHint"
+  },
+  "networkingVisibility": "Networking Visibility",
+  "@networkingVisibility": {
+    "description": "networkingVisibility"
+  },
+  "allowOthersDiscover": "Allow others to discover and connect with you",
+  "@allowOthersDiscover": {
+    "description": "allowOthersDiscover"
+  },
+  "markAllAsRead": "Mark all as read",
+  "@markAllAsRead": {
+    "description": "markAllAsRead"
+  },
+  "waitlistOffersTooltip": "Waitlist Offers",
+  "@waitlistOffersTooltip": {
+    "description": "waitlistOffersTooltip"
+  },
+  "imageUploadComingSoon": "Image upload coming soon!",
+  "@imageUploadComingSoon": {
+    "description": "imageUploadComingSoon"
+  },
+  "failedToPickImage": "Failed to pick image: {error}",
+  "@failedToPickImage": {
+    "description": "failedToPickImage",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSendMessage": "Failed to send message: {error}",
+  "@failedToSendMessage": {
+    "description": "failedToSendMessage",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "replyFromUser": "Reply from {name}",
+  "@replyFromUser": {
+    "description": "replyFromUser",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "typeYourAnswerHint": "Type your answer...",
+  "@typeYourAnswerHint": {
+    "description": "typeYourAnswerHint"
+  },
+  "chatDeletedSnack": "Chat deleted",
+  "@chatDeletedSnack": {
+    "description": "chatDeletedSnack"
+  },
+  "deleteChatTitle": "Delete Chat",
+  "@deleteChatTitle": {
+    "description": "deleteChatTitle"
+  },
+  "deleteChatConfirmLong": "Are you sure you want to delete this chat? This action cannot be undone.",
+  "@deleteChatConfirmLong": {
+    "description": "deleteChatConfirmLong"
+  },
+  "notificationsTitle": "Notifications",
+  "@notificationsTitle": {
+    "description": "notificationsTitle"
+  },
+  "waitlistOffersTitle": "Waitlist Offers",
+  "@waitlistOffersTitle": {
+    "description": "waitlistOffersTitle"
+  },
+  "declineOfferTitle": "Decline Offer",
+  "@declineOfferTitle": {
+    "description": "declineOfferTitle"
+  },
+  "offerAcceptedSnack": "Offer accepted! You are now registered.",
+  "@offerAcceptedSnack": {
+    "description": "offerAcceptedSnack"
+  },
+  "offerDeclinedSnack": "Offer declined.",
+  "@offerDeclinedSnack": {
+    "description": "offerDeclinedSnack"
+  },
+  "failedToAcceptOffer": "Failed to accept offer: {error}",
+  "@failedToAcceptOffer": {
+    "description": "failedToAcceptOffer",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedGeneric": "Failed: {error}",
+  "@failedGeneric": {
+    "description": "failedGeneric",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginRequiredTitle": "Login Required",
+  "@loginRequiredTitle": {
+    "description": "loginRequiredTitle"
+  },
+  "loginRequiredMessage": "Please login to view your events",
+  "@loginRequiredMessage": {
+    "description": "loginRequiredMessage"
+  },
+  "certificateSentSnack": "Certificate sent to your email!",
+  "@certificateSentSnack": {
+    "description": "certificateSentSnack"
+  },
+  "failedToSendCertificate": "Failed to send certificate: {error}",
+  "@failedToSendCertificate": {
+    "description": "failedToSendCertificate",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registrationCancelledSnack": "Registration cancelled successfully",
+  "@registrationCancelledSnack": {
+    "description": "registrationCancelledSnack"
+  },
+  "failedToCancelRegistration": "Failed to cancel: {error}",
+  "@failedToCancelRegistration": {
+    "description": "failedToCancelRegistration",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelRegistrationTitle": "Cancel Registration",
+  "@cancelRegistrationTitle": {
+    "description": "cancelRegistrationTitle"
+  },
+  "cancelRegistrationConfirm": "Are you sure you want to cancel this registration? This action cannot be undone.",
+  "@cancelRegistrationConfirm": {
+    "description": "cancelRegistrationConfirm"
+  },
+  "yesCancel": "Yes, Cancel",
+  "@yesCancel": {
+    "description": "yesCancel"
+  },
+  "viewTicket": "View Ticket",
+  "@viewTicket": {
+    "description": "viewTicket"
+  },
+  "sendCertificateToEmail": "Send Certificate to Email",
+  "@sendCertificateToEmail": {
+    "description": "sendCertificateToEmail"
+  },
+  "ticketLabel": "Ticket",
+  "@ticketLabel": {
+    "description": "ticketLabel"
+  },
+  "quantityLabel": "Quantity",
+  "@quantityLabel": {
+    "description": "quantityLabel"
+  },
+  "totalLabel": "Total",
+  "@totalLabel": {
+    "description": "totalLabel"
+  },
+  "subtotalLabel": "Subtotal",
+  "@subtotalLabel": {
+    "description": "subtotalLabel"
+  },
+  "unitPriceQtyLabel": "Unit price × Qty",
+  "@unitPriceQtyLabel": {
+    "description": "unitPriceQtyLabel"
+  },
+  "haveCouponCode": "Have a coupon code?",
+  "@haveCouponCode": {
+    "description": "haveCouponCode"
+  },
+  "enterCodeHint": "Enter code",
+  "@enterCodeHint": {
+    "description": "enterCodeHint"
+  },
+  "registrationDeadlineLabel": "Registration Deadline",
+  "@registrationDeadlineLabel": {
+    "description": "registrationDeadlineLabel"
+  },
+  "livePollsLabel": "Live Polls",
+  "@livePollsLabel": {
+    "description": "livePollsLabel"
+  },
+  "scheduleLabel": "Schedule",
+  "@scheduleLabel": {
+    "description": "scheduleLabel"
+  },
+  "removedFromComparison": "Removed from comparison",
+  "@removedFromComparison": {
+    "description": "removedFromComparison"
+  },
+  "addedToComparison": "Added to comparison ({count}/4)",
+  "@addedToComparison": {
+    "description": "addedToComparison",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maxEventsComparison": "Maximum 4 events for comparison",
+  "@maxEventsComparison": {
+    "description": "maxEventsComparison"
+  },
+  "failedToValidateLabel": "Failed to validate: {error}",
+  "@failedToValidateLabel": {
+    "description": "failedToValidateLabel",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transferTicketTitle": "Transfer Ticket",
+  "@transferTicketTitle": {
+    "description": "transferTicketTitle"
+  },
+  "transferInitiatedSnack": "Transfer initiated!",
+  "@transferInitiatedSnack": {
+    "description": "transferInitiatedSnack"
+  },
+  "recipientEmailHint": "recipient@example.com",
+  "@recipientEmailHint": {
+    "description": "recipientEmailHint"
+  },
+  "transferTicketTooltip": "Transfer ticket",
+  "@transferTicketTooltip": {
+    "description": "transferTicketTooltip"
+  },
+  "registeredForSession": "Registered for session!",
+  "@registeredForSession": {
+    "description": "registeredForSession"
+  },
+  "noSessionsAvailable": "No sessions available",
+  "@noSessionsAvailable": {
+    "description": "noSessionsAvailable"
+  },
+  "addToMySchedule": "Add to My Schedule",
+  "@addToMySchedule": {
+    "description": "addToMySchedule"
+  },
+  "scheduleWithName": "Schedule - {name}",
+  "@scheduleWithName": {
+    "description": "scheduleWithName",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pollsWithName": "Polls — {name}",
+  "@pollsWithName": {
+    "description": "pollsWithName",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToSubmitPolls": "Failed to submit polls. Please try again.",
+  "@failedToSubmitPolls": {
+    "description": "failedToSubmitPolls"
+  },
+  "noEventsTitle": "No Events",
+  "@noEventsTitle": {
+    "description": "noEventsTitle"
+  },
+  "eventComparisonTitle": "Event Comparison",
+  "@eventComparisonTitle": {
+    "description": "eventComparisonTitle"
+  },
+  "browseEventsAction": "Browse Events",
+  "@browseEventsAction": {
+    "description": "browseEventsAction"
+  },
+  "noDataAvailable": "No data available",
+  "@noDataAvailable": {
+    "description": "noDataAvailable"
+  },
+  "noMoreEventsAvailable": "No more events available",
+  "@noMoreEventsAvailable": {
+    "description": "noMoreEventsAvailable"
+  },
+  "calendarSyncComingSoon": "Calendar sync coming soon!",
+  "@calendarSyncComingSoon": {
+    "description": "calendarSyncComingSoon"
+  },
+  "failedToLoadProfile": "Failed to load profile",
+  "@failedToLoadProfile": {
+    "description": "failedToLoadProfile"
+  },
+  "shareAction": "Share",
+  "@shareAction": {
+    "description": "shareAction"
+  },
+  "reportAction": "Report",
+  "@reportAction": {
+    "description": "reportAction"
+  },
+  "reportSubmittedSnack": "Report submitted",
+  "@reportSubmittedSnack": {
+    "description": "reportSubmittedSnack"
+  },
+  "subscribedToCityUpdates": "Subscribed to city updates!",
+  "@subscribedToCityUpdates": {
+    "description": "subscribedToCityUpdates"
+  },
+  "noOrganisersAvailable": "No organisers available",
+  "@noOrganisersAvailable": {
+    "description": "noOrganisersAvailable"
+  },
+  "noCategoriesAvailable": "No categories available",
+  "@noCategoriesAvailable": {
+    "description": "noCategoriesAvailable"
+  },
+  "compareEventsTooltip": "Compare Events",
+  "@compareEventsTooltip": {
+    "description": "compareEventsTooltip"
+  },
+  "searchEventsHint": "Search events...",
+  "@searchEventsHint": {
+    "description": "searchEventsHint"
+  },
+  "galleryTitle": "Gallery",
+  "@galleryTitle": {
+    "description": "galleryTitle"
+  },
+  "failedToLoadCategories": "Failed to load categories",
+  "@failedToLoadCategories": {
+    "description": "failedToLoadCategories"
+  },
+  "viewEventLabel": "View Event",
+  "@viewEventLabel": {
+    "description": "viewEventLabel"
+  },
+  "couponCodeCopied": "Coupon code copied: {code}",
+  "@couponCodeCopied": {
+    "description": "couponCodeCopied",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "useThisCoupon": "Use this coupon",
+  "@useThisCoupon": {
+    "description": "useThisCoupon"
+  },
+  "backOnlineSyncing": "Back online! Syncing data...",
+  "@backOnlineSyncing": {
+    "description": "backOnlineSyncing"
+  },
+  "userLabel": "User",
+  "@userLabel": {
+    "description": "userLabel"
+  },
+  "muteLabel": "Mute",
+  "@muteLabel": {
+    "description": "muteLabel"
+  },
+  "unmuteLabel": "Unmute",
+  "@unmuteLabel": {
+    "description": "unmuteLabel"
+  },
+  "clearAction": "Clear",
+  "@clearAction": {
+    "description": "clearAction"
+  },
+  "noLabel": "No",
+  "@noLabel": {
+    "description": "noLabel"
+  },
+  "clearChatAction": "Clear Chat",
+  "@clearChatAction": {
+    "description": "clearChatAction"
+  },
+  "allEvents": "All Events",
+  "@allEvents": {
+    "description": "allEvents"
+  },
+  "allEventsFilter": "All Events",
+  "@allEventsFilter": {
+    "description": "allEventsFilter"
+  },
+  "conversationPinned": "Conversation pinned",
+  "@conversationPinned": {
+    "description": "conversationPinned"
+  },
+  "conversationUnpinned": "Conversation unpinned",
+  "@conversationUnpinned": {
+    "description": "conversationUnpinned"
+  },
+  "conversationArchived": "Conversation archived",
+  "@conversationArchived": {
+    "description": "conversationArchived"
+  },
+  "conversationUnarchived": "Conversation unarchived",
+  "@conversationUnarchived": {
+    "description": "conversationUnarchived"
+  }
 }
