@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -61,49 +62,158 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "LOWER(e.description) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Event> searchEvents(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' AND " +
-           "(LOWER(e.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(e.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND (LOWER(e.title) LIKE CONCAT('%', LOWER(:query), '%') " +
+           "       OR LOWER(COALESCE(e.description, '')) LIKE CONCAT('%', LOWER(:query), '%')) " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND (LOWER(e.title) LIKE CONCAT('%', LOWER(:query), '%') " +
+           "       OR LOWER(COALESCE(e.description, '')) LIKE CONCAT('%', LOWER(:query), '%'))",
+           nativeQuery = true)
     Page<Event> searchEventsWithBoostPriority(@Param("query") String query, @Param("now") LocalDateTime now, Pageable pageable);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
-           "AND e.startTime BETWEEN :now AND :endDate " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate",
+           nativeQuery = true)
     Page<Event> findUpcomingEventsWithBoostPriority(
             @Param("now") LocalDateTime now,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.category = :category AND e.status = 'PUBLISHED' " +
-           "AND e.visibility = 'PUBLIC' AND e.startTime > :now " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.category_id = :categoryId " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time > :now " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.category_id = :categoryId " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time > :now",
+           nativeQuery = true)
     Page<Event> findEventsByCategoryWithBoostPriority(
-            @Param("category") Category category,
+            @Param("categoryId") Long categoryId,
             @Param("now") LocalDateTime now,
             Pageable pageable);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.city = :city AND e.status = 'PUBLISHED' " +
-           "AND e.visibility = 'PUBLIC' AND e.startTime BETWEEN :now AND :endDate " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.city_id = :cityId " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.city_id = :cityId " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate",
+           nativeQuery = true)
     Page<Event> findEventsByCityWithBoostPriority(
-            @Param("city") City city,
+            @Param("cityId") Long cityId,
             @Param("now") LocalDateTime now,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
@@ -145,6 +255,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     long countByCity(City city);
 
+    long countByCityAndStatus(City city, EventStatus status);
+
     @Query("SELECT e FROM Event e " +
            "LEFT JOIN FETCH e.organiser " +
            "LEFT JOIN FETCH e.category " +
@@ -170,25 +282,80 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
            "WHERE e.id = :eventId")
     java.util.Optional<Event> findByIdWithRelationships(@Param("eventId") UUID eventId);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "WHERE e.deleted = 0 " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC'",
+           nativeQuery = true)
     Page<Event> findFeaturedPublicEvents(@Param("now") LocalDateTime now, Pageable pageable);
 
     @Query("SELECT DISTINCT e FROM Event e JOIN e.speakers s WHERE LOWER(s.name) = LOWER(:speakerName) " +
            "AND e.status = 'PUBLISHED' AND e.visibility = 'PUBLIC' ORDER BY e.startTime DESC")
     Page<Event> findEventsBySpeakerName(@Param("speakerName") String speakerName, Pageable pageable);
 
-    @Query("SELECT DISTINCT e FROM Event e " +
-           "LEFT JOIN EventBoost b ON e.id = b.event.id AND b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "WHERE e.city.country = :country AND e.status = 'PUBLISHED' " +
-           "AND e.visibility = 'PUBLIC' AND e.startTime BETWEEN :now AND :endDate " +
-           "ORDER BY CASE WHEN b.boostPackage IS NOT NULL THEN 0 ELSE 1 END, " +
-           "CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
-           "e.startTime ASC")
+    @Query(value = "SELECT e.* FROM events e " +
+           "JOIN cities c ON c.id = e.city_id " +
+           "OUTER APPLY (" +
+           "    SELECT TOP 1 CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END AS boost_rank " +
+           "    FROM event_boosts eb " +
+           "    WHERE eb.event_id = e.id " +
+           "      AND eb.status = 'ACTIVE' " +
+           "      AND eb.start_time <= :now " +
+           "      AND eb.end_time > :now " +
+           "    ORDER BY CASE eb.boost_package " +
+           "        WHEN 'VIP' THEN 0 " +
+           "        WHEN 'PREMIUM' THEN 1 " +
+           "        WHEN 'STANDARD' THEN 2 " +
+           "        WHEN 'BASIC' THEN 3 " +
+           "        ELSE 4 END" +
+           ") boost " +
+           "WHERE e.deleted = 0 " +
+           "  AND c.country = :country " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate " +
+           "ORDER BY CASE WHEN boost.boost_rank IS NULL THEN 1 ELSE 0 END, " +
+           "         COALESCE(boost.boost_rank, 4), " +
+           "         e.start_time ASC",
+           countQuery = "SELECT COUNT(*) FROM events e " +
+           "JOIN cities c ON c.id = e.city_id " +
+           "WHERE e.deleted = 0 " +
+           "  AND c.country = :country " +
+           "  AND e.status = 'PUBLISHED' " +
+           "  AND e.visibility = 'PUBLIC' " +
+           "  AND e.start_time BETWEEN :now AND :endDate",
+           nativeQuery = true)
     Page<Event> findUpcomingEventsByCountryWithBoostPriority(
             @Param("country") String country,
             @Param("now") LocalDateTime now,
@@ -286,4 +453,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     List<Event> searchEventsByKeyword(@Param("keyword") String keyword,
                                        @Param("now") LocalDateTime now,
                                        Pageable pageable);
+
+    Optional<Event> findByTitle(String title);
 }

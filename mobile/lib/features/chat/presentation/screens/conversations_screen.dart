@@ -247,25 +247,24 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen>
     final l10n = AppLocalizations.of(context)!;
 
     // Listen to WebSocket for real-time bumping
-    ref.listen(pollEventStreamProvider, (previous, next) {
-      next.whenData((eventData) {
-        if (eventData['type'] == 'NEW_MESSAGE') {
-          final payload = eventData['message'];
-          final conversationId = eventData['conversationId'] as String?;
-          if (payload != null && conversationId != null) {
-            final isMe =
-                payload['sender']?['id'] == ref.read(currentUserProvider)?.id;
-            ref.read(conversationsProvider.notifier).applyNewMessage(
-                  conversationId: conversationId,
-                  content: payload['content'],
-                  timestamp: payload['createdAt'] != null
-                      ? DateTime.tryParse(payload['createdAt'])
-                      : DateTime.now(),
-                  incrementUnread: !isMe,
-                  messageId: payload['id'],
-                );
-          }
-        }
+    ref.listen(chatEventStreamProvider, (previous, next) {
+      next.whenData((event) {
+        if (event.type != ChatEventType.newMessage) return;
+        final payload = event.message;
+        final conversationId = event.conversationId;
+        if (payload == null || conversationId == null) return;
+
+        final isMe =
+            payload['sender']?['id'] == ref.read(currentUserProvider)?.id;
+        ref.read(conversationsProvider.notifier).applyNewMessage(
+              conversationId: conversationId,
+              content: payload['content'] as String?,
+              timestamp: payload['createdAt'] != null
+                  ? DateTime.tryParse(payload['createdAt'].toString())
+                  : DateTime.now(),
+              incrementUnread: !isMe,
+              messageId: payload['id'] as String?,
+            );
       });
     });
 

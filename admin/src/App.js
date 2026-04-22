@@ -21,6 +21,8 @@ import {
     AdminCities,
     AdminNotifications,
     AdminBoosts,
+    AdminBoostPackages,
+    AdminSubscriptionPlans,
     AdminRevenue,
     AdminSupportRequests,
 } from "./pages/admin";
@@ -61,6 +63,8 @@ function App() {
                                 <Route path="/admin/cities" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminCities /></ProtectedRoute>} />
                                 <Route path="/admin/notifications" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminNotifications /></ProtectedRoute>} />
                                 <Route path="/admin/boosts" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminBoosts /></ProtectedRoute>} />
+                                <Route path="/admin/boost-packages" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminBoostPackages /></ProtectedRoute>} />
+                                <Route path="/admin/subscription-plans" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminSubscriptionPlans /></ProtectedRoute>} />
                                 <Route path="/admin/revenue" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminRevenue /></ProtectedRoute>} />
                                 <Route path="/admin/support-requests" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminSupportRequests /></ProtectedRoute>} />
                                 <Route path="/organiser/dashboard" element={<ProtectedRoute allowedRoles={["ORGANISER"]}><OrganiserDashboard /></ProtectedRoute>} />

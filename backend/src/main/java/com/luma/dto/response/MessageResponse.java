@@ -1,6 +1,7 @@
 package com.luma.dto.response;
 
 import com.luma.entity.Message;
+import com.luma.entity.User;
 import com.luma.entity.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -97,7 +98,7 @@ public class MessageResponse {
             builder.sender(SenderResponse.builder()
                     .id(message.getSender().getId())
                     .fullName(message.getSender().getFullName())
-                    .avatarUrl(message.getSender().getAvatarUrl())
+                    .avatarUrl(resolveUserImageUrl(message.getSender()))
                     .build());
         }
 
@@ -137,5 +138,23 @@ public class MessageResponse {
         }
         UUID organiserId = conversation.getEvent().getOrganiser().getId();
         return organiserId.equals(message.getSender().getId()) ? "ORGANISER" : "ATTENDEE";
+    }
+
+    private static String resolveUserImageUrl(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        if (user.getOrganiserProfile() != null
+                && user.getOrganiserProfile().getLogoUrl() != null
+                && !user.getOrganiserProfile().getLogoUrl().isBlank()) {
+            return user.getOrganiserProfile().getLogoUrl();
+        }
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+            return user.getAvatarUrl();
+        }
+
+        return null;
     }
 }

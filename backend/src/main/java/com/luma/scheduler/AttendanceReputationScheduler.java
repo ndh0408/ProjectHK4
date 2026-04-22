@@ -57,12 +57,17 @@ public class AttendanceReputationScheduler {
     public void expireUnconfirmedRegistrations() {
         log.info("AttendanceReputationScheduler: Running auto-expiry for unconfirmed approvals...");
         
+        LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiryThreshold = LocalDateTime.now().minusHours(48);
         
         // Lấy các đơn APPROVED mà chưa CONFIRMED quá 48h
         List<Registration> expiredOnes = registrationRepository.findAll().stream()
                 .filter(r -> r.getStatus() == RegistrationStatus.APPROVED)
                 .filter(r -> r.getApprovedAt() != null && r.getApprovedAt().isBefore(expiryThreshold))
+                .filter(r -> r.getCheckedInAt() == null)
+                .filter(r -> r.getEvent() != null
+                        && r.getEvent().getStartTime() != null
+                        && r.getEvent().getStartTime().isAfter(now))
                 .filter(r -> {
                     // Kiểm tra xem có phải event free không
                     return registrationService.getActualPrice(r).compareTo(java.math.BigDecimal.ZERO) == 0;

@@ -32,7 +32,7 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @Column(unique = true, columnDefinition = "NVARCHAR(50)")
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String phone;
 
     private String password;

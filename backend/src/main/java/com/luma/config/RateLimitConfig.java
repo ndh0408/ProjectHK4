@@ -28,7 +28,7 @@ public class RateLimitConfig {
     private int apiRequestsPerMinute;
 
     /// LLM endpoint gets a much tighter budget than the generic API bucket
-    /// — every hit costs Groq tokens and there is no database cache yet.
+    /// — every hit costs OpenAI tokens and there is no database cache yet.
     @Value("${rate-limit.assistant.requests-per-minute:15}")
     private int assistantRequestsPerMinute;
 

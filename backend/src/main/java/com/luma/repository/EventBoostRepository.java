@@ -41,19 +41,34 @@ public interface EventBoostRepository extends JpaRepository<EventBoost, UUID> {
            "b.createdAt DESC")
     List<UUID> findBoostedEventIds(@Param("now") LocalDateTime now);
 
-    @Query("SELECT DISTINCT b FROM EventBoost b " +
+    // SQL Server rejects SELECT DISTINCT combined with ORDER BY on a CASE expression not in the
+    // select list. Service-layer deduplication (EventBoostService#getFeaturedEvents) already
+    // collapses duplicates per event, so plain SELECT is safe here.
+    // All 4 tiers surface in the featured row (VIP/PREMIUM first) so STANDARD/BASIC buyers
+    // still get home visibility — otherwise the cheaper tiers feel worthless to organisers.
+    @Query("SELECT b FROM EventBoost b " +
            "WHERE b.status = 'ACTIVE' AND b.startTime <= :now AND b.endTime > :now " +
-           "AND b.boostPackage IN ('PREMIUM', 'VIP') " +
-           "ORDER BY CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 ELSE 2 END, " +
+           "ORDER BY CASE b.boostPackage WHEN 'VIP' THEN 0 WHEN 'PREMIUM' THEN 1 " +
+           "           WHEN 'STANDARD' THEN 2 WHEN 'BASIC' THEN 3 ELSE 4 END, " +
            "b.createdAt DESC")
     List<EventBoost> findFeaturedBoosts(@Param("now") LocalDateTime now);
 
-    @Query("SELECT DISTINCT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")
+    @Query("SELECT b FROM EventBoost b WHERE b.status = 'ACTIVE' AND b.boostPackage = 'VIP' AND b.startTime <= :now AND b.endTime > :now")
     List<EventBoost> findHomeBannerBoosts(@Param("now") LocalDateTime now);
 
     @Modifying
     @Query("UPDATE EventBoost b SET b.status = 'EXPIRED' WHERE b.status = 'ACTIVE' AND b.endTime < :now")
     int expireBoosts(@Param("now") LocalDateTime now);
+
+    /**
+     * Sweep PENDING boosts older than the cutoff — organisers who started checkout but never
+     * paid. Flips them to CANCELLED so the Boost History stops showing a stale "Pending
+     * Payment" row and createBoost unblocks for a retry.
+     */
+    @Modifying
+    @Query("UPDATE EventBoost b SET b.status = 'CANCELLED' " +
+           "WHERE b.status = 'PENDING' AND b.paidAt IS NULL AND b.createdAt < :cutoff")
+    int cancelStalePending(@Param("cutoff") LocalDateTime cutoff);
 
     @Query("SELECT COUNT(b) FROM EventBoost b WHERE b.organiser.id = :organiserId AND b.status = 'ACTIVE'")
     long countActiveBoostsByOrganiser(@Param("organiserId") UUID organiserId);

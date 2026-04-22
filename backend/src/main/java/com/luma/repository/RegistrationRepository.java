@@ -82,8 +82,11 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
            "AND r.event.status IN ('PUBLISHED', 'ONGOING') AND r.event.endTime > CURRENT_TIMESTAMP ORDER BY r.event.startTime ASC")
     Page<Registration> findUpcomingRegistrationsByUser(@Param("user") User user, Pageable pageable);
 
-    @Query("SELECT r FROM Registration r WHERE r.user = :user AND r.status NOT IN ('CANCELLED', 'REJECTED') " +
-           "AND r.event.status IN ('PUBLISHED', 'ONGOING', 'COMPLETED') AND r.event.endTime < CURRENT_TIMESTAMP ORDER BY r.event.endTime DESC")
+    @Query("SELECT r FROM Registration r WHERE r.user = :user " +
+           "AND r.event.endTime < CURRENT_TIMESTAMP " +
+           "AND (r.checkedInAt IS NOT NULL OR " +
+           "(r.status NOT IN ('CANCELLED', 'REJECTED') AND r.event.status IN ('PUBLISHED', 'ONGOING', 'COMPLETED'))) " +
+           "ORDER BY r.event.endTime DESC")
     Page<Registration> findPastRegistrationsByUser(@Param("user") User user, Pageable pageable);
 
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser = :organiser AND r.status = 'APPROVED'")
@@ -129,7 +132,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query("SELECT r FROM Registration r WHERE r.event IN :events AND r.status IN :statuses")
     List<Registration> findByEventAndStatusIn(@Param("event") Event event, @Param("statuses") List<RegistrationStatus> statuses);
 
-    @Query("SELECT r FROM Registration r WHERE r.event = :event AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    @Query("SELECT r FROM Registration r WHERE r.event = :event AND r.checkedInAt IS NOT NULL")
     List<Registration> findCheckedInByEvent(@Param("event") Event event);
 
     List<Registration> findByEventAndStatusAndCheckedInAtIsNotNull(Event event, RegistrationStatus status);
@@ -148,7 +151,7 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
                                                   @Param("start") LocalDateTime start,
                                                   @Param("end") LocalDateTime end);
 
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event = :event AND r.checkedInAt IS NOT NULL")
     long countCheckedInByEvent(@Param("event") Event event);
 
     @Query("SELECT r FROM Registration r " +
@@ -184,6 +187,8 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
 
     List<Registration> findByUserAndStatusIn(User user, List<RegistrationStatus> statuses);
 
+    long countByUserAndCheckedInAtIsNotNull(User user);
+
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.user = :user AND r.status = 'APPROVED'")
     long countApprovedByUser(@Param("user") User user);
 
@@ -193,17 +198,23 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.status = :status")
     long countByStatusGlobal(@Param("status") RegistrationStatus status);
 
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.checkedInAt IS NOT NULL")
     long countCheckedInGlobal();
 
     @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.status = 'APPROVED'")
     long countApprovedByOrganiserId(@Param("organiserId") UUID organiserId);
 
-    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.status = 'APPROVED' AND r.checkedInAt IS NOT NULL")
+    @Query("SELECT COUNT(r) FROM Registration r WHERE r.event.organiser.id = :organiserId AND r.checkedInAt IS NOT NULL")
     long countCheckedInByOrganiserId(@Param("organiserId") UUID organiserId);
 
     @Query("SELECT r FROM Registration r JOIN FETCH r.user JOIN FETCH r.event " +
            "WHERE r.event IN :events AND r.status IN :statuses")
     List<Registration> findByEventInAndStatusIn(@Param("events") List<Event> events,
                                                  @Param("statuses") List<RegistrationStatus> statuses);
+
+    Optional<Registration> findByUserIdAndEventId(UUID userId, UUID eventId);
+
+    List<Registration> findAllByEventIdAndStatus(UUID eventId, RegistrationStatus status);
+
+    List<Registration> findAllByStatus(RegistrationStatus status);
 }

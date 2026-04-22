@@ -41,7 +41,7 @@ public class RegistrationReviewService {
         }
 
         // 2. History & Reputation (40 pts max)
-        long attended = registrationRepository.countByUserAndStatus(user, RegistrationStatus.CHECKED_IN);
+        long attended = registrationRepository.countByUserAndCheckedInAtIsNotNull(user);
         // Also consider CONFIRMED but past event as potential NO_SHOW if logic allows, 
         // but let's stick to explicit NO_SHOW status for now.
         long noShows = registrationRepository.countByUserAndStatus(user, RegistrationStatus.NO_SHOW);
@@ -67,10 +67,12 @@ public class RegistrationReviewService {
         }
 
         // 4. Intent Signal (15 pts max)
-        // Check if any answer is substantial
+        // Either detailed custom answers, or substantive goals/expectations from the form.
         boolean hasDetailedAnswers = reg.getAnswers() != null && reg.getAnswers().stream()
                 .anyMatch(a -> a.getAnswerText() != null && a.getAnswerText().trim().length() > 30);
-        if (hasDetailedAnswers) {
+        boolean hasDetailedGoals = (reg.getRegistrationGoals() != null && reg.getRegistrationGoals().trim().length() > 30)
+                || (reg.getExpectations() != null && reg.getExpectations().trim().length() > 30);
+        if (hasDetailedAnswers || hasDetailedGoals) {
             score += 15;
             reasons.add("Mục tiêu tham gia rõ ràng/có đầu tư");
         } else {

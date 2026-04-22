@@ -66,6 +66,22 @@ const adminApi = {
     getSupportRequestCounts: () => api.get('/admin/support-requests/counts'),
     updateSupportRequest: (id, payload) => api.patch(`/admin/support-requests/${id}`, payload),
 
+    // Boost package pricing CRUD (admin-editable tier configuration)
+    getBoostPackages: () => api.get('/admin/pricing/boost-packages'),
+    getBoostPackage: (key) => api.get(`/admin/pricing/boost-packages/${key}`),
+    createBoostPackage: (key, payload) => api.post(`/admin/pricing/boost-packages/${key}`, payload),
+    updateBoostPackage: (key, payload) => api.put(`/admin/pricing/boost-packages/${key}`, payload),
+    deleteBoostPackage: (key) => api.delete(`/admin/pricing/boost-packages/${key}`),
+
+    // Subscription plan pricing CRUD
+    getSubscriptionPlans: () => api.get('/admin/pricing/subscription-plans'),
+    getSubscriptionPlan: (key) => api.get(`/admin/pricing/subscription-plans/${key}`),
+    createSubscriptionPlan: (key, payload) => api.post(`/admin/pricing/subscription-plans/${key}`, payload),
+    updateSubscriptionPlan: (key, payload) => api.put(`/admin/pricing/subscription-plans/${key}`, payload),
+    deleteSubscriptionPlan: (key) => api.delete(`/admin/pricing/subscription-plans/${key}`),
+
+    // Boost moderation
+    forceExpireBoost: (boostId) => api.post(`/admin/boosts/${boostId}/force-expire`),
 };
 
 export default adminApi;

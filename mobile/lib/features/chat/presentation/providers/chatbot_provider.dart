@@ -8,9 +8,9 @@ import '../../../../services/api_service.dart';
 import '../models/chatbot_message.dart';
 
 /// State notifier that talks to the LUMA AI Assistant backend
-/// (`POST /user/assistant/chat`). The backend itself is a real Groq-powered
-/// LLM with RAG over the events DB and a hard scope limiter — this provider
-/// only manages local message state, history persistence, and cancellation.
+/// (`POST /user/assistant/chat`). The backend itself is a real OpenAI
+/// ChatGPT-powered LLM with RAG over the events DB and a hard scope limiter —
+/// this provider only manages local message state, history persistence, and cancellation.
 class ChatbotNotifier extends StateNotifier<AsyncValue<List<ChatbotMessage>>> {
   ChatbotNotifier(this._api) : super(const AsyncValue.data([])) {
     _loadHistory();

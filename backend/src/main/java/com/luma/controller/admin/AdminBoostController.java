@@ -46,4 +46,14 @@ public class AdminBoostController {
         stats.put("totalHomeBanner", boostService.getHomeBannerEvents().size());
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
+
+    /**
+     * Force-expire an active boost — used for moderation (e.g. policy violation, refund granted).
+     * Flips status to EXPIRED and clamps endTime to now so it stops surfacing immediately.
+     */
+    @PostMapping("/{boostId}/force-expire")
+    public ResponseEntity<ApiResponse<BoostResponse>> forceExpireBoost(@PathVariable UUID boostId) {
+        BoostResponse response = boostService.forceExpireBoost(boostId);
+        return ResponseEntity.ok(ApiResponse.success("Boost force-expired", response));
+    }
 }

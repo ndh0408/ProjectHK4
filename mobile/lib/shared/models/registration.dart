@@ -240,8 +240,12 @@ class Registration {
   bool get isCheckedIn => status == RegistrationStatusEnum.checkedIn;
   bool get isNoShow => status == RegistrationStatusEnum.noShow;
 
-  /// User đã chính thức có vé (đã confirm hoặc đã check-in)
-  bool get hasValidTicket => isConfirmed || isCheckedIn;
+  /// User đã chính thức có vé: đã check-in, đã confirm, hoặc đã được duyệt và
+  /// không còn vướng thanh toán (event miễn phí hoặc đã thanh toán xong).
+  bool get hasValidTicket =>
+      isCheckedIn ||
+      isConfirmed ||
+      (isApproved && !requiresPayment && ticketCode != null);
 
   /// User đã từng check-in thành công (dữ liệu uy tín)
   bool get hasAttended => checkedInAt != null;

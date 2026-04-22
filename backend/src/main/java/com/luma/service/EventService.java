@@ -114,7 +114,7 @@ public class EventService {
         City city = cityService.getEntityById(cityId);
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime endDate = now.plusMonths(2);
-        Page<Event> events = eventRepository.findEventsByCityWithBoostPriority(city, now, endDate, pageable);
+        Page<Event> events = eventRepository.findEventsByCityWithBoostPriority(city.getId(), now, endDate, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 
@@ -130,7 +130,7 @@ public class EventService {
     public PageResponse<EventResponse> getEventsByCategory(Long categoryId, Pageable pageable) {
         Category category = categoryService.getEntityById(categoryId);
         LocalDateTime now = LocalDateTime.now();
-        Page<Event> events = eventRepository.findEventsByCategoryWithBoostPriority(category, now, pageable);
+        Page<Event> events = eventRepository.findEventsByCategoryWithBoostPriority(category.getId(), now, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
     }
 

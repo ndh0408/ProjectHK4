@@ -9,6 +9,7 @@ import '../../../../services/api_service.dart';
 import '../../../../shared/models/registration_question.dart';
 import '../../../../shared/widgets/app_components.dart';
 import '../../../../shared/widgets/app_text_field.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import 'payment_screen.dart';
 
 class RegistrationFormScreen extends ConsumerStatefulWidget {
@@ -43,7 +44,7 @@ class _RegistrationFormScreenState
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _errorMessage;
-  
+
   // Profile Form Fields
   final _jobTitleController = TextEditingController();
   final _companyController = TextEditingController();
@@ -86,16 +87,34 @@ class _RegistrationFormScreenState
         return;
       }
 
-      // Nếu là sự kiện PAID, chuyển thẳng sang payment screen
-      if (!widget.isFree && widget.ticketPrice != null && widget.ticketPrice! > 0) {
+      // Paid events skip the form: reuse an existing registration if there
+      // is one (from a prior unfinished checkout), otherwise create a fresh
+      // one up-front so PaymentScreen has a real id to call /payment-intent
+      // with. An empty id collapses the path and the request 404s into the
+      // generic 500 handler.
+      if (!widget.isFree &&
+          widget.ticketPrice != null &&
+          widget.ticketPrice! > 0) {
+        String registrationId;
+        if (regStatus.isRegistered && regStatus.registrationId != null) {
+          registrationId = regStatus.registrationId!;
+        } else {
+          final registration = await api.registerForEvent(
+            widget.eventId,
+            ticketTypeId: widget.ticketTypeId,
+            quantity: widget.quantity,
+          );
+          registrationId = registration.id;
+        }
         if (!mounted) return;
+        final total = widget.ticketPrice! * widget.quantity;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => PaymentScreen(
-              registrationId: regStatus.registrationId ?? '',
+              registrationId: registrationId,
               eventTitle: widget.eventTitle,
-              amount: widget.ticketPrice ?? 0,
+              amount: total,
               tierName: widget.ticketTypeName,
               unitPrice: widget.ticketPrice,
               quantity: widget.quantity,
@@ -105,7 +124,7 @@ class _RegistrationFormScreenState
         return;
       }
 
-      // Sự kiện FREE mới cần load questions
+      // Free events still need the questions form
       await _loadQuestions();
     } catch (e) {
       setState(() {
@@ -148,7 +167,7 @@ class _RegistrationFormScreenState
       _showError('Please enter your company');
       return false;
     }
-    
+
     // Validate Custom Questions
     for (final question in _questions) {
       if (!question.required) continue;
@@ -264,6 +283,8 @@ class _RegistrationFormScreenState
           ),
         );
       } else if (mounted) {
+        ref.invalidate(myFutureRegistrationsProvider);
+        ref.invalidate(myPastRegistrationsProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context)!.successfullyRegistered),
@@ -423,7 +444,8 @@ class _RegistrationFormScreenState
     );
   }
 
-  Widget _buildCustomQuestionsSection(BuildContext context, AppLocalizations l10n) {
+  Widget _buildCustomQuestionsSection(
+      BuildContext context, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

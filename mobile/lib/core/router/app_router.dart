@@ -33,6 +33,7 @@ import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/chat/presentation/screens/event_buddies_screen.dart';
 import '../../features/chat/presentation/screens/create_group_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/user_profile_screen.dart';
 import '../../features/chat/presentation/screens/discover_networking_screen.dart';
 import '../../features/events/presentation/screens/event_polls_screen.dart';
 import '../../features/events/presentation/screens/event_schedule_screen.dart';
@@ -158,6 +159,22 @@ final routerProvider = Provider<GoRouter>((ref) {
               final auth = authState;
               final userId = auth is Authenticated ? auth.user.id : '';
               return ProfileScreen(key: ValueKey('profile_$userId'));
+            },
+          ),
+          GoRoute(
+            path: '/profile/:userId',
+            name: 'user-profile',
+            builder: (context, state) {
+              final requestedUserId = state.pathParameters['userId'] ?? '';
+              final auth = authState;
+              final currentUserId = auth is Authenticated ? auth.user.id : '';
+              if (requestedUserId.isEmpty || requestedUserId == currentUserId) {
+                return ProfileScreen(key: ValueKey('profile_$currentUserId'));
+              }
+              return UserProfileScreen(
+                key: ValueKey('user_profile_$requestedUserId'),
+                userId: requestedUserId,
+              );
             },
           ),
           GoRoute(

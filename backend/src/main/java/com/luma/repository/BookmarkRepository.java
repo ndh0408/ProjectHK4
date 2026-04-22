@@ -32,4 +32,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, UUID> {
     long countByUser(User user);
 
     long countByEvent(Event event);
+
+    Optional<Bookmark> findByUserIdAndEventId(UUID userId, UUID eventId);
 }

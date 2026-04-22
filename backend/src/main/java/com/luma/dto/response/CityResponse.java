@@ -23,6 +23,10 @@ public class CityResponse {
     private int eventCount;
 
     public static CityResponse fromEntity(City city) {
+        return fromEntity(city, 0);
+    }
+
+    public static CityResponse fromEntity(City city, int eventCount) {
         return CityResponse.builder()
                 .id(city.getId())
                 .name(city.getName())
@@ -32,7 +36,7 @@ public class CityResponse {
                 .latitude(city.getLatitude())
                 .longitude(city.getLongitude())
                 .active(city.isActive())
-                .eventCount(city.getEvents() != null ? city.getEvents().size() : 0)
+                .eventCount(eventCount)
                 .build();
     }
 }

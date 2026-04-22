@@ -6,7 +6,6 @@ import {
     Avatar,
     IconButton,
     Tooltip,
-    Link,
     Grid,
 } from '@mui/material';
 import {
@@ -23,6 +22,11 @@ import {
     DataTableCard,
     StatCard,
 } from '../../components/ui';
+
+const getPublicApiBaseUrl = () => {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+    return apiUrl.replace(/\/api\/?$/, '');
+};
 
 const OrganiserCertificates = () => {
     const [certificates, setCertificates] = useState([]);
@@ -51,6 +55,24 @@ const OrganiserCertificates = () => {
     useEffect(() => {
         loadCertificates();
     }, [loadCertificates]);
+
+    const handleDownloadCertificate = async (certificateCode) => {
+        if (!certificateCode) return;
+        try {
+            const response = await organiserApi.downloadCertificatePdfByCode(certificateCode);
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const objectUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `${certificateCode}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(objectUrl);
+        } catch (error) {
+            toast.error('Failed to download certificate PDF');
+        }
+    };
 
     const filteredCertificates = certificates.filter((cert) => {
         if (!searchQuery) return true;
@@ -127,31 +149,32 @@ const OrganiserCertificates = () => {
             align: 'right',
             headerAlign: 'right',
             renderCell: (params) => {
-                const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-                const viewUrl = `${baseUrl}/api/certificates/${params.row.certificateCode}/pdf`;
-                const downloadUrl = `${baseUrl}/api/certificates/${params.row.certificateCode}/pdf?download=true`;
+                const publicApiBaseUrl = getPublicApiBaseUrl();
+                const viewUrl = `${publicApiBaseUrl}/api/certificates/${params.row.certificateCode}/pdf`;
                 return (
                     <Box sx={{ display: 'flex', gap: 0.25 }}>
                         <Tooltip title="Preview">
-                            <IconButton
-                                size="small"
-                                onClick={() => window.open(viewUrl, '_blank')}
-                                disabled={!params.row.certificateCode}
-                            >
-                                <VisibilityIcon fontSize="small" />
-                            </IconButton>
+                            <span>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => window.open(viewUrl, '_blank', 'noopener,noreferrer')}
+                                    disabled={!params.row.certificateCode}
+                                >
+                                    <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                            </span>
                         </Tooltip>
                         <Tooltip title="Download">
-                            <IconButton
-                                size="small"
-                                color="primary"
-                                component={Link}
-                                href={downloadUrl}
-                                download={`${params.row.certificateCode}.pdf`}
-                                disabled={!params.row.certificateCode}
-                            >
-                                <DownloadIcon fontSize="small" />
-                            </IconButton>
+                            <span>
+                                <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => handleDownloadCertificate(params.row.certificateCode)}
+                                    disabled={!params.row.certificateCode}
+                                >
+                                    <DownloadIcon fontSize="small" />
+                                </IconButton>
+                            </span>
                         </Tooltip>
                     </Box>
                 );

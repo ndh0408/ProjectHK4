@@ -101,7 +101,7 @@ class OrganisersScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  '${_formatNumber(totalFollowers)} combined followers create stronger trust and conversion cues.',
+                                  '${_formatNumber(totalFollowers)} followers across featured organiser calendars.',
                                   style: AppTypography.body.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
@@ -120,7 +120,7 @@ class OrganisersScreen extends ConsumerWidget {
                     child: SectionHeader(
                       title: 'Featured organisers',
                       subtitle:
-                          'Profiles surface reputation first so users can judge credibility before tapping into the full detail view.',
+                          'Verified teams, active calendars and public organiser profiles.',
                     ),
                   ),
                 ),
@@ -134,21 +134,21 @@ class OrganisersScreen extends ConsumerWidget {
                     AppSpacing.pageX,
                     AppSpacing.massive,
                   ),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.lg,
-                      mainAxisSpacing: AppSpacing.lg,
-                      childAspectRatio: 0.73,
-                    ),
+                  sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final organiser = data[index];
-                        return _OrganiserCard(
-                          organiser: organiser,
-                          onTap: () =>
-                              context.push('/organiser/${organiser.id}'),
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == data.length - 1
+                                ? 0
+                                : AppSpacing.lg,
+                          ),
+                          child: _OrganiserCard(
+                            organiser: organiser,
+                            onTap: () =>
+                                context.push('/organiser/${organiser.id}'),
+                          ),
                         );
                       },
                       childCount: data.length,
@@ -190,186 +190,188 @@ class _OrganiserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = organiser.logoUrl ?? organiser.avatarUrl;
+    final summary = _buildSummary(organiser);
+    final statusLabel = organiser.verified ? 'Verified' : 'Active';
+
     return AppCard(
       onTap: onTap,
-      child: SizedBox.expand(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: StatusChip(
-                label: organiser.verified ? 'Verified' : 'Active',
-                variant: organiser.verified
-                    ? StatusChipVariant.success
-                    : StatusChipVariant.primary,
-                compact: true,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      gradient: organiser.verified
-                          ? const LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.secondary,
-                              ],
-                            )
-                          : LinearGradient(
-                              colors: [
-                                AppColors.primary.withValues(alpha: 0.18),
-                                AppColors.info.withValues(alpha: 0.18),
-                              ],
-                            ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircleAvatar(
-                      radius: 36,
-                      backgroundColor: AppColors.surfaceVariant,
-                      backgroundImage: organiser.avatarUrl != null
-                          ? CachedNetworkImageProvider(organiser.avatarUrl!)
-                          : null,
-                      child: organiser.avatarUrl == null
-                          ? Text(
-                              organiser.displayName
-                                  .substring(0, 1)
-                                  .toUpperCase(),
-                              style: AppTypography.h2.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  if (organiser.verified)
-                    Positioned(
-                      right: -2,
-                      bottom: -2,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.verified_rounded,
-                          color: AppColors.primary,
-                          size: 18,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      borderColor: AppColors.borderLight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _OrganiserArtwork(
+            name: organiser.displayName,
+            imageUrl: imageUrl,
+            verified: organiser.verified,
+            logoMode: organiser.logoUrl != null,
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        organiser.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.h4.copyWith(
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              organiser.displayName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTypography.h4.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              organiser.verified
-                  ? 'High-trust organiser with a verified identity and an active event footprint.'
-                  : 'Active organiser with a growing event portfolio and audience.',
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Spacer(),
-            Row(
-              children: [
-                Expanded(
-                  child: _MiniStat(
-                    label: 'Followers',
-                    value: OrganisersScreen._formatNumber(
-                      organiser.followersCount,
-                    ),
-                  ),
+                    if (organiser.verified) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      const Icon(
+                        Icons.verified_rounded,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _MiniStat(
-                    label: 'Events',
-                    value: organiser.eventsCount.toString(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
+                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'View profile',
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.primary,
+                  '$statusLabel • ${organiser.eventsCount} events • ${OrganisersScreen._formatNumber(organiser.followersCount)} followers',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AppColors.primary,
-                  size: 18,
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  summary,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.body.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Open profile',
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: AppRadius.allMd,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: AppTypography.h4.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.caption.copyWith(
-              color: AppColors.textSecondary,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _OrganiserArtwork extends StatelessWidget {
+  const _OrganiserArtwork({
+    required this.name,
+    required this.imageUrl,
+    required this.verified,
+    required this.logoMode,
+  });
+
+  final String name;
+  final String? imageUrl;
+  final bool verified;
+  final bool logoMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      height: 84,
+      padding: EdgeInsets.all(logoMode ? AppSpacing.sm : 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppRadius.allLg,
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: verified ? AppShadows.xs : null,
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.allMd,
+        child: imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl!,
+                fit: logoMode ? BoxFit.contain : BoxFit.cover,
+                errorWidget: (_, __, ___) => _OrganiserFallback(name: name),
+              )
+            : _OrganiserFallback(name: name),
+      ),
+    );
+  }
+}
+
+class _OrganiserFallback extends StatelessWidget {
+  const _OrganiserFallback({
+    required this.name,
+  });
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            AppColors.primarySoft,
+            AppColors.secondarySoft,
+          ],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name.substring(0, 1).toUpperCase(),
+        style: AppTypography.h2.copyWith(
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+}
+
+String _buildSummary(OrganiserProfile organiser) {
+  final bio = organiser.bio;
+  if (bio != null && bio.trim().isNotEmpty) {
+    return _stripMarkdown(bio);
+  }
+
+  return organiser.verified
+      ? 'Verified organiser with active public events.'
+      : 'Active organiser with a public event calendar.';
+}
+
+String _stripMarkdown(String text) {
+  String firstMatch(Match match) => match.group(1) ?? '';
+
+  return text
+      .replaceAll(RegExp(r'#{1,6}\s*'), '')
+      .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), firstMatch)
+      .replaceAllMapped(RegExp(r'\*(.+?)\*'), firstMatch)
+      .replaceAllMapped(RegExp(r'__(.+?)__'), firstMatch)
+      .replaceAllMapped(RegExp(r'_(.+?)_'), firstMatch)
+      .replaceAllMapped(RegExp(r'~~(.+?)~~'), firstMatch)
+      .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), firstMatch)
+      .replaceAllMapped(RegExp(r'`(.+?)`'), firstMatch)
+      .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'\n{2,}'), '\n')
+      .trim();
 }

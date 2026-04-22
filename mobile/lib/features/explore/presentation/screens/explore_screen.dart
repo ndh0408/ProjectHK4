@@ -122,7 +122,6 @@ class ExploreScreen extends ConsumerWidget {
           children: [
             _ExploreHero(
               onSearch: () => context.push('/search'),
-              onCompare: () => context.push('/compare-events'),
             ),
             const SizedBox(height: AppSpacing.xl),
             SectionHeader(
@@ -302,11 +301,9 @@ class ExploreScreen extends ConsumerWidget {
 class _ExploreHero extends StatelessWidget {
   const _ExploreHero({
     required this.onSearch,
-    required this.onCompare,
   });
 
   final VoidCallback onSearch;
-  final VoidCallback onCompare;
 
   @override
   Widget build(BuildContext context) {
@@ -392,30 +389,6 @@ class _ExploreHero extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      label: 'Open Search',
-                      icon: Icons.search_rounded,
-                      variant: AppButtonVariant.primary,
-                      expanded: true,
-                      onPressed: onSearch,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: AppButton(
-                      label: 'Compare Events',
-                      icon: Icons.compare_arrows_rounded,
-                      variant: AppButtonVariant.tonal,
-                      expanded: true,
-                      onPressed: onCompare,
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

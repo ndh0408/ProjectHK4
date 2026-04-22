@@ -26,16 +26,16 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AIAssistantService {
 
-    private final RestTemplate groqRestTemplate;
+    private final RestTemplate openaiRestTemplate;
     private final ObjectMapper objectMapper;
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final CityRepository cityRepository;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${openai.model:gpt-4o-mini}")
     private String model;
 
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Map<String, Object> chat(String userMessage, User user) {
@@ -85,7 +85,7 @@ public class AIAssistantService {
             "Recommend something fun" → {"intent":"RECOMMEND_EVENTS","keyword":null,"category":null,"city":null,"limit":5}
             """;
 
-        String response = callGroqApi(systemPrompt, userMessage, 200, 0.2);
+        String response = callOpenAiApi(systemPrompt, userMessage, 200, 0.2);
 
         try {
             String cleaned = cleanJsonResponse(response);
@@ -251,7 +251,7 @@ public class AIAssistantService {
         }
         userPrompt.append("\n\nGenerate a natural, helpful response based on this data.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 600, 0.7);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 600, 0.7);
     }
 
     private int countDataPoints(Map<String, Object> data) {
@@ -263,7 +263,7 @@ public class AIAssistantService {
         return count;
     }
 
-    private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens, double temperature) {
+    private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens, double temperature) {
         try {
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -289,10 +289,10 @@ public class AIAssistantService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
-            String responseStr = groqRestTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            String responseStr = openaiRestTemplate.postForObject(OPENAI_API_URL, entity, String.class);
 
             if (responseStr == null || responseStr.isBlank()) {
-                log.warn("Groq API returned empty response in assistant");
+                log.warn("OpenAI API returned empty response in assistant");
                 return "I'm having trouble processing your request right now.";
             }
 
@@ -310,7 +310,7 @@ public class AIAssistantService {
             }
             return "I'm having trouble processing your request right now.";
         } catch (Exception e) {
-            log.error("Error calling Groq API in assistant: ", e);
+            log.error("Error calling OpenAI API in assistant: ", e);
             return "Sorry, I encountered an error. Please try again.";
         }
     }

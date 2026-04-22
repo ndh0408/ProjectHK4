@@ -30,4 +30,6 @@ public interface CertificateRepository extends JpaRepository<Certificate, UUID> 
 
     @Query("SELECT c FROM Certificate c WHERE c.registration.event.id = :eventId ORDER BY c.generatedAt DESC")
     Page<Certificate> findByEventId(@Param("eventId") UUID eventId, Pageable pageable);
+
+    Optional<Certificate> findByRegistrationId(UUID registrationId);
 }

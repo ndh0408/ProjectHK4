@@ -66,6 +66,31 @@ public class OrganiserSubscriptionController {
                 subscriptionService.cancelSubscription(organiser.getId())));
     }
 
+    @GetMapping("/compare/{plan}")
+    @Operation(summary = "Classify a proposed plan change as SAME / UPGRADE / DOWNGRADE / CANCEL")
+    public ResponseEntity<ApiResponse<Map<String, String>>> comparePlan(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable SubscriptionPlan plan) {
+        User organiser = userService.getEntityByEmail(userDetails.getUsername());
+        String action = subscriptionService.comparePlan(organiser.getId(), plan);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("action", action, "plan", plan.name())));
+    }
+
+    /**
+     * Downgrade between paid tiers (e.g. PREMIUM → STANDARD) applied immediately without a
+     * new Stripe charge. The organiser already paid for the higher tier this billing cycle,
+     * so the switch is free; they simply lose higher-tier benefits starting now.
+     */
+    @PostMapping("/downgrade/{plan}")
+    @Operation(summary = "Downgrade to a lower paid tier (no charge)")
+    public ResponseEntity<ApiResponse<OrganiserSubscriptionResponse>> downgradePlan(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable SubscriptionPlan plan) {
+        User organiser = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(
+                subscriptionService.upgradePlan(organiser.getId(), plan)));
+    }
+
     @GetMapping("/can-create-event")
     @Operation(summary = "Check if organiser can create more events")
     public ResponseEntity<ApiResponse<Boolean>> canCreateEvent(
@@ -91,14 +116,11 @@ public class OrganiserSubscriptionController {
             @PathVariable SubscriptionPlan plan) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
 
-        BigDecimal amount = switch (plan) {
-            case STANDARD -> BigDecimal.valueOf(19.99);
-            case PREMIUM -> BigDecimal.valueOf(49.99);
-            case VIP -> BigDecimal.valueOf(99.99);
-            default -> BigDecimal.ZERO;
-        };
+        // Pull admin-edited price from config so any Subscription Plan update in admin reflects
+        // immediately in what organisers are charged at checkout.
+        BigDecimal amount = subscriptionService.getMonthlyPrice(plan);
 
-        if (amount.compareTo(BigDecimal.ZERO) == 0) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
             return ResponseEntity.badRequest().body(
                     ApiResponse.error("Cannot create checkout for FREE plan"));
         }

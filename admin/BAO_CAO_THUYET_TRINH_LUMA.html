@@ -464,7 +464,7 @@
         <p>Trong những năm gần đây, ngành tổ chức sự kiện ở Việt Nam phát triển mạnh mẽ với sự xuất hiện của hàng nghìn workshop, hội thảo, concert và lễ hội mỗi tháng. Tuy nhiên, người tham dự thường gặp khó khăn trong việc tìm kiếm sự kiện phù hợp, đăng ký phức tạp, không có công cụ kết nối với những người tham dự khác. Phía nhà tổ chức cũng đối mặt với việc phải dùng nhiều công cụ rời rạc — gây mất thời gian và dễ sai sót. Nhận thấy khoảng trống đó, nhóm chúng em quyết định xây dựng <strong>LUMA</strong> — một nền tảng "tất cả trong một".</p>
 
         <h3>1.2. Mục Tiêu Dự Án</h3>
-        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động cho người tham dự, web portal cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe), trí tuệ nhân tạo (Groq LLM) và các công nghệ real-time (WebSocket). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Seat Map, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
+        <p>Dự án LUMA hướng đến ba mục tiêu chính. <strong>Thứ nhất</strong>, xây dựng một nền tảng đa thiết bị gồm ứng dụng di động cho người tham dự, web portal cho nhà tổ chức và admin. <strong>Thứ hai</strong>, tích hợp các dịch vụ thanh toán quốc tế (Stripe), trí tuệ nhân tạo (OpenAI ChatGPT) và các công nghệ real-time (WebSocket). <strong>Thứ ba</strong>, phát triển các tính năng nâng cao tạo lợi thế cạnh tranh như Smart Waitlist, Funnel Analytics, Coupon Engine, Networking, Seat Map, Schedule Builder và đặc biệt là 5 chức năng AI nâng cao với pattern RAG (Retrieval-Augmented Generation).</p>
 
         <h3>1.3. Công Nghệ Sử Dụng</h3>
 
@@ -477,7 +477,7 @@
             <span class="tech-badge">SQL Server</span>
             <span class="tech-badge">WebSocket (STOMP)</span>
             <span class="tech-badge">Stripe SDK</span>
-            <span class="tech-badge">Groq LLM API</span>
+            <span class="tech-badge">OpenAI ChatGPT API</span>
             <span class="tech-badge">Cloudinary</span>
         </p>
 
@@ -533,7 +533,7 @@
                 <tr><th>Mục đích</th><th>Đường dẫn File</th><th>Mô tả</th></tr>
             </thead>
             <tbody>
-                <tr><td>Backend Config</td><td><code>backend\src\main\resources\application.properties</code></td><td>Cấu hình DB, JWT, Stripe, Groq API</td></tr>
+                <tr><td>Backend Config</td><td><code>backend\src\main\resources\application.properties</code></td><td>Cấu hình DB, JWT, Stripe, OpenAI API</td></tr>
                 <tr><td>Maven Build</td><td><code>backend\pom.xml</code></td><td>Dependencies Spring Boot</td></tr>
                 <tr><td>Admin Package</td><td><code>admin\package.json</code></td><td>Dependencies React/MUI</td></tr>
                 <tr><td>Mobile Package</td><td><code>mobile\pubspec.yaml</code></td><td>Dependencies Flutter</td></tr>
@@ -843,7 +843,7 @@
             <h4>❓ Câu Hỏi Từ Ban Giám Khảo</h4>
             <div class="qa-item">
                 <div class="question">Function calling của bạn khác gì với OpenAI function calling chính thức?</div>
-                <div class="answer">Bản chất giống nhau — OpenAI có sẵn API gọi function thông qua tool definitions. Em implement thủ công vì Groq LLM (model em dùng) chưa support function calling đầy đủ. Em chia thành 2 lần gọi LLM riêng: lần 1 để classify intent, lần 2 để generate response sau khi backend đã query data. Pattern này tuy tốn 2 API call nhưng kiểm soát được flow rõ ràng.</div>
+                <div class="answer">Bản chất giống nhau — OpenAI có sẵn API gọi function thông qua tool definitions. Em implement thủ công để kiểm soát flow và tiết kiệm token, thay vì dựa vào function calling tự động. Em chia thành 2 lần gọi LLM riêng: lần 1 để classify intent, lần 2 để generate response sau khi backend đã query data. Pattern này tuy tốn 2 API call nhưng kiểm soát được flow rõ ràng.</div>
             </div>
             <div class="qa-item">
                 <div class="question">Nếu user hỏi "tìm sự kiện trùng tên với tên tôi" thì AI làm gì?</div>
@@ -1543,7 +1543,7 @@
 
         <div class="why-block">
             <h5>💡 Tại sao chúng em xây dựng chức năng này?</h5>
-            <p>Khi có hàng trăm sự kiện được tạo mỗi ngày, admin không thể đọc kỹ từng sự kiện. Em tích hợp AI (Groq LLM) để tự động phân tích nội dung và đưa ra đề xuất ban đầu. Đây là phiên bản basic — chỉ gửi event content cho AI và nhận lại phán đoán dựa trên kiến thức training của LLM.</p>
+            <p>Khi có hàng trăm sự kiện được tạo mỗi ngày, admin không thể đọc kỹ từng sự kiện. Em tích hợp AI (OpenAI ChatGPT) để tự động phân tích nội dung và đưa ra đề xuất ban đầu. Đây là phiên bản basic — chỉ gửi event content cho AI và nhận lại phán đoán dựa trên kiến thức training của LLM.</p>
         </div>
 
         <div class="how-block">

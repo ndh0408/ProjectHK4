@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/boost.dart';
 import '../../../../shared/widgets/boost_badge.dart';
@@ -93,6 +94,9 @@ class BoostedEventsSection extends ConsumerWidget {
               return _BoostedEventCard(
                 event: event,
                 onTap: () {
+                  // Credit the click to boost ROI stats before navigating.
+                  // Fire-and-forget: API swallows errors, nothing gates navigation.
+                  ref.read(apiServiceProvider).trackBoostClick(event.id);
                   ref.read(selectedEventProvider.notifier).state = event;
                   context.push('/event/${event.id}');
                 },

@@ -260,11 +260,17 @@ const OrganiserBoost = () => {
                 const boostId = params.get('boost');
                 const action = params.get('action');
                 const existingBoostId = params.get('existingBoostId');
-                
+
+                // Strip the query params FIRST so a React StrictMode double-mount,
+                // a page reload, or a back/forward nav cannot re-enter this handler
+                // and double-toast / double-confirm. The backend activateBoost is
+                // idempotent, but the UX noise is confusing.
+                window.history.replaceState({}, document.title, window.location.pathname);
+
                 if (boostId) {
                     try {
                         console.log('Confirming boost payment:', { boostId, action, existingBoostId });
-                        
+
                         // Try to confirm payment
                         await organiserApi.confirmBoostPayment(boostId, action, existingBoostId);
                         
@@ -291,10 +297,9 @@ const OrganiserBoost = () => {
                 } else {
                     toast.warning('Payment successful but no boost ID found. Please contact support.');
                 }
-                window.history.replaceState({}, document.title, window.location.pathname);
             } else if (params.get('canceled') === 'true') {
-                toast.info('Payment was canceled. You can try again or delete the pending boost.');
                 window.history.replaceState({}, document.title, window.location.pathname);
+                toast.info('Payment was canceled. You can try again or delete the pending boost.');
             }
         };
 
@@ -830,9 +835,9 @@ const OrganiserBoost = () => {
             >
                 <Autocomplete
                     fullWidth
-                    options={events}
+                    options={events.filter(e => e.status === 'PUBLISHED')}
                     getOptionLabel={(option) => option.title || ''}
-                    value={events.find(e => e.id === selectedEvent) || null}
+                    value={events.find(e => e.id === selectedEvent && e.status === 'PUBLISHED') || null}
                     onChange={(e, newValue) => {
                         setSelectedEvent(newValue?.id || '');
                         setSelectedPackage(null);

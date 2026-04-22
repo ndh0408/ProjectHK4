@@ -122,6 +122,10 @@ const organiserApi = {
 
     getCertificates: (params) => api.get('/organiser/certificates', { params }),
     getEventCertificates: (eventId, params) => api.get(`/organiser/certificates/event/${eventId}`, { params }),
+    downloadCertificatePdfByCode: (certificateCode) => api.get(`/certificates/${certificateCode}/pdf`, {
+        params: { download: true },
+        responseType: 'blob'
+    }),
 
     generateBio: (data) => api.post('/organiser/profile/ai/generate-bio', data),
 
@@ -152,6 +156,8 @@ const organiserApi = {
     getBoostSubscription: () => api.get('/organiser/boosts/subscription'),
     createSubscriptionCheckout: (plan) => api.post(`/organiser/subscription/checkout/${plan}`),
     confirmSubscriptionPayment: (plan) => api.post(`/organiser/subscription/confirm-payment/${plan}`),
+    compareSubscriptionPlan: (plan) => api.get(`/organiser/subscription/compare/${plan}`),
+    downgradeSubscription: (plan) => api.post(`/organiser/subscription/downgrade/${plan}`),
 
     // Chat Management
     pinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/pin`),

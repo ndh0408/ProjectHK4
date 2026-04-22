@@ -161,7 +161,7 @@ public class OrganiserPollController {
     }
 
     @PostMapping("/ai/generate")
-    @Operation(summary = "Generate poll questions using AI (Groq)")
+    @Operation(summary = "Generate poll questions using AI (OpenAI ChatGPT)")
     public ResponseEntity<ApiResponse<Object>> generatePoll(
             @Valid @RequestBody GeneratePollRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {

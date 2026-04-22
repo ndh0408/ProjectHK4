@@ -28,15 +28,15 @@ public class AIService {
     private final ObjectMapper objectMapper;
     private final String model;
 
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
     public AIService(
-            RestTemplate groqRestTemplate,
-            @Value("${groq.model:llama-3.3-70b-versatile}") String model) {
-        this.restTemplate = groqRestTemplate;
+            RestTemplate openaiRestTemplate,
+            @Value("${openai.model:gpt-4o-mini}") String model) {
+        this.restTemplate = openaiRestTemplate;
         this.model = model;
         this.objectMapper = new ObjectMapper();
-        log.info("AIService initialized with Groq model: {}", model);
+        log.info("AIService initialized with OpenAI model: {}", model);
     }
 
     public String suggestAnswer(Question question) {
@@ -46,7 +46,7 @@ public class AIService {
         String userPrompt = buildUserPrompt(question);
 
         try {
-            log.info("Calling Groq API with model: {}", model);
+            log.info("Calling OpenAI API with model: {}", model);
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -68,14 +68,14 @@ public class AIService {
             requestBody.put("messages", messages);
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
-            log.debug("Groq Request JSON: {}", requestJson);
+            log.debug("OpenAI Request JSON: {}", requestJson);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
-            String responseStr = restTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            String responseStr = restTemplate.postForObject(OPENAI_API_URL, entity, String.class);
 
             JsonNode responseJson = objectMapper.readTree(responseStr);
             JsonNode choices = responseJson.get("choices");
@@ -86,7 +86,7 @@ public class AIService {
 
             return "Unable to generate suggestion. Please try again.";
         } catch (Exception e) {
-            log.error("Error calling Groq API: ", e);
+            log.error("Error calling OpenAI API: ", e);
             throw new RuntimeException("Failed to generate AI suggestion: " + e.getMessage());
         }
     }
@@ -189,7 +189,7 @@ public class AIService {
             userPrompt.append("End Time: ").append(endTime).append("\n");
         }
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 800);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 800);
     }
 
     public String improveEventDescription(String title, String currentDescription) {
@@ -211,7 +211,7 @@ public class AIService {
                 "Event Title: " + title + "\n\n" +
                 "Current Description:\n" + currentDescription;
 
-        return callGroqApi(systemPrompt, userPrompt, 800);
+        return callOpenAiApi(systemPrompt, userPrompt, 800);
     }
 
     public String generateSpeakerBio(String name, String title, String eventTitle) {
@@ -235,7 +235,7 @@ public class AIService {
             userPrompt.append("Speaking at event: ").append(eventTitle).append("\n");
         }
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 200);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 200);
     }
 
     public String generateNotificationMessage(String eventTitle, String notificationType, String additionalContext) {
@@ -258,7 +258,7 @@ public class AIService {
             userPrompt.append("Additional Context: ").append(additionalContext).append("\n");
         }
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 300);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 300);
     }
 
     public String suggestRegistrationQuestions(String eventTitle, String eventCategory, String eventDescription, int numberOfQuestions) {
@@ -296,7 +296,7 @@ public class AIService {
         }
         userPrompt.append("\nReturn ONLY a JSON array with the questions.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
     public String generateDashboardInsights(
@@ -355,7 +355,7 @@ public class AIService {
 
         userPrompt.append("\nProvide actionable insights based on this data. Return ONLY valid JSON.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
     public String analyzeEventForModeration(String title, String description, String organiserName,
@@ -410,7 +410,7 @@ public class AIService {
         userPrompt.append(description != null && !description.isEmpty() ? description : "No description provided");
         userPrompt.append("\n\nProvide moderation analysis. Return ONLY valid JSON.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 800);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 800);
     }
 
     public String generateRejectionReason(String title, String description, String concerns) {
@@ -439,7 +439,7 @@ public class AIService {
         }
         userPrompt.append("\nWrite a polite rejection message explaining the issues and encouraging improvement.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 300);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 300);
     }
 
     public String generateBroadcastMessage(String purpose, String targetAudience, String additionalContext) {
@@ -464,7 +464,7 @@ public class AIService {
         }
         userPrompt.append("\nWrite an engaging broadcast message.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 300);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 300);
     }
 
     public String generateAdminInsights(long totalUsers, long totalOrganisers, long totalEvents,
@@ -532,7 +532,7 @@ public class AIService {
         }
         userPrompt.append("\n\nProvide actionable insights for the ADMIN team. Focus on platform management, not marketing. Return ONLY valid JSON.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 1200);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 1200);
     }
 
     public String generateCoupon(String description, String discountType, BigDecimal discountValue,
@@ -607,7 +607,7 @@ public class AIService {
         userPrompt.append("\nLanguage: ").append("vi".equals(language) ? "Vietnamese" : "English").append("\n");
         userPrompt.append("\nGenerate creative coupon code and description. Return ONLY valid JSON.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 800);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 800);
     }
 
     public String generateOrganiserBio(String organizationName, String eventTypes, String targetAudience, String additionalInfo) {
@@ -645,7 +645,7 @@ public class AIService {
         }
         userPrompt.append("\nWrite a detailed bio in Markdown format with proper formatting. 150-200 words, 3-4 paragraphs.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 400);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 400);
     }
 
     public String moderateReviewContent(String reviewText, int rating, String eventTitle) {
@@ -697,7 +697,7 @@ public class AIService {
         userPrompt.append("Review text: ").append(reviewText != null ? reviewText : "(no comment)").append("\n");
         userPrompt.append("\nAnalyze and return JSON only.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 300);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 300);
     }
 
     public String generateFullEvent(String eventIdea, String eventType, String targetAudience,
@@ -780,7 +780,7 @@ public class AIService {
 
         userPrompt.append("\nGenerate a complete, professional event proposal. Return ONLY valid JSON.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 1500);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 1500);
     }
 
     public String generateEventRecommendations(List<Event> userViewedEvents, List<Event> availableEvents, int limit) {
@@ -835,7 +835,7 @@ public class AIService {
 
         userPrompt.append("\nReturn the top ").append(limit).append(" most relevant event IDs as JSON array.");
 
-        return callGroqApi(systemPrompt.toString(), userPrompt.toString(), 500);
+        return callOpenAiApi(systemPrompt.toString(), userPrompt.toString(), 500);
     }
 
     public String findSimilarEvents(Event sourceEvent, List<Event> candidateEvents, int limit) {
@@ -880,7 +880,7 @@ public class AIService {
 
         userPrompt.append("\nReturn the top ").append(limit).append(" most similar event IDs as JSON array.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 500);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 500);
     }
 
     public String generatePoll(String topic, Integer numOptions, String pollType, Integer maxRating,
@@ -945,12 +945,12 @@ public class AIService {
         }
         userPrompt.append("\n\nReturn ONLY valid JSON with no additional text or explanation.");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
-    private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
+    private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
-            log.info("=== Starting Groq API Call ===");
+            log.info("=== Starting OpenAI API Call ===");
             log.info("Model: {}", model);
             log.info("Max tokens: {}", maxTokens);
             log.info("RestTemplate: {}", restTemplate != null ? "✅ Initialized" : "❌ NULL");
@@ -979,20 +979,20 @@ public class AIService {
             requestBody.put("messages", messages);
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
-            log.debug("Groq Request JSON: {} chars", requestJson.length());
+            log.debug("OpenAI Request JSON: {} chars", requestJson.length());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
-            log.info("Making POST request to: {}", GROQ_API_URL);
-            String responseStr = restTemplate.postForObject(GROQ_API_URL, entity, String.class);
-            log.info("✅ Received response from Groq API: {} chars", responseStr != null ? responseStr.length() : "null");
+            log.info("Making POST request to: {}", OPENAI_API_URL);
+            String responseStr = restTemplate.postForObject(OPENAI_API_URL, entity, String.class);
+            log.info("✅ Received response from OpenAI API: {} chars", responseStr != null ? responseStr.length() : "null");
 
             if (responseStr == null) {
-                log.error("❌ Groq API returned null response!");
-                throw new RuntimeException("Groq API returned null response. Check if API key is valid.");
+                log.error("❌ OpenAI API returned null response!");
+                throw new RuntimeException("OpenAI API returned null response. Check if API key is valid.");
             }
 
             JsonNode responseJson = objectMapper.readTree(responseStr);
@@ -1004,24 +1004,24 @@ public class AIService {
                 return result;
             }
 
-            log.warn("⚠️ No valid choices in Groq response. Full response: {}", responseStr);
+            log.warn("⚠️ No valid choices in OpenAI response. Full response: {}", responseStr);
             return "Unable to generate content. Please try again.";
         } catch (org.springframework.web.client.HttpClientErrorException e) {
-            log.error("❌ HTTP Client Error: status={}, message={}, body={}", 
+            log.error("❌ HTTP Client Error: status={}, message={}, body={}",
                 e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
             if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
-                String msg = "Groq API authentication failed: Invalid or missing API key. Status: " + e.getStatusCode();
+                String msg = "OpenAI API authentication failed: Invalid or missing API key. Status: " + e.getStatusCode();
                 throw new RuntimeException(msg);
             }
-            String msg = "Groq API Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
+            String msg = "OpenAI API Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
             throw new RuntimeException(msg);
         } catch (org.springframework.web.client.HttpServerErrorException e) {
-            log.error("❌ HTTP Server Error: status={}, message={}, body={}", 
+            log.error("❌ HTTP Server Error: status={}, message={}, body={}",
                 e.getStatusCode(), e.getMessage(), e.getResponseBodyAsString());
-            String msg = "Groq API Server Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
+            String msg = "OpenAI API Server Error: " + e.getStatusCode() + " - " + (e.getMessage() != null ? e.getMessage() : "No details");
             throw new RuntimeException(msg);
         } catch (Exception e) {
-            log.error("❌ Unexpected error calling Groq API: ", e);
+            log.error("❌ Unexpected error calling OpenAI API: ", e);
             String errorDetail = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             String msg = "Failed to generate AI content: " + errorDetail;
             throw new RuntimeException(msg);

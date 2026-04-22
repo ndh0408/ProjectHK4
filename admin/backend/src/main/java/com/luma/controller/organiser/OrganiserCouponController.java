@@ -121,7 +121,7 @@ public class OrganiserCouponController {
             if (errorMsg.contains("API key") || errorMsg.contains("authentication failed")) {
                 return ResponseEntity
                         .status(500)
-                        .body(ApiResponse.error("⚠️ GROQ API not configured: " + errorMsg));
+                        .body(ApiResponse.error("⚠️ OPENAI API not configured: " + errorMsg));
             }
             return ResponseEntity
                     .status(500)

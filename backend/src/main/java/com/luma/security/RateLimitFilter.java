@@ -95,7 +95,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return rateLimitConfig.getLoginBucket(clientIp);
         }
 
-        // LLM-backed endpoints are expensive (Groq tokens) — keep them on a
+        // LLM-backed endpoints are expensive (OpenAI tokens) — keep them on a
         // separate, tighter bucket so they don't drain the generic API budget.
         if (path.equals("/api/user/assistant/chat") && "POST".equals(method)) {
             return rateLimitConfig.getAssistantBucket(clientIp);

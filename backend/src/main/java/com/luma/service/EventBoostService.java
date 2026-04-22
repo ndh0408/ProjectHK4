@@ -43,6 +43,8 @@ public class EventBoostService {
     private final EventViewRepository eventViewRepository;
     private final RegistrationRepository registrationRepository;
     private final OrganiserSubscriptionService subscriptionService;
+    private final NotificationService notificationService;
+    private final BoostPackageConfigService boostConfigService;
 
     private static final List<RegistrationStatus> BOOST_REGISTRATION_STATUSES = List.of(
             RegistrationStatus.PENDING,
@@ -50,29 +52,76 @@ public class EventBoostService {
             RegistrationStatus.WAITING_LIST
     );
 
+    /**
+     * Best-effort convert a config key (may be canonical enum name or a custom tier) to the
+     * BoostPackage enum. Returns null for custom tiers that don't map — caller should fall
+     * back to synthesising a BoostPackageInfo by hand.
+     */
+    private BoostPackage enumKey(String key) {
+        try { return BoostPackage.valueOf(key); } catch (IllegalArgumentException ex) { return null; }
+    }
+
     public List<BoostPackageInfo> getAvailablePackages() {
-        return Arrays.stream(BoostPackage.values())
-                .map(BoostPackageInfo::fromEnum)
+        return boostConfigService.listActive().stream()
+                .map(cfg -> {
+                    BoostPackage pkg = enumKey(cfg.getPackageKey());
+                    BoostPackageInfo info = pkg != null
+                            ? BoostPackageInfo.fromEnum(pkg)
+                            : BoostPackageInfo.builder()
+                                .packageType(null)
+                                .displayName(cfg.getDisplayName())
+                                .badge(cfg.getBadgeText())
+                                .description(cfg.getDisplayName() + " tier")
+                                .build();
+                    info.setPrice(cfg.getPriceUsd());
+                    info.setPriceFormatted(String.format("$%.2f", cfg.getPriceUsd()));
+                    info.setDurationDays(cfg.getDurationDays());
+                    return info;
+                })
                 .collect(Collectors.toList());
     }
 
     public List<BoostPackageInfo> getAvailablePackagesWithDiscount(UUID organiserId) {
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiserId);
 
-        return Arrays.stream(BoostPackage.values())
-                .map(pkg -> {
-                    BoostPackageInfo info = BoostPackageInfo.fromEnum(pkg);
+        return boostConfigService.listActive().stream()
+                .map(cfg -> {
+                    BoostPackage pkg = enumKey(cfg.getPackageKey());
+                    BoostPackageInfo info = pkg != null
+                            ? BoostPackageInfo.fromEnum(pkg)
+                            : BoostPackageInfo.builder()
+                                .packageType(null)
+                                .displayName(cfg.getDisplayName())
+                                .badge(cfg.getBadgeText())
+                                .description(cfg.getDisplayName() + " tier")
+                                .build();
+                    java.math.BigDecimal basePrice = cfg.getPriceUsd();
+                    info.setDurationDays(cfg.getDurationDays());
                     if (discountPercent > 0) {
-                        java.math.BigDecimal discountedPrice = pkg.getPrice()
+                        java.math.BigDecimal discountedPrice = basePrice
                                 .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                                 .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
                         info.setPrice(discountedPrice);
                         info.setPriceFormatted(String.format("$%.2f", discountedPrice));
-                        info.setDescription(info.getDescription() + " (" + discountPercent + "% subscription discount applied)");
+                        String desc = info.getDescription() == null ? "" : info.getDescription();
+                        info.setDescription(desc + " (" + discountPercent + "% subscription discount applied)");
+                    } else {
+                        info.setPrice(basePrice);
+                        info.setPriceFormatted(String.format("$%.2f", basePrice));
                     }
                     return info;
                 })
                 .collect(Collectors.toList());
+    }
+
+    /** Service-wide helper: admin-edited price for a boost tier, falling back to enum default. */
+    private java.math.BigDecimal configuredPrice(BoostPackage pkg) {
+        return boostConfigService.getPriceOrDefault(pkg);
+    }
+
+    /** Service-wide helper: admin-edited duration for a boost tier, falling back to enum default. */
+    private int configuredDuration(BoostPackage pkg) {
+        return boostConfigService.getDurationDaysOrDefault(pkg);
     }
 
     @Transactional
@@ -98,14 +147,15 @@ public class EventBoostService {
 
         BoostPackage pkg = request.getBoostPackage();
 
+        java.math.BigDecimal basePrice = configuredPrice(pkg);
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
-        java.math.BigDecimal finalPrice = pkg.getPrice();
+        java.math.BigDecimal finalPrice = basePrice;
         if (discountPercent > 0) {
-            finalPrice = pkg.getPrice()
+            finalPrice = basePrice
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
             log.info("Applied {}% subscription discount to boost. Original: {}, Final: {}",
-                    discountPercent, pkg.getPrice(), finalPrice);
+                    discountPercent, basePrice, finalPrice);
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -123,7 +173,7 @@ public class EventBoostService {
                 .paymentIntentId(paymentIntentId)
                 .paidAt(now)
                 .startTime(now)
-                .endTime(now.plusDays(pkg.getDurationDays()))
+                .endTime(now.plusDays(configuredDuration(pkg)))
                 .viewsBeforeBoost(viewsBeforeBoost)
                 .registrationsBeforeBoost(registrationsBeforeBoost)
                 .build();
@@ -161,7 +211,7 @@ public class EventBoostService {
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiserId);
 
         if (currentPackage == newPackage) {
-            java.math.BigDecimal extendPrice = newPackage.getPrice();
+            java.math.BigDecimal extendPrice = configuredPrice(newPackage);
             if (discountPercent > 0) {
                 extendPrice = extendPrice
                         .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
@@ -169,8 +219,8 @@ public class EventBoostService {
             }
 
             LocalDateTime newEndTime = endTime != null
-                    ? endTime.plusDays(newPackage.getDurationDays())
-                    : LocalDateTime.now().plusDays(newPackage.getDurationDays());
+                    ? endTime.plusDays(configuredDuration(newPackage))
+                    : LocalDateTime.now().plusDays(configuredDuration(newPackage));
 
             return BoostUpgradeInfo.builder()
                     .hasExistingBoost(true)
@@ -181,16 +231,16 @@ public class EventBoostService {
                     .remainingDays((int) remainingDays)
                     .currentEndTime(endTime)
                     .newEndTime(newEndTime)
-                    .additionalDays(newPackage.getDurationDays())
+                    .additionalDays(configuredDuration(newPackage))
                     .price(extendPrice)
                     .message(String.format("Extend your %s boost by %d more days",
-                            currentPackage.getDisplayName(), newPackage.getDurationDays()))
+                            currentPackage.getDisplayName(), configuredDuration(newPackage)))
                     .build();
         } else {
             int currentTier = getPackageTier(currentPackage);
             int newTier = getPackageTier(newPackage);
 
-            java.math.BigDecimal newPrice = newPackage.getPrice();
+            java.math.BigDecimal newPrice = configuredPrice(newPackage);
             if (discountPercent > 0) {
                 newPrice = newPrice
                         .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
@@ -222,7 +272,7 @@ public class EventBoostService {
                     .currentBoostId(currentBoost.getId())
                     .remainingDays((int) remainingDays)
                     .currentEndTime(endTime)
-                    .newEndTime(LocalDateTime.now().plusDays(newPackage.getDurationDays()))
+                    .newEndTime(LocalDateTime.now().plusDays(configuredDuration(newPackage)))
                     .refundAmount(refundAmount)
                     .price(finalPrice)
                     .originalPrice(newPrice)
@@ -261,21 +311,38 @@ public class EventBoostService {
 
         BoostPackage pkg = request.getBoostPackage();
 
-        List<EventBoost> activeBoosts = boostRepository.findByEventIdAndStatus(event.getId(), BoostStatus.ACTIVE);
-        boolean hasActiveBoost = activeBoosts.stream().anyMatch(EventBoost::isActive);
-
-        if (hasActiveBoost) {
-            log.info("Event {} has active boost, creating extend/upgrade request", event.getId());
+        // If there's already a PENDING boost on this event, it's almost always an abandoned
+        // Stripe checkout (user closed the tab or pressed Cancel on Stripe's side). Auto-cancel
+        // stale PENDING (>1 minute old) so the organiser isn't locked out of retrying. Only
+        // the organiser's own stale rows are touched; a true in-flight double-click within the
+        // same minute is still rejected to stop accidental duplicate charges.
+        List<EventBoost> pending = boostRepository.findByEventIdAndStatus(event.getId(), BoostStatus.PENDING);
+        LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
+        boolean hasFreshPending = false;
+        for (EventBoost p : pending) {
+            if (!p.getOrganiser().getId().equals(organiser.getId())) continue;
+            if (p.getCreatedAt() != null && p.getCreatedAt().isAfter(oneMinuteAgo)) {
+                hasFreshPending = true;
+            } else {
+                p.setStatus(BoostStatus.CANCELLED);
+                boostRepository.save(p);
+                log.info("Auto-cancelled stale PENDING boost {} on event {} (abandoned checkout)",
+                        p.getId(), event.getId());
+            }
+        }
+        if (hasFreshPending) {
+            throw new BadRequestException(
+                    "A boost checkout for this event is already in progress. Complete or cancel it before starting another.");
         }
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
-        java.math.BigDecimal finalPrice = pkg.getPrice();
+        java.math.BigDecimal finalPrice = configuredPrice(pkg);
         if (discountPercent > 0) {
-            finalPrice = pkg.getPrice()
+            finalPrice = configuredPrice(pkg)
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
             log.info("Applied {}% subscription discount to boost. Original: {}, Final: {}",
-                    discountPercent, pkg.getPrice(), finalPrice);
+                    discountPercent, configuredPrice(pkg), finalPrice);
         }
 
         EventBoost boost = EventBoost.builder()
@@ -352,7 +419,7 @@ public class EventBoostService {
         boostRepository.save(existingBoost);
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
-        java.math.BigDecimal finalPrice = newPackage.getPrice();
+        java.math.BigDecimal finalPrice = configuredPrice(newPackage);
         if (discountPercent > 0) {
             finalPrice = finalPrice
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
@@ -369,7 +436,7 @@ public class EventBoostService {
                 .paymentIntentId(paymentIntentId)
                 .paidAt(now)
                 .startTime(now)
-                .endTime(now.plusDays(newPackage.getDurationDays()))
+                .endTime(now.plusDays(configuredDuration(newPackage)))
                 .viewsBeforeBoost(safeCount(eventViewRepository.countByEvent(existingBoost.getEvent())))
                 .registrationsBeforeBoost(safeCount(
                         registrationRepository.countByEventAndStatusIn(
@@ -386,6 +453,61 @@ public class EventBoostService {
         return mapToResponse(newBoost);
     }
 
+    /**
+     * Idempotent post-checkout confirmation. Frontend calls this when Stripe redirects back;
+     * the Stripe webhook may or may not have fired first depending on environment (e.g. local
+     * dev without Stripe CLI). Handles every action cleanly and is safe to call twice:
+     *
+     *   EXTEND          — boost is already ACTIVE; add the package's duration to endTime
+     *   UPGRADE/DOWNGRADE — the pending new-tier boost might already be ACTIVE (webhook
+     *                     already ran and self-heal expired the old tier) or still PENDING
+     *                     (webhook missed); either way finish by ensuring pending→ACTIVE and
+     *                     the old tier is expired
+     *   NEW (default)   — flip PENDING→ACTIVE; if already ACTIVE, just return it
+     */
+    @Transactional
+    public BoostResponse confirmPayment(UUID boostId, String action, UUID existingBoostId, User organiser) {
+        EventBoost boost = boostRepository.findById(boostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Boost not found"));
+        if (!boost.getOrganiser().getId().equals(organiser.getId())) {
+            throw new BadRequestException("You can only confirm your own boosts");
+        }
+
+        if ("EXTEND".equals(action)) {
+            if (boost.getStatus() == BoostStatus.ACTIVE) {
+                return extendBoost(boostId, organiser, "payment_confirmed");
+            }
+            // Fallback: someone landed on EXTEND but the target boost isn't ACTIVE anymore —
+            // treat as a regular activate to avoid stuck PENDING rows.
+            return activateBoost(boostId, "payment_confirmed");
+        }
+
+        // UPGRADE / DOWNGRADE / NEW — all reduce to "make sure this boost is ACTIVE".
+        // activateBoost's self-heal logic handles expiring the previous tier on the same
+        // event; passing existingBoostId is unnecessary because the unique filtered index
+        // keeps only one ACTIVE per event anyway.
+        if (boost.getStatus() == BoostStatus.PENDING) {
+            return activateBoost(boostId, "payment_confirmed");
+        }
+        if (boost.getStatus() == BoostStatus.ACTIVE) {
+            // Webhook already activated. Belt-and-braces: if caller passed an existingBoostId
+            // that is somehow still ACTIVE (webhook race on a different event), expire it.
+            if (existingBoostId != null && !existingBoostId.equals(boostId)) {
+                boostRepository.findById(existingBoostId).ifPresent(old -> {
+                    if (old.getStatus() == BoostStatus.ACTIVE
+                            && old.getOrganiser().getId().equals(organiser.getId())) {
+                        old.setStatus(BoostStatus.EXPIRED);
+                        old.setEndTime(LocalDateTime.now());
+                        boostRepository.save(old);
+                    }
+                });
+            }
+            return mapToResponse(boost);
+        }
+        // CANCELLED / EXPIRED — return as-is; the frontend will refresh and see the actual state.
+        return mapToResponse(boost);
+    }
+
     @Transactional
     public BoostResponse activateBoost(UUID boostId, String paymentIntentId) {
         EventBoost boost = boostRepository.findById(boostId)
@@ -395,19 +517,61 @@ public class EventBoostService {
             throw new BadRequestException("Boost is not in pending status");
         }
 
+        // Self-heal duplicates: if an ACTIVE boost already exists on this event (prior tier
+        // before an upgrade, or race from double-click), expire them FIRST and flush so the
+        // filtered unique index (UQ_event_boosts_one_active_per_event) sees them as EXPIRED
+        // by the time we flip this PENDING→ACTIVE. Without the flush, Hibernate batches both
+        // UPDATEs and the index rejects the second with "This record already exists".
+        UUID eventId = boost.getEvent().getId();
+        List<EventBoost> existingActive = boostRepository.findByEventIdAndStatus(eventId, BoostStatus.ACTIVE);
+        boolean didExpire = false;
+        for (EventBoost other : existingActive) {
+            if (!other.getId().equals(boost.getId())) {
+                other.setStatus(BoostStatus.EXPIRED);
+                other.setEndTime(LocalDateTime.now());
+                boostRepository.save(other);
+                didExpire = true;
+                log.info("Auto-expired stale active boost {} on event {} in favour of new boost {}",
+                        other.getId(), eventId, boost.getId());
+            }
+        }
+        if (didExpire) {
+            // Force the EXPIRED updates to hit the DB now, before the VIP UPDATE follows —
+            // otherwise SQL Server sees two ACTIVE rows for the event in the same statement
+            // batch and the filtered unique index rejects the whole transaction.
+            boostRepository.flush();
+        }
+
         LocalDateTime now = LocalDateTime.now();
         boost.setStatus(BoostStatus.ACTIVE);
         boost.setPaymentIntentId(paymentIntentId);
         boost.setPaidAt(now);
         boost.setStartTime(now);
-        boost.setEndTime(now.plusDays(boost.getBoostPackage().getDurationDays()));
+        boost.setEndTime(now.plusDays(configuredDuration(boost.getBoostPackage())));
         boost.setViewsBeforeBoost(safeCount(eventViewRepository.countByEvent(boost.getEvent())));
         boost.setRegistrationsBeforeBoost(safeCount(
                 registrationRepository.countByEventAndStatusIn(boost.getEvent(), BOOST_REGISTRATION_STATUSES)
         ));
 
+        // Single-transaction race is handled above by expiring siblings before flipping
+        // this boost to ACTIVE. Cross-transaction races are blocked by the DB filtered
+        // unique index `UQ_event_boosts_one_active_per_event` — if that fires, the webhook
+        // returns 500 and Stripe retries, which re-enters activateBoost where the sibling
+        // is now visible and gets expired cleanly.
         boost = boostRepository.save(boost);
         log.info("Boost activated: {} for event {}", boostId, boost.getEvent().getId());
+
+        // Blast a notification to every follower of the organiser so the newly-featured event
+        // reaches its audience immediately, not just via passive list ranking.
+        try {
+            notificationService.notifyFollowersOfBoost(
+                    boost.getOrganiser(),
+                    boost.getEvent(),
+                    boost.getBoostPackage().getBadgeText());
+        } catch (Exception e) {
+            log.warn("Failed to notify followers of boost activation {}: {}", boostId, e.getMessage());
+        }
+
         return mapToResponse(boost);
     }
 
@@ -448,38 +612,102 @@ public class EventBoostService {
         return boostRepository.findBoostedEventIds(LocalDateTime.now());
     }
 
+    // Home-surface caps — keep the carousel short enough to stay interesting,
+    // and stop a single organiser buying many slots from dominating the view.
+    private static final int MAX_FEATURED_EVENTS = 24;
+    private static final int MAX_BANNER_EVENTS = 6;
+    private static final int MAX_PER_ORGANISER_FEATURED = 2;
+    private static final int MAX_PER_ORGANISER_BANNER = 1;
+
     public List<Event> getFeaturedEvents() {
-        List<EventBoost> featuredBoosts = boostRepository.findFeaturedBoosts(LocalDateTime.now());
-        
-        // Remove duplicates - keep only the highest package boost per event
-        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.HashMap<>();
+        // Filter by admin-configured featured flags (not hardcoded tier names). Admin can
+        // toggle featuredOnHome / featuredInCategory off on VIP and any ACTIVE boost of that
+        // tier stops appearing in the Home Featured row; likewise a new custom tier with
+        // featuredOnHome=true surfaces here automatically.
+        java.util.Set<String> featuredKeys = boostConfigService.activeFeaturedKeys();
+        List<EventBoost> featuredBoosts = boostRepository.findFeaturedBoosts(LocalDateTime.now()).stream()
+                .filter(b -> featuredKeys.contains(b.getBoostPackage().name()))
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.LinkedHashMap<>();
         for (EventBoost boost : featuredBoosts) {
-            UUID eventId = boost.getEvent().getId();
-            EventBoost existing = uniqueBoosts.get(eventId);
-            
-            // Keep VIP > PREMIUM > STANDARD > BASIC
-            if (existing == null || boost.getBoostPackage().compareTo(existing.getBoostPackage()) > 0) {
-                uniqueBoosts.put(eventId, boost);
-            }
+            uniqueBoosts.putIfAbsent(boost.getEvent().getId(), boost);
         }
-        
-        return uniqueBoosts.values().stream()
-                .map(EventBoost::getEvent)
+
+        return smartArrangeBoosts(
+                new java.util.ArrayList<>(uniqueBoosts.values()),
+                MAX_PER_ORGANISER_FEATURED, MAX_FEATURED_EVENTS)
+                .stream().map(EventBoost::getEvent)
                 .collect(java.util.stream.Collectors.toList());
     }
 
     public List<Event> getHomeBannerEvents() {
-        List<EventBoost> bannerBoosts = boostRepository.findHomeBannerBoosts(LocalDateTime.now());
-        
-        // Remove duplicates - keep only one boost per event
-        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.HashMap<>();
-        for (EventBoost boost : bannerBoosts) {
-            uniqueBoosts.put(boost.getEvent().getId(), boost);
-        }
-        
-        return uniqueBoosts.values().stream()
-                .map(EventBoost::getEvent)
+        // Admin-controlled: only tiers whose config row has homeBanner=true AND active=true
+        // render as a banner. Flipping homeBanner=false on VIP hides VIP banners immediately.
+        java.util.Set<String> bannerKeys = boostConfigService.activeHomeBannerKeys();
+        if (bannerKeys.isEmpty()) return java.util.Collections.emptyList();
+
+        List<EventBoost> bannerBoosts = boostRepository.findFeaturedBoosts(LocalDateTime.now()).stream()
+                .filter(b -> bannerKeys.contains(b.getBoostPackage().name()))
                 .collect(java.util.stream.Collectors.toList());
+
+        java.util.Map<UUID, EventBoost> uniqueBoosts = new java.util.LinkedHashMap<>();
+        for (EventBoost boost : bannerBoosts) {
+            uniqueBoosts.putIfAbsent(boost.getEvent().getId(), boost);
+        }
+
+        return smartArrangeBoosts(
+                new java.util.ArrayList<>(uniqueBoosts.values()),
+                MAX_PER_ORGANISER_BANNER, MAX_BANNER_EVENTS)
+                .stream().map(EventBoost::getEvent)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Smart arrangement for boosted/featured slots:
+     * 1) Keep VIP above PREMIUM above STANDARD above BASIC so paying more always wins the
+     *    higher slot.
+     * 2) Rotate within each tier by the current hour so every paying organiser cycles
+     *    through the top slot over the day — prevents "first buyer sits forever".
+     * 3) Cap per-organiser so one account can't flood the surface.
+     * 4) Final total cap keeps the carousel short enough to stay scannable.
+     */
+    private List<EventBoost> smartArrangeBoosts(List<EventBoost> boosts,
+                                                int maxPerOrganiser,
+                                                int maxTotal) {
+        if (boosts.isEmpty()) return boosts;
+
+        java.util.Map<BoostPackage, List<EventBoost>> byTier = new java.util.LinkedHashMap<>();
+        for (BoostPackage tier : new BoostPackage[]{BoostPackage.VIP, BoostPackage.PREMIUM,
+                                                    BoostPackage.STANDARD, BoostPackage.BASIC}) {
+            byTier.put(tier, new java.util.ArrayList<>());
+        }
+        for (EventBoost b : boosts) {
+            byTier.computeIfAbsent(b.getBoostPackage(), k -> new java.util.ArrayList<>()).add(b);
+        }
+
+        int rotation = LocalDateTime.now().getHour();
+        List<EventBoost> arranged = new java.util.ArrayList<>(boosts.size());
+        for (List<EventBoost> tierList : byTier.values()) {
+            int n = tierList.size();
+            if (n == 0) continue;
+            int start = Math.floorMod(rotation, n);
+            for (int i = 0; i < n; i++) {
+                arranged.add(tierList.get((start + i) % n));
+            }
+        }
+
+        java.util.Map<UUID, Integer> perOrganiser = new java.util.HashMap<>();
+        List<EventBoost> result = new java.util.ArrayList<>(Math.min(arranged.size(), maxTotal));
+        for (EventBoost b : arranged) {
+            UUID orgId = b.getOrganiser() != null ? b.getOrganiser().getId() : null;
+            int used = orgId != null ? perOrganiser.getOrDefault(orgId, 0) : 0;
+            if (used >= maxPerOrganiser) continue;
+            result.add(b);
+            if (orgId != null) perOrganiser.put(orgId, used + 1);
+            if (result.size() >= maxTotal) break;
+        }
+        return result;
     }
 
     public boolean isEventBoosted(UUID eventId) {
@@ -512,6 +740,47 @@ public class EventBoostService {
         if (expired > 0) {
             log.info("Expired {} boosts", expired);
         }
+    }
+
+    /**
+     * Garbage-collect abandoned PENDING boosts. A PENDING row is created when the organiser
+     * clicks Boost Now; it should flip to ACTIVE once Stripe fires the webhook. If it sits
+     * PENDING for longer than {@value #PENDING_BOOST_TIMEOUT_MINUTES} minutes the organiser
+     * either bailed on Stripe checkout or the webhook never arrived — the row just clogs the
+     * Boost History as "Pending Payment" forever and also blocks them from trying again
+     * (createBoost rejects duplicate PENDING on same event). Auto-cancel so the UI is honest
+     * and retries are unblocked.
+     */
+    private static final int PENDING_BOOST_TIMEOUT_MINUTES = 30;
+
+    @Scheduled(fixedRate = 300000) // every 5 min
+    @Transactional
+    public void cancelAbandonedPendingBoosts() {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(PENDING_BOOST_TIMEOUT_MINUTES);
+        int cancelled = boostRepository.cancelStalePending(cutoff);
+        if (cancelled > 0) {
+            log.info("Auto-cancelled {} abandoned PENDING boosts older than {} minutes",
+                    cancelled, PENDING_BOOST_TIMEOUT_MINUTES);
+        }
+    }
+
+    /**
+     * Admin/moderation: stop a boost immediately regardless of its original endTime.
+     * Sets status=EXPIRED and clamps endTime to now so it disappears from every home surface
+     * and listing on the next request.
+     */
+    @Transactional
+    public BoostResponse forceExpireBoost(UUID boostId) {
+        EventBoost boost = boostRepository.findById(boostId)
+                .orElseThrow(() -> new ResourceNotFoundException("Boost not found"));
+        if (boost.getStatus() == BoostStatus.EXPIRED) {
+            return mapToResponse(boost);
+        }
+        boost.setStatus(BoostStatus.EXPIRED);
+        boost.setEndTime(LocalDateTime.now());
+        boost = boostRepository.save(boost);
+        log.info("Admin force-expired boost {} for event {}", boostId, boost.getEvent().getId());
+        return mapToResponse(boost);
     }
 
     @Transactional

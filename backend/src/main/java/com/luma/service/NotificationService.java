@@ -16,6 +16,7 @@ import com.luma.repository.RegistrationRepository;
 import com.luma.repository.UserRepository;
 import com.luma.entity.enums.RegistrationStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class NotificationService {
 
@@ -95,6 +97,41 @@ public class NotificationService {
         webSocketNotificationService.sendToUser(user.getId(), notification);
 
         return notification;
+    }
+
+    /**
+     * Push a notification to every follower of {@code organiser} when one of their events gets
+     * boosted. This is the promotional kick that makes a paid boost reach people immediately —
+     * not just rely on passive ranking in lists.
+     */
+    @Transactional
+    public void notifyFollowersOfBoost(User organiser, Event event, String boostPackageDisplay) {
+        List<com.luma.entity.Follow> followers = followRepository.findAllByOrganiserUser(organiser);
+        if (followers.isEmpty()) return;
+        String title = boostPackageDisplay != null && !boostPackageDisplay.isBlank()
+                ? (boostPackageDisplay + " Event — Don't miss it")
+                : "Featured event from " + organiser.getFullName();
+        String message = organiser.getFullName() + " just featured \"" + event.getTitle()
+                + "\". Tap to have a look.";
+        for (com.luma.entity.Follow follow : followers) {
+            User recipient = follow.getFollower();
+            if (recipient == null || recipient.getId().equals(organiser.getId())) continue;
+            try {
+                sendNotification(
+                        recipient,
+                        title,
+                        message,
+                        NotificationType.BROADCAST,
+                        event.getId(),
+                        "EVENT"
+                );
+            } catch (Exception e) {
+                log.warn("Failed to notify follower {} about boosted event {}: {}",
+                        recipient.getId(), event.getId(), e.getMessage());
+            }
+        }
+        log.info("Sent boost notification to {} followers for event {}",
+                followers.size(), event.getId());
     }
 
     @Transactional

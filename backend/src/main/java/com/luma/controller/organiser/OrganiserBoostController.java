@@ -10,6 +10,7 @@ import com.luma.entity.User;
 import com.luma.entity.enums.BoostPackage;
 import com.luma.entity.enums.BoostStatus;
 import com.luma.service.EventBoostService;
+import com.luma.service.OrganiserSubscriptionService;
 import com.luma.service.PaymentService;
 import com.luma.service.UserService;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class OrganiserBoostController {
     private final EventBoostService boostService;
     private final UserService userService;
     private final PaymentService paymentService;
+    private final OrganiserSubscriptionService subscriptionService;
 
     @GetMapping("/packages")
     public ResponseEntity<ApiResponse<List<BoostPackageInfo>>> getAvailablePackages(
@@ -50,23 +52,12 @@ public class OrganiserBoostController {
             @RequestParam(required = false) UUID existingBoostId,
             @AuthenticationPrincipal UserDetails userDetails) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
-
-        BoostResponse boost;
-        String message;
-
-        if ("EXTEND".equals(action)) {
-            boost = boostService.extendBoost(boostId, organiser, "payment_confirmed");
-            message = "Boost extended successfully";
-        } else if (("UPGRADE".equals(action) || "DOWNGRADE".equals(action)) && existingBoostId != null) {
-            BoostResponse pendingBoost = boostService.getBoostById(boostId);
-            boost = boostService.upgradeBoost(existingBoostId, pendingBoost.getBoostPackage(), organiser, "payment_confirmed");
-            boostService.deletePendingBoost(boostId, organiser);
-            message = "Boost upgraded successfully";
-        } else {
-            boost = boostService.activateBoost(boostId, "manual_activation");
-            message = "Boost activated successfully";
-        }
-
+        BoostResponse boost = boostService.confirmPayment(boostId, action, existingBoostId, organiser);
+        String message = switch (action == null ? "" : action) {
+            case "EXTEND" -> "Boost extended successfully";
+            case "UPGRADE", "DOWNGRADE" -> "Boost upgraded successfully";
+            default -> "Boost activated successfully";
+        };
         return ResponseEntity.ok(ApiResponse.success(message, boost));
     }
 
@@ -87,6 +78,22 @@ public class OrganiserBoostController {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
         Page<BoostResponse> boosts = boostService.getOrganiserBoosts(organiser.getId(), status, pageable);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(boosts)));
+    }
+
+    /**
+     * Boost subscription info proxy — returns the organiser's current subscription wrapped so the
+     * boost page can show tier + discount. Declared BEFORE the {boostId} mapping so the literal
+     * path wins over the UUID-typed wildcard; otherwise Spring tries to parse "subscription" as a
+     * UUID and blows up the organiser portal's initial load.
+     */
+    @GetMapping("/subscription")
+    public ResponseEntity<ApiResponse<Object>> getBoostSubscriptionInfo(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User organiser = userService.getEntityByEmail(userDetails.getUsername());
+        int discount = subscriptionService.getBoostDiscountPercent(organiser.getId());
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("discountPercent", discount);
+        return ResponseEntity.ok(ApiResponse.success(body));
     }
 
     @GetMapping("/{boostId}")
@@ -162,12 +169,21 @@ public class OrganiserBoostController {
             boostIdForCheckout = boost.getId();
         }
 
+        // Pull the admin-edited duration for the Stripe checkout description so the user sees
+        // the right number of days on the payment page. Actual boost activation also uses the
+        // config-driven duration (EventBoostService.activateBoost).
+        int chargedDays = boostService.getAvailablePackages().stream()
+                .filter(p -> p.getPackageType() == request.getBoostPackage())
+                .map(BoostPackageInfo::getDurationDays)
+                .findFirst()
+                .orElse(request.getBoostPackage().getDurationDays());
+
         String checkoutUrl = paymentService.createBoostCheckoutSession(
                 organiser.getId(),
                 request.getEventId(),
                 request.getBoostPackage().name(),
                 priceToCharge,
-                request.getBoostPackage().getDurationDays(),
+                chargedDays,
                 boostIdForCheckout,
                 action,
                 existingBoostId

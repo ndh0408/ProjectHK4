@@ -84,3 +84,10 @@ _tmp_*
 *.tmp.sql
 Clear
 
+# ===================================
+# Log files - NEVER commit
+# ===================================
+*.log
+backend/*.log
+admin/backend/*.log
+

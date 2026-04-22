@@ -77,8 +77,18 @@ class ApiService {
   }
 
   Future<User> getCurrentUser() async {
-    final response = await _client.getRaw<Map<String, dynamic>>('/user/profile');
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/user/profile');
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    return User.fromJson(data);
+  }
+
+  Future<User> getUserProfileById(String userId) async {
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/user/profile/$userId');
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return User.fromJson(data);
   }
 
@@ -87,9 +97,12 @@ class ApiService {
       '/events/featured',
       queryParameters: {'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     final content = data['content'] as List<dynamic>? ?? [];
-    return content.map((item) => Event.fromJson(item as Map<String, dynamic>)).toList();
+    return content
+        .map((item) => Event.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Event>> getBoostedFeaturedEvents() async {
@@ -97,7 +110,9 @@ class ApiService {
       '/events/boosted/featured',
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => Event.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) => Event.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<Event>> getHomeBannerEvents() async {
@@ -105,7 +120,9 @@ class ApiService {
       '/events/boosted/banner',
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => Event.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) => Event.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<PaginatedResponse<Event>> getEvents({
@@ -133,7 +150,8 @@ class ApiService {
         if (search != null && search.isNotEmpty) 'q': search,
       },
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -145,7 +163,8 @@ class ApiService {
       '/user/events/upcoming',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -157,7 +176,8 @@ class ApiService {
       '/user/events/upcoming',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -174,7 +194,8 @@ class ApiService {
       endpoint,
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -182,7 +203,8 @@ class ApiService {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/events/$id',
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return Event.fromJson(data);
   }
 
@@ -201,7 +223,8 @@ class ApiService {
         'size': size,
       },
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Registration.fromJson);
   }
 
@@ -228,12 +251,16 @@ class ApiService {
     return RegistrationStatus.fromJson(data);
   }
 
-  Future<List<RegistrationQuestion>> getRegistrationQuestions(String eventId) async {
+  Future<List<RegistrationQuestion>> getRegistrationQuestions(
+      String eventId) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/events/$eventId/registration-questions',
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => RegistrationQuestion.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) =>
+            RegistrationQuestion.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Registration> registerForEventWithAnswers(
@@ -288,7 +315,15 @@ class ApiService {
 
   Future<void> trackEventView(String eventId) async {
     try {
-      await _client.post<Map<String, dynamic>>('/user/events/$eventId/track-view');
+      await _client
+          .post<Map<String, dynamic>>('/user/events/$eventId/track-view');
+    } catch (_) {}
+  }
+
+  Future<void> trackBoostClick(String eventId) async {
+    try {
+      await _client
+          .post<Map<String, dynamic>>('/user/events/$eventId/track-boost-click');
     } catch (_) {}
   }
 
@@ -308,7 +343,8 @@ class ApiService {
     return data.cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> votePoll(String pollId, {List<String>? optionIds, int? ratingValue}) async {
+  Future<Map<String, dynamic>> votePoll(String pollId,
+      {List<String>? optionIds, int? ratingValue}) async {
     final body = <String, dynamic>{};
     if (optionIds != null) body['optionIds'] = optionIds;
     if (ratingValue != null) body['ratingValue'] = ratingValue;
@@ -319,7 +355,8 @@ class ApiService {
     return response['data'] as Map<String, dynamic>? ?? response;
   }
 
-  Future<List<Map<String, dynamic>>> discoverNetworking({int page = 0, int size = 20}) async {
+  Future<List<Map<String, dynamic>>> discoverNetworking(
+      {int page = 0, int size = 20}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/networking/discover',
       queryParameters: {'page': page, 'size': size},
@@ -328,7 +365,8 @@ class ApiService {
     return data.cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> sendConnectionRequest(String userId, {String? message}) async {
+  Future<Map<String, dynamic>> sendConnectionRequest(String userId,
+      {String? message}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/networking/connect/$userId',
       data: message != null ? {'message': message} : {},
@@ -343,14 +381,16 @@ class ApiService {
     return response['data'] as Map<String, dynamic>? ?? response;
   }
 
-  Future<Map<String, dynamic>> declineConnectionRequest(String requestId) async {
+  Future<Map<String, dynamic>> declineConnectionRequest(
+      String requestId) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/networking/requests/$requestId/decline',
     );
     return response['data'] as Map<String, dynamic>? ?? response;
   }
 
-  Future<Map<String, dynamic>> getPendingConnectionRequests({int page = 0}) async {
+  Future<Map<String, dynamic>> getPendingConnectionRequests(
+      {int page = 0}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/networking/requests/pending',
       queryParameters: {'page': page, 'size': 20},
@@ -366,15 +406,21 @@ class ApiService {
     return response.data!['data'] as Map<String, dynamic>? ?? {};
   }
 
-  Future<Map<String, dynamic>> validateCoupon(String code, double amount, String registrationId) async {
+  Future<Map<String, dynamic>> validateCoupon(
+      String code, double amount, String registrationId) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/coupons/validate',
-      queryParameters: {'code': code, 'amount': amount, 'registrationId': registrationId},
+      queryParameters: {
+        'code': code,
+        'amount': amount,
+        'registrationId': registrationId
+      },
     );
     return response.data!['data'] as Map<String, dynamic>? ?? {};
   }
 
-  Future<List<Coupon>> getUserCoupons({String? eventId, String? registrationId}) async {
+  Future<List<Coupon>> getUserCoupons(
+      {String? eventId, String? registrationId}) async {
     final params = <String, dynamic>{};
     if (eventId != null) params['eventId'] = eventId;
     if (registrationId != null) params['registrationId'] = registrationId;
@@ -383,7 +429,9 @@ class ApiService {
       queryParameters: params.isEmpty ? null : params,
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((json) => Coupon.fromJson(json as Map<String, dynamic>)).toList();
+    return data
+        .map((json) => Coupon.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Map<String, dynamic>> compareEvents(List<String> eventIds) async {
@@ -431,7 +479,8 @@ class ApiService {
     return data.cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> transferTicket(String registrationId, String toEmail) async {
+  Future<Map<String, dynamic>> transferTicket(
+      String registrationId, String toEmail) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/transfers/$registrationId/transfer',
       data: {'toEmail': toEmail},
@@ -469,7 +518,8 @@ class ApiService {
     return response['data'] as Map<String, dynamic>? ?? response;
   }
 
-  Future<Map<String, dynamic>> initiatePayment(String registrationId, {String? couponCode}) async {
+  Future<Map<String, dynamic>> initiatePayment(String registrationId,
+      {String? couponCode}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/payments/registrations/$registrationId/payment-intent',
       queryParameters: couponCode != null && couponCode.isNotEmpty
@@ -493,7 +543,8 @@ class ApiService {
     return response.data!['data'] as Map<String, dynamic>? ?? response.data!;
   }
 
-  Future<Map<String, dynamic>> createCheckoutSession(String registrationId, {String? couponCode}) async {
+  Future<Map<String, dynamic>> createCheckoutSession(String registrationId,
+      {String? couponCode}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/payments/registrations/$registrationId/checkout-session',
       queryParameters: couponCode != null && couponCode.isNotEmpty
@@ -513,44 +564,65 @@ class ApiService {
   Future<List<Category>> getCategories() async {
     final response = await _client.getRaw<Map<String, dynamic>>('/categories');
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => Category.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) => Category.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<City>> getCities() async {
-    final response = await _client.getRaw<Map<String, dynamic>>('/cities/with-events');
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/cities/with-events');
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => City.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) => City.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<Map<String, List<City>>> getCitiesByContinent() async {
-    final response = await _client.getRaw<Map<String, dynamic>>('/cities/by-continent');
-    final data = response.data!['data'] as Map<String, dynamic>? ?? {};
-    return data.map((key, value) {
-      final cities = (value as List<dynamic>)
-          .map((item) => City.fromJson(item as Map<String, dynamic>))
-          .toList();
-      return MapEntry(key, cities);
-    });
+    try {
+      final response =
+          await _client.getRaw<Map<String, dynamic>>('/cities/by-continent');
+      final data = response.data!['data'] as Map<String, dynamic>? ?? {};
+      return data.map((key, value) {
+        final cities = (value as List<dynamic>)
+            .map((item) => City.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return MapEntry(key, cities);
+      });
+    } on DioException catch (error) {
+      final statusCode = error.response?.statusCode ?? 0;
+      if (statusCode < 500) rethrow;
+
+      final cities = await getCities();
+      return _groupCitiesByContinent(cities);
+    }
   }
 
   Future<List<OrganiserProfile>> getFeaturedOrganisers() async {
-    final response = await _client.getRaw<Map<String, dynamic>>('/user/follow/featured');
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/user/follow/featured');
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => OrganiserProfile.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map((item) => OrganiserProfile.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<OrganiserProfile> getOrganiserProfile(String id) async {
-    final response = await _client.getRaw<Map<String, dynamic>>('/user/organisers/$id');
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/user/organisers/$id');
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return OrganiserProfile.fromJson(data);
   }
 
-  Future<PaginatedResponse<Event>> getOrganiserEvents(String organiserId, {int page = 0, int size = 50}) async {
+  Future<PaginatedResponse<Event>> getOrganiserEvents(String organiserId,
+      {int page = 0, int size = 50}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/organisers/$organiserId/events',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -560,6 +632,25 @@ class ApiService {
 
   Future<void> unfollowOrganiser(String organiserId) async {
     await _client.delete('/user/follow/$organiserId');
+  }
+
+  Map<String, List<City>> _groupCitiesByContinent(List<City> cities) {
+    final grouped = <String, List<City>>{};
+
+    for (final city in cities) {
+      final continent = _normalizeContinent(city.continent);
+      grouped.putIfAbsent(continent, () => <City>[]).add(city);
+    }
+
+    return grouped;
+  }
+
+  String _normalizeContinent(String? continent) {
+    final value = continent?.trim();
+    if (value == null || value.isEmpty) {
+      return 'Other';
+    }
+    return value;
   }
 
   Future<bool> isFollowingOrganiser(String organiserId) async {
@@ -577,7 +668,8 @@ class ApiService {
       '/user/notifications',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, AppNotification.fromJson);
   }
 
@@ -625,11 +717,13 @@ class ApiService {
         'size': size,
       },
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
-  Future<String> uploadImageBytes(List<int> bytes, String filename, {String folder = 'events'}) async {
+  Future<String> uploadImageBytes(List<int> bytes, String filename,
+      {String folder = 'events'}) async {
     final formData = FormData.fromMap({
       'file': MultipartFile.fromBytes(
         bytes,
@@ -673,7 +767,8 @@ class ApiService {
       '/user/chat/conversations',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Conversation.fromJson);
   }
 
@@ -710,7 +805,8 @@ class ApiService {
       '/user/chat/conversations/$conversationId/messages',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     // Parse items individually so a single malformed message (e.g. a poll
     // snapshot with unexpected shape) doesn't wipe the whole chat history.
     final rawContent = data['content'];
@@ -796,7 +892,9 @@ class ApiService {
       '/user/chat/events/$eventId/attendees',
     );
     final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => ChatParticipant.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => ChatParticipant.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> deleteMessage(String messageId) async {
@@ -820,7 +918,7 @@ class ApiService {
     final data = response['data'] as Map<String, dynamic>? ?? response;
     return PaginatedResponse<ChatMessage>.fromJson(
       data,
-      (json) => ChatMessage.fromJson(json as Map<String, dynamic>),
+      (json) => ChatMessage.fromJson(json),
     );
   }
 
@@ -857,7 +955,9 @@ class ApiService {
       '/user/chat/blocked',
     );
     final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => BlockedUser.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => BlockedUser.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<bool> isUserBlocked(String userId) async {
@@ -897,14 +997,17 @@ class ApiService {
     );
   }
 
-  Future<List<EventBuddy>> getEventBuddies({int page = 0, int size = 20}) async {
+  Future<List<EventBuddy>> getEventBuddies(
+      {int page = 0, int size = 20}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/chat/buddies',
       queryParameters: {'page': page, 'size': size},
     );
     final data = response.data!['data'] as Map<String, dynamic>?;
     final content = data?['content'] as List<dynamic>? ?? [];
-    return content.map((e) => EventBuddy.fromJson(e as Map<String, dynamic>)).toList();
+    return content
+        .map((e) => EventBuddy.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<EventBuddy>> getEventBuddiesByEvent(String eventId) async {
@@ -912,7 +1015,9 @@ class ApiService {
       '/user/chat/events/$eventId/buddies',
     );
     final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => EventBuddy.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => EventBuddy.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<EventChatSummary>> getEventChats() async {
@@ -955,18 +1060,22 @@ class ApiService {
     return Conversation.fromJson(data);
   }
 
-  Future<void> addGroupParticipants(String conversationId, List<String> userIds) async {
+  Future<void> addGroupParticipants(
+      String conversationId, List<String> userIds) async {
     await _client.post<void>(
       '/user/chat/conversations/$conversationId/participants',
       data: {'userIds': userIds},
     );
   }
 
-  Future<void> removeGroupParticipant(String conversationId, String userId) async {
-    await _client.delete('/user/chat/conversations/$conversationId/participants/$userId');
+  Future<void> removeGroupParticipant(
+      String conversationId, String userId) async {
+    await _client.delete(
+        '/user/chat/conversations/$conversationId/participants/$userId');
   }
 
-  Future<Certificate> getCertificateByRegistration(String registrationId) async {
+  Future<Certificate> getCertificateByRegistration(
+      String registrationId) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/certificates/registration/$registrationId',
     );
@@ -999,7 +1108,8 @@ class ApiService {
       '/user/recommendations/personalized',
       queryParameters: {'limit': limit},
     );
-    final recommendedEvents = response['recommendedEvents'] as List<dynamic>? ?? [];
+    final recommendedEvents =
+        response['recommendedEvents'] as List<dynamic>? ?? [];
     return recommendedEvents
         .map((e) => Event.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -1032,7 +1142,8 @@ class ApiService {
       '/user/events/$eventId/reviews',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Review.fromJson);
   }
 
@@ -1068,7 +1179,8 @@ class ApiService {
       '/user/my-reviews',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Review.fromJson);
   }
 
@@ -1081,7 +1193,8 @@ class ApiService {
       '/user/reviews/$reviewId/report',
       data: {
         'reason': reason,
-        if (description != null && description.isNotEmpty) 'description': description,
+        if (description != null && description.isNotEmpty)
+          'description': description,
       },
     );
   }
@@ -1108,7 +1221,8 @@ class ApiService {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/bookmarks/$eventId/status',
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return data['bookmarked'] as bool? ?? false;
   }
 
@@ -1120,7 +1234,8 @@ class ApiService {
       '/user/bookmarks',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Event.fromJson);
   }
 
@@ -1140,16 +1255,19 @@ class ApiService {
       '/user/events/my-questions',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, Question.fromJson);
   }
 
   Future<String> getGoogleCalendarAuthUrl({String? redirectUri}) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/calendar/auth-url',
-      queryParameters: redirectUri != null ? {'redirectUri': redirectUri} : null,
+      queryParameters:
+          redirectUri != null ? {'redirectUri': redirectUri} : null,
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return data['authUrl'] as String;
   }
 
@@ -1174,11 +1292,13 @@ class ApiService {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/calendar/status',
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return GoogleCalendarStatus.fromJson(data);
   }
 
-  Future<CalendarSyncResult> syncEventToCalendar(String registrationId, {String? calendarId}) async {
+  Future<CalendarSyncResult> syncEventToCalendar(String registrationId,
+      {String? calendarId}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/user/calendar/sync',
       data: {
@@ -1199,7 +1319,10 @@ class ApiService {
       '/user/calendar/synced-events',
     );
     final data = response.data!['data'] as List<dynamic>? ?? [];
-    return data.map((item) => CalendarSyncResult.fromJson(item as Map<String, dynamic>)).toList();
+    return data
+        .map(
+            (item) => CalendarSyncResult.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<int> syncAllEventsToCalendar() async {
@@ -1227,7 +1350,8 @@ class ApiService {
       '/user/gallery',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, EventImage.fromJson);
   }
 
@@ -1240,7 +1364,8 @@ class ApiService {
       '/user/gallery/category/$categoryId',
       queryParameters: {'page': page, 'size': size},
     );
-    final data = response.data!['data'] as Map<String, dynamic>? ?? response.data!;
+    final data =
+        response.data!['data'] as Map<String, dynamic>? ?? response.data!;
     return PaginatedResponse.fromJson(data, EventImage.fromJson);
   }
 

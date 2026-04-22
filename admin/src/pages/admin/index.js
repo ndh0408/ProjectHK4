@@ -6,5 +6,7 @@ export { default as AdminCategories } from './Categories';
 export { default as AdminCities } from './Cities';
 export { default as AdminNotifications } from './Notifications';
 export { default as AdminBoosts } from './Boosts';
+export { default as AdminBoostPackages } from './BoostPackages';
+export { default as AdminSubscriptionPlans } from './SubscriptionPlans';
 export { default as AdminRevenue } from './Revenue';
 export { default as AdminSupportRequests } from './SupportRequests';

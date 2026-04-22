@@ -17,6 +17,7 @@ import com.luma.repository.RegistrationAnswerRepository;
 import com.luma.repository.RegistrationQuestionRepository;
 import com.luma.repository.RegistrationRepository;
 import com.luma.repository.TicketTypeRepository;
+import com.luma.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,14 @@ public class RegistrationService {
     private final RegistrationReviewService registrationReviewService;
     private final CouponRepository couponRepository;
     private final CouponUsageRepository couponUsageRepository;
+    private final UserRepository userRepository;
+    private final EventBoostService eventBoostService;
+
+    private static String trimOrNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
 
     public Registration getEntityById(UUID id) {
         return registrationRepository.findById(id)
@@ -175,18 +184,34 @@ public class RegistrationService {
         Registration savedRegistration = registrationRepository.save(registration);
 
         notificationService.notifyOrganiserNewRegistration(savedRegistration);
+        creditBoostRegistration(eventId);
 
         return RegistrationResponse.fromEntity(savedRegistration);
     }
 
+    private void creditBoostRegistration(UUID eventId) {
+        try {
+            eventBoostService.updateBoostStats(eventId, 0, 0, 1);
+        } catch (Exception e) {
+            log.warn("Failed to credit registration to boost stats for event {}: {}", eventId, e.getMessage());
+        }
+    }
+
     @Transactional
     public RegistrationResponse registerForEventWithAnswers(User user, UUID eventId, List<RegistrationAnswerRequest> answerRequests) {
-        return registerForEventWithAnswers(user, eventId, answerRequests, null, 1);
+        return registerForEventWithAnswers(user, eventId, answerRequests, null, 1, null);
     }
 
     @Transactional
     public RegistrationResponse registerForEventWithAnswers(User user, UUID eventId,
             List<RegistrationAnswerRequest> answerRequests, UUID ticketTypeId, Integer quantity) {
+        return registerForEventWithAnswers(user, eventId, answerRequests, ticketTypeId, quantity, null);
+    }
+
+    @Transactional
+    public RegistrationResponse registerForEventWithAnswers(User user, UUID eventId,
+            List<RegistrationAnswerRequest> answerRequests, UUID ticketTypeId, Integer quantity,
+            java.util.Map<String, String> profileData) {
         Event event = eventService.getEntityByIdWithRelationships(eventId);
 
         if (event.getStartTime().isBefore(LocalDateTime.now())) {
@@ -236,12 +261,37 @@ public class RegistrationService {
             }
         }
 
+        // Persist profile data submitted with the registration form.
+        // User fields (jobTitle/company/industry/linkedinUrl) update the user so future
+        // events and the AI review service see the current profile. Registration fields
+        // (goals/expectations/experienceLevel) live on this Registration only.
+        String regGoals = null, regExpectations = null, regExperience = null;
+        if (profileData != null) {
+            String jobTitle = trimOrNull(profileData.get("jobTitle"));
+            String company = trimOrNull(profileData.get("company"));
+            String industry = trimOrNull(profileData.get("industry"));
+            String linkedinUrl = trimOrNull(profileData.get("linkedinUrl"));
+            boolean dirty = false;
+            if (jobTitle != null) { user.setJobTitle(jobTitle); dirty = true; }
+            if (company != null) { user.setCompany(company); dirty = true; }
+            if (industry != null) { user.setIndustry(industry); dirty = true; }
+            if (linkedinUrl != null) { user.setLinkedinUrl(linkedinUrl); dirty = true; }
+            if (dirty) userRepository.save(user);
+
+            regGoals = trimOrNull(profileData.get("registrationGoals"));
+            regExpectations = trimOrNull(profileData.get("expectations"));
+            regExperience = trimOrNull(profileData.get("experienceLevel"));
+        }
+
         Registration registration = Registration.builder()
                 .user(user)
                 .event(event)
                 .ticketType(ticketType)
                 .quantity(qty)
                 .ticketCode(generateTicketCode())
+                .registrationGoals(regGoals)
+                .expectations(regExpectations)
+                .experienceLevel(regExperience)
                 .build();
 
         if (event.isFull()) {
@@ -276,6 +326,7 @@ public class RegistrationService {
         }
 
         notificationService.notifyOrganiserNewRegistration(registration);
+        creditBoostRegistration(eventId);
 
         return RegistrationResponse.fromEntity(registration);
     }
@@ -287,7 +338,8 @@ public class RegistrationService {
                 eventId,
                 request.getAnswers(),
                 request.getTicketTypeId(),
-                request.getQuantity()
+                request.getQuantity(),
+                request.getProfileData()
         );
     }
 
@@ -404,9 +456,19 @@ public class RegistrationService {
 
         Event event = registration.getEvent();
 
+        if (registration.getCheckedInAt() != null ||
+                registration.getStatus() == RegistrationStatus.CHECKED_IN) {
+            throw new BadRequestException("You cannot cancel a registration after check-in");
+        }
+
+        if (event.getEndTime() != null && event.getEndTime().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("You cannot cancel a registration after the event has ended");
+        }
+
         returnTicketsToPool(registration);
 
-        if (registration.getStatus() == RegistrationStatus.APPROVED) {
+        if (registration.getStatus() == RegistrationStatus.APPROVED ||
+                registration.getStatus() == RegistrationStatus.CONFIRMED) {
             eventService.decrementApprovedCount(event);
             promoteFromWaitingList(event);
         } else if (registration.getStatus() == RegistrationStatus.WAITING_LIST) {
@@ -466,8 +528,9 @@ public class RegistrationService {
 
         validateOrganiserAccess(event, organiser);
 
-        if (registration.getStatus() != RegistrationStatus.APPROVED) {
-            throw new BadRequestException("Only approved registrations can be checked in");
+        if (registration.getStatus() != RegistrationStatus.APPROVED &&
+                registration.getStatus() != RegistrationStatus.CONFIRMED) {
+            throw new BadRequestException("Only approved or confirmed registrations can be checked in");
         }
 
         if (registration.getCheckedInAt() != null) {

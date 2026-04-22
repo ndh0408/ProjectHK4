@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/theme.dart';
+import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/models/boost.dart';
 import '../../../../shared/widgets/boost_badge.dart';
@@ -167,7 +168,11 @@ class _VipBannerCarouselState extends ConsumerState<VipBannerCarousel> {
 
   Widget _buildBannerCard(Event event) {
     return GestureDetector(
-      onTap: () => context.push('/event/${event.id}'),
+      onTap: () {
+        // Credit the click to boost ROI stats before navigating.
+        ref.read(apiServiceProvider).trackBoostClick(event.id);
+        context.push('/event/${event.id}');
+      },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(

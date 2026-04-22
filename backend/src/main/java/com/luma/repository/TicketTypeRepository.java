@@ -59,4 +59,6 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, UUID> {
 
     @Query("SELECT COALESCE(SUM(t.soldCount), 0) FROM TicketType t WHERE t.event.id = :eventId")
     int getTotalSoldByEventId(@Param("eventId") UUID eventId);
+
+    List<TicketType> findAll();
 }

@@ -66,6 +66,13 @@ const adminGroups = [
         ],
     },
     {
+        label: 'Pricing',
+        items: [
+            { text: 'Boost Packages', icon: <BoostIcon />, path: '/admin/boost-packages' },
+            { text: 'Subscription Plans', icon: <SubscriptionIcon />, path: '/admin/subscription-plans' },
+        ],
+    },
+    {
         label: 'Engagement',
         items: [
             { text: 'Notifications', icon: <NotificationsIcon />, path: '/admin/notifications' },

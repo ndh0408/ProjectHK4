@@ -505,13 +505,85 @@ const buildTheme = () => createTheme({
         },
 
         MuiSwitch: {
+            defaultProps: { disableRipple: false },
             styleOverrides: {
-                root: { padding: 6 },
-                switchBase: {
-                    '&.Mui-checked + .MuiSwitch-track': { opacity: 1, backgroundColor: palette.primary[500] },
+                root: {
+                    width: 44,
+                    height: 24,
+                    padding: 0,
+                    display: 'inline-flex',
+                    overflow: 'visible',
+                    alignItems: 'center',
                 },
-                track: { borderRadius: radius.pill, backgroundColor: palette.neutral[300], opacity: 1 },
-                thumb: { boxShadow: shadow.sm },
+                switchBase: {
+                    padding: 2,
+                    color: '#ffffff',
+                    transition: `transform ${motion.base}`,
+                    '&:hover': { backgroundColor: 'transparent' },
+                    '&.Mui-checked': {
+                        transform: 'translateX(20px)',
+                        color: '#ffffff',
+                        '& + .MuiSwitch-track': {
+                            opacity: 1,
+                            backgroundColor: palette.primary[500],
+                        },
+                        '&:hover + .MuiSwitch-track': {
+                            backgroundColor: palette.primary[600],
+                        },
+                    },
+                    '&.Mui-focusVisible .MuiSwitch-thumb': {
+                        boxShadow: shadow.focus,
+                    },
+                    '&.Mui-disabled .MuiSwitch-thumb': {
+                        color: palette.neutral[100],
+                    },
+                    '&.Mui-disabled + .MuiSwitch-track': {
+                        opacity: 0.5,
+                    },
+                },
+                thumb: {
+                    width: 20,
+                    height: 20,
+                    boxShadow: '0 2px 4px rgba(15, 23, 42, 0.2)',
+                    backgroundColor: '#ffffff',
+                    transition: `all ${motion.fast}`,
+                },
+                track: {
+                    borderRadius: 12,
+                    backgroundColor: palette.neutral[300],
+                    opacity: 1,
+                    transition: `background-color ${motion.base}`,
+                    boxSizing: 'border-box',
+                },
+                sizeSmall: {
+                    width: 36,
+                    height: 20,
+                    '& .MuiSwitch-switchBase': {
+                        padding: 2,
+                        '&.Mui-checked': {
+                            transform: 'translateX(16px)',
+                        },
+                    },
+                    '& .MuiSwitch-thumb': {
+                        width: 16,
+                        height: 16,
+                    },
+                    '& .MuiSwitch-track': {
+                        borderRadius: 10,
+                    },
+                },
+                colorSuccess: {
+                    '&.Mui-checked + .MuiSwitch-track': { backgroundColor: palette.success[500] },
+                    '&.Mui-checked:hover + .MuiSwitch-track': { backgroundColor: palette.success[600] },
+                },
+                colorWarning: {
+                    '&.Mui-checked + .MuiSwitch-track': { backgroundColor: palette.warning[500] },
+                    '&.Mui-checked:hover + .MuiSwitch-track': { backgroundColor: palette.warning[600] },
+                },
+                colorError: {
+                    '&.Mui-checked + .MuiSwitch-track': { backgroundColor: palette.danger[500] },
+                    '&.Mui-checked:hover + .MuiSwitch-track': { backgroundColor: palette.danger[600] },
+                },
             },
         },
 

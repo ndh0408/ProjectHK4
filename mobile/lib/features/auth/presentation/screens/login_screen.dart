@@ -12,7 +12,6 @@ import '../../../../shared/widgets/app_components.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
-import '../../../my_events/presentation/screens/my_events_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../domain/auth_state.dart';
 import '../../providers/auth_provider.dart';

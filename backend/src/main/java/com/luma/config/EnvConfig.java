@@ -14,21 +14,21 @@ import org.springframework.context.event.EventListener;
 @Slf4j
 @Configuration
 public class EnvConfig {
-    
+
     @Autowired
     private Environment environment;
-    
+
     @EventListener(ApplicationStartedEvent.class)
     public void onApplicationStarted() {
         // Verify environment variables loaded after application starts
-        String groqApiKey = environment.getProperty("groq.api-key");
-        String groqModel = environment.getProperty("groq.model");
-        
-        if (groqApiKey != null && !groqApiKey.isBlank() && !groqApiKey.equals("${GROQ_API_KEY}")) {
-            log.info("✅ Groq API configured successfully - Model: {}", groqModel);
+        String openaiApiKey = environment.getProperty("openai.api-key");
+        String openaiModel = environment.getProperty("openai.model");
+
+        if (openaiApiKey != null && !openaiApiKey.isBlank() && !openaiApiKey.equals("${OPENAI_API_KEY}")) {
+            log.info("✅ OpenAI API configured successfully - Model: {}", openaiModel);
         } else {
-            log.warn("⚠️  GROQ_API_KEY environment variable not found");
-            log.info("📝 Verify .env file exists in 'backend' directory with: GROQ_API_KEY=gsk_...");
+            log.warn("⚠️  OPENAI_API_KEY environment variable not found");
+            log.info("📝 Verify .env file exists in 'backend' directory with: OPENAI_API_KEY=sk-...");
         }
     }
 }

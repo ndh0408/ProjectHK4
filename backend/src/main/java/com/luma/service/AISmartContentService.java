@@ -24,16 +24,16 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AISmartContentService {
 
-    private final RestTemplate groqRestTemplate;
+    private final RestTemplate openaiRestTemplate;
     private final ObjectMapper objectMapper;
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final RegistrationQuestionRepository registrationQuestionRepository;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${openai.model:gpt-4o-mini}")
     private String model;
 
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Map<String, Object> generateEventDescriptionWithRAG(
@@ -106,7 +106,7 @@ public class AISmartContentService {
             userPrompt.append(ragContext);
         }
 
-        String aiResponse = callGroqApi(systemPrompt, userPrompt.toString(), 800);
+        String aiResponse = callOpenAiApi(systemPrompt, userPrompt.toString(), 800);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("description", aiResponse);
@@ -196,7 +196,7 @@ public class AISmartContentService {
             userPrompt.append(ragContext);
         }
 
-        String aiResponse = callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+        String aiResponse = callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
 
         Map<String, Object> result = new LinkedHashMap<>();
         try {
@@ -297,7 +297,7 @@ public class AISmartContentService {
             userPrompt.append(ragContext);
         }
 
-        String aiResponse = callGroqApi(systemPrompt, userPrompt.toString(), 1000);
+        String aiResponse = callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
 
         Map<String, Object> result = new LinkedHashMap<>();
         try {
@@ -316,7 +316,7 @@ public class AISmartContentService {
         return result;
     }
 
-    private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
+    private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -342,10 +342,10 @@ public class AISmartContentService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
-            String responseStr = groqRestTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            String responseStr = openaiRestTemplate.postForObject(OPENAI_API_URL, entity, String.class);
 
             if (responseStr == null || responseStr.isBlank()) {
-                log.warn("Groq API returned empty response");
+                log.warn("OpenAI API returned empty response");
                 return "";
             }
 
@@ -364,7 +364,7 @@ public class AISmartContentService {
 
             return "";
         } catch (Exception e) {
-            log.error("Error calling Groq API: ", e);
+            log.error("Error calling OpenAI API: ", e);
             return "";
         }
     }

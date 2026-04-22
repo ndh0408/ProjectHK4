@@ -15,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/user/profile")
 @RequiredArgsConstructor
@@ -27,6 +29,13 @@ public class UserProfileController {
     @Operation(summary = "Get current user profile")
     public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         UserResponse response = userService.getUserByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get user profile by id")
+    public ResponseEntity<ApiResponse<UserResponse>> getProfileById(@PathVariable UUID userId) {
+        UserResponse response = userService.getUserById(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

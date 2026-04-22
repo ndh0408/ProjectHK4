@@ -35,6 +35,22 @@ import {
 import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
+const PLAN_ORDER = { FREE: 0, STANDARD: 1, PREMIUM: 2, VIP: 3 };
+
+/**
+ * Decide whether a proposed plan change is an upgrade (charge via Stripe), a cross-tier
+ * downgrade (apply immediately, no new charge since the organiser already paid higher),
+ * or a cancel (drop to FREE). Mirrors the backend's comparePlan logic.
+ */
+const classifyAction = (targetPlan, currentPlan) => {
+    if (!currentPlan || !targetPlan) return 'UPGRADE';
+    if (targetPlan === currentPlan) return 'SAME';
+    if (targetPlan === 'FREE') return 'CANCEL';
+    const t = PLAN_ORDER[targetPlan] ?? 0;
+    const c = PLAN_ORDER[currentPlan] ?? 0;
+    return t > c ? 'UPGRADE' : 'DOWNGRADE';
+};
+
 const PLAN_META = {
     FREE: {
         icon: <StarIcon />,
@@ -121,24 +137,35 @@ const Subscription = () => {
 
         try {
             setProcessing(true);
+            const action = upgradeDialog.action || 'UPGRADE';
 
-            if (upgradeDialog.plan === 'FREE') {
+            if (action === 'CANCEL') {
                 await organiserApi.cancelSubscription();
-                toast.success('Successfully downgraded to FREE plan!');
-                setUpgradeDialog({ open: false, plan: null });
+                toast.success('Successfully downgraded to FREE plan');
+                setUpgradeDialog({ open: false, plan: null, action: null });
                 await fetchData();
                 return;
             }
 
+            if (action === 'DOWNGRADE') {
+                // Paid → lower paid tier — applied immediately, no new Stripe charge since
+                // the organiser already paid for the current (higher) tier this cycle.
+                await organiserApi.downgradeSubscription(upgradeDialog.plan);
+                toast.success(`Successfully switched to ${upgradeDialog.plan} plan`);
+                setUpgradeDialog({ open: false, plan: null, action: null });
+                await fetchData();
+                return;
+            }
+
+            // UPGRADE — charge via Stripe checkout.
             const response = await organiserApi.createSubscriptionCheckout(upgradeDialog.plan);
             const checkoutUrl = response.data.data.checkoutUrl;
-
             window.location.href = checkoutUrl;
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Failed to create checkout session';
+            const errorMsg = err.response?.data?.message || 'Failed to change plan';
             setError(errorMsg);
             toast.error(errorMsg);
-            console.error('Upgrade error:', err);
+            console.error('Plan change error:', err);
             setProcessing(false);
         }
     };
@@ -451,7 +478,11 @@ const Subscription = () => {
                                     <LoadingButton
                                         fullWidth
                                         variant={isFeatured ? 'contained' : 'outlined'}
-                                        onClick={() => setUpgradeDialog({ open: true, plan: plan.name })}
+                                        onClick={() => setUpgradeDialog({
+                                            open: true,
+                                            plan: plan.name,
+                                            action: classifyAction(plan.name, subscription?.plan),
+                                        })}
                                         sx={
                                             isFeatured
                                                 ? {
@@ -471,7 +502,9 @@ const Subscription = () => {
                                                   }
                                         }
                                     >
-                                        {plan.name === 'FREE' ? 'Downgrade' : 'Upgrade'}
+                                        {classifyAction(plan.name, subscription?.plan) === 'UPGRADE'
+                                            ? 'Upgrade'
+                                            : 'Downgrade'}
                                     </LoadingButton>
                                 )}
                             </SectionCard>
@@ -480,30 +513,37 @@ const Subscription = () => {
                 })}
             </Grid>
 
-            <Dialog open={upgradeDialog.open} onClose={() => setUpgradeDialog({ open: false, plan: null })}>
+            <Dialog open={upgradeDialog.open} onClose={() => setUpgradeDialog({ open: false, plan: null, action: null })}>
                 <DialogTitle sx={{ fontWeight: 700 }}>
-                    {upgradeDialog.plan === 'FREE'
-                        ? 'Downgrade to Free Plan?'
-                        : `Upgrade to ${plans.find(p => p.name === upgradeDialog.plan)?.displayName || upgradeDialog.plan || ''} Plan?`}
+                    {upgradeDialog.action === 'CANCEL' && 'Downgrade to Free Plan?'}
+                    {upgradeDialog.action === 'DOWNGRADE' && `Switch to ${plans.find(p => p.name === upgradeDialog.plan)?.displayName || upgradeDialog.plan || ''} Plan?`}
+                    {(upgradeDialog.action === 'UPGRADE' || !upgradeDialog.action) && `Upgrade to ${plans.find(p => p.name === upgradeDialog.plan)?.displayName || upgradeDialog.plan || ''} Plan?`}
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="text.secondary">
-                        {upgradeDialog.plan === 'FREE'
-                            ? 'You will lose access to premium features. Are you sure you want to downgrade?'
-                            : 'You will be charged for the new plan. Continue with the upgrade?'}
+                        {upgradeDialog.action === 'CANCEL' &&
+                            'You will lose access to premium features at the end of the current billing period. Continue?'}
+                        {upgradeDialog.action === 'DOWNGRADE' &&
+                            'No new charge — you already paid for the higher tier this cycle. You will switch to the lower plan and lose the higher-tier benefits starting now.'}
+                        {(upgradeDialog.action === 'UPGRADE' || !upgradeDialog.action) &&
+                            `You will be redirected to Stripe to complete payment of $${plans.find(p => p.name === upgradeDialog.plan)?.monthlyPrice ?? ''}/month. Continue?`}
                     </Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setUpgradeDialog({ open: false, plan: null })}>
+                    <Button onClick={() => setUpgradeDialog({ open: false, plan: null, action: null })}>
                         Cancel
                     </Button>
                     <LoadingButton
                         variant="contained"
                         onClick={handleUpgrade}
                         loading={processing}
-                        color={upgradeDialog.plan === 'FREE' ? 'error' : 'primary'}
+                        color={upgradeDialog.action === 'CANCEL' ? 'error'
+                            : upgradeDialog.action === 'DOWNGRADE' ? 'warning'
+                            : 'primary'}
                     >
-                        Confirm
+                        {upgradeDialog.action === 'UPGRADE' || !upgradeDialog.action
+                            ? 'Continue to Payment'
+                            : 'Confirm'}
                     </LoadingButton>
                 </DialogActions>
             </Dialog>

@@ -207,63 +207,70 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 36,
-                          backgroundColor: AppColors.primarySoft,
-                          backgroundImage: organiser.avatarUrl != null
-                              ? CachedNetworkImageProvider(organiser.avatarUrl!)
-                              : null,
-                          child: organiser.avatarUrl == null
-                              ? Text(
-                                  organiser.displayName
-                                      .substring(0, 1)
-                                      .toUpperCase(),
-                                  style: AppTypography.h2.copyWith(
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      organiser.displayName,
+                    Builder(
+                      builder: (context) {
+                        final profileImageUrl =
+                            organiser.logoUrl ?? organiser.avatarUrl;
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 36,
+                              backgroundColor: AppColors.primarySoft,
+                              backgroundImage: profileImageUrl != null
+                                  ? CachedNetworkImageProvider(profileImageUrl)
+                                  : null,
+                              child: profileImageUrl == null
+                                  ? Text(
+                                      organiser.displayName
+                                          .substring(0, 1)
+                                          .toUpperCase(),
                                       style: AppTypography.h2.copyWith(
-                                        color: AppColors.textPrimary,
+                                        color: AppColors.primary,
                                       ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          organiser.displayName,
+                                          style: AppTypography.h2.copyWith(
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      if (organiser.verified)
+                                        const StatusChip(
+                                          label: 'Verified',
+                                          variant: StatusChipVariant.success,
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    organiser.website?.isNotEmpty == true
+                                        ? organiser.website!
+                                        : organiser.contactEmail?.isNotEmpty ==
+                                                true
+                                            ? organiser.contactEmail!
+                                            : 'Independent organiser profile',
+                                    style: AppTypography.body.copyWith(
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
-                                  if (organiser.verified)
-                                    const StatusChip(
-                                      label: 'Verified',
-                                      variant: StatusChipVariant.success,
-                                    ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                organiser.website?.isNotEmpty == true
-                                    ? organiser.website!
-                                    : organiser.contactEmail?.isNotEmpty == true
-                                        ? organiser.contactEmail!
-                                        : 'Independent organiser profile',
-                                style: AppTypography.body.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     if (!isOwnProfile)

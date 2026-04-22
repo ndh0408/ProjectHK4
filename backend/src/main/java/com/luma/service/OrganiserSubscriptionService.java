@@ -27,11 +27,40 @@ public class OrganiserSubscriptionService {
 
     private final OrganiserSubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
+    private final SubscriptionPlanConfigService planConfigService;
 
     public List<SubscriptionPlanInfo> getAllPlans() {
-        return Arrays.stream(SubscriptionPlan.values())
-                .map(SubscriptionPlanInfo::fromEnum)
+        return planConfigService.listActive().stream()
+                .map(cfg -> {
+                    // Config key may be a canonical enum name or a custom admin-added plan.
+                    SubscriptionPlan planEnum;
+                    try { planEnum = SubscriptionPlan.valueOf(cfg.getPlanKey()); }
+                    catch (IllegalArgumentException ex) { planEnum = null; }
+                    SubscriptionPlanInfo info = planEnum != null
+                            ? SubscriptionPlanInfo.fromEnum(planEnum)
+                            : SubscriptionPlanInfo.builder()
+                                .name(cfg.getPlanKey())
+                                .planType(null)
+                                .displayName(cfg.getDisplayName())
+                                .features(java.util.List.of())
+                                .badge(cfg.getPlanKey())
+                                .badgeColor("#6B7280")
+                                .description(cfg.getDisplayName() + " plan")
+                                .build();
+                    info.setMonthlyPrice(cfg.getMonthlyPriceUsd());
+                    info.setPriceFormatted(String.format("$%.2f", cfg.getMonthlyPriceUsd()));
+                    info.setMaxEventsPerMonth(cfg.getMaxEventsPerMonth() == -1
+                            ? "Unlimited" : String.valueOf(cfg.getMaxEventsPerMonth()));
+                    info.setBoostDiscountPercent(cfg.getBoostDiscountPercent());
+                    info.setDisplayName(cfg.getDisplayName());
+                    return info;
+                })
                 .collect(Collectors.toList());
+    }
+
+    /** Admin-edited monthly price for a plan, falling back to enum defaults. */
+    public java.math.BigDecimal getMonthlyPrice(SubscriptionPlan plan) {
+        return planConfigService.getMonthlyPriceOrDefault(plan);
     }
 
     @Transactional
@@ -58,7 +87,15 @@ public class OrganiserSubscriptionService {
                 .billingCycleStart(LocalDateTime.now())
                 .build();
 
-        return subscriptionRepository.save(subscription);
+        try {
+            return subscriptionRepository.save(subscription);
+        } catch (org.springframework.dao.DataIntegrityViolationException race) {
+            // Another concurrent request just inserted the FREE subscription for this
+            // organiser (unique index on organiser_id). Re-read and return that row.
+            log.warn("Free subscription insert race for organiser {} — fetching existing row", organiserId);
+            return subscriptionRepository.findByOrganiserId(organiserId)
+                    .orElseThrow(() -> race);
+        }
     }
 
     @Transactional
@@ -66,14 +103,19 @@ public class OrganiserSubscriptionService {
         OrganiserSubscription subscription = getOrCreateSubscriptionEntity(organiserId);
         SubscriptionPlan currentPlan = subscription.getEffectivePlan();
 
+        if (newPlan == currentPlan) {
+            throw new BadRequestException("You are already on the " + newPlan.getDisplayName() + " plan");
+        }
         if (newPlan == SubscriptionPlan.FREE) {
-            throw new BadRequestException("Cannot upgrade to FREE plan. Use downgrade instead.");
+            // Downgrade to FREE goes through cancelSubscription, not this path.
+            throw new BadRequestException("Use cancel subscription to downgrade to FREE plan");
         }
 
-        if (newPlan.ordinal() <= currentPlan.ordinal() && currentPlan != SubscriptionPlan.FREE) {
-            throw new BadRequestException("New plan must be higher than current plan");
-        }
-
+        // Paid → paid transition — either upgrade (higher tier) or downgrade (lower tier).
+        // Both are accepted here; the caller (frontend + controller) decides whether to charge
+        // via Stripe checkout (upgrade) or apply immediately (downgrade — no new charge since
+        // the organiser has already paid for higher).
+        boolean isDowngrade = newPlan.ordinal() < currentPlan.ordinal();
         subscription.setPlan(newPlan);
         subscription.setStartDate(LocalDateTime.now());
         subscription.setEndDate(LocalDateTime.now().plusMonths(1));
@@ -81,9 +123,23 @@ public class OrganiserSubscriptionService {
         subscription.resetMonthlyUsage();
 
         OrganiserSubscription saved = subscriptionRepository.save(subscription);
-        log.info("Organiser {} upgraded to {} plan", organiserId, newPlan);
+        log.info("Organiser {} {} to {} plan (from {})",
+                organiserId, isDowngrade ? "downgraded" : "upgraded", newPlan, currentPlan);
 
         return OrganiserSubscriptionResponse.fromEntity(saved);
+    }
+
+    /**
+     * Plan-tier helper for the frontend / controller to decide whether a proposed plan
+     * change is an upgrade (charge via Stripe), downgrade (apply immediately / refund
+     * excess as store credit in a future iteration), or a no-op.
+     */
+    public String comparePlan(UUID organiserId, SubscriptionPlan newPlan) {
+        SubscriptionPlan current = getOrCreateSubscriptionEntity(organiserId).getEffectivePlan();
+        if (newPlan == current) return "SAME";
+        if (newPlan == SubscriptionPlan.FREE) return "CANCEL";
+        if (newPlan.ordinal() > current.ordinal()) return "UPGRADE";
+        return "DOWNGRADE";
     }
 
     @Transactional
@@ -109,7 +165,8 @@ public class OrganiserSubscriptionService {
 
     public int getBoostDiscountPercent(UUID organiserId) {
         OrganiserSubscription subscription = getOrCreateSubscriptionEntity(organiserId);
-        return subscription.getEffectivePlan().getBoostDiscountPercent();
+        // Prefer admin-editable config, fall back to enum default.
+        return planConfigService.getBoostDiscountPercentOrDefault(subscription.getEffectivePlan());
     }
 
     @Transactional

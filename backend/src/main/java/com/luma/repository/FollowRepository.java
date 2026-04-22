@@ -36,4 +36,6 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
 
     @Query("SELECT f FROM Follow f WHERE f.organiser.user = :organiser")
     java.util.List<Follow> findAllByOrganiserUser(@Param("organiser") User organiser);
+
+    Optional<Follow> findByFollowerIdAndOrganiserId(UUID followerId, UUID organiserId);
 }

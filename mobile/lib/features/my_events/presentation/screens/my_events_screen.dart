@@ -1,13 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/l10n/app_localizations.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
+import '../../../../shared/models/certificate.dart';
 import '../../../../shared/models/registration.dart';
 import '../../../../shared/widgets/app_components.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -207,11 +212,12 @@ class _RegistrationCard extends ConsumerWidget {
   final bool isUpcoming;
 
   (String, StatusChipVariant) _statusPresentation() {
+    if (registration.hasAttended) {
+      return ('Checked-in', StatusChipVariant.success);
+    }
+
     switch (registration.status) {
       case RegistrationStatusEnum.approved:
-        if (registration.isCheckedIn) {
-          return ('Checked-in', StatusChipVariant.success);
-        }
         if (registration.requiresPayment &&
             (registration.ticketPrice ?? registration.ticketTypePrice ?? 0) >
                 0 &&
@@ -257,33 +263,21 @@ class _RegistrationCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _sendCertificateToEmail(
+  Future<void> _viewCertificate(
     BuildContext context,
     WidgetRef ref,
   ) async {
-    try {
-      final api = ref.read(apiServiceProvider);
-      await api.sendCertificateByEmail(registration.id);
+    if (!context.mounted) return;
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Certificate sent to your email'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Failed to send certificate: ${ErrorUtils.extractMessage(e)}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _CertificateViewerScreen(
+          registrationId: registration.id,
+          eventTitle: registration.event?.title ?? registration.eventTitle,
+          initialCertificate: registration.certificate,
+        ),
+      ),
+    );
   }
 
   Future<void> _cancelRegistration(BuildContext context, WidgetRef ref) async {
@@ -332,12 +326,12 @@ class _RegistrationCard extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final canViewTicket =
-        registration.hasValidTicket && isUpcoming;
-    final canCancel =
-        isUpcoming && registration.status != RegistrationStatusEnum.cancelled;
-    final canGetCertificate =
-        !isUpcoming && registration.eligibleForCertificate;
+    final canViewTicket = registration.hasValidTicket && isUpcoming;
+    final canCancel = isUpcoming &&
+        !registration.hasAttended &&
+        registration.status != RegistrationStatusEnum.cancelled;
+    final canViewCertificate = !isUpcoming &&
+        (registration.eligibleForCertificate || registration.certificate != null);
     final (statusText, statusVariant) = _statusPresentation();
 
     return AppCard(
@@ -382,7 +376,7 @@ class _RegistrationCard extends ConsumerWidget {
               ],
             ),
           ],
-          if (canViewTicket || canCancel || canGetCertificate) ...[
+          if (canViewTicket || canCancel || canViewCertificate) ...[
             const SizedBox(height: AppSpacing.lg),
             if (canViewTicket)
               AppButton(
@@ -401,20 +395,146 @@ class _RegistrationCard extends ConsumerWidget {
                 onPressed: () => _cancelRegistration(context, ref),
               ),
             ],
-            if (canGetCertificate) ...[
+            if (canViewCertificate) ...[
               if (canViewTicket || canCancel)
                 const SizedBox(height: AppSpacing.md),
               AppButton(
-                label: 'Send certificate to email',
-                icon: Icons.mail_outline_rounded,
+                label: 'View certificate',
+                icon: Icons.workspace_premium_outlined,
                 variant: AppButtonVariant.tonal,
                 expanded: true,
-                onPressed: () => _sendCertificateToEmail(context, ref),
+                onPressed: () => _viewCertificate(context, ref),
               ),
             ],
           ],
         ],
       ),
+    );
+  }
+}
+
+class _CertificateViewerScreen extends ConsumerStatefulWidget {
+  const _CertificateViewerScreen({
+    required this.registrationId,
+    this.eventTitle,
+    this.initialCertificate,
+  });
+
+  final String registrationId;
+  final String? eventTitle;
+  final Certificate? initialCertificate;
+
+  @override
+  ConsumerState<_CertificateViewerScreen> createState() =>
+      _CertificateViewerScreenState();
+}
+
+class _CertificateViewerScreenState
+    extends ConsumerState<_CertificateViewerScreen> {
+  String? _filePath;
+  String? _error;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCertificate();
+  }
+
+  Future<void> _loadCertificate() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      final certificate = widget.initialCertificate ??
+          await api.getCertificateByRegistration(widget.registrationId);
+      final pdfBytes = await api.downloadCertificate(certificate.id);
+
+      if (pdfBytes.isEmpty) {
+        throw Exception('Certificate PDF is empty');
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File(
+        '${tempDir.path}${Platform.pathSeparator}certificate_${certificate.id}.pdf',
+      );
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      if (!mounted) return;
+      setState(() {
+        _filePath = file.path;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = ErrorUtils.extractMessage(
+          e,
+          fallback: 'Could not open your certificate.',
+        );
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Certificate'),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const LoadingState(message: 'Opening your certificate...');
+    }
+
+    if (_error != null) {
+      return Padding(
+        padding: AppSpacing.screenPadding,
+        child: ErrorState(
+          message: _error!,
+          onRetry: _loadCertificate,
+        ),
+      );
+    }
+
+    if (_filePath == null) {
+      return Padding(
+        padding: AppSpacing.screenPadding,
+        child: ErrorState(
+          message: 'Could not open your certificate.',
+          onRetry: _loadCertificate,
+        ),
+      );
+    }
+
+    return PDFView(
+      filePath: _filePath!,
+      enableSwipe: true,
+      swipeHorizontal: false,
+      autoSpacing: true,
+      pageFling: true,
+      backgroundColor: AppColors.background,
+      onError: (error) {
+        if (!mounted) return;
+        setState(() {
+          _error = error;
+        });
+      },
+      onPageError: (_, error) {
+        if (!mounted) return;
+        setState(() {
+          _error = error;
+        });
+      },
     );
   }
 }

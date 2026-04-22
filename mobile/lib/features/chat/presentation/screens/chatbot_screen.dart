@@ -516,6 +516,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
               child:
                   _SupportEscalationCard(requestId: message.supportRequestId!),
             ),
+          if (_bookingActionFor(message) != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: _BookingActionButton(data: message.data!),
+            ),
           Padding(
             padding: EdgeInsets.only(
               top: 2,
@@ -541,6 +546,16 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     if (data is Map<String, dynamic>) {
       final event = data['event'];
       if (event is Map<String, dynamic>) return event['id']?.toString();
+    }
+    return null;
+  }
+
+  String? _bookingActionFor(ChatbotMessage message) {
+    if (message.intent != 'BOOK_TICKET') return null;
+    final data = message.data;
+    if (data is Map<String, dynamic>) {
+      final action = data['bookingAction'];
+      if (action is String && action.isNotEmpty) return action;
     }
     return null;
   }
@@ -1756,5 +1771,115 @@ class _SupportEscalationCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Renders the action button the AI assistant refers to in its reply
+/// ("Điền form đăng ký", "Thanh toán ngay", "Xem vé & QR", ...). The
+/// backend tells us what to render via `data.bookingAction` and
+/// `data.actionLabel`; we just route the tap to the right screen.
+class _BookingActionButton extends StatelessWidget {
+  const _BookingActionButton({required this.data});
+
+  final Map<String, dynamic> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = data['bookingAction'] as String?;
+    final label = (data['actionLabel'] as String?) ?? _defaultLabel(action);
+    final eventId = data['eventId']?.toString();
+    final registration = data['registration'];
+    final existingTicket = data['existingTicket'];
+    final registrationId = _extractRegistrationId(registration, existingTicket);
+
+    IconData icon;
+    Color color;
+    switch (action) {
+      case 'VIEW_TICKET':
+      case 'VIEW_EXISTING':
+        icon = Icons.confirmation_number_outlined;
+        color = AppColors.success;
+        break;
+      case 'OPEN_CHECKOUT':
+      case 'OPEN_FORM_THEN_CHECKOUT':
+        icon = Icons.payment_outlined;
+        color = AppColors.primary;
+        break;
+      case 'OPEN_FORM':
+        icon = Icons.assignment_outlined;
+        color = AppColors.primary;
+        break;
+      default:
+        icon = Icons.open_in_new_rounded;
+        color = AppColors.primary;
+    }
+
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.85,
+      child: ElevatedButton.icon(
+        onPressed: () => _handleTap(context, action, eventId, registrationId),
+        icon: Icon(icon, size: 18),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleTap(
+      BuildContext context, String? action, String? eventId, String? registrationId) {
+    HapticFeedback.selectionClick();
+    switch (action) {
+      case 'VIEW_TICKET':
+      case 'VIEW_EXISTING':
+        // Navigate to the user's tickets tab; the new ticket will be first.
+        context.push('/ticket');
+        return;
+      case 'OPEN_FORM':
+      case 'OPEN_FORM_THEN_CHECKOUT':
+        if (eventId != null) context.push('/event/$eventId/register');
+        return;
+      case 'OPEN_CHECKOUT':
+      case 'OPEN_EVENT_PAGE':
+      default:
+        if (eventId != null) context.push('/event/$eventId');
+    }
+  }
+
+  String? _extractRegistrationId(dynamic registration, dynamic existing) {
+    if (registration is Map<String, dynamic>) {
+      final id = registration['id'] ?? registration['registrationId'];
+      if (id != null) return id.toString();
+    }
+    if (existing is Map<String, dynamic>) {
+      final id = existing['registrationId'] ?? existing['id'];
+      if (id != null) return id.toString();
+    }
+    return null;
+  }
+
+  String _defaultLabel(String? action) {
+    switch (action) {
+      case 'VIEW_TICKET':
+        return 'Xem vé & QR';
+      case 'VIEW_EXISTING':
+        return 'Xem vé';
+      case 'OPEN_FORM':
+        return 'Điền form đăng ký';
+      case 'OPEN_FORM_THEN_CHECKOUT':
+        return 'Điền form & thanh toán';
+      case 'OPEN_CHECKOUT':
+        return 'Thanh toán ngay';
+      case 'OPEN_EVENT_PAGE':
+        return 'Mở trang sự kiện';
+      default:
+        return 'Mở';
+    }
   }
 }

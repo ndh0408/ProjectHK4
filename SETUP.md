@@ -31,7 +31,7 @@ cd ProjectHK4
 ## 3. Import file nhạy cảm từ archive chung
 
 Nhóm trưởng (Huy) sẽ gửi file **`LUMA-secrets.zip`** qua Zalo/Drive. File này chứa:
-- `backend.env` — credentials (DB password, JWT, Stripe, Cloudinary, Groq, Google OAuth client)
+- `backend.env` — credentials (DB password, JWT, Stripe, Cloudinary, OpenAI, Google OAuth client)
 - `admin.env` — config URL cho admin React
 - `debug.keystore` — keystore dùng chung để Google Sign-In trên Android hoạt động với cùng 1 SHA-1 đã đăng ký Cloud Console
 - `import-secrets.bat` — script auto-copy các file vào đúng chỗ

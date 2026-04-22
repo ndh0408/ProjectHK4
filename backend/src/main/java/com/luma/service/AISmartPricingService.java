@@ -23,14 +23,14 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AISmartPricingService {
 
-    private final RestTemplate groqRestTemplate;
+    private final RestTemplate openaiRestTemplate;
     private final ObjectMapper objectMapper;
     private final EventRepository eventRepository;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${openai.model:gpt-4o-mini}")
     private String model;
 
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Map<String, Object> suggestPricing(Long categoryId, Integer capacity, String eventType) {
@@ -246,7 +246,7 @@ public class AISmartPricingService {
         userPrompt.append("High-priced events: ").append(Math.round(fill.highTierFillRate)).append("% fill\n");
         userPrompt.append("Price-fill correlation: ").append(fill.correlation).append("\n");
 
-        return callGroqApi(systemPrompt, userPrompt.toString(), 250);
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 250);
     }
 
     private Map<String, Object> defaultPricingSuggestion(Integer capacity, String eventType) {
@@ -268,7 +268,7 @@ public class AISmartPricingService {
         return result;
     }
 
-    private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
+    private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -294,10 +294,10 @@ public class AISmartPricingService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
-            String responseStr = groqRestTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            String responseStr = openaiRestTemplate.postForObject(OPENAI_API_URL, entity, String.class);
 
             if (responseStr == null || responseStr.isBlank()) {
-                log.warn("Groq API returned empty response for pricing");
+                log.warn("OpenAI API returned empty response for pricing");
                 return "AI analysis temporarily unavailable.";
             }
 
@@ -315,7 +315,7 @@ public class AISmartPricingService {
             }
             return "Unable to generate analysis.";
         } catch (Exception e) {
-            log.error("Error calling Groq API for pricing: ", e);
+            log.error("Error calling OpenAI API for pricing: ", e);
             return "AI analysis temporarily unavailable.";
         }
     }

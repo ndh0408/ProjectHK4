@@ -2,6 +2,7 @@ package com.luma.dto.response;
 
 import com.luma.entity.Conversation;
 import com.luma.entity.ConversationParticipant;
+import com.luma.entity.User;
 import com.luma.entity.enums.ConversationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -111,7 +112,7 @@ public class ConversationResponse {
                     .map(p -> ParticipantResponse.builder()
                             .userId(p.getUser().getId())
                             .fullName(p.getUser().getFullName())
-                            .avatarUrl(p.getUser().getAvatarUrl())
+                            .avatarUrl(resolveUserImageUrl(p.getUser()))
                             .lastReadAt(p.getLastReadAt())
                             .build())
                     .toList();
@@ -123,11 +124,29 @@ public class ConversationResponse {
                         .findFirst()
                         .ifPresent(otherParticipant -> {
                             builder.name(otherParticipant.getUser().getFullName());
-                            builder.imageUrl(otherParticipant.getUser().getAvatarUrl());
+                            builder.imageUrl(resolveUserImageUrl(otherParticipant.getUser()));
                         });
             }
         }
 
         return builder.build();
+    }
+
+    private static String resolveUserImageUrl(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        if (user.getOrganiserProfile() != null
+                && user.getOrganiserProfile().getLogoUrl() != null
+                && !user.getOrganiserProfile().getLogoUrl().isBlank()) {
+            return user.getOrganiserProfile().getLogoUrl();
+        }
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
+            return user.getAvatarUrl();
+        }
+
+        return null;
     }
 }

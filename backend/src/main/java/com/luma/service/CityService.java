@@ -3,13 +3,16 @@ package com.luma.service;
 import com.luma.dto.request.CityRequest;
 import com.luma.dto.response.CityResponse;
 import com.luma.entity.City;
+import com.luma.entity.enums.EventStatus;
 import com.luma.exception.BadRequestException;
 import com.luma.exception.ResourceNotFoundException;
 import com.luma.repository.CityRepository;
+import com.luma.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 public class CityService {
 
     private final CityRepository cityRepository;
+    private final EventRepository eventRepository;
 
     @Transactional(readOnly = true)
     public City getEntityById(Long id) {
@@ -29,34 +33,36 @@ public class CityService {
     @Transactional(readOnly = true)
     public List<CityResponse> getAllCities() {
         return cityRepository.findByActiveTrue().stream()
-                .map(CityResponse::fromEntity)
+                .map(this::toPublicCityResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<CityResponse> getAllCitiesForAdmin() {
         return cityRepository.findAll().stream()
-                .map(CityResponse::fromEntity)
+                .map(this::toAdminCityResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<CityResponse> getCitiesWithEvents() {
         return cityRepository.findCitiesWithEvents().stream()
-                .map(CityResponse::fromEntity)
+                .map(this::toPublicCityResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Map<String, List<CityResponse>> getCitiesByContinent() {
-        return cityRepository.findCitiesWithEvents().stream()
-                .map(CityResponse::fromEntity)
-                .collect(Collectors.groupingBy(CityResponse::getContinent));
+        return getCitiesWithEvents().stream()
+                .collect(Collectors.groupingBy(
+                        city -> normalizeContinent(city.getContinent()),
+                        LinkedHashMap::new,
+                        Collectors.toList()));
     }
 
     @Transactional(readOnly = true)
     public CityResponse getCityById(Long id) {
-        return CityResponse.fromEntity(getEntityById(id));
+        return toAdminCityResponse(getEntityById(id));
     }
 
     @Transactional
@@ -71,7 +77,7 @@ public class CityService {
                 .active(true)
                 .build();
 
-        return CityResponse.fromEntity(cityRepository.save(city));
+        return toAdminCityResponse(cityRepository.save(city));
     }
 
     @Transactional
@@ -88,7 +94,7 @@ public class CityService {
             city.setActive(request.getActive());
         }
 
-        return CityResponse.fromEntity(cityRepository.save(city));
+        return toAdminCityResponse(cityRepository.save(city));
     }
 
     @Transactional
@@ -98,5 +104,24 @@ public class CityService {
             throw new BadRequestException("Cannot delete city with existing events");
         }
         cityRepository.delete(city);
+    }
+
+    private String normalizeContinent(String continent) {
+        if (continent == null || continent.isBlank()) {
+            return "Other";
+        }
+        return continent.trim();
+    }
+
+    private CityResponse toPublicCityResponse(City city) {
+        return CityResponse.fromEntity(
+                city,
+                Math.toIntExact(eventRepository.countByCityAndStatus(city, EventStatus.PUBLISHED)));
+    }
+
+    private CityResponse toAdminCityResponse(City city) {
+        return CityResponse.fromEntity(
+                city,
+                Math.toIntExact(eventRepository.countByCity(city)));
     }
 }

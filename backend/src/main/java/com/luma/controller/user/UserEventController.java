@@ -33,6 +33,7 @@ public class UserEventController {
     private final CityService cityService;
     private final RegistrationQuestionService registrationQuestionService;
     private final FunnelAnalyticsService funnelAnalyticsService;
+    private final EventBoostService eventBoostService;
 
     @GetMapping("/upcoming")
     @Operation(summary = "Get upcoming events (next month)")
@@ -139,7 +140,7 @@ public class UserEventController {
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         RegistrationResponse response = registrationService.registerForEventWithAnswers(
-                user, eventId, request.getAnswers(), ticketTypeId, quantity);
+                user, eventId, request.getAnswers(), ticketTypeId, quantity, request.getProfileData());
         return ResponseEntity.ok(ApiResponse.success("Registration successful", response));
     }
 
@@ -211,6 +212,13 @@ public class UserEventController {
         com.luma.entity.Event event = eventService.getEntityById(eventId);
         funnelAnalyticsService.trackEventView(event, user, sessionId);
         return ResponseEntity.ok(ApiResponse.success("View tracked", null));
+    }
+
+    @PostMapping("/{eventId}/track-boost-click")
+    @Operation(summary = "Track a click on a boosted event card so organisers see real ROI")
+    public ResponseEntity<ApiResponse<Void>> trackBoostClick(@PathVariable UUID eventId) {
+        eventBoostService.updateBoostStats(eventId, 0, 1, 0);
+        return ResponseEntity.ok(ApiResponse.success("Click tracked", null));
     }
 
 }

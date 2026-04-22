@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AIQueryService {
 
-    private final RestTemplate groqRestTemplate;
+    private final RestTemplate openaiRestTemplate;
     private final ObjectMapper objectMapper;
     private final QuestionRepository questionRepository;
     private final EventRepository eventRepository;
@@ -38,10 +38,10 @@ public class AIQueryService {
     private final FollowRepository followRepository;
     private final PayoutRepository payoutRepository;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${openai.model:gpt-4o-mini}")
     private String model;
 
-    private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
     public Map<String, Object> suggestAnswerWithContext(Question question) {
         Event event = question.getEvent();
@@ -81,7 +81,7 @@ public class AIQueryService {
         String userPrompt = buildSmartAnswerUserPrompt(question);
 
         try {
-            String aiResponse = callGroqApi(systemPrompt, userPrompt, 600);
+            String aiResponse = callOpenAiApi(systemPrompt, userPrompt, 600);
 
             Map<String, Object> result = new HashMap<>();
             result.put("suggestedAnswer", aiResponse);
@@ -203,7 +203,7 @@ public class AIQueryService {
         String userPrompt = buildOrganiserInsightsUserPrompt(dbStats, benchmarks);
 
         try {
-            String aiResponse = callGroqApi(systemPrompt, userPrompt, 1200);
+            String aiResponse = callOpenAiApi(systemPrompt, userPrompt, 1200);
             String cleanJson = cleanJsonResponse(aiResponse);
 
             Map<String, Object> insights = objectMapper.readValue(cleanJson, Map.class);
@@ -423,7 +423,7 @@ public class AIQueryService {
         return result;
     }
 
-    private String callGroqApi(String systemPrompt, String userPrompt, int maxTokens) {
+    private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             Map<String, Object> requestBody = new LinkedHashMap<>();
             requestBody.put("model", model);
@@ -442,7 +442,7 @@ public class AIQueryService {
 
             HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
-            String responseStr = groqRestTemplate.postForObject(GROQ_API_URL, entity, String.class);
+            String responseStr = openaiRestTemplate.postForObject(OPENAI_API_URL, entity, String.class);
 
             JsonNode responseJson = objectMapper.readTree(responseStr);
             JsonNode choices = responseJson.get("choices");
@@ -453,7 +453,7 @@ public class AIQueryService {
 
             return "Unable to generate content.";
         } catch (Exception e) {
-            log.error("Error calling Groq API: ", e);
+            log.error("Error calling OpenAI API: ", e);
             throw new RuntimeException("Failed to generate AI content: " + e.getMessage());
         }
     }

@@ -7,10 +7,12 @@ import com.luma.dto.response.PaymentResponse;
 import com.luma.dto.response.RegistrationAnswerResponse;
 import com.luma.dto.response.RegistrationResponse;
 import com.luma.entity.Event;
+import com.luma.entity.Registration;
 import com.luma.entity.RegistrationAnswer;
 import com.luma.entity.User;
 import com.luma.entity.enums.RegistrationStatus;
 import com.luma.repository.RegistrationAnswerRepository;
+import com.luma.repository.RegistrationRepository;
 import com.luma.dto.response.WaitlistOfferResponse;
 import com.luma.service.EventService;
 import com.luma.service.ExcelExportService;
@@ -18,6 +20,7 @@ import com.luma.service.PaymentService;
 import com.luma.service.RegistrationService;
 import com.luma.service.UserService;
 import com.luma.service.WaitlistService;
+import com.luma.service.RegistrationReviewService;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +50,8 @@ public class OrganiserRegistrationController {
     private final PaymentService paymentService;
     private final RegistrationAnswerRepository registrationAnswerRepository;
     private final WaitlistService waitlistService;
+    private final RegistrationReviewService registrationReviewService;
+    private final RegistrationRepository registrationRepository;
 
     @GetMapping("/registrations/event/{eventId}")
     @Operation(summary = "Get all registrations for an event")
@@ -61,7 +66,15 @@ public class OrganiserRegistrationController {
         } else {
             response = registrationService.getRegistrationsByEvent(event, pageable);
         }
-        return ResponseEntity.ok(ApiResponse.success(response));
+        // Enrich registrations with review data (score, warnings, etc.)
+        var enrichedContent = response.getContent().stream()
+                .map(reg -> {
+                    Registration fullReg = registrationRepository.findById(reg.getId()).orElse(null);
+                    return registrationReviewService.enrichWithReviewData(reg, fullReg);
+                })
+                .toList();
+        var enrichedResponse = PageResponse.of(enrichedContent, response.getPage(), response.getSize(), response.getTotalElements());
+        return ResponseEntity.ok(ApiResponse.success(enrichedResponse));
     }
 
     @GetMapping("/events/{eventId}/registrations")
@@ -77,7 +90,15 @@ public class OrganiserRegistrationController {
     @Operation(summary = "Get waiting list for an event")
     public ResponseEntity<ApiResponse<List<RegistrationResponse>>> getWaitingList(@PathVariable UUID eventId) {
         Event event = eventService.getEntityById(eventId);
-        return ResponseEntity.ok(ApiResponse.success(registrationService.getWaitingList(event)));
+        List<RegistrationResponse> waitingList = registrationService.getWaitingList(event);
+        // Enrich with review data
+        var enrichedList = waitingList.stream()
+                .map(reg -> {
+                    Registration fullReg = registrationRepository.findById(reg.getId()).orElse(null);
+                    return registrationReviewService.enrichWithReviewData(reg, fullReg);
+                })
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(enrichedList));
     }
 
     @PutMapping("/registrations/{registrationId}/approve")
@@ -87,7 +108,10 @@ public class OrganiserRegistrationController {
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         RegistrationResponse response = registrationService.approveRegistration(registrationId, user);
-        return ResponseEntity.ok(ApiResponse.success("Registration approved successfully", response));
+        // Enrich with review data
+        Registration fullReg = registrationRepository.findById(registrationId).orElse(null);
+        RegistrationResponse enrichedResponse = registrationReviewService.enrichWithReviewData(response, fullReg);
+        return ResponseEntity.ok(ApiResponse.success("Registration approved successfully", enrichedResponse));
     }
 
     @PutMapping("/registrations/{registrationId}/reject")

@@ -25,6 +25,7 @@ public class FunnelAnalyticsService {
     private final RegistrationRepository registrationRepository;
     private final ReviewRepository reviewRepository;
     private final EventRepository eventRepository;
+    private final EventBoostService eventBoostService;
 
     @Transactional
     public void trackEventView(Event event, User user, String sessionId) {
@@ -34,6 +35,14 @@ public class FunnelAnalyticsService {
                 .sessionId(sessionId)
                 .build();
         eventViewRepository.save(view);
+
+        // Credit the view to any active boost so organisers see real ROI in
+        // views_during_boost. Silently skipped if the event isn't boosted.
+        try {
+            eventBoostService.updateBoostStats(event.getId(), 1, 0, 0);
+        } catch (Exception e) {
+            log.warn("Failed to credit view to boost stats for event {}: {}", event.getId(), e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

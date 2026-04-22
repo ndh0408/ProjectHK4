@@ -55,8 +55,11 @@ public class PublicEventController {
                 .map(event -> {
                     EventResponse response = EventResponse.fromEntity(event);
                     response.setIsBoosted(true);
-                    response.setBoostPackage(eventBoostService.getEventBoostPackage(event.getId()).name());
-                    response.setBoostBadge(eventBoostService.getEventBoostPackage(event.getId()).getBadgeText());
+                    var pkg = eventBoostService.getEventBoostPackage(event.getId());
+                    if (pkg != null) {
+                        response.setBoostPackage(pkg.name());
+                        response.setBoostBadge(pkg.getBadgeText());
+                    }
                     return response;
                 })
                 .collect(Collectors.toList());

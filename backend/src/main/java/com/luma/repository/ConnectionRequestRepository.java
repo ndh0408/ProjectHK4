@@ -45,4 +45,6 @@ public interface ConnectionRequestRepository extends JpaRepository<ConnectionReq
 
     @Query("SELECT COUNT(cr) FROM ConnectionRequest cr WHERE cr.receiver = :user AND cr.status = 'PENDING'")
     long countPendingRequests(@Param("user") User user);
+
+    Optional<ConnectionRequest> findBySenderIdAndReceiverId(UUID senderId, UUID receiverId);
 }

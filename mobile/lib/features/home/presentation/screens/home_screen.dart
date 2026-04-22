@@ -21,6 +21,10 @@ import '../widgets/vip_banner_carousel.dart';
 import '../widgets/trending_events_section.dart';
 import '../widgets/boosted_events_section.dart';
 import '../widgets/ai_recommendations_section.dart';
+import 'package:mobile/features/explore/presentation/screens/explore_screen.dart'
+    show categoriesProvider;
+import '../../../../shared/models/category.dart' as cat_model;
+import 'package:cached_network_image/cached_network_image.dart';
 
 enum LocationFilter { nearby, allTheWorld }
 
@@ -165,6 +169,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 )),
                 const SizedBox(height: AppSpacing.section),
               ],
+              _buildCategoriesStrip(),
+              const SizedBox(height: AppSpacing.section),
               const VipBannerCarousel(),
               const SizedBox(height: AppSpacing.section),
               const BoostedEventsSection(),
@@ -322,6 +328,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(selectedEventProvider.notifier).state = event;
         context.push('/event/${event.id}');
       },
+    );
+  }
+
+  Widget _buildCategoriesStrip() {
+    final categoriesAsync = ref.watch(categoriesProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'Browse Categories',
+          subtitle: 'Find events that match your interests',
+          onTap: () => context.push('/explore'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: 110,
+          child: categoriesAsync.when(
+            loading: () => ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+              itemCount: 6,
+              itemBuilder: (_, __) => Container(
+                width: 84,
+                margin: const EdgeInsets.only(right: AppSpacing.md),
+                decoration: const BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: AppRadius.allMd,
+                ),
+              ),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (categories) {
+              if (categories.isEmpty) return const SizedBox.shrink();
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+                itemBuilder: (context, index) {
+                  final c = categories[index];
+                  return _CategoryChip(
+                    category: c,
+                    onTap: () => context.push('/events?categoryId=${c.id}'),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -571,6 +627,74 @@ class _ChatActionButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.category, required this.onTap});
+
+  final cat_model.Category category;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppRadius.allMd,
+      child: Container(
+        width: 92,
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: AppRadius.allMd,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: category.iconUrl != null && category.iconUrl!.isNotEmpty
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: category.iconUrl!,
+                        width: 28,
+                        height: 28,
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => const Icon(
+                          Icons.category_rounded,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.category_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              category.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

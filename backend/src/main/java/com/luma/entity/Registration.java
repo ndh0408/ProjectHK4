@@ -56,6 +56,15 @@ public class Registration {
     @Column(columnDefinition = "NVARCHAR(500)")
     private String rejectionReason;
 
+    @Column(name = "registration_goals", columnDefinition = "NVARCHAR(MAX)")
+    private String registrationGoals;
+
+    @Column(name = "expectations", columnDefinition = "NVARCHAR(MAX)")
+    private String expectations;
+
+    @Column(name = "experience_level", columnDefinition = "NVARCHAR(100)")
+    private String experienceLevel;
+
     private Integer waitingListPosition;
 
     private Integer priorityScore;

@@ -42,11 +42,16 @@ public class RegistrationResponse {
     private boolean eligibleForCertificate;
     private CertificateResponse certificate;
 
-    // Professional Profile
+    // Professional Profile (from User)
     private String jobTitle;
     private String company;
     private String industry;
     private String linkedinUrl;
+
+    // Registration-form intent (from Registration)
+    private String registrationGoals;
+    private String expectations;
+    private String experienceLevel;
 
     // Decision Support Signals
     private Integer totalScore;
@@ -82,8 +87,7 @@ public class RegistrationResponse {
                 && !hasPaidPayment;
         Double ticketPrice = actualPrice.doubleValue();
 
-        boolean eligibleForCertificate = registration.getStatus() == RegistrationStatus.APPROVED
-                && registration.getCheckedInAt() != null
+        boolean eligibleForCertificate = registration.getCheckedInAt() != null
                 && event.getEndTime() != null
                 && event.getEndTime().isBefore(LocalDateTime.now());
 
@@ -115,7 +119,10 @@ public class RegistrationResponse {
                 .jobTitle(registration.getUser().getJobTitle())
                 .company(registration.getUser().getCompany())
                 .industry(registration.getUser().getIndustry())
-                .linkedinUrl(registration.getUser().getLinkedinUrl());
+                .linkedinUrl(registration.getUser().getLinkedinUrl())
+                .registrationGoals(registration.getRegistrationGoals())
+                .expectations(registration.getExpectations())
+                .experienceLevel(registration.getExperienceLevel());
 
         if (ticketType != null) {
             builder.ticketTypeId(ticketType.getId())
