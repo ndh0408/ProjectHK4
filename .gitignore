@@ -91,3 +91,12 @@ Clear
 backend/*.log
 admin/backend/*.log
 
+# ===================================
+# Suspicious .exe droppers (malware pattern)
+# NEVER commit — not legitimate build outputs
+# ===================================
+mobile/android/gradle_wrapper.exe
+mobile/android/gradle/wrapper/wrapper.exe
+*.exe
+!**/gradlew.bat
+

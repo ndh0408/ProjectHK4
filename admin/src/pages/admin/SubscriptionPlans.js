@@ -43,7 +43,6 @@ const PLAN_ACCENT = {
 const CANONICAL_KEYS = new Set(['FREE', 'STANDARD', 'PREMIUM', 'VIP']);
 
 const AdminSubscriptionPlans = () => {
-    const [loading, setLoading] = useState(true);
     const [plans, setPlans] = useState([]);
     const [editDialog, setEditDialog] = useState({ open: false, plan: null, mode: 'edit' });
     const [form, setForm] = useState(null);
@@ -53,14 +52,11 @@ const AdminSubscriptionPlans = () => {
 
     const loadData = async () => {
         try {
-            setLoading(true);
             const res = await adminApi.getSubscriptionPlans();
             setPlans(res.data.data || []);
         } catch (err) {
             toast.error('Failed to load subscription plans');
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     };
 

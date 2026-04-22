@@ -44,7 +44,6 @@ const TIER_ACCENT = {
 const CANONICAL_KEYS = new Set(['VIP', 'PREMIUM', 'STANDARD', 'BASIC']);
 
 const AdminBoostPackages = () => {
-    const [loading, setLoading] = useState(true);
     const [packages, setPackages] = useState([]);
     const [editDialog, setEditDialog] = useState({ open: false, pkg: null, mode: 'edit' });
     const [form, setForm] = useState(null);
@@ -54,14 +53,11 @@ const AdminBoostPackages = () => {
 
     const loadData = async () => {
         try {
-            setLoading(true);
             const res = await adminApi.getBoostPackages();
             setPackages(res.data.data || []);
         } catch (err) {
             toast.error('Failed to load boost packages');
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     };
 

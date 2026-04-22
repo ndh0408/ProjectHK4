@@ -50,6 +50,7 @@ public class RegistrationService {
     private final CouponUsageRepository couponUsageRepository;
     private final UserRepository userRepository;
     private final EventBoostService eventBoostService;
+    private final com.luma.repository.TicketTransferRepository ticketTransferRepository;
 
     private static String trimOrNull(String s) {
         if (s == null) return null;
@@ -535,6 +536,12 @@ public class RegistrationService {
 
         if (registration.getCheckedInAt() != null) {
             throw new BadRequestException("This registration has already been checked in");
+        }
+
+        if (ticketTransferRepository.existsByRegistrationAndStatus(
+                registration, com.luma.entity.enums.TransferStatus.PENDING)) {
+            throw new BadRequestException(
+                    "This ticket has a pending transfer. Cancel the transfer before check-in.");
         }
 
         validateCheckInTime(event);

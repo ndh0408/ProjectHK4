@@ -488,6 +488,20 @@ class ApiService {
     return response['data'] as Map<String, dynamic>? ?? response;
   }
 
+  Future<Map<String, dynamic>> acceptTicketTransfer(String transferId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/transfers/$transferId/accept',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
+  Future<Map<String, dynamic>> declineTicketTransfer(String transferId) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/user/transfers/$transferId/decline',
+    );
+    return response['data'] as Map<String, dynamic>? ?? response;
+  }
+
   Future<List<Map<String, dynamic>>> getResaleListings(String eventId) async {
     final response = await _client.getRaw<Map<String, dynamic>>(
       '/user/transfers/event/$eventId/resale',

@@ -41,9 +41,11 @@ public class TicketTransferService {
 
         validateTransfer(registration, fromUser);
 
-        User toUser = userRepository.findByEmail(toEmail).orElse(null);
+        User toUser = userRepository.findByEmail(toEmail)
+                .orElseThrow(() -> new BadRequestException(
+                        "Recipient must have a Luma account. Ask them to sign up with " + toEmail + " first."));
 
-        if (toUser != null && toUser.getId().equals(fromUser.getId())) {
+        if (toUser.getId().equals(fromUser.getId())) {
             throw new BadRequestException("Cannot transfer ticket to yourself");
         }
 
@@ -60,21 +62,19 @@ public class TicketTransferService {
         transfer = transferRepository.save(transfer);
         log.info("Ticket transfer initiated: {} -> {}", fromUser.getId(), toEmail);
 
-        if (toUser != null) {
-            try {
-                notificationService.sendNotification(
-                        toUser,
-                        "Ticket Transfer Received",
-                        fromUser.getFullName() + " wants to transfer a ticket for \"" +
-                                registration.getEvent().getTitle() + "\" to you",
-                        com.luma.entity.enums.NotificationType.TICKET_TRANSFER_RECEIVED,
-                        transfer.getId(),
-                        "TRANSFER",
-                        fromUser
-                );
-            } catch (Exception e) {
-                log.error("Failed to send transfer notification: {}", e.getMessage());
-            }
+        try {
+            notificationService.sendNotification(
+                    toUser,
+                    "Ticket Transfer Received",
+                    fromUser.getFullName() + " wants to transfer a ticket for \"" +
+                            registration.getEvent().getTitle() + "\" to you",
+                    com.luma.entity.enums.NotificationType.TICKET_TRANSFER_RECEIVED,
+                    transfer.getId(),
+                    "TRANSFER",
+                    fromUser
+            );
+        } catch (Exception e) {
+            log.error("Failed to send transfer notification: {}", e.getMessage());
         }
 
         return TicketTransferResponse.fromEntity(transfer);
@@ -159,6 +159,23 @@ public class TicketTransferService {
         transfer.setRespondedAt(LocalDateTime.now());
         transferRepository.save(transfer);
 
+        if (transfer.getFromUser() != null) {
+            try {
+                notificationService.sendNotification(
+                        transfer.getFromUser(),
+                        "Ticket Transfer Accepted",
+                        acceptingUser.getFullName() + " accepted your ticket transfer for \"" +
+                                registration.getEvent().getTitle() + "\"",
+                        com.luma.entity.enums.NotificationType.TICKET_TRANSFER_ACCEPTED,
+                        transfer.getId(),
+                        "TRANSFER",
+                        acceptingUser
+                );
+            } catch (Exception e) {
+                log.error("Failed to send transfer accepted notification: {}", e.getMessage());
+            }
+        }
+
         TicketTransferResponse response = TicketTransferResponse.fromEntity(transfer);
         if (transfer.isResale() && transfer.getResalePrice() != null
                 && transfer.getResalePrice().compareTo(BigDecimal.ZERO) > 0) {
@@ -178,9 +195,33 @@ public class TicketTransferService {
             throw new BadRequestException("This transfer is no longer pending");
         }
 
+        if (!transfer.isResale() && transfer.getToUser() != null &&
+                !transfer.getToUser().getId().equals(user.getId()) &&
+                !transfer.getFromUser().getId().equals(user.getId())) {
+            throw new BadRequestException("You cannot decline this transfer");
+        }
+
         transfer.setStatus(TransferStatus.DECLINED);
         transfer.setRespondedAt(LocalDateTime.now());
         transferRepository.save(transfer);
+
+        if (transfer.getFromUser() != null &&
+                !transfer.getFromUser().getId().equals(user.getId())) {
+            try {
+                notificationService.sendNotification(
+                        transfer.getFromUser(),
+                        "Ticket Transfer Declined",
+                        user.getFullName() + " declined your ticket transfer for \"" +
+                                transfer.getRegistration().getEvent().getTitle() + "\"",
+                        com.luma.entity.enums.NotificationType.TICKET_TRANSFER_RECEIVED,
+                        transfer.getId(),
+                        "TRANSFER",
+                        user
+                );
+            } catch (Exception e) {
+                log.error("Failed to send transfer declined notification: {}", e.getMessage());
+            }
+        }
 
         return TicketTransferResponse.fromEntity(transfer);
     }

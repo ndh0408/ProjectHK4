@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/utils/error_utils.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/widgets/app_components.dart';
@@ -79,7 +80,10 @@ class TicketScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to transfer ticket: $e'),
+                      content: Text(ErrorUtils.extractMessage(
+                        e,
+                        fallback: 'Failed to transfer ticket',
+                      )),
                       backgroundColor: AppColors.error,
                     ),
                   );

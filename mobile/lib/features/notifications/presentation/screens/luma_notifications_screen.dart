@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/utils/error_utils.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/notification.dart';
 import '../../../../shared/widgets/app_components.dart';
@@ -77,6 +78,12 @@ class _LumaNotificationsScreenState
 
     if (!mounted) return;
 
+    if (notification.type == 'TICKET_TRANSFER_RECEIVED' &&
+        notification.relatedEventId != null) {
+      await _handleIncomingTransfer(notification);
+      return;
+    }
+
     if (notification.canReply && notification.senderId != null) {
       await _openChatWithUser(notification.senderId!);
       return;
@@ -85,6 +92,68 @@ class _LumaNotificationsScreenState
     final route = _routeForNotification(notification);
     if (route != null) {
       context.push(route);
+    }
+  }
+
+  Future<void> _handleIncomingTransfer(AppNotification notification) async {
+    final transferId = notification.relatedEventId!;
+    final choice = await showDialog<_TransferChoice>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Incoming ticket transfer'),
+        content: Text(notification.body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _TransferChoice.decline),
+            child: const Text('Decline'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, _TransferChoice.accept),
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+
+    if (choice == null || !mounted) return;
+
+    try {
+      final api = ref.read(apiServiceProvider);
+      if (choice == _TransferChoice.accept) {
+        await api.acceptTicketTransfer(transferId);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ticket transfer accepted'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.push('/my-events');
+      } else {
+        await api.declineTicketTransfer(transferId);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ticket transfer declined'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = ErrorUtils.extractMessage(
+        e,
+        fallback: 'Could not process transfer',
+      );
+      final alreadyHandled = msg.toLowerCase().contains('no longer');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(alreadyHandled
+              ? 'This transfer was already handled.'
+              : msg),
+          backgroundColor:
+              alreadyHandled ? AppColors.warning : AppColors.error,
+        ),
+      );
     }
   }
 
@@ -587,3 +656,5 @@ class _NotificationCard extends StatelessWidget {
     }
   }
 }
+
+enum _TransferChoice { accept, decline }
