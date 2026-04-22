@@ -20,6 +20,7 @@ public class BoostPackageInfo {
     private BigDecimal originalPrice;
     private String originalPriceFormatted;
     private boolean discountEligible;
+    private int discountPercent;
     private double boostMultiplier;
     private String boostMultiplierText;
     private String badge;

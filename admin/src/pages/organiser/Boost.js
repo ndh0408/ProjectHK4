@@ -79,9 +79,10 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
     const isUpgrade = upgradeInfo?.action === 'UPGRADE' && selected;
     const isDowngrade = upgradeInfo?.action === 'DOWNGRADE' && selected;
     const isFeatured = pkg.packageType === 'PREMIUM';
-    const appliedDiscount = (discountPercent > 0 && pkg.discountEligible !== false
-        && pkg.originalPrice != null && pkg.price != null
-        && Number(pkg.originalPrice) !== Number(pkg.price)) ? discountPercent : 0;
+    const appliedDiscount = (pkg.originalPrice != null && pkg.price != null
+        && Number(pkg.originalPrice) > Number(pkg.price))
+        ? Math.round((1 - Number(pkg.price) / Number(pkg.originalPrice)) * 100)
+        : 0;
 
     return (
         <Box
@@ -562,9 +563,10 @@ const OrganiserBoost = () => {
                 {packages.map((pkg) => {
                     const meta = PACKAGE_META[pkg.packageType] || PACKAGE_META.BASIC;
                     const isFeatured = pkg.packageType === 'PREMIUM';
-                    const pkgDiscount = (discountPercent > 0 && pkg.discountEligible !== false
-                        && pkg.originalPrice != null && pkg.price != null
-                        && Number(pkg.originalPrice) !== Number(pkg.price)) ? discountPercent : 0;
+                    const pkgDiscount = (pkg.originalPrice != null && pkg.price != null
+                        && Number(pkg.originalPrice) > Number(pkg.price))
+                        ? Math.round((1 - Number(pkg.price) / Number(pkg.originalPrice)) * 100)
+                        : 0;
                     return (
                         <Grid item xs={12} sm={6} md={3} key={pkg.packageType}>
                             <SectionCard

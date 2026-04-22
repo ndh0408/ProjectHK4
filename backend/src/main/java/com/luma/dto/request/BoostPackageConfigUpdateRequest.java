@@ -33,5 +33,6 @@ public class BoostPackageConfigUpdateRequest {
     private Boolean homeBanner;
     private Boolean active;
     private Boolean discountEligible;
+    private Integer discountPercent;
     private Integer sortOrder;
 }

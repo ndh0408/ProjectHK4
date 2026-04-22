@@ -77,6 +77,7 @@ const AdminBoostPackages = () => {
             homeBanner: pkg.homeBanner,
             active: pkg.active,
             discountEligible: pkg.discountEligible !== false,
+            discountPercent: pkg.discountPercent ?? 0,
             sortOrder: pkg.sortOrder,
         });
     };
@@ -96,6 +97,7 @@ const AdminBoostPackages = () => {
             homeBanner: false,
             active: true,
             discountEligible: true,
+            discountPercent: 0,
             sortOrder: 100,
         });
     };
@@ -120,6 +122,7 @@ const AdminBoostPackages = () => {
         }
         try {
             setSaving(true);
+            const discountPct = Math.max(0, Math.min(100, Number(form.discountPercent) || 0));
             const payload = {
                 ...form,
                 displayName,
@@ -127,6 +130,7 @@ const AdminBoostPackages = () => {
                 priceUsd: Number(form.priceUsd),
                 durationDays: Number(form.durationDays),
                 boostMultiplier: Number(form.boostMultiplier),
+                discountPercent: discountPct,
                 sortOrder: Number(form.sortOrder),
             };
             if (editDialog.mode === 'create') {
@@ -230,6 +234,9 @@ const AdminBoostPackages = () => {
                                     {pkg.featuredOnHome && <Chip size="small" label="Featured Home" color="primary" />}
                                     {pkg.featuredInCategory && <Chip size="small" label="Featured Category" color="info" />}
                                     {pkg.priorityInSearch && <Chip size="small" label="Search Priority" />}
+                                    {pkg.discountPercent > 0 && (
+                                        <Chip size="small" label={`Sale -${pkg.discountPercent}%`} color="error" />
+                                    )}
                                     {pkg.discountEligible === false && (
                                         <Chip size="small" label="No subscription discount" color="error" variant="outlined" />
                                     )}
@@ -371,13 +378,24 @@ const AdminBoostPackages = () => {
                                 </Stack>
                             </Box>
                             <Box>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Pricing</Typography>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Pricing & promotions</Typography>
+                                <TextField
+                                    label="Package sale (%)"
+                                    type="number"
+                                    value={form.discountPercent ?? 0}
+                                    onChange={(e) => field('discountPercent', e.target.value)}
+                                    inputProps={{ min: 0, max: 100, step: 1 }}
+                                    InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                                    fullWidth
+                                    helperText="Sale applied to everyone buying this package (0 = no sale)."
+                                    sx={{ mb: 1.5 }}
+                                />
                                 <FormControlLabel
                                     control={<Switch checked={form.discountEligible !== false} onChange={(e) => field('discountEligible', e.target.checked)} />}
                                     label="Eligible for subscription discount"
                                 />
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 6, mt: -0.5 }}>
-                                    When off, subscribers pay the full price on this tier (no discount applied).
+                                    When both a package sale and a subscription discount apply, the higher of the two is used (not stacked).
                                 </Typography>
                             </Box>
                         </Stack>

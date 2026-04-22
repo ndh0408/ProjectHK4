@@ -73,6 +73,11 @@ public class BoostPackageConfigService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.Optional<BoostPackageConfig> getConfigOrEmpty(String key) {
+        return repository.findById(key);
+    }
+
+    @Transactional(readOnly = true)
     public BigDecimal getPriceOrDefault(BoostPackage key) {
         return repository.findById(key.name())
                 .map(BoostPackageConfig::getPriceUsd)
@@ -91,6 +96,18 @@ public class BoostPackageConfigService {
         return repository.findById(key.name())
                 .map(cfg -> Boolean.TRUE.equals(cfg.getDiscountEligible()))
                 .orElse(true);
+    }
+
+    @Transactional(readOnly = true)
+    public int getPackageDiscountPercent(String key) {
+        return repository.findById(key)
+                .map(cfg -> cfg.getDiscountPercent() == null ? 0 : cfg.getDiscountPercent())
+                .orElse(0);
+    }
+
+    @Transactional(readOnly = true)
+    public int getPackageDiscountPercent(BoostPackage key) {
+        return getPackageDiscountPercent(key.name());
     }
 
     /** Keys of ACTIVE config rows flagged for the Home VIP banner. Empty if admin hid all. */
@@ -141,6 +158,7 @@ public class BoostPackageConfigService {
                 .homeBanner(Boolean.TRUE.equals(req.getHomeBanner()))
                 .active(req.getActive() == null ? true : req.getActive())
                 .discountEligible(req.getDiscountEligible() == null ? true : req.getDiscountEligible())
+                .discountPercent(clampPercent(req.getDiscountPercent()))
                 .sortOrder(req.getSortOrder() == null ? 100 : req.getSortOrder())
                 .build();
         BoostPackageConfig saved = repository.save(cfg);
@@ -166,11 +184,20 @@ public class BoostPackageConfigService {
         if (req.getHomeBanner() != null) cfg.setHomeBanner(req.getHomeBanner());
         if (req.getActive() != null) cfg.setActive(req.getActive());
         if (req.getDiscountEligible() != null) cfg.setDiscountEligible(req.getDiscountEligible());
+        if (req.getDiscountPercent() != null) cfg.setDiscountPercent(clampPercent(req.getDiscountPercent()));
         if (req.getSortOrder() != null) cfg.setSortOrder(req.getSortOrder());
         BoostPackageConfig saved = repository.save(cfg);
-        log.info("Admin updated BoostPackageConfig {}: ${} / {}d / active={} / discountEligible={}",
-                key, saved.getPriceUsd(), saved.getDurationDays(), saved.getActive(), saved.getDiscountEligible());
+        log.info("Admin updated BoostPackageConfig {}: ${} / {}d / active={} / discountEligible={} / discountPercent={}",
+                key, saved.getPriceUsd(), saved.getDurationDays(), saved.getActive(),
+                saved.getDiscountEligible(), saved.getDiscountPercent());
         return saved;
+    }
+
+    private int clampPercent(Integer value) {
+        if (value == null) return 0;
+        if (value < 0) return 0;
+        if (value > 100) return 100;
+        return value;
     }
 
     @Transactional
