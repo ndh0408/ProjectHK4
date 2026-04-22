@@ -86,6 +86,13 @@ public class BoostPackageConfigService {
                 .orElse(key.getDurationDays());
     }
 
+    @Transactional(readOnly = true)
+    public boolean isDiscountEligible(BoostPackage key) {
+        return repository.findById(key.name())
+                .map(cfg -> Boolean.TRUE.equals(cfg.getDiscountEligible()))
+                .orElse(true);
+    }
+
     /** Keys of ACTIVE config rows flagged for the Home VIP banner. Empty if admin hid all. */
     @Transactional(readOnly = true)
     public Set<String> activeHomeBannerKeys() {
@@ -117,9 +124,13 @@ public class BoostPackageConfigService {
         if (repository.existsById(normalized)) {
             throw new BadRequestException("Package '" + normalized + "' already exists — use Edit instead");
         }
+        String displayName = req.getDisplayName() == null ? "" : req.getDisplayName().trim();
+        if (displayName.isBlank()) {
+            throw new BadRequestException("Display name is required");
+        }
         BoostPackageConfig cfg = BoostPackageConfig.builder()
                 .packageKey(normalized)
-                .displayName(req.getDisplayName())
+                .displayName(displayName)
                 .priceUsd(req.getPriceUsd())
                 .durationDays(req.getDurationDays())
                 .boostMultiplier(req.getBoostMultiplier())
@@ -129,6 +140,7 @@ public class BoostPackageConfigService {
                 .priorityInSearch(Boolean.TRUE.equals(req.getPriorityInSearch()))
                 .homeBanner(Boolean.TRUE.equals(req.getHomeBanner()))
                 .active(req.getActive() == null ? true : req.getActive())
+                .discountEligible(req.getDiscountEligible() == null ? true : req.getDiscountEligible())
                 .sortOrder(req.getSortOrder() == null ? 100 : req.getSortOrder())
                 .build();
         BoostPackageConfig saved = repository.save(cfg);
@@ -139,7 +151,11 @@ public class BoostPackageConfigService {
     @Transactional
     public BoostPackageConfig update(String key, BoostPackageConfigUpdateRequest req) {
         BoostPackageConfig cfg = get(key);
-        cfg.setDisplayName(req.getDisplayName());
+        String displayName = req.getDisplayName() == null ? "" : req.getDisplayName().trim();
+        if (displayName.isBlank()) {
+            throw new BadRequestException("Display name is required");
+        }
+        cfg.setDisplayName(displayName);
         cfg.setPriceUsd(req.getPriceUsd());
         cfg.setDurationDays(req.getDurationDays());
         cfg.setBoostMultiplier(req.getBoostMultiplier());
@@ -149,10 +165,11 @@ public class BoostPackageConfigService {
         if (req.getPriorityInSearch() != null) cfg.setPriorityInSearch(req.getPriorityInSearch());
         if (req.getHomeBanner() != null) cfg.setHomeBanner(req.getHomeBanner());
         if (req.getActive() != null) cfg.setActive(req.getActive());
+        if (req.getDiscountEligible() != null) cfg.setDiscountEligible(req.getDiscountEligible());
         if (req.getSortOrder() != null) cfg.setSortOrder(req.getSortOrder());
         BoostPackageConfig saved = repository.save(cfg);
-        log.info("Admin updated BoostPackageConfig {}: ${} / {}d / active={}",
-                key, saved.getPriceUsd(), saved.getDurationDays(), saved.getActive());
+        log.info("Admin updated BoostPackageConfig {}: ${} / {}d / active={} / discountEligible={}",
+                key, saved.getPriceUsd(), saved.getDurationDays(), saved.getActive(), saved.getDiscountEligible());
         return saved;
     }
 

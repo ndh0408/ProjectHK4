@@ -12,10 +12,14 @@ import java.util.ArrayList;
 @Builder
 public class BoostPackageInfo {
     private BoostPackage packageType;
+    private String packageKey;
     private String displayName;
     private int durationDays;
     private BigDecimal price;
     private String priceFormatted;
+    private BigDecimal originalPrice;
+    private String originalPriceFormatted;
+    private boolean discountEligible;
     private double boostMultiplier;
     private String boostMultiplierText;
     private String badge;

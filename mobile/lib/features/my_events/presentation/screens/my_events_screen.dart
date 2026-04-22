@@ -246,6 +246,8 @@ class _RegistrationCard extends ConsumerWidget {
     final event = registration.event!;
     final user = ref.read(currentUserProvider);
     final dateFormat = DateFormat('EEE, MMM d, yyyy • h:mm a');
+    final effectivePrice =
+        registration.ticketTypePrice ?? registration.ticketPrice ?? 0;
 
     unawaited(
       context.push(
@@ -258,6 +260,7 @@ class _RegistrationCard extends ConsumerWidget {
           'eventLocation': event.location,
           'registrationId': registration.id,
           'checkedInAt': registration.checkedInAt,
+          'isTransferable': effectivePrice > 0,
         },
       ),
     );

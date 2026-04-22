@@ -129,6 +129,20 @@ public class TicketTransferService {
         registration.setTicketCode("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         registration.setCheckedInAt(null);
 
+        registration.setRegistrationGoals(null);
+        registration.setExpectations(null);
+        registration.setExperienceLevel(null);
+        registration.setCouponCode(null);
+        registration.setReminderSent(false);
+        registration.setReminderSentAt(null);
+        registration.setPriorityScore(null);
+        registration.setWaitingListPosition(null);
+        registration.setRejectionReason(null);
+        registration.setRejectedAt(null);
+        if (registration.getAnswers() != null) {
+            registration.getAnswers().clear();
+        }
+
         if (transfer.isResale() && transfer.getResalePrice() != null
                 && transfer.getResalePrice().compareTo(BigDecimal.ZERO) > 0) {
             registration.setStatus(RegistrationStatus.PENDING);
@@ -191,6 +205,10 @@ public class TicketTransferService {
         }
         if (registration.getCheckedInAt() != null) {
             throw new BadRequestException("Cannot transfer a ticket that has been checked in");
+        }
+        BigDecimal price = getTicketPrice(registration);
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BadRequestException("Free tickets cannot be transferred");
         }
         if (transferRepository.existsByRegistrationAndStatus(registration, TransferStatus.PENDING)) {
             throw new BadRequestException("This ticket already has a pending transfer");

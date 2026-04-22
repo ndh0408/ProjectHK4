@@ -61,21 +61,38 @@ public class EventBoostService {
         try { return BoostPackage.valueOf(key); } catch (IllegalArgumentException ex) { return null; }
     }
 
+    /** Build the base info object from config, falling back to packageKey when displayName is blank. */
+    private BoostPackageInfo buildBaseInfo(com.luma.entity.BoostPackageConfig cfg) {
+        BoostPackage pkg = enumKey(cfg.getPackageKey());
+        String name = cfg.getDisplayName() == null || cfg.getDisplayName().isBlank()
+                ? cfg.getPackageKey()
+                : cfg.getDisplayName();
+        BoostPackageInfo info = pkg != null
+                ? BoostPackageInfo.fromEnum(pkg)
+                : BoostPackageInfo.builder()
+                    .packageType(null)
+                    .displayName(name)
+                    .badge(cfg.getBadgeText())
+                    .description(name + " tier")
+                    .build();
+        info.setPackageKey(cfg.getPackageKey());
+        if (pkg == null) {
+            info.setDisplayName(name);
+        }
+        info.setDurationDays(cfg.getDurationDays());
+        info.setDiscountEligible(Boolean.TRUE.equals(cfg.getDiscountEligible()));
+        return info;
+    }
+
     public List<BoostPackageInfo> getAvailablePackages() {
         return boostConfigService.listActive().stream()
                 .map(cfg -> {
-                    BoostPackage pkg = enumKey(cfg.getPackageKey());
-                    BoostPackageInfo info = pkg != null
-                            ? BoostPackageInfo.fromEnum(pkg)
-                            : BoostPackageInfo.builder()
-                                .packageType(null)
-                                .displayName(cfg.getDisplayName())
-                                .badge(cfg.getBadgeText())
-                                .description(cfg.getDisplayName() + " tier")
-                                .build();
-                    info.setPrice(cfg.getPriceUsd());
-                    info.setPriceFormatted(String.format("$%.2f", cfg.getPriceUsd()));
-                    info.setDurationDays(cfg.getDurationDays());
+                    BoostPackageInfo info = buildBaseInfo(cfg);
+                    java.math.BigDecimal basePrice = cfg.getPriceUsd();
+                    info.setPrice(basePrice);
+                    info.setPriceFormatted(String.format("$%.2f", basePrice));
+                    info.setOriginalPrice(basePrice);
+                    info.setOriginalPriceFormatted(String.format("$%.2f", basePrice));
                     return info;
                 })
                 .collect(Collectors.toList());
@@ -86,18 +103,12 @@ public class EventBoostService {
 
         return boostConfigService.listActive().stream()
                 .map(cfg -> {
-                    BoostPackage pkg = enumKey(cfg.getPackageKey());
-                    BoostPackageInfo info = pkg != null
-                            ? BoostPackageInfo.fromEnum(pkg)
-                            : BoostPackageInfo.builder()
-                                .packageType(null)
-                                .displayName(cfg.getDisplayName())
-                                .badge(cfg.getBadgeText())
-                                .description(cfg.getDisplayName() + " tier")
-                                .build();
+                    BoostPackageInfo info = buildBaseInfo(cfg);
                     java.math.BigDecimal basePrice = cfg.getPriceUsd();
-                    info.setDurationDays(cfg.getDurationDays());
-                    if (discountPercent > 0) {
+                    info.setOriginalPrice(basePrice);
+                    info.setOriginalPriceFormatted(String.format("$%.2f", basePrice));
+                    boolean eligible = Boolean.TRUE.equals(cfg.getDiscountEligible());
+                    if (discountPercent > 0 && eligible) {
                         java.math.BigDecimal discountedPrice = basePrice
                                 .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                                 .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -149,8 +160,9 @@ public class EventBoostService {
 
         java.math.BigDecimal basePrice = configuredPrice(pkg);
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
+        boolean discountEligible = boostConfigService.isDiscountEligible(pkg);
         java.math.BigDecimal finalPrice = basePrice;
-        if (discountPercent > 0) {
+        if (discountPercent > 0 && discountEligible) {
             finalPrice = basePrice
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -209,10 +221,11 @@ public class EventBoostService {
         }
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiserId);
+        boolean newEligible = boostConfigService.isDiscountEligible(newPackage);
 
         if (currentPackage == newPackage) {
             java.math.BigDecimal extendPrice = configuredPrice(newPackage);
-            if (discountPercent > 0) {
+            if (discountPercent > 0 && newEligible) {
                 extendPrice = extendPrice
                         .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                         .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -241,7 +254,7 @@ public class EventBoostService {
             int newTier = getPackageTier(newPackage);
 
             java.math.BigDecimal newPrice = configuredPrice(newPackage);
-            if (discountPercent > 0) {
+            if (discountPercent > 0 && newEligible) {
                 newPrice = newPrice
                         .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                         .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -336,8 +349,9 @@ public class EventBoostService {
         }
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
+        boolean discountEligible = boostConfigService.isDiscountEligible(pkg);
         java.math.BigDecimal finalPrice = configuredPrice(pkg);
-        if (discountPercent > 0) {
+        if (discountPercent > 0 && discountEligible) {
             finalPrice = configuredPrice(pkg)
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);
@@ -419,8 +433,9 @@ public class EventBoostService {
         boostRepository.save(existingBoost);
 
         int discountPercent = subscriptionService.getBoostDiscountPercent(organiser.getId());
+        boolean newEligible = boostConfigService.isDiscountEligible(newPackage);
         java.math.BigDecimal finalPrice = configuredPrice(newPackage);
-        if (discountPercent > 0) {
+        if (discountPercent > 0 && newEligible) {
             finalPrice = finalPrice
                     .multiply(java.math.BigDecimal.valueOf(100 - discountPercent))
                     .divide(java.math.BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP);

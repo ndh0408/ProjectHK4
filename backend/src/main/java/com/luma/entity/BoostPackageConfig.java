@@ -63,6 +63,10 @@ public class BoostPackageConfig {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(name = "discount_eligible", nullable = false)
+    @Builder.Default
+    private Boolean discountEligible = true;
+
     @Column(nullable = false)
     @Builder.Default
     private Integer sortOrder = 0;

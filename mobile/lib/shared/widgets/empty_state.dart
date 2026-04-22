@@ -75,70 +75,96 @@ class _EmptyStateState extends State<EmptyState>
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(
-                widget.compact ? AppSpacing.lg : AppSpacing.xxxl),
-            child: AppCard(
-              padding: EdgeInsets.all(
-                  widget.compact ? AppSpacing.xl : AppSpacing.xxxl),
-              background: Theme.of(context).colorScheme.surface,
-              shadow: AppShadows.xs,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: iconSize * 1.5,
-                    height: iconSize * 1.5,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          (widget.iconColor ?? AppColors.primary)
-                              .withValues(alpha: 0.14),
-                          (widget.iconColor ?? AppColors.primary)
-                              .withValues(alpha: 0.05),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.hasBoundedHeight
+                      ? constraints.maxHeight
+                      : 0,
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal:
+                          widget.compact ? AppSpacing.md : AppSpacing.lg,
+                      vertical:
+                          widget.compact ? AppSpacing.sm : AppSpacing.md,
+                    ),
+                    child: AppCard(
+                      padding: EdgeInsets.all(
+                          widget.compact ? AppSpacing.lg : AppSpacing.xl),
+                      background: Theme.of(context).colorScheme.surface,
+                      shadow: AppShadows.xs,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: iconSize * 1.5,
+                            height: iconSize * 1.5,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  (widget.iconColor ?? AppColors.primary)
+                                      .withValues(alpha: 0.14),
+                                  (widget.iconColor ?? AppColors.primary)
+                                      .withValues(alpha: 0.05),
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              widget.icon,
+                              size: iconSize,
+                              color: widget.iconColor ?? AppColors.primary,
+                            ),
+                          ),
+                          SizedBox(
+                              height: widget.compact
+                                  ? AppSpacing.md
+                                  : AppSpacing.lg),
+                          Text(
+                            widget.title,
+                            style: titleStyle?.copyWith(
+                                fontWeight: FontWeight.w700),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(
+                              height: widget.compact
+                                  ? AppSpacing.xs
+                                  : AppSpacing.sm),
+                          Text(
+                            widget.subtitle,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (widget.actionLabel != null &&
+                              widget.onAction != null) ...[
+                            SizedBox(
+                                height: widget.compact
+                                    ? AppSpacing.md
+                                    : AppSpacing.lg),
+                            AppButton(
+                              label: widget.actionLabel!,
+                              icon: Icons.explore_outlined,
+                              onPressed: widget.onAction,
+                            ),
+                          ],
                         ],
                       ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      widget.icon,
-                      size: iconSize,
-                      color: widget.iconColor ?? AppColors.primary,
                     ),
                   ),
-                  SizedBox(
-                      height: widget.compact ? AppSpacing.md : AppSpacing.xxl),
-                  Text(
-                    widget.title,
-                    style: titleStyle?.copyWith(fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(
-                      height: widget.compact ? AppSpacing.xs : AppSpacing.sm),
-                  Text(
-                    widget.subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  if (widget.actionLabel != null &&
-                      widget.onAction != null) ...[
-                    SizedBox(
-                        height: widget.compact ? AppSpacing.lg : AppSpacing.xl),
-                    AppButton(
-                      label: widget.actionLabel!,
-                      icon: Icons.explore_outlined,
-                      onPressed: widget.onAction,
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

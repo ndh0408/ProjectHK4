@@ -249,6 +249,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 eventLocation: extra['eventLocation'] ?? '',
                 registrationId: extra['registrationId'] as String?,
                 checkedInAt: extra['checkedInAt'] as DateTime?,
+                isTransferable: extra['isTransferable'] as bool? ?? false,
               );
             },
           ),

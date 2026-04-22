@@ -79,6 +79,9 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
     const isUpgrade = upgradeInfo?.action === 'UPGRADE' && selected;
     const isDowngrade = upgradeInfo?.action === 'DOWNGRADE' && selected;
     const isFeatured = pkg.packageType === 'PREMIUM';
+    const appliedDiscount = (discountPercent > 0 && pkg.discountEligible !== false
+        && pkg.originalPrice != null && pkg.price != null
+        && Number(pkg.originalPrice) !== Number(pkg.price)) ? discountPercent : 0;
 
     return (
         <Box
@@ -168,7 +171,7 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
             </Stack>
 
             <Box sx={{ mb: 1.5 }}>
-                {discountPercent > 0 && (
+                {appliedDiscount > 0 && (
                     <Typography
                         variant="caption"
                         sx={{
@@ -177,7 +180,7 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
                             display: 'block',
                         }}
                     >
-                        {pkg.originalPriceFormatted || pkg.priceFormatted}
+                        {pkg.originalPriceFormatted}
                     </Typography>
                 )}
                 <Stack direction="row" alignItems="baseline" spacing={1}>
@@ -191,9 +194,9 @@ const PackageCard = ({ pkg, selected, onSelect, discountPercent, upgradeInfo, cu
                     >
                         {pkg.priceFormatted}
                     </Typography>
-                    {discountPercent > 0 && (
+                    {appliedDiscount > 0 && (
                         <Chip
-                            label={`-${discountPercent}%`}
+                            label={`-${appliedDiscount}%`}
                             size="small"
                             sx={{
                                 height: 18,
@@ -559,6 +562,9 @@ const OrganiserBoost = () => {
                 {packages.map((pkg) => {
                     const meta = PACKAGE_META[pkg.packageType] || PACKAGE_META.BASIC;
                     const isFeatured = pkg.packageType === 'PREMIUM';
+                    const pkgDiscount = (discountPercent > 0 && pkg.discountEligible !== false
+                        && pkg.originalPrice != null && pkg.price != null
+                        && Number(pkg.originalPrice) !== Number(pkg.price)) ? discountPercent : 0;
                     return (
                         <Grid item xs={12} sm={6} md={3} key={pkg.packageType}>
                             <SectionCard
@@ -614,12 +620,12 @@ const OrganiserBoost = () => {
                                     </Typography>
                                 </Stack>
                                 <Box sx={{ mb: 2 }}>
-                                    {discountPercent > 0 && (
+                                    {pkgDiscount > 0 && (
                                         <Typography
                                             variant="caption"
                                             sx={{ textDecoration: 'line-through', color: tokens.text.muted, display: 'block' }}
                                         >
-                                            {pkg.originalPriceFormatted || pkg.priceFormatted}
+                                            {pkg.originalPriceFormatted}
                                         </Typography>
                                     )}
                                     <Stack direction="row" alignItems="baseline" spacing={1}>
@@ -630,9 +636,9 @@ const OrganiserBoost = () => {
                                             / {pkg.durationDays}d
                                         </Typography>
                                     </Stack>
-                                    {discountPercent > 0 && (
+                                    {pkgDiscount > 0 ? (
                                         <Chip
-                                            label={`${discountPercent}% OFF`}
+                                            label={`${pkgDiscount}% OFF`}
                                             size="small"
                                             sx={{
                                                 mt: 0.5,
@@ -643,7 +649,21 @@ const OrganiserBoost = () => {
                                                 fontSize: '0.6875rem',
                                             }}
                                         />
-                                    )}
+                                    ) : discountPercent > 0 && pkg.discountEligible === false ? (
+                                        <Chip
+                                            label="No subscription discount"
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{
+                                                mt: 0.5,
+                                                borderColor: tokens.palette.neutral[300],
+                                                color: tokens.text.muted,
+                                                fontWeight: 600,
+                                                height: 20,
+                                                fontSize: '0.6875rem',
+                                            }}
+                                        />
+                                    ) : null}
                                 </Box>
                                 <Divider sx={{ mb: 2 }} />
                                 <Typography variant="body2" sx={{ color: tokens.text.secondary, mb: 2, flexGrow: 1 }}>

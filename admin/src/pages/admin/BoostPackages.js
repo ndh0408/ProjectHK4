@@ -80,6 +80,7 @@ const AdminBoostPackages = () => {
             priorityInSearch: pkg.priorityInSearch,
             homeBanner: pkg.homeBanner,
             active: pkg.active,
+            discountEligible: pkg.discountEligible !== false,
             sortOrder: pkg.sortOrder,
         });
     };
@@ -98,6 +99,7 @@ const AdminBoostPackages = () => {
             priorityInSearch: true,
             homeBanner: false,
             active: true,
+            discountEligible: true,
             sortOrder: 100,
         });
     };
@@ -110,10 +112,22 @@ const AdminBoostPackages = () => {
 
     const handleSave = async () => {
         if (!form) return;
+        const displayName = (form.displayName || '').trim();
+        if (!displayName) {
+            toast.error('Display name is required');
+            return;
+        }
+        const badgeText = (form.badgeText || '').trim();
+        if (!badgeText) {
+            toast.error('Badge text is required');
+            return;
+        }
         try {
             setSaving(true);
             const payload = {
                 ...form,
+                displayName,
+                badgeText,
                 priceUsd: Number(form.priceUsd),
                 durationDays: Number(form.durationDays),
                 boostMultiplier: Number(form.boostMultiplier),
@@ -199,7 +213,9 @@ const AdminBoostPackages = () => {
                                         size="small"
                                     />
                                 </Stack>
-                                <Typography variant="body2" color="text.secondary">{pkg.displayName}</Typography>
+                                <Typography variant="body2" color={pkg.displayName ? 'text.secondary' : 'error.main'}>
+                                    {pkg.displayName || '(No display name — edit to set one)'}
+                                </Typography>
 
                                 <Stack spacing={0.75} sx={{ mt: 2, mb: 2 }}>
                                     <Typography variant="h4" fontWeight={800}>
@@ -218,6 +234,9 @@ const AdminBoostPackages = () => {
                                     {pkg.featuredOnHome && <Chip size="small" label="Featured Home" color="primary" />}
                                     {pkg.featuredInCategory && <Chip size="small" label="Featured Category" color="info" />}
                                     {pkg.priorityInSearch && <Chip size="small" label="Search Priority" />}
+                                    {pkg.discountEligible === false && (
+                                        <Chip size="small" label="No subscription discount" color="error" variant="outlined" />
+                                    )}
                                 </Stack>
 
                                 <Box sx={{ mt: 'auto' }}>
@@ -275,6 +294,9 @@ const AdminBoostPackages = () => {
                                 value={form.displayName}
                                 onChange={(e) => field('displayName', e.target.value)}
                                 fullWidth
+                                required
+                                error={!form.displayName?.trim()}
+                                helperText={!form.displayName?.trim() ? 'Required — shown on the boost card' : ' '}
                             />
                             <Grid container spacing={2}>
                                 <Grid item xs={6}>
@@ -351,6 +373,16 @@ const AdminBoostPackages = () => {
                                         label="Active (available for purchase)"
                                     />
                                 </Stack>
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Pricing</Typography>
+                                <FormControlLabel
+                                    control={<Switch checked={form.discountEligible !== false} onChange={(e) => field('discountEligible', e.target.checked)} />}
+                                    label="Eligible for subscription discount"
+                                />
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 6, mt: -0.5 }}>
+                                    When off, subscribers pay the full price on this tier (no discount applied).
+                                </Typography>
                             </Box>
                         </Stack>
                     )}

@@ -19,6 +19,7 @@ class TicketScreen extends ConsumerWidget {
     required this.eventLocation,
     this.registrationId,
     this.checkedInAt,
+    this.isTransferable = false,
   });
 
   final String eventName;
@@ -28,11 +29,14 @@ class TicketScreen extends ConsumerWidget {
   final String eventLocation;
   final String? registrationId;
   final DateTime? checkedInAt;
+  final bool isTransferable;
 
   bool get isCheckedIn => checkedInAt != null;
+  bool get canTransfer =>
+      isTransferable && registrationId != null && !isCheckedIn;
 
   Future<void> _showTransferDialog(BuildContext context, WidgetRef ref) async {
-    if (registrationId == null || isCheckedIn) return;
+    if (!canTransfer) return;
 
     final controller = TextEditingController();
 
@@ -98,7 +102,7 @@ class TicketScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.ticket),
         actions: [
-          if (registrationId != null && !isCheckedIn)
+          if (canTransfer)
             IconButton(
               icon: const Icon(Icons.swap_horiz_rounded),
               tooltip: 'Transfer ticket',
@@ -243,7 +247,7 @@ class TicketScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: registrationId != null && !isCheckedIn
+      bottomNavigationBar: canTransfer
           ? SafeArea(
               top: false,
               child: Padding(
