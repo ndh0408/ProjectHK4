@@ -1,0 +1,123 @@
+============================================================
+   LUMA  -  HƯỚNG DẪN CÀI ĐẶT VÀ CHẠY DỰ ÁN
+   Đồ án: Nhóm 5 - LUMA
+============================================================
+
+Dự án gồm 3 phần:
+  - backend   : Spring Boot (Java 17, Maven wrapper kèm sẵn)
+  - admin     : Web admin / organiser (React, Node.js)
+  - mobile    : Flutter (chạy được trên Android + Web)
+
+Database: Microsoft SQL Server, file backup ở:
+   backend\backups\luma_db.bak
+
+------------------------------------------------------------
+1) YÊU CẦU CÀI SẴN TRÊN MÁY
+------------------------------------------------------------
+  [1] Java 17 hoặc mới hơn    (kiểm tra: java -version)
+  [2] Node.js 18+ và npm      (kiểm tra: node -v)
+  [3] Flutter SDK             (kiểm tra: flutter --version)
+      + Android Studio (có Android emulator)
+  [4] Microsoft SQL Server (Express hoặc Developer đều được)
+      + Đã bật chế độ SQL Server Authentication (Mixed Mode)
+      + User 'sa' bật, password = 1
+      + Bật TCP/IP trong SQL Server Configuration Manager
+        (port 1433 mặc định)
+
+Nếu chưa cấu hình sa, mở SSMS -> New Query chạy:
+      ALTER LOGIN sa WITH PASSWORD = '1';
+      ALTER LOGIN sa ENABLE;
+Sau đó restart dịch vụ "SQL Server (SQLEXPRESS)" trong Services.msc.
+
+------------------------------------------------------------
+2) BƯỚC 1 — NẠP DATABASE (chỉ làm MỘT LẦN)
+------------------------------------------------------------
+Mở thư mục dự án, double-click:
+      restore-database.bat
+
+Script sẽ:
+  - Tự tìm sqlcmd.exe
+  - Tự dò SQL Server (localhost,1433  /  .\SQLEXPRESS  ...)
+  - Nạp file backend\backups\luma_db.bak vào database tên "luma_db"
+  - Nếu đã có luma_db từ trước sẽ hỏi có ghi đè không.
+
+Khi thấy "[SUCCESS] Database 'luma_db' restored." là xong.
+
+------------------------------------------------------------
+3) BƯỚC 2 — CHẠY TOÀN BỘ HỆ THỐNG (mỗi lần mở dự án)
+------------------------------------------------------------
+Double-click:
+      start-all-app.bat
+
+Script sẽ mở 4 cửa sổ console tự động:
+  - LUMA Backend              : Spring Boot (port 8080)
+  - LUMA Admin Frontend       : React      (port 3000)
+  - LUMA Mobile App           : Flutter app chạy trên Android
+  - LUMA Flutter Web (User)   : Flutter web (port 5000)
+
+Nếu máy chưa có Android emulator / điện thoại nối USB,
+script sẽ thử tự khởi động một AVD có sẵn. Nếu không có AVD,
+hãy tạo một máy ảo trong Android Studio -> Device Manager.
+
+Các URL sau khi chạy:
+  Backend          http://localhost:8080
+  Admin Web        http://localhost:3000
+  User Web         http://localhost:5000
+  Swagger API      http://localhost:8080/swagger-ui.html
+
+------------------------------------------------------------
+4) TÀI KHOẢN DEMO
+------------------------------------------------------------
+Sau khi restore DB, có thể đăng nhập thử bằng tài khoản demo
+(xem file backend\database\seed_huy_demo.sql để biết thêm).
+
+Tài khoản admin mặc định (thường dùng):
+  Email     : admin@luma.com
+  Password  : admin123
+(Nếu không vào được, xem seed file để lấy thông tin chính xác.)
+
+------------------------------------------------------------
+5) DỪNG TOÀN BỘ DỊCH VỤ
+------------------------------------------------------------
+Double-click:
+      stop-all.bat
+
+Hoặc đóng thủ công 4 cửa sổ cmd đã mở.
+
+------------------------------------------------------------
+6) CẤU HÌNH NÂNG CAO (không bắt buộc)
+------------------------------------------------------------
+File cấu hình backend: backend\.env
+  - Đã có sẵn key Cloudinary / Stripe test / OpenAI / Gmail SMTP.
+  - Nếu SQL Server không phải localhost:1433 hoặc user/mật khẩu khác,
+    chỉnh lại dòng DB_URL / DB_USERNAME / DB_PASSWORD trong .env.
+
+File cấu hình mobile (chạy trên máy thật):
+  mobile\.env  (xem mobile\.env.example)
+  - Đặt API_HOST = IP máy chạy backend trong cùng LAN.
+
+------------------------------------------------------------
+7) XỬ LÝ LỖI THƯỜNG GẶP
+------------------------------------------------------------
+- "Cannot connect to SQL Server":
+    Mở SQL Server Configuration Manager -> SQL Server Network
+    Configuration -> Protocols for SQLEXPRESS -> bật TCP/IP,
+    set Port = 1433. Restart service.
+
+- Port 8080 / 3000 / 5000 đang bị chiếm:
+    Mở cmd (admin): netstat -ano | findstr :8080
+    Tìm PID, taskkill /PID <id> /F. Rồi chạy lại.
+
+- Flutter "No supported devices connected":
+    Mở Android Studio, bật Emulator, chờ boot xong rồi chạy lại.
+
+- Admin React báo lỗi dependency:
+    cd admin && npm install
+
+- Backend báo lỗi Maven/dependency:
+    cd backend && mvnw clean install -DskipTests
+
+============================================================
+Chúc thầy/cô chấm dự án thuận lợi!
+   - Nhóm 5 -
+============================================================

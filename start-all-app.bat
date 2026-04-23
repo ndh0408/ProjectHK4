@@ -127,7 +127,12 @@ timeout /t 5 /nobreak > nul
 echo [3/5] Starting Admin Frontend (React) on port 3000 - fresh dev server...
 echo      Note: Frontend has HOT RELOAD - changes auto-refresh in browser
 echo.
-start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && set BROWSER=none && set FAST_REFRESH=true && npm start"
+if not exist "%PROJECT_DIR%\admin\node_modules\react-scripts" (
+    echo      [!] admin\node_modules not found - running 'npm install' once...
+    start "LUMA Admin Frontend (first-run npm install)" cmd /k "cd /d "%PROJECT_DIR%\admin" && npm install && set BROWSER=none && set FAST_REFRESH=true && npm start"
+) else (
+    start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && set BROWSER=none && set FAST_REFRESH=true && npm start"
+)
 
 timeout /t 2 /nobreak > nul
 
