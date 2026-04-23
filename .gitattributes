@@ -2,5 +2,9 @@
 *.sh        text eol=lf
 *.bash      text eol=lf
 
+# Force CRLF for Windows batch files (avoids LF→CRLF diff noise on Windows)
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
 # Other text files: let Git handle normally
 *           text=auto

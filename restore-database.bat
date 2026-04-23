@@ -81,6 +81,10 @@ echo.
 if errorlevel 1 goto :restoreFailed
 
 echo.
+echo [INFO] Ensuring luma_db is in MULTI_USER mode ...
+"%SQLCMD%" -S %SQL_SERVER% -U sa -P 1 -C -Q "ALTER DATABASE [luma_db] SET MULTI_USER WITH ROLLBACK IMMEDIATE;" >nul 2>&1
+
+echo.
 echo ============================================
 echo   [SUCCESS] Database 'luma_db' restored.
 echo ============================================

@@ -120,6 +120,13 @@ echo.
 echo [2/5] Starting Backend (Spring Boot - Maven)...
 echo      Note: Backend requires MANUAL RESTART when Java code changes
 echo.
+
+:: Ensure luma_db is in MULTI_USER mode (fixes SQL 924 after a restore).
+:: Silent / best-effort: ignore if sqlcmd is missing or DB is already OK.
+for %%S in ("localhost,1433" "localhost" ".\SQLEXPRESS" "localhost\SQLEXPRESS") do (
+    sqlcmd -S %%~S -U sa -P 1 -C -l 3 -Q "IF DB_ID('luma_db') IS NOT NULL ALTER DATABASE [luma_db] SET MULTI_USER WITH ROLLBACK IMMEDIATE;" >nul 2>&1
+)
+
 start "LUMA Backend" cmd /k "cd /d "%PROJECT_DIR%\backend" && mvnw spring-boot:run"
 
 timeout /t 5 /nobreak > nul
