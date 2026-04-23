@@ -261,7 +261,7 @@ const VerificationQueue = ({ isApplication, onChange }) => {
                 </Stack>
             ),
         },
-        ...(isApplication ? [] : [{
+        {
             field: 'documentType',
             headerName: 'Document',
             minWidth: 170,
@@ -274,7 +274,8 @@ const VerificationQueue = ({ isApplication, onChange }) => {
                     <Typography variant="body2">{DOC_LABEL[params.row.documentType]}</Typography>
                 </Stack>
             ) : <Typography variant="caption" color="text.disabled">—</Typography>,
-        }, {
+        },
+        {
             field: 'aiStatus',
             headerName: 'AI',
             width: 150,
@@ -293,7 +294,7 @@ const VerificationQueue = ({ isApplication, onChange }) => {
                     </Tooltip>
                 );
             },
-        }]),
+        },
         {
             field: 'submittedAt',
             headerName: 'Submitted',
@@ -456,7 +457,7 @@ const ReviewDialog = ({
             </DialogTitle>
             <DialogContent dividers>
                 <Grid container spacing={3}>
-                    <Grid item xs={12} md={isApp ? 12 : 6}>
+                    <Grid item xs={12} md={6}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>Applicant</Typography>
                         <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
                             <Avatar src={selected.organiserAvatarUrl} sx={{ width: 48, height: 48 }}>
@@ -506,74 +507,75 @@ const ReviewDialog = ({
                                 />
                                 <InfoRow label="Contact email" value={selected.organisationContactEmail} />
                                 <InfoRow label="Contact phone" value={selected.organisationContactPhone} />
+                                <Divider sx={{ my: 2 }} />
                             </>
                         )}
 
-                        {!isApp && (
-                            <>
-                                <InfoRow label="Document type" value={DOC_LABEL[selected.documentType]} />
-                                <InfoRow label="Legal name" value={selected.legalName} />
-                                <InfoRow label="Document number" value={selected.documentNumber} />
+                        <InfoRow label="Document type" value={DOC_LABEL[selected.documentType]} />
+                        <InfoRow label="Legal name" value={selected.legalName} />
+                        <InfoRow label="Document number" value={selected.documentNumber} />
 
-                                {selected.documentType === 'CITIZEN_ID' && (
-                                    <Alert severity="warning" icon={<WarningIcon />} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">
-                                            Document is a <strong>Citizen ID</strong>. Granting the Verified
-                                            badge to individuals is unusual — prefer business licences.
-                                        </Typography>
-                                    </Alert>
-                                )}
-
-                                <Divider sx={{ my: 2 }} />
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    <AIIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
-                                    AI pre-check
+                        {!isApp && selected.documentType === 'CITIZEN_ID' && (
+                            <Alert severity="warning" icon={<WarningIcon />} sx={{ mt: 1 }}>
+                                <Typography variant="caption">
+                                    Document is a <strong>Citizen ID</strong>. Granting the Verified
+                                    badge to individuals is unusual — prefer business licences.
                                 </Typography>
-                                {selected.aiStatus ? (
-                                    <Box
-                                        sx={{
-                                            p: 1.5,
-                                            borderRadius: 2,
-                                            bgcolor: 'grey.50',
-                                            border: '1px solid',
-                                            borderColor: 'divider',
-                                        }}
-                                    >
-                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                                            <Chip
-                                                size="small"
-                                                label={selected.aiStatus}
-                                                color={AI_CHIP_COLOR[selected.aiStatus] || 'default'}
-                                            />
-                                            {selected.aiConfidence != null && (
-                                                <Typography variant="caption" color="text.secondary">
-                                                    Confidence: {selected.aiConfidence}%
-                                                </Typography>
-                                            )}
-                                        </Stack>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {selected.aiReason || 'No reason provided.'}
+                            </Alert>
+                        )}
+
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            <AIIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
+                            AI pre-check
+                        </Typography>
+                        {selected.aiStatus ? (
+                            <Box
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    bgcolor: 'grey.50',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                }}
+                            >
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                                    <Chip
+                                        size="small"
+                                        label={selected.aiStatus}
+                                        color={AI_CHIP_COLOR[selected.aiStatus] || 'default'}
+                                    />
+                                    {selected.aiConfidence != null && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Confidence: {selected.aiConfidence}%
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                                            AI is a hint only — your manual review is authoritative.
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    <Typography variant="body2" color="text.secondary">
-                                        AI pre-check was not available.
-                                    </Typography>
-                                )}
-                            </>
+                                    )}
+                                </Stack>
+                                <Typography variant="body2" color="text.secondary">
+                                    {selected.aiReason || 'No reason provided.'}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                    AI is a hint only — your manual review is authoritative.
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary">
+                                AI pre-check was not available.
+                            </Typography>
                         )}
                     </Grid>
 
-                    {!isApp && (
-                        <Grid item xs={12} md={6}>
-                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Uploaded documents ({selected.documentUrls?.length || 0})
+                    <Grid item xs={12} md={6}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            Uploaded documents ({selected.documentUrls?.length || 0})
+                        </Typography>
+                        {(selected.documentUrls?.length || 0) === 0 ? (
+                            <Typography variant="body2" color="text.secondary">
+                                No documents were uploaded.
                             </Typography>
+                        ) : (
                             <Stack spacing={2}>
-                                {(selected.documentUrls || []).map((url, i) => (
+                                {selected.documentUrls.map((url, i) => (
                                     <Box
                                         key={`${url}-${i}`}
                                         sx={{
@@ -612,8 +614,8 @@ const ReviewDialog = ({
                                     </Box>
                                 ))}
                             </Stack>
-                        </Grid>
-                    )}
+                        )}
+                    </Grid>
 
                     {selected.status !== 'PENDING' && (
                         <Grid item xs={12}>
