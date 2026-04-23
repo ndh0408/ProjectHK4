@@ -5,5 +5,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Runtime log files (spring logging.file.name + daily rollovers)
+*.log
+*.log.*.tmp
+backend-debug.log*
+
 # Environment variables - NEVER commit
 .env

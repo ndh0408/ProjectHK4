@@ -1,8 +1,15 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 abstract final class ApiConstants {
   static String get _host {
+    // Allow override via .env — useful for physical devices where the
+    // Android emulator alias 10.0.2.2 doesn't resolve. Set API_HOST to the
+    // laptop's LAN IP, or to "localhost" when using `adb reverse tcp:8080`.
+    final override = dotenv.maybeGet('API_HOST');
+    if (override != null && override.isNotEmpty) return override;
+
     if (kIsWeb) return 'localhost';
     if (Platform.isAndroid) return '10.0.2.2';
     return 'localhost';
