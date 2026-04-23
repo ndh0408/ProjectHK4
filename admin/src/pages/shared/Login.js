@@ -25,6 +25,8 @@ import {
     People as PeopleIcon,
     TrendingUp as AnalyticsIcon,
     CheckCircleOutline as CheckIcon,
+    RocketLaunch as RocketLaunchIcon,
+    ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { publicApi } from '../../api';
@@ -384,30 +386,88 @@ const Login = () => {
                     <Box
                         sx={{
                             mt: 2.5,
-                            p: 2.25,
-                            borderRadius: 2,
+                            p: 2.5,
+                            borderRadius: 3,
+                            position: 'relative',
+                            overflow: 'hidden',
                             border: '1px solid',
                             borderColor: 'primary.100',
-                            bgcolor: 'primary.50',
+                            background: (theme) =>
+                                `linear-gradient(135deg, ${theme.palette.primary[50] || '#EEF2FF'} 0%, ${theme.palette.secondary[50] || '#FDF2F8'} 100%)`,
                             display: 'flex',
                             alignItems: 'center',
                             gap: 2,
+                            '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                top: -40,
+                                right: -40,
+                                width: 140,
+                                height: 140,
+                                borderRadius: '50%',
+                                background: (theme) =>
+                                    `radial-gradient(circle, ${theme.palette.primary.main}18 0%, transparent 70%)`,
+                                pointerEvents: 'none',
+                            },
                         }}
                     >
-                        <Box sx={{ flex: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.25 }}>
+                        <Box
+                            sx={{
+                                width: 44,
+                                height: 44,
+                                flexShrink: 0,
+                                borderRadius: 2,
+                                display: 'grid',
+                                placeItems: 'center',
+                                background: (theme) =>
+                                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                color: '#fff',
+                                boxShadow: (theme) =>
+                                    `0 6px 16px ${theme.palette.primary.main}40`,
+                            }}
+                        >
+                            <RocketLaunchIcon fontSize="small" />
+                        </Box>
+                        <Box sx={{ flex: 1, minWidth: 0, position: 'relative', zIndex: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.25 }}>
                                 Want to organise events?
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                                Apply to become a LUMA organiser — approval usually takes 1-2 business days.
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.45 }}>
+                                Apply to become a LUMA organiser — approval usually takes 1–2 business days.
                             </Typography>
                         </Box>
                         <Button
                             component={RouterLink}
                             to="/apply-organiser"
-                            variant="outlined"
-                            size="small"
-                            sx={{ whiteSpace: 'nowrap' }}
+                            variant="contained"
+                            disableElevation
+                            endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
+                            sx={{
+                                position: 'relative',
+                                zIndex: 1,
+                                whiteSpace: 'nowrap',
+                                px: 2,
+                                py: 0.85,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                textTransform: 'none',
+                                borderRadius: 2,
+                                color: '#fff',
+                                background: (theme) =>
+                                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+                                boxShadow: (theme) =>
+                                    `0 8px 20px ${theme.palette.primary.main}33`,
+                                transition: 'transform 180ms ease, box-shadow 180ms ease, filter 180ms ease',
+                                '&:hover': {
+                                    transform: 'translateY(-1px)',
+                                    filter: 'brightness(1.05)',
+                                    boxShadow: (theme) =>
+                                        `0 10px 24px ${theme.palette.primary.main}4D`,
+                                },
+                                '&:active': {
+                                    transform: 'translateY(0)',
+                                },
+                            }}
                         >
                             Apply now
                         </Button>
