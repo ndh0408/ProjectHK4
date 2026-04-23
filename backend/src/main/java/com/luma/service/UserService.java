@@ -20,13 +20,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    public static final int OTP_EXPIRY_MINUTES = 10;
+    public static final int OTP_RESEND_COOLDOWN_SECONDS = 60;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public User getEntityById(UUID id) {
@@ -59,16 +64,95 @@ public class UserService {
             throw new BadRequestException("Phone number is already in use");
         }
 
-        User user = User.builder()
+        User.UserBuilder builder = User.builder()
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .role(UserRole.USER)
                 .status(UserStatus.ACTIVE)
-                .build();
+                .emailVerified(false);
 
+        String plainOtp = null;
+        if (request.getEmail() != null) {
+            plainOtp = generateOtp();
+            builder.verificationCode(passwordEncoder.encode(plainOtp))
+                    .verificationCodeExpiry(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES));
+        }
+
+        User user = userRepository.save(builder.build());
+
+        if (plainOtp != null) {
+            emailService.sendOtpEmail(user.getEmail(), user.getFullName(), plainOtp, OTP_EXPIRY_MINUTES);
+        }
+
+        return user;
+    }
+
+    /**
+     * Regenerate and email a fresh OTP. Enforces a cooldown so a user who
+     * spams "resend" cannot flood their inbox or exhaust our SMTP quota.
+     */
+    @Transactional
+    public void issueOtp(String email) {
+        User user = getEntityByEmail(email);
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException("This email is already verified");
+        }
+        if (user.getEmail() == null) {
+            throw new BadRequestException("No email on file for this account");
+        }
+
+        if (user.getVerificationCodeExpiry() != null) {
+            LocalDateTime lastIssuedAt = user.getVerificationCodeExpiry()
+                    .minusMinutes(OTP_EXPIRY_MINUTES);
+            long secondsSinceIssue = java.time.Duration
+                    .between(lastIssuedAt, LocalDateTime.now())
+                    .getSeconds();
+            if (secondsSinceIssue >= 0 && secondsSinceIssue < OTP_RESEND_COOLDOWN_SECONDS) {
+                long wait = OTP_RESEND_COOLDOWN_SECONDS - secondsSinceIssue;
+                throw new BadRequestException(
+                        "Please wait " + wait + " seconds before requesting a new code");
+            }
+        }
+
+        String plainOtp = generateOtp();
+        user.setVerificationCode(passwordEncoder.encode(plainOtp));
+        user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES));
+        userRepository.save(user);
+
+        emailService.sendOtpEmail(user.getEmail(), user.getFullName(), plainOtp, OTP_EXPIRY_MINUTES);
+    }
+
+    @Transactional
+    public User confirmOtp(String email, String otp) {
+        User user = getEntityByEmail(email);
+
+        if (user.isEmailVerified()) {
+            return user;
+        }
+
+        if (user.getVerificationCode() == null || user.getVerificationCodeExpiry() == null) {
+            throw new BadRequestException("No verification code found. Please request a new one.");
+        }
+
+        if (user.getVerificationCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Verification code has expired. Please request a new one.");
+        }
+
+        if (!passwordEncoder.matches(otp, user.getVerificationCode())) {
+            throw new BadRequestException("Invalid verification code");
+        }
+
+        user.setEmailVerified(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiry(null);
         return userRepository.save(user);
+    }
+
+    private String generateOtp() {
+        return String.format("%06d", ThreadLocalRandom.current().nextInt(1_000_000));
     }
 
     @Transactional

@@ -8,6 +8,7 @@ import com.luma.dto.request.GoogleAuthRequest;
 import com.luma.dto.request.LoginRequest;
 import com.luma.dto.request.RegisterRequest;
 import com.luma.dto.response.AuthResponse;
+import com.luma.dto.response.PendingVerificationResponse;
 import com.luma.dto.response.UserResponse;
 import com.luma.entity.RefreshToken;
 import com.luma.entity.User;
@@ -51,18 +52,50 @@ public class AuthService {
     @Value("${google.client-id}")
     private String googleClientId;
 
+    /**
+     * Registration now issues an OTP instead of a JWT. The caller must prove
+     * ownership of the email via {@link #verifyOtp} before they get a token.
+     * If the only contact is a phone (no email), we have no channel for OTP,
+     * so phone-only registrations fall back to the legacy immediate-login path.
+     */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public Object register(RegisterRequest request) {
         if (request.getEmail() == null && request.getPhone() == null) {
             throw new BadRequestException("Email or phone number is required");
         }
 
         User user = userService.createUser(request);
+
+        if (user.getEmail() != null && !user.isEmailVerified()) {
+            return PendingVerificationResponse.builder()
+                    .email(user.getEmail())
+                    .needsVerification(true)
+                    .otpExpiresInSeconds(UserService.OTP_EXPIRY_MINUTES * 60)
+                    .build();
+        }
+
         return generateAuthResponse(user);
     }
 
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse verifyOtp(String email, String otp) {
+        User user = userService.confirmOtp(email, otp);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new UnauthorizedException("Your account has been locked. Please contact administrator.");
+        }
+
+        userService.updateLastLogin(user.getId());
+        return generateAuthResponse(user);
+    }
+
+    @Transactional
+    public void resendOtp(String email) {
+        userService.issueOtp(email);
+    }
+
+    @Transactional
+    public Object login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
@@ -72,6 +105,14 @@ public class AuthService {
 
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new UnauthorizedException("Your account has been locked. Please contact administrator.");
+        }
+
+        if (user.getEmail() != null && !user.isEmailVerified()) {
+            return PendingVerificationResponse.builder()
+                    .email(user.getEmail())
+                    .needsVerification(true)
+                    .otpExpiresInSeconds(UserService.OTP_EXPIRY_MINUTES * 60)
+                    .build();
         }
 
         userService.updateLastLogin(user.getId());
@@ -101,6 +142,18 @@ public class AuthService {
     @Transactional
     public void logout(User user) {
         refreshTokenRepository.deleteByUser(user);
+    }
+
+    @Transactional
+    public AuthResponse issueSessionForUserId(UUID userId) {
+        User user = userService.getEntityById(userId);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new UnauthorizedException("Your account has been locked. Please contact administrator.");
+        }
+
+        userService.updateLastLogin(user.getId());
+        return generateAuthResponse(user);
     }
 
     @Transactional

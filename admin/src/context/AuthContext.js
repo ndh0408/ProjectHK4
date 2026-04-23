@@ -15,6 +15,15 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const persistUser = useCallback((userData) => {
+        if (userData) {
+            localStorage.setItem('user', JSON.stringify(userData));
+        } else {
+            localStorage.removeItem('user');
+        }
+        setUser(userData);
+    }, []);
+
     const logout = useCallback(async () => {
         try {
             const refreshToken = localStorage.getItem('refreshToken');
@@ -44,8 +53,7 @@ export const AuthProvider = ({ children }) => {
                     const response = await authApi.getProfile();
                     if (!cancelled) {
                         const userData = response.data.data;
-                        setUser(userData);
-                        localStorage.setItem('user', JSON.stringify(userData));
+                        persistUser(userData);
                     }
                 } catch (error) {
                     if (!cancelled) {
@@ -61,7 +69,7 @@ export const AuthProvider = ({ children }) => {
         return () => {
             cancelled = true;
         };
-    }, [logout]);
+    }, [logout, persistUser]);
 
     const login = useCallback(async (email, password) => {
         const response = await authApi.login(email, password);
@@ -73,10 +81,23 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem('accessToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
+        persistUser(userData);
 
         return userData;
+    }, [persistUser]);
+
+    const updateUser = useCallback((partialUser) => {
+        setUser((currentUser) => {
+            if (!currentUser) {
+                return currentUser;
+            }
+            const nextUser = {
+                ...currentUser,
+                ...partialUser,
+            };
+            localStorage.setItem('user', JSON.stringify(nextUser));
+            return nextUser;
+        });
     }, []);
 
     const isAdmin = useCallback(() => user?.role === 'ADMIN', [user]);
@@ -87,10 +108,11 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        updateUser,
         isAdmin,
         isOrganiser,
         isAuthenticated: !!user,
-    }), [user, loading, login, logout, isAdmin, isOrganiser]);
+    }), [user, loading, login, logout, updateUser, isAdmin, isOrganiser]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

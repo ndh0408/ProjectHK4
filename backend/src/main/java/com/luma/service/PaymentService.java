@@ -44,6 +44,7 @@ public class PaymentService {
     private final EventService eventService;
     private final CommissionService commissionService;
     private final CouponService couponService;
+    private final WaitlistService waitlistService;
 
     @Value("${stripe.secret-key}")
     private String stripeSecretKey;
@@ -60,6 +61,17 @@ public class PaymentService {
     @PostConstruct
     public void init() {
         Stripe.apiKey = stripeSecretKey;
+    }
+
+    /**
+     * Hard guard before we let a user move money. Skips users who signed up
+     * with phone only (no email on file) since they have no OTP channel.
+     */
+    private void requireVerifiedEmail(User user) {
+        if (user.getEmail() != null && !user.isEmailVerified()) {
+            throw new BadRequestException(
+                    "EMAIL_NOT_VERIFIED: Please verify your email before making a purchase");
+        }
     }
 
     private BigDecimal getActualPrice(Registration registration) {
@@ -93,6 +105,8 @@ public class PaymentService {
 
     @Transactional
     public PaymentIntentResponse createPaymentIntent(UUID registrationId, User user, String couponCode) {
+        requireVerifiedEmail(user);
+
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
 
@@ -346,6 +360,22 @@ public class PaymentService {
         payment.setFailureReason(failureMessage);
         paymentRepository.save(payment);
 
+        Registration registration = payment.getRegistration();
+        // If this payment belongs to a waitlist-promoted registration, releasing
+        // the seat is required — otherwise the PENDING row holds the ticket
+        // pool slot forever and the next waitlist user never gets promoted.
+        if (registration != null
+                && registration.getStatus() == RegistrationStatus.PENDING
+                && registration.getPaymentDeadline() != null) {
+            try {
+                waitlistService.releasePromotedRegistration(registration,
+                        "payment_failed: " + failureMessage);
+            } catch (Exception e) {
+                log.error("Failed to release promoted registration {} after payment failure: {}",
+                        registration.getId(), e.getMessage(), e);
+            }
+        }
+
         log.info("Webhook: Payment failed for payment intent {}: {}", paymentIntentId, failureMessage);
     }
 
@@ -484,6 +514,8 @@ public class PaymentService {
 
     @Transactional
     public PaymentIntentResponse createCheckoutSession(UUID registrationId, User user, String couponCode) {
+        requireVerifiedEmail(user);
+
         Registration registration = registrationRepository.findById(registrationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Registration not found"));
 

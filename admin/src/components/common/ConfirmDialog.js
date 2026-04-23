@@ -25,7 +25,7 @@ const ConfirmDialog = ({
         <Dialog open={open} onClose={onCancel} fullWidth maxWidth="xs">
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
-                <DialogContentText component="div">
+                <DialogContentText component="div" sx={{ whiteSpace: 'pre-line' }}>
                     {message}
                     {entityName && (
                         <Box

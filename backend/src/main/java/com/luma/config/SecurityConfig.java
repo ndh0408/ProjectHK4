@@ -53,6 +53,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/webhooks/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 // Swagger access controlled by springdoc.api-docs.enabled / springdoc.swagger-ui.enabled
                 // Set SWAGGER_ENABLED=false in production .env to disable

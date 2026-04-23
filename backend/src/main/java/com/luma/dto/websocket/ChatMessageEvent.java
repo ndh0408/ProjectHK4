@@ -17,6 +17,7 @@ public class ChatMessageEvent {
     public enum EventType {
         NEW_MESSAGE,
         MESSAGE_DELETED,
+        PINNED_MESSAGE_UPDATED,
         TYPING,
         READ,
         ONLINE,

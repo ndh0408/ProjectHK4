@@ -948,6 +948,102 @@ public class AIService {
         return callOpenAiApi(systemPrompt, userPrompt.toString(), 1000);
     }
 
+    public String analyzeVerificationDocument(List<String> imageUrls,
+                                               com.luma.entity.enums.VerificationDocumentType documentType) {
+        String docLabel = documentType == com.luma.entity.enums.VerificationDocumentType.BUSINESS_LICENSE
+                ? "Vietnamese Business Registration Certificate (Giấy chứng nhận đăng ký doanh nghiệp)"
+                : "Vietnamese Citizen Identity Card (Căn cước công dân / CCCD)";
+
+        String systemPrompt = """
+            You are a document verification assistant for an event platform.
+            You will be given one or more images of a document an event organiser uploaded.
+            The organiser claims the document is a: %s.
+
+            Your task: decide whether the uploaded images plausibly look like the claimed document.
+
+            Rules:
+            1. Do NOT make a final approve/reject decision. A human admin will decide.
+            2. Classify into ONE of these statuses:
+               - "VALID": Clear image, layout & fields consistent with the claimed document type, no obvious signs of tampering.
+               - "SUSPICIOUS": Blurry, partially obscured, low resolution, fields missing, or unusual layout but could still be genuine.
+               - "INVALID": Clearly not the claimed document (random photo, screenshot of something else, meme, blank page, test image).
+            3. Provide a short reason (1-2 sentences) in Vietnamese explaining what you saw.
+            4. Provide a confidence score 0-100 (how confident you are in your classification).
+            5. Return ONLY a JSON object, no markdown, no extra text.
+
+            JSON format:
+            {
+              "status": "VALID" | "SUSPICIOUS" | "INVALID",
+              "confidence": 0-100,
+              "reason": "Short Vietnamese explanation"
+            }
+            """.formatted(docLabel);
+
+        try {
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("model", model);
+            requestBody.put("max_tokens", 300);
+            requestBody.put("temperature", 0.2);
+
+            List<Map<String, Object>> messages = new ArrayList<>();
+
+            Map<String, Object> systemMessage = new LinkedHashMap<>();
+            systemMessage.put("role", "system");
+            systemMessage.put("content", systemPrompt);
+            messages.add(systemMessage);
+
+            List<Map<String, Object>> userContent = new ArrayList<>();
+            Map<String, Object> textPart = new LinkedHashMap<>();
+            textPart.put("type", "text");
+            textPart.put("text", "Claimed document type: " + docLabel
+                    + ". Analyze the attached image(s) and return JSON only.");
+            userContent.add(textPart);
+
+            for (String url : imageUrls) {
+                if (url == null || url.isBlank()) continue;
+                Map<String, Object> imagePart = new LinkedHashMap<>();
+                imagePart.put("type", "image_url");
+                Map<String, Object> imageUrl = new LinkedHashMap<>();
+                imageUrl.put("url", url);
+                imageUrl.put("detail", "low");
+                imagePart.put("image_url", imageUrl);
+                userContent.add(imagePart);
+            }
+
+            Map<String, Object> userMessage = new LinkedHashMap<>();
+            userMessage.put("role", "user");
+            userMessage.put("content", userContent);
+            messages.add(userMessage);
+
+            requestBody.put("messages", messages);
+
+            String requestJson = objectMapper.writeValueAsString(requestBody);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
+
+            String responseStr = restTemplate.postForObject(OPENAI_API_URL, entity, String.class);
+            JsonNode responseJson = objectMapper.readTree(responseStr);
+            JsonNode choices = responseJson.get("choices");
+
+            if (choices != null && choices.isArray() && choices.size() > 0) {
+                String content = choices.get(0).get("message").get("content").asText().trim();
+                if (content.startsWith("```")) {
+                    content = content.replaceAll("^```(?:json)?\\s*", "").replaceAll("```\\s*$", "").trim();
+                }
+                return content;
+            }
+
+            log.warn("OpenAI Vision returned no choices");
+            return null;
+        } catch (Exception e) {
+            log.error("Failed to analyze verification document: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             log.info("=== Starting OpenAI API Call ===");

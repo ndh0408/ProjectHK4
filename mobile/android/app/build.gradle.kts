@@ -5,6 +5,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Apply the Firebase google-services plugin only when the config file exists.
+// Without this guard the build fails before a dev has a chance to drop the
+// JSON in. See SETUP_FCM.md for the full setup instructions.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.example.mobile"
     compileSdk = flutter.compileSdkVersion

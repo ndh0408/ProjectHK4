@@ -40,7 +40,7 @@ if exist "%PROJECT_DIR%\admin\build" (
 )
 echo.
 
-echo [1/4] Checking for connected Android device / emulator...
+echo [1/5] Checking for connected Android device / emulator...
 echo.
 
 set "ADB="
@@ -117,39 +117,48 @@ exit /b 1
 echo      [OK] Android device ready.
 echo.
 
-echo [2/4] Starting Backend (Spring Boot - Maven)...
+echo [2/5] Starting Backend (Spring Boot - Maven)...
 echo      Note: Backend requires MANUAL RESTART when Java code changes
 echo.
 start "LUMA Backend" cmd /k "cd /d "%PROJECT_DIR%\backend" && mvnw spring-boot:run"
 
 timeout /t 5 /nobreak > nul
 
-echo [3/4] Starting Admin Frontend (React) - fresh dev server...
+echo [3/5] Starting Admin Frontend (React) on port 3000 - fresh dev server...
 echo      Note: Frontend has HOT RELOAD - changes auto-refresh in browser
 echo.
 start "LUMA Admin Frontend" cmd /k "cd /d "%PROJECT_DIR%\admin" && set BROWSER=none && set FAST_REFRESH=true && npm start"
 
 timeout /t 2 /nobreak > nul
 
-echo [4/4] Launching Mobile App on Android (flutter run)...
+echo [4/5] Launching Mobile App on Android (flutter run)...
 echo      Hot Reload: press 'r' in the Flutter console to reload, 'R' for full restart.
 echo.
 start "LUMA Mobile App" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" pub get && "%FLUTTER_PATH%" run -d %ANDROID_DEVICE_ID%"
+
+timeout /t 2 /nobreak > nul
+
+echo [5/5] Launching Flutter Web (user-facing) on port 5000...
+echo      Opens in Chrome. Same codebase as the mobile app, compiled to web.
+echo.
+start "LUMA Flutter Web (User)" cmd /k "cd /d "%PROJECT_DIR%\mobile" && "%FLUTTER_PATH%" run -d chrome --web-port=5000"
 
 echo.
 echo ============================================
 echo           All Services Starting!
 echo ============================================
 echo.
-echo Backend:       http://localhost:8080
-echo Admin:         http://localhost:3000
-echo Mobile:        Running as native app on Android device/emulator
-echo Swagger:       http://localhost:8080/swagger-ui.html
+echo Backend:        http://localhost:8080
+echo Admin (React):  http://localhost:3000
+echo User Web:       http://localhost:5000   (Flutter web, opens in Chrome)
+echo Mobile:         Running as native app on Android device/emulator
+echo Swagger:        http://localhost:8080/swagger-ui.html
 echo.
 echo ============================================
 echo                 IMPORTANT
 echo ============================================
 echo - Admin (React):     Auto-reload on file save (dev cache auto-cleared at startup)
+echo - User Web (Flutter):Chrome opens automatically; press 'r' in its console for hot reload
 echo - Mobile (Flutter):  Native app - press 'r' in its console to hot reload
 echo                      Make sure emulator/device is running BEFORE this step
 echo - Backend (Java):    RESTART REQUIRED on code change

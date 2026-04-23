@@ -187,7 +187,7 @@ const Sidebar = ({ open, onClose }) => {
                 }}
             >
                 <Avatar
-                    src={user?.avatarUrl}
+                    src={user?.avatarUrl || user?.logoUrl || user?.coverUrl}
                     sx={{
                         width: 36,
                         height: 36,

@@ -27,7 +27,7 @@ public class OrganiserProfile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
     private String displayName;
 
     @Column(columnDefinition = "NVARCHAR(MAX)")
@@ -41,6 +41,7 @@ public class OrganiserProfile {
 
     private String contactEmail;
 
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String contactPhone;
 
     @Builder.Default

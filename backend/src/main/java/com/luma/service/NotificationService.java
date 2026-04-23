@@ -37,6 +37,7 @@ public class NotificationService {
     private final FollowRepository followRepository;
     private final WebSocketNotificationService webSocketNotificationService;
     private final EmailService emailService;
+    private final FcmPushService fcmPushService;
 
     @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getUserNotifications(User user, Pageable pageable) {
@@ -95,6 +96,13 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
 
         webSocketNotificationService.sendToUser(user.getId(), notification);
+
+        try {
+            fcmPushService.sendToUser(user, title, message, type, referenceId, referenceType);
+        } catch (Exception e) {
+            log.warn("FCM push failed for user {} (notification {}): {}",
+                    user.getId(), notification.getId(), e.getMessage());
+        }
 
         return notification;
     }
@@ -165,12 +173,21 @@ public class NotificationService {
 
     @Transactional
     public void sendPromotedFromWaitingListNotification(Registration registration) {
+        boolean requiresPayment = registration.getStatus() == com.luma.entity.enums.RegistrationStatus.PENDING
+                && registration.getPaymentDeadline() != null;
+        String title = requiresPayment ? "Spot opened — pay to confirm" : "You're In!";
+        String body = requiresPayment
+                ? "A spot opened up for \"" + registration.getEvent().getTitle()
+                        + "\". Complete payment within "
+                        + com.luma.service.WaitlistService.PROMOTED_PAYMENT_DEADLINE_MINUTES
+                        + " minutes to secure it."
+                : "Great news! A spot opened up and you've been moved from the waiting list. " +
+                        "Your registration for \"" + registration.getEvent().getTitle() + "\" is now approved!";
         sendNotification(
                 registration.getUser(),
-                "You're In!",
-                "Great news! A spot opened up and you've been moved from the waiting list. " +
-                        "Your registration for \"" + registration.getEvent().getTitle() + "\" is now approved!",
-                NotificationType.REGISTRATION_APPROVED,
+                title,
+                body,
+                NotificationType.WAITLIST_OFFER,
                 registration.getEvent().getId(),
                 "EVENT"
         );

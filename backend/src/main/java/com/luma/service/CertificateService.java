@@ -335,8 +335,7 @@ public class CertificateService {
                     bodyBoldFont,
                     bodyFont,
                     certificateCode,
-                    issuedDate,
-                    resolveOrganiserLogoUrl(organiser, organiserProfile)
+                    issuedDate
             );
 
             addTextBlock(
@@ -560,8 +559,7 @@ public class CertificateService {
             PdfFont bodyBoldFont,
             PdfFont bodyFont,
             String certificateCode,
-            String issuedDate,
-            String logoUrl
+            String issuedDate
     ) throws IOException {
         float bandX = 46;
         float bandY = pageHeight - 108;
@@ -588,10 +586,10 @@ public class CertificateService {
                 .fill()
                 .restoreState();
 
-        ImageData logoImageData = tryLoadRemoteImage(logoUrl);
+        ImageData logoImageData = loadPlatformLogo();
         if (logoImageData != null) {
             Image logoImage = new Image(logoImageData);
-            logoImage.scaleToFit(40, 40);
+            logoImage.scaleToFit(44, 44);
             logoImage.setFixedPosition(
                     logoCardX + (logoCardSize - logoImage.getImageScaledWidth()) / 2,
                     logoCardY + (logoCardSize - logoImage.getImageScaledHeight()) / 2
@@ -910,6 +908,15 @@ public class CertificateService {
         }
     }
 
+    private ImageData loadPlatformLogo() {
+        try (InputStream inputStream = new ClassPathResource("static/luma-logo.png").getInputStream()) {
+            return ImageDataFactory.create(inputStream.readAllBytes());
+        } catch (Exception e) {
+            log.debug("Could not load platform logo from classpath: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private ImageData tryLoadRemoteImage(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {
             return null;
@@ -984,7 +991,10 @@ public class CertificateService {
             Map<String, Object> options = ObjectUtils.asMap(
                     "folder", "luma/certificates",
                     "public_id", certificateCode,
-                    "resource_type", "raw"
+                    "resource_type", "image",
+                    "format", "pdf",
+                    "use_filename", false,
+                    "unique_filename", false
             );
 
             Map<?, ?> result = cloudinary.uploader().upload(pdfBytes, options);

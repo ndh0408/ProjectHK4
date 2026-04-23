@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/app_components.dart';
@@ -26,10 +27,13 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
   List<Event>? _similarEvents;
   bool _loadingSimilar = false;
   Event? _firstSelectedEvent;
+  late final PageController _comparisonPageController;
+  int _currentComparisonPage = 0;
 
   @override
   void initState() {
     super.initState();
+    _comparisonPageController = PageController(viewportFraction: 0.88);
     // Sync eventIds from navigation to the provider without clearing existing ones
     // This ensures events added via the comparison button are preserved
     if (widget.eventIds != null && widget.eventIds!.isNotEmpty) {
@@ -42,6 +46,12 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
     });
+  }
+
+  @override
+  void dispose() {
+    _comparisonPageController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeScreen() async {
@@ -97,6 +107,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       setState(() {
         _data = data;
         _loading = false;
+        _currentComparisonPage = 0;
       });
     } catch (e) {
       setState(() => _loading = false);
@@ -134,9 +145,13 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
         _data = null;
         _firstSelectedEvent = null;
         _similarEvents = null;
+        _currentComparisonPage = 0;
       });
     } else if (selectedIds.length == 1) {
-      setState(() => _data = null);
+      setState(() {
+        _data = null;
+        _currentComparisonPage = 0;
+      });
       _loadFirstEventAndSimilar(selectedIds.first);
     } else {
       _loadComparison();
@@ -150,6 +165,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       _data = null;
       _firstSelectedEvent = null;
       _similarEvents = null;
+      _currentComparisonPage = 0;
     });
   }
 
@@ -165,35 +181,40 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
           if (selectedIds.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(right: AppSpacing.pageX),
-              child: Container(
-                margin: const EdgeInsets.only(right: AppSpacing.sm),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  borderRadius: AppRadius.allPill,
-                ),
-                child: Text(
-                  '${selectedIds.length}/4',
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.textPrimary,
+              child: Row(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius: AppRadius.allPill,
+                    ),
+                    child: Text(
+                      '${selectedIds.length}/4',
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
-                ),
+                  IconButton(
+                    tooltip: 'Clear selected events',
+                    onPressed: _clearAll,
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppColors.errorLight,
+                      foregroundColor: AppColors.error,
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  ),
+                ],
               ),
             ),
         ],
       ),
       body: _buildBody(selectedIds),
-      floatingActionButton: selectedIds.length >= 2
-          ? FloatingActionButton.extended(
-              onPressed: _clearAll,
-              backgroundColor: AppColors.error,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Clear All'),
-            )
-          : null,
     );
   }
 
@@ -405,9 +426,15 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
 
     // Calculate best values
     final bestValues = _calculateBestValues(events);
+    final isMobile = Responsive.isMobile(context);
 
     return ListView(
-      padding: AppSpacing.screenPadding,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pageX,
+        AppSpacing.pageY,
+        AppSpacing.pageX,
+        AppSpacing.pageY + AppSpacing.section,
+      ),
       children: [
         AppCard(
           margin: const EdgeInsets.only(bottom: AppSpacing.section),
@@ -439,7 +466,9 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Shortlist cards appear first, then the metric table confirms the best value.',
+                      isMobile
+                          ? 'Swipe through the shortlist first, then scan the metric cards below.'
+                          : 'Shortlist cards appear first, then the metric table confirms the best value.',
                       style: AppTypography.body.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -458,35 +487,127 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
             ],
           ),
         ),
-        const SectionHeader(
+        SectionHeader(
           title: 'Compared events',
-          subtitle:
-              'Cards stay visual, while the table below highlights where each event wins.',
+          subtitle: isMobile
+              ? 'One card at a time for easier reading on smaller screens.'
+              : 'Cards stay visual, while the table below highlights where each event wins.',
         ),
         const SizedBox(height: AppSpacing.lg),
+        if (isMobile)
+          _buildMobileComparisonCards(events, bestValues)
+        else
+          SizedBox(
+            height: 320,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: events.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final event = events[index] as Map<String, dynamic>;
+                final eventId = event['id']?.toString() ?? '';
+                final badges = _getBadgesForEvent(event, bestValues, events);
+                return _EventComparisonCard(
+                  event: event,
+                  badges: badges,
+                  isBestValue: badges.isNotEmpty,
+                  width: 220,
+                  onRemove: () => _removeEvent(eventId),
+                  onViewDetails: () => context.push('/event/$eventId'),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: AppSpacing.section),
+        if (isMobile)
+          _buildMobileComparisonBreakdown(events, bestValues)
+        else
+          _buildComparisonTable(events, bestValues),
+      ],
+    );
+  }
+
+  Widget _buildMobileComparisonCards(
+    List<dynamic> events,
+    Map<String, dynamic> bestValues,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Swipe sideways to review each event card without squeezing content.',
+          style: AppTypography.caption.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
         SizedBox(
-          height: 320,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
+          height: 372,
+          child: PageView.builder(
+            controller: _comparisonPageController,
             itemCount: events.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            onPageChanged: (index) {
+              if (_currentComparisonPage != index) {
+                setState(() => _currentComparisonPage = index);
+              }
+            },
             itemBuilder: (context, index) {
               final event = events[index] as Map<String, dynamic>;
               final eventId = event['id']?.toString() ?? '';
               final badges = _getBadgesForEvent(event, bestValues, events);
-              return _EventComparisonCard(
-                event: event,
-                badges: badges,
-                isBestValue: badges.isNotEmpty,
-                onRemove: () => _removeEvent(eventId),
-                onViewDetails: () => context.push('/event/$eventId'),
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: index == events.length - 1 ? 0 : AppSpacing.md,
+                ),
+                child: _EventComparisonCard(
+                  event: event,
+                  badges: badges,
+                  isBestValue: badges.isNotEmpty,
+                  compact: true,
+                  onRemove: () => _removeEvent(eventId),
+                  onViewDetails: () => context.push('/event/$eventId'),
+                ),
               );
             },
           ),
         ),
-        const SizedBox(height: AppSpacing.section),
-        _buildComparisonTable(events, bestValues),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            _buildPageIndicator(events.length),
+            const Spacer(),
+            Text(
+              '${_currentComparisonPage + 1}/${events.length}',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildPageIndicator(int count) {
+    return Row(
+      children: List.generate(count, (index) {
+        final isActive = index == _currentComparisonPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          margin: EdgeInsets.only(
+            right: index == count - 1 ? 0 : AppSpacing.xs,
+          ),
+          width: isActive ? 20 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: isActive
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.18),
+            borderRadius: AppRadius.allPill,
+          ),
+        );
+      }),
     );
   }
 
@@ -641,12 +762,18 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
     return badges;
   }
 
-  Widget _buildComparisonTable(
-      List<dynamic> events, Map<String, dynamic> bestValues) {
-    final rows = [
+  List<_ComparisonRow> _buildComparisonRows(
+    List<dynamic> events,
+    Map<String, dynamic> bestValues,
+  ) {
+    final eventTitles =
+        events.map((e) => e['title']?.toString() ?? 'Untitled').toList();
+
+    return [
       _ComparisonRow(
         label: 'Ticket Price',
         icon: Icons.attach_money,
+        eventTitles: eventTitles,
         values: events.map((e) {
           final price = e['ticketPrice'];
           if (price == null) return 'Free';
@@ -660,6 +787,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       _ComparisonRow(
         label: 'Rating',
         icon: Icons.star,
+        eventTitles: eventTitles,
         values: events.map((e) {
           final rating = e['averageRating'];
           if (rating == null) return 'N/A';
@@ -673,6 +801,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       _ComparisonRow(
         label: 'Registrations',
         icon: Icons.people,
+        eventTitles: eventTitles,
         values: events.map((e) {
           final count = e['registrationCount'];
           if (count == null) return '-';
@@ -687,6 +816,7 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       _ComparisonRow(
         label: 'Fill Rate',
         icon: Icons.pie_chart,
+        eventTitles: eventTitles,
         values: events.map((e) {
           final rate = e['fillRate'];
           if (rate == null) return '-';
@@ -700,34 +830,49 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
       _ComparisonRow(
         label: 'Date',
         icon: Icons.schedule,
-        values: events.map((e) {
-          final startDate = e['startDate'] ?? e['startTime'];
-          if (startDate == null) return '-';
-          try {
-            final date = DateTime.parse(startDate.toString());
-            return DateFormat('dd/MM/yyyy').format(date);
-          } catch (_) {
-            return startDate.toString();
-          }
-        }).toList(),
+        eventTitles: eventTitles,
+        values: events
+            .map((e) => _formatComparisonDate(
+                  e['startDate'] ?? e['startTime'],
+                  pattern: 'dd/MM/yyyy',
+                ))
+            .toList(),
       ),
       _ComparisonRow(
         label: 'Venue',
         icon: Icons.location_on,
+        eventTitles: eventTitles,
         values: events.map((e) => e['venue']?.toString() ?? '-').toList(),
       ),
       _ComparisonRow(
         label: 'City',
         icon: Icons.location_city,
+        eventTitles: eventTitles,
         values: events.map((e) => e['cityName']?.toString() ?? '-').toList(),
       ),
       _ComparisonRow(
         label: 'Category',
         icon: Icons.category,
+        eventTitles: eventTitles,
         values:
             events.map((e) => e['categoryName']?.toString() ?? '-').toList(),
       ),
     ];
+  }
+
+  String _formatComparisonDate(dynamic rawDate,
+      {String pattern = 'dd/MM/yyyy'}) {
+    if (rawDate == null) return '-';
+    try {
+      return DateFormat(pattern).format(DateTime.parse(rawDate.toString()));
+    } catch (_) {
+      return rawDate.toString();
+    }
+  }
+
+  Widget _buildComparisonTable(
+      List<dynamic> events, Map<String, dynamic> bestValues) {
+    final rows = _buildComparisonRows(events, bestValues);
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -757,6 +902,210 @@ class _EventComparisonScreenState extends ConsumerState<EventComparisonScreen> {
             ),
           ),
           ...rows.map((row) => _buildRow(row)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileComparisonBreakdown(
+    List<dynamic> events,
+    Map<String, dynamic> bestValues,
+  ) {
+    final rows = _buildComparisonRows(events, bestValues);
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: const BoxDecoration(
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppRadius.lg),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.analytics_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Detailed Comparison',
+                      style: AppTypography.h4.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Each metric groups all selected events together and marks the leader.',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              children: [
+                for (var index = 0; index < rows.length; index++) ...[
+                  _buildMobileMetricRow(rows[index]),
+                  if (index < rows.length - 1)
+                    const SizedBox(height: AppSpacing.md),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileMetricRow(_ComparisonRow row) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 340;
+        final tileWidth = twoColumns
+            ? (constraints.maxWidth - AppSpacing.md) / 2
+            : constraints.maxWidth;
+
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadius.allMd,
+            border: Border.all(color: AppColors.borderLight),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(row.icon, size: 18, color: AppColors.textSecondary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      row.label,
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
+                children: row.values.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final value = entry.value;
+                  final isHighlighted =
+                      row.highlights.length > index && row.highlights[index];
+                  final title = row.eventTitles.length > index
+                      ? row.eventTitles[index]
+                      : 'Event ${index + 1}';
+
+                  return SizedBox(
+                    width: tileWidth,
+                    child: _buildMetricValueTile(
+                      title: title,
+                      value: value,
+                      isHighlighted: isHighlighted,
+                      highlightColor: row.highlightColor,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetricValueTile({
+    required String title,
+    required String value,
+    required bool isHighlighted,
+    Color? highlightColor,
+  }) {
+    final accent = highlightColor ?? AppColors.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isHighlighted
+            ? accent.withValues(alpha: 0.08)
+            : AppColors.surfaceVariant,
+        borderRadius: AppRadius.allMd,
+        border: Border.all(
+          color: isHighlighted
+              ? accent.withValues(alpha: 0.28)
+              : AppColors.borderLight,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (isHighlighted) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.14),
+                    borderRadius: AppRadius.allPill,
+                  ),
+                  child: Text(
+                    'Best',
+                    style: AppTypography.caption.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.body.copyWith(
+              color: isHighlighted ? accent : AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -976,6 +1325,8 @@ class _EventComparisonCard extends StatelessWidget {
   final Map<String, dynamic> event;
   final List<String> badges;
   final bool isBestValue;
+  final double? width;
+  final bool compact;
   final VoidCallback onRemove;
   final VoidCallback onViewDetails;
 
@@ -983,9 +1334,56 @@ class _EventComparisonCard extends StatelessWidget {
     required this.event,
     required this.badges,
     required this.isBestValue,
+    this.width,
+    this.compact = false,
     required this.onRemove,
     required this.onViewDetails,
   });
+
+  String _formatCardDate(dynamic rawDate) {
+    if (rawDate == null) return '';
+    try {
+      return DateFormat('dd MMM').format(DateTime.parse(rawDate.toString()));
+    } catch (_) {
+      return rawDate.toString();
+    }
+  }
+
+  Widget _buildMetaChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: AppRadius.allPill,
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.overline.copyWith(
+                color: color,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -994,9 +1392,11 @@ class _EventComparisonCard extends StatelessWidget {
     final organiserName = event['organiserName']?.toString() ?? 'Unknown';
     final price = event['ticketPrice'];
     final rating = event['averageRating'];
+    final cityName = event['cityName']?.toString() ?? '';
+    final dateLabel = _formatCardDate(event['startDate'] ?? event['startTime']);
 
     return SizedBox(
-      width: 220,
+      width: width,
       child: AppCard(
         padding: EdgeInsets.zero,
         borderColor: isBestValue
@@ -1008,7 +1408,7 @@ class _EventComparisonCard extends StatelessWidget {
             Stack(
               children: [
                 SizedBox(
-                  height: 120,
+                  height: compact ? 150 : 120,
                   width: double.infinity,
                   child: imageUrl != null && imageUrl.isNotEmpty
                       ? CachedNetworkImage(
@@ -1092,6 +1492,27 @@ class _EventComparisonCard extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    if (dateLabel.isNotEmpty || cityName.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          if (dateLabel.isNotEmpty)
+                            _buildMetaChip(
+                              icon: Icons.schedule_rounded,
+                              label: dateLabel,
+                              color: AppColors.primary,
+                            ),
+                          if (cityName.isNotEmpty)
+                            _buildMetaChip(
+                              icon: Icons.location_on_rounded,
+                              label: cityName,
+                              color: AppColors.textSecondary,
+                            ),
+                        ],
+                      ),
+                    ],
                     const Spacer(),
                     Row(
                       children: [
@@ -1118,6 +1539,7 @@ class _EventComparisonCard extends StatelessWidget {
                           variant: price != null
                               ? StatusChipVariant.primary
                               : StatusChipVariant.success,
+                          compact: compact,
                         ),
                       ],
                     ),
@@ -1142,6 +1564,7 @@ class _EventComparisonCard extends StatelessWidget {
 class _ComparisonRow {
   final String label;
   final IconData icon;
+  final List<String> eventTitles;
   final List<String> values;
   final List<bool> highlights;
   final Color? highlightColor;
@@ -1149,6 +1572,7 @@ class _ComparisonRow {
   _ComparisonRow({
     required this.label,
     required this.icon,
+    required this.eventTitles,
     required this.values,
     this.highlights = const [],
     this.highlightColor,

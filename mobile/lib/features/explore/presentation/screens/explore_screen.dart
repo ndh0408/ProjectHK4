@@ -695,13 +695,12 @@ class _FeaturedCalendarRow extends StatelessWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: AppColors.primarySoft,
-                backgroundImage:
-                    (organiser.logoUrl ?? organiser.avatarUrl) != null
-                        ? CachedNetworkImageProvider(
-                            organiser.logoUrl ?? organiser.avatarUrl!,
-                          )
-                        : null,
-                child: (organiser.logoUrl ?? organiser.avatarUrl) == null
+                backgroundImage: organiser.profileImageUrl != null
+                    ? CachedNetworkImageProvider(
+                        organiser.profileImageUrl!,
+                      )
+                    : null,
+                child: organiser.profileImageUrl == null
                     ? Text(
                         organiser.displayName[0].toUpperCase(),
                         style: AppTypography.h4.copyWith(

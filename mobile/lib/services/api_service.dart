@@ -313,6 +313,30 @@ class ApiService {
     await _client.delete('/user/events/registrations/$registrationId');
   }
 
+  Future<void> registerDeviceToken({
+    required String token,
+    required String platform,
+    String? deviceModel,
+    String? appVersion,
+  }) async {
+    await _client.post<Map<String, dynamic>>(
+      '/user/device-tokens',
+      data: {
+        'token': token,
+        'platform': platform,
+        if (deviceModel != null) 'deviceModel': deviceModel,
+        if (appVersion != null) 'appVersion': appVersion,
+      },
+    );
+  }
+
+  Future<void> unregisterDeviceToken(String token) async {
+    await _client.delete(
+      '/user/device-tokens',
+      queryParameters: {'token': token},
+    );
+  }
+
   Future<void> trackEventView(String eventId) async {
     try {
       await _client
@@ -615,6 +639,15 @@ class ApiService {
   Future<List<OrganiserProfile>> getFeaturedOrganisers() async {
     final response =
         await _client.getRaw<Map<String, dynamic>>('/user/follow/featured');
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data
+        .map((item) => OrganiserProfile.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<OrganiserProfile>> getOrganisers() async {
+    final response =
+        await _client.getRaw<Map<String, dynamic>>('/user/organisers');
     final data = response.data!['data'] as List<dynamic>? ?? [];
     return data
         .map((item) => OrganiserProfile.fromJson(item as Map<String, dynamic>))

@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute, ErrorBoundary } from "./components/common";
 import { MainLayout } from "./components/layout";
 import Login from "./pages/shared/Login";
+import RegisterOrganiser from "./pages/shared/RegisterOrganiser";
 import NotFound from "./pages/shared/NotFound";
 
 import {
@@ -54,6 +55,7 @@ function App() {
                     <BrowserRouter>
                         <Routes>
                             <Route path="/login" element={<Login />} />
+                            <Route path="/apply-organiser" element={<RegisterOrganiser />} />
                             <Route element={<ProtectedRoute allowedRoles={["ADMIN", "ORGANISER"]}><MainLayout /></ProtectedRoute>}>
                                 <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminDashboard /></ProtectedRoute>} />
                                 <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["ADMIN"]}><AdminUsers /></ProtectedRoute>} />

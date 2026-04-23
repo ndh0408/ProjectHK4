@@ -23,6 +23,13 @@ public class WaitlistService {
 
     private static final int OFFER_EXPIRY_MINUTES = 30;
 
+    /**
+     * A paid waitlist-promoted user has this long to complete payment.
+     * Exceeding it releases the seat back to the waitlist via
+     * {@code releasePromotedRegistration}.
+     */
+    public static final int PROMOTED_PAYMENT_DEADLINE_MINUTES = 30;
+
     private final WaitlistOfferRepository waitlistOfferRepository;
     private final RegistrationRepository registrationRepository;
     private final TicketTypeRepository ticketTypeRepository;
@@ -157,9 +164,12 @@ public class WaitlistService {
 
         if (isPaidEvent) {
             registration.setStatus(RegistrationStatus.PENDING);
+            registration.setPaymentDeadline(
+                    LocalDateTime.now().plusMinutes(PROMOTED_PAYMENT_DEADLINE_MINUTES));
         } else {
             registration.setStatus(RegistrationStatus.APPROVED);
             registration.setApprovedAt(LocalDateTime.now());
+            registration.setPaymentDeadline(null);
             eventService.incrementApprovedCount(event);
         }
         registration.setWaitingListPosition(null);
@@ -240,6 +250,44 @@ public class WaitlistService {
         sendWaitlistOfferExpiredNotification(offer);
 
         createOfferForNextInLine(offer.getEvent());
+    }
+
+    /**
+     * Release a PENDING registration that was promoted off the waitlist but
+     * never completed payment (fail/abandon/timeout). Returns the held tickets
+     * to the pool, cancels the registration, and triggers the next waitlist
+     * offer so another user can take the spot.
+     *
+     * Called from:
+     *   - PaymentService webhook on payment_intent.payment_failed
+     *   - PromotedPaymentReclaimScheduler on payment deadline expiry
+     */
+    @Transactional
+    public void releasePromotedRegistration(Registration registration, String reason) {
+        if (registration.getStatus() != RegistrationStatus.PENDING) {
+            log.info("Skip release: registration {} is not PENDING (status={})",
+                    registration.getId(), registration.getStatus());
+            return;
+        }
+
+        Event event = registration.getEvent();
+
+        if (registration.getTicketType() != null && registration.getQuantity() != null) {
+            ticketTypeRepository.decrementSoldCount(
+                    registration.getTicketType().getId(),
+                    registration.getQuantity()
+            );
+        }
+
+        registration.setStatus(RegistrationStatus.CANCELLED);
+        registration.setWaitingListPosition(null);
+        registration.setPaymentDeadline(null);
+        registrationRepository.save(registration);
+
+        log.info("Released promoted PENDING registration {} on event {} (reason: {})",
+                registration.getId(), event.getId(), reason);
+
+        createOfferForNextInLine(event);
     }
 
     public List<WaitlistOfferResponse> getPendingOffersForUser(UUID userId) {

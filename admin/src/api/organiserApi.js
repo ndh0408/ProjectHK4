@@ -13,6 +13,13 @@ const organiserApi = {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
     },
+    uploadCover: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post('/organiser/profile/cover', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
     uploadSignature: (file) => {
         const formData = new FormData();
         formData.append('file', file);
@@ -110,6 +117,8 @@ const organiserApi = {
 
     getFollowers: (params) => api.get('/organiser/dashboard/followers', { params }),
 
+    listEventChats: () => api.get('/organiser/chat/event-chats'),
+
     getNotifications: (params) => api.get('/organiser/notifications', { params }),
     getUnreadNotifications: (params) => api.get('/organiser/notifications/unread', { params }),
     getUnreadCount: () => api.get('/organiser/notifications/unread-count'),
@@ -128,6 +137,9 @@ const organiserApi = {
     }),
 
     generateBio: (data) => api.post('/organiser/profile/ai/generate-bio', data),
+
+    getMyVerification: () => api.get('/organiser/verification'),
+    submitVerification: (data) => api.post('/organiser/verification', data),
 
     getBoostPackages: () => api.get('/organiser/boosts/packages'),
     createBoost: (data) => api.post('/organiser/boosts', data),
@@ -161,11 +173,11 @@ const organiserApi = {
 
     // Chat Management
     pinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/pin`),
-    unpinMessage: (conversationId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/unpin`),
+    unpinMessage: (conversationId, messageId) => api.post(`/organiser/chat/conversations/${conversationId}/messages/${messageId}/unpin`),
     banUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/ban`),
-    unbanUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/unban`),
-    muteUser: (conversationId, userId, mute = true) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?mute=${mute}`),
-    unmuteUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?mute=false`),
+    unbanUser: (conversationId, userId) => api.delete(`/organiser/chat/conversations/${conversationId}/participants/${userId}/ban`),
+    muteUser: (conversationId, userId, minutes = 60) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?minutes=${minutes}`),
+    unmuteUser: (conversationId, userId) => api.post(`/organiser/chat/conversations/${conversationId}/participants/${userId}/mute?minutes=0`),
     deleteAnyMessage: (messageId) => api.delete(`/organiser/chat/messages/${messageId}`),
     searchChatMessages: (conversationId, query) => api.get(`/organiser/chat/conversations/${conversationId}/search`, { params: { query } }),
 

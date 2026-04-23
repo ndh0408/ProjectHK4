@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -10,6 +10,7 @@ import {
     Alert,
     CircularProgress,
     Stack,
+    Chip,
 } from '@mui/material';
 import {
     Save as SaveIcon,
@@ -17,10 +18,13 @@ import {
     Verified as VerifiedIcon,
     AutoAwesome as AIIcon,
     AccountCircle as ProfileIcon,
+    Send as SendIcon,
+    VerifiedUser as VerifyShieldIcon,
 } from '@mui/icons-material';
 import MDEditor from '@uiw/react-md-editor';
 import { organiserApi } from '../../api';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, VerificationDocumentUpload } from '../../components/common';
+import { useAuth } from '../../context/AuthContext';
 import {
     PageHeader,
     SectionCard,
@@ -32,10 +36,12 @@ import { tokens } from '../../theme';
 import { toast } from 'react-toastify';
 
 const OrganiserProfile = () => {
+    const { updateUser } = useAuth();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploadingCover, setUploadingCover] = useState(false);
     const [generatingBio, setGeneratingBio] = useState(false);
     const [formData, setFormData] = useState({
         displayName: '',
@@ -46,15 +52,43 @@ const OrganiserProfile = () => {
     });
     const [formErrors, setFormErrors] = useState({});
 
-    useEffect(() => {
-        loadProfile();
-    }, []);
+    const [verification, setVerification] = useState(null);
+    const [verificationLoading, setVerificationLoading] = useState(true);
+    const [submittingVerification, setSubmittingVerification] = useState(false);
+    const [verificationForm, setVerificationForm] = useState({
+        documentType: 'BUSINESS_LICENSE',  // locked — profile flow is badge request
+        documentUrls: [],
+        legalName: '',
+        documentNumber: '',
+    });
+    const [verificationErrors, setVerificationErrors] = useState({});
 
-    const loadProfile = async () => {
+    const syncAuthUser = useCallback((profileData) => {
+        if (!profileData) {
+            return;
+        }
+
+        updateUser?.({
+            avatarUrl:
+                profileData.avatarUrl ||
+                profileData.logoUrl ||
+                profileData.coverUrl ||
+                null,
+            logoUrl: profileData.logoUrl || null,
+            coverUrl: profileData.coverUrl || null,
+            fullName:
+                profileData.fullName ||
+                profileData.organizationName ||
+                profileData.displayName,
+        });
+    }, [updateUser]);
+
+    const loadProfile = useCallback(async () => {
         try {
             const response = await organiserApi.getProfile();
             const data = response.data.data;
             setProfile(data);
+            syncAuthUser(data);
             setFormData({
                 displayName: data.displayName || data.organizationName || '',
                 bio: data.bio || '',
@@ -67,7 +101,25 @@ const OrganiserProfile = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [syncAuthUser]);
+
+    const loadVerification = useCallback(async () => {
+        setVerificationLoading(true);
+        try {
+            const response = await organiserApi.getMyVerification();
+            setVerification(response.data.data);
+        } catch (error) {
+            // Non-fatal - user might not have submitted yet
+            setVerification(null);
+        } finally {
+            setVerificationLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadProfile();
+        loadVerification();
+    }, [loadProfile, loadVerification]);
 
     const isValidUrl = (url) => {
         if (!url) return true;
@@ -109,9 +161,12 @@ const OrganiserProfile = () => {
         setSaving(true);
 
         try {
-            await organiserApi.updateProfile(formData);
+            const response = await organiserApi.updateProfile(formData);
+            const data = response.data.data;
+            setProfile(data);
+            syncAuthUser(data);
             toast.success('Profile updated successfully');
-            loadProfile();
+            await loadProfile();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to update profile');
         } finally {
@@ -136,14 +191,86 @@ const OrganiserProfile = () => {
 
         setUploadingAvatar(true);
         try {
-            await organiserApi.uploadAvatar(file);
+            const response = await organiserApi.uploadAvatar(file);
+            const data = response.data.data;
+            setProfile(data);
+            syncAuthUser(data);
             toast.success('Avatar updated successfully');
-            loadProfile();
+            await loadProfile();
         } catch (error) {
             console.error('Avatar upload error:', error);
             toast.error(error.response?.data?.message || 'Failed to upload avatar');
         } finally {
             setUploadingAvatar(false);
+        }
+    };
+
+    const handleCoverUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error('File size must be less than 10MB');
+            return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Invalid file type. Allowed: JPG, PNG, WebP, GIF');
+            return;
+        }
+
+        setUploadingCover(true);
+        try {
+            const response = await organiserApi.uploadCover(file);
+            const data = response.data.data;
+            setProfile(data);
+            syncAuthUser(data);
+            toast.success('Cover updated successfully');
+            await loadProfile();
+        } catch (error) {
+            console.error('Cover upload error:', error);
+            toast.error(error.response?.data?.message || 'Failed to upload cover');
+        } finally {
+            setUploadingCover(false);
+        }
+    };
+
+    const validateVerification = () => {
+        const errors = {};
+        if (verificationForm.documentUrls.length === 0) {
+            errors.documentUrls = 'Please upload at least one document image';
+        }
+        setVerificationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleSubmitVerification = async () => {
+        if (!validateVerification()) {
+            toast.error('Please fix the errors in the verification form');
+            return;
+        }
+        setSubmittingVerification(true);
+        try {
+            const payload = {
+                documentType: verificationForm.documentType,
+                documentUrls: verificationForm.documentUrls,
+                legalName: verificationForm.legalName?.trim() || null,
+                documentNumber: verificationForm.documentNumber?.trim() || null,
+            };
+            await organiserApi.submitVerification(payload);
+            toast.success('Verification request submitted');
+            setVerificationForm({
+                documentType: 'BUSINESS_LICENSE',
+                documentUrls: [],
+                legalName: '',
+                documentNumber: '',
+            });
+            await loadVerification();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to submit verification');
+        } finally {
+            setSubmittingVerification(false);
         }
     };
 
@@ -188,9 +315,49 @@ const OrganiserProfile = () => {
             <Grid container spacing={3}>
                 <Grid item xs={12} md={4}>
                     <SectionCard contentSx={{ textAlign: 'center', py: 4 }}>
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                height: 168,
+                                mb: 3,
+                                borderRadius: 3,
+                                overflow: 'hidden',
+                                border: (theme) => `1px solid ${theme.palette.divider}`,
+                                background: profile?.coverUrl
+                                    ? `center/cover no-repeat url(${profile.coverUrl})`
+                                    : 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 60%, #F97316 100%)',
+                            }}
+                        >
+                            <input
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id="cover-upload"
+                                type="file"
+                                onChange={handleCoverUpload}
+                                disabled={uploadingCover}
+                            />
+                            <label htmlFor="cover-upload">
+                                <Button
+                                    component="span"
+                                    size="small"
+                                    variant="contained"
+                                    disabled={uploadingCover}
+                                    startIcon={uploadingCover ? <CircularProgress size={16} color="inherit" /> : <CameraIcon fontSize="small" />}
+                                    sx={{
+                                        position: 'absolute',
+                                        right: 12,
+                                        bottom: 12,
+                                        backdropFilter: 'blur(8px)',
+                                    }}
+                                >
+                                    {uploadingCover ? 'Uploading...' : 'Upload Cover'}
+                                </Button>
+                            </label>
+                        </Box>
+
                         <Box sx={{ position: 'relative', display: 'inline-block' }}>
                             <Avatar
-                                src={profile?.logoUrl || profile?.avatarUrl}
+                                src={profile?.logoUrl || profile?.avatarUrl || profile?.coverUrl}
                                 sx={{
                                     width: 120,
                                     height: 120,
@@ -247,7 +414,7 @@ const OrganiserProfile = () => {
                         </Stack>
 
                         <Typography color="text.secondary" sx={{ mb: 1 }}>
-                            {profile?.email}
+                            {profile?.website || profile?.contactEmail || profile?.email}
                         </Typography>
 
                         {profile?.verified ? (
@@ -407,8 +574,195 @@ const OrganiserProfile = () => {
                             </Box>
                         </form>
                     </SectionCard>
+
+                    <Box sx={{ mt: 3 }}>
+                        <SectionCard
+                            title="Verified Badge"
+                            subtitle="Submit your business registration certificate to earn the blue Verified tick. Reserved for established brands with a business licence."
+                        >
+                            {verificationLoading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                                    <CircularProgress size={24} />
+                                </Box>
+                            ) : (
+                                <VerificationPanel
+                                    profileVerified={profile?.verified}
+                                    verification={verification}
+                                    form={verificationForm}
+                                    setForm={setVerificationForm}
+                                    errors={verificationErrors}
+                                    setErrors={setVerificationErrors}
+                                    submitting={submittingVerification}
+                                    onSubmit={handleSubmitVerification}
+                                />
+                            )}
+                        </SectionCard>
+                    </Box>
                 </Grid>
             </Grid>
+        </Box>
+    );
+};
+
+const VerificationStatusChip = ({ status, aiStatus }) => {
+    if (status === 'APPROVED') return <StatusChip label="Approved" status="success" />;
+    if (status === 'REJECTED') return <StatusChip label="Rejected" status="error" />;
+    if (status === 'PENDING') return <StatusChip label="Pending review" status="warning" />;
+    return null;
+};
+
+const AIStatusChip = ({ aiStatus, aiConfidence }) => {
+    if (!aiStatus) return null;
+    const color = aiStatus === 'VALID' ? 'success'
+        : aiStatus === 'SUSPICIOUS' ? 'warning'
+        : aiStatus === 'INVALID' ? 'error'
+        : 'default';
+    return (
+        <Chip
+            size="small"
+            label={`AI: ${aiStatus}${aiConfidence != null ? ` (${aiConfidence}%)` : ''}`}
+            color={color}
+            variant="outlined"
+        />
+    );
+};
+
+const VerificationPanel = ({
+    profileVerified,
+    verification,
+    form,
+    setForm,
+    errors,
+    setErrors,
+    submitting,
+    onSubmit,
+}) => {
+    const isPending = verification?.status === 'PENDING';
+    const isApproved = verification?.status === 'APPROVED';
+    const isRejected = verification?.status === 'REJECTED';
+    const canResubmit = !isPending;
+    const [showResubmit, setShowResubmit] = React.useState(false);
+    const hideFormByDefault = profileVerified && !isRejected;
+
+    return (
+        <Box>
+            {profileVerified ? (
+                <Alert
+                    severity="success"
+                    icon={<VerifyShieldIcon />}
+                    sx={{ mb: 3 }}
+                >
+                    Your organisation is <strong>Verified</strong>. The blue Verified badge is shown on your public page.
+                </Alert>
+            ) : (
+                <Alert severity="info" sx={{ mb: 3 }}>
+                    You don't have the Verified badge yet. The badge is a trust signal for attendees and is typically granted to brands with a business licence, an active website and a track record of events.
+                </Alert>
+            )}
+
+            {verification && (
+                <Box
+                    sx={{
+                        mb: 3,
+                        p: 2.5,
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'grey.50',
+                    }}
+                >
+                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
+                        <Typography variant="subtitle2">Last submission</Typography>
+                        <VerificationStatusChip status={verification.status} />
+                        <AIStatusChip aiStatus={verification.aiStatus} aiConfidence={verification.aiConfidence} />
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary">
+                        Submitted on {new Date(verification.submittedAt).toLocaleString()} —
+                        Document type: <strong>{verification.documentType === 'BUSINESS_LICENSE' ? 'Business License' : 'Citizen ID'}</strong>
+                    </Typography>
+                    {verification.aiReason && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                            AI hint: {verification.aiReason}
+                        </Typography>
+                    )}
+                    {isRejected && verification.rejectReason && (
+                        <Alert severity="error" sx={{ mt: 1.5 }}>
+                            <Typography variant="body2" fontWeight={600}>Admin feedback</Typography>
+                            <Typography variant="body2">{verification.rejectReason}</Typography>
+                        </Alert>
+                    )}
+                    {isPending && (
+                        <Alert severity="info" sx={{ mt: 1.5 }}>
+                            Your submission is in the admin review queue. You will be notified once reviewed.
+                        </Alert>
+                    )}
+                    {isApproved && verification.reviewedByName && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75 }}>
+                            Reviewed by {verification.reviewedByName} on {new Date(verification.reviewedAt).toLocaleString()}
+                        </Typography>
+                    )}
+                </Box>
+            )}
+
+            {canResubmit && hideFormByDefault && !showResubmit && (
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button size="small" variant="text" onClick={() => setShowResubmit(true)}>
+                        Submit new documents
+                    </Button>
+                </Box>
+            )}
+
+            {canResubmit && (!hideFormByDefault || showResubmit) && (
+                <>
+                    <Typography variant="subtitle1" sx={{ mb: 0.5 }}>
+                        {verification ? 'Submit new documents' : 'Request Verified badge'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                        A business licence is strongly preferred over a personal ID for badge requests.
+                    </Typography>
+
+                    <VerificationDocumentUpload
+                        fixedType="BUSINESS_LICENSE"
+                        documentUrls={form.documentUrls}
+                        onChangeDocumentUrls={(urls) => {
+                            setForm((f) => ({ ...f, documentUrls: urls }));
+                            if (errors.documentUrls) setErrors((e) => ({ ...e, documentUrls: '' }));
+                        }}
+                        error={errors.documentUrls}
+                    />
+
+                    <Grid container spacing={2.5} sx={{ mt: 1 }}>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Company / legal name"
+                                value={form.legalName}
+                                onChange={(e) => setForm((f) => ({ ...f, legalName: e.target.value }))}
+                                fullWidth
+                                helperText="Exactly as it appears on the business licence"
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label="Business registration number"
+                                value={form.documentNumber}
+                                onChange={(e) => setForm((f) => ({ ...f, documentNumber: e.target.value }))}
+                                fullWidth
+                            />
+                        </Grid>
+                    </Grid>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2.5 }}>
+                        <LoadingButton
+                            variant="contained"
+                            startIcon={<SendIcon />}
+                            loading={submitting}
+                            onClick={onSubmit}
+                        >
+                            {submitting ? 'Submitting...' : (profileVerified ? 'Submit new documents' : 'Request Verified Badge')}
+                        </LoadingButton>
+                    </Box>
+                </>
+            )}
         </Box>
     );
 };

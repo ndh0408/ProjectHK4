@@ -4,6 +4,7 @@ import com.luma.dto.request.CreateGroupChatRequest;
 import com.luma.dto.response.ApiResponse;
 import com.luma.dto.response.ConversationResponse;
 import com.luma.dto.response.EventBuddyResponse;
+import com.luma.dto.response.EventChatSummaryResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.User;
 import com.luma.service.OrganiserChatService;
@@ -108,6 +109,14 @@ public class OrganiserChatController {
         return ResponseEntity.ok(ApiResponse.success(organiserChatService.getConversations(organiser, pageable)));
     }
 
+    @GetMapping("/event-chats")
+    @Operation(summary = "Get event group chats only for events created by the organiser")
+    public ResponseEntity<ApiResponse<List<EventChatSummaryResponse>>> getEventChats(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User organiser = userService.getEntityByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(organiserChatService.getEventChats(organiser)));
+    }
+
     @PostMapping("/conversations/{conversationId}/messages/{messageId}/pin")
     @Operation(summary = "Pin a message in an event group chat")
     public ResponseEntity<ApiResponse<ConversationResponse>> pinMessage(
@@ -122,6 +131,7 @@ public class OrganiserChatController {
     @Operation(summary = "Unpin a message in an event group chat")
     public ResponseEntity<ApiResponse<ConversationResponse>> unpinMessage(
             @PathVariable UUID conversationId,
+            @PathVariable UUID messageId,
             @AuthenticationPrincipal UserDetails userDetails) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Message unpinned", organiserChatService.unpinMessage(organiser, conversationId)));
@@ -132,11 +142,11 @@ public class OrganiserChatController {
     public ResponseEntity<ApiResponse<Void>> muteAttendee(
             @PathVariable UUID conversationId,
             @PathVariable UUID userId,
-            @RequestParam boolean mute,
+            @RequestParam(defaultValue = "60") int minutes,
             @AuthenticationPrincipal UserDetails userDetails) {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
-        organiserChatService.muteAttendee(organiser, conversationId, userId, mute);
-        return ResponseEntity.ok(ApiResponse.success(mute ? "Attendee muted" : "Attendee unmuted", null));
+        organiserChatService.muteAttendee(organiser, conversationId, userId, minutes);
+        return ResponseEntity.ok(ApiResponse.success(minutes <= 0 ? "Attendee unmuted" : "Attendee muted", null));
     }
 
     @PostMapping("/conversations/{conversationId}/participants/{userId}/ban")
@@ -148,6 +158,17 @@ public class OrganiserChatController {
         User organiser = userService.getEntityByEmail(userDetails.getUsername());
         organiserChatService.banAttendee(organiser, conversationId, userId);
         return ResponseEntity.ok(ApiResponse.success("Attendee banned from chat", null));
+    }
+
+    @DeleteMapping("/conversations/{conversationId}/participants/{userId}/ban")
+    @Operation(summary = "Unban an attendee from an event group chat")
+    public ResponseEntity<ApiResponse<Void>> unbanAttendee(
+            @PathVariable UUID conversationId,
+            @PathVariable UUID userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User organiser = userService.getEntityByEmail(userDetails.getUsername());
+        organiserChatService.unbanAttendee(organiser, conversationId, userId);
+        return ResponseEntity.ok(ApiResponse.success("Attendee unbanned from chat", null));
     }
 
     @DeleteMapping("/messages/{messageId}")

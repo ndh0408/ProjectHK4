@@ -231,16 +231,27 @@ public class TicketTypeService {
 
     private void updateEventFreeStatus(Event event) {
         List<TicketType> ticketTypes = ticketTypeRepository.findByEventIdOrderByDisplayOrderAsc(event.getId());
+        List<TicketType> visibleTicketTypes = ticketTypes.stream()
+                .filter(TicketType::getIsVisible)
+                .toList();
 
-        if (ticketTypes.isEmpty()) {
+        if (visibleTicketTypes.isEmpty()) {
+            BigDecimal currentPrice = event.getTicketPrice() != null ? event.getTicketPrice() : BigDecimal.ZERO;
+            event.setTicketPrice(currentPrice);
+            event.setFree(currentPrice.compareTo(BigDecimal.ZERO) <= 0);
+            eventRepository.save(event);
             return;
         }
 
-        boolean allFree = ticketTypes.stream()
-                .filter(TicketType::getIsVisible)
+        boolean allFree = visibleTicketTypes.stream()
                 .allMatch(tt -> tt.getPrice().compareTo(BigDecimal.ZERO) == 0);
+        BigDecimal minPrice = visibleTicketTypes.stream()
+                .map(TicketType::getPrice)
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
 
         event.setFree(allFree);
+        event.setTicketPrice(minPrice);
         eventRepository.save(event);
     }
 

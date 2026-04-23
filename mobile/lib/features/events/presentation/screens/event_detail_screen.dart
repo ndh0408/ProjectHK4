@@ -116,11 +116,17 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
       selectedQty = result.quantity;
     }
 
+    if (event.isFull) {
+      final confirmed = await _confirmJoinWaitlist(event);
+      if (confirmed != true) return;
+    }
+
     final isFree = selectedTier != null
         ? selectedTier.isFree
         : event.isFree;
     final unitPrice = selectedTier?.price ?? event.ticketPrice;
 
+    if (!mounted) return;
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -132,6 +138,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           ticketTypeId: selectedTier?.id,
           ticketTypeName: selectedTier?.name,
           quantity: selectedQty,
+          isWaitlist: event.isFull,
         ),
       ),
     );
@@ -139,6 +146,72 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
     if (result == true) {
       _refreshData();
     }
+  }
+
+  Future<bool?> _confirmJoinWaitlist(Event event) {
+    final isPaid = !event.isFree && (event.ticketPrice ?? 0) > 0;
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: const [
+            Icon(Icons.hourglass_top, color: AppColors.warning),
+            SizedBox(width: 8),
+            Text('Join the waitlist?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "This event is full. You can still join the waitlist — if someone cancels, the next person in line is automatically moved off the waitlist.",
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.notifications_active,
+                      size: 18, color: AppColors.warning),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isPaid
+                          ? "No charge now. You'll be notified when a spot opens up and can pay to confirm."
+                          : "You'll be notified as soon as a spot opens up.",
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.hourglass_top, size: 18),
+            label: const Text('Join waitlist'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warning,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _refreshData() {

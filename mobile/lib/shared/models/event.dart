@@ -313,12 +313,13 @@ class Event {
 
   bool get isEventEnded => DateTime.now().isAfter(endTime);
 
-  bool get canRegister => !isFull && !isRegistrationClosed && !isEventEnded;
+  bool get canRegister => !isRegistrationClosed && !isEventEnded;
+
+  bool get canJoinWaitlist => isFull && !isRegistrationClosed && !isEventEnded;
 
   String? get registrationStatusMessage {
     if (isEventEnded) return 'Event has ended';
     if (isRegistrationClosed) return 'Registration closed';
-    if (isFull) return 'Event is full';
     return null;
   }
 }

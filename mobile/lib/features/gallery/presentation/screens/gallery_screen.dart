@@ -44,6 +44,20 @@ class GalleryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final crossAxisCount = screenWidth >= 1100
+        ? 4
+        : screenWidth >= 700
+            ? 3
+            : 2;
+    final childAspectRatio = screenWidth >= 1100
+        ? 0.82
+        : screenWidth >= 700
+            ? 0.74
+            : textScale > 1.05
+                ? 0.54
+                : 0.58;
     final l10n = AppLocalizations.of(context)!;
     final imagesAsync = ref.watch(filteredGalleryProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
@@ -222,12 +236,11 @@ class GalleryScreen extends ConsumerWidget {
                     AppSpacing.massive,
                   ),
                   sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
                       crossAxisSpacing: AppSpacing.lg,
                       mainAxisSpacing: AppSpacing.lg,
-                      mainAxisExtent: 260,
+                      childAspectRatio: childAspectRatio,
                     ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -343,9 +356,8 @@ class _GalleryCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(AppRadius.lg),
                 ),
-                child: SizedBox(
-                  height: 150,
-                  width: double.infinity,
+                child: AspectRatio(
+                  aspectRatio: 1.32,
                   child: CachedNetworkImage(
                     imageUrl: image.imageUrl,
                     fit: BoxFit.cover,
@@ -391,7 +403,12 @@ class _GalleryCard extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.lg,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -407,8 +424,8 @@ class _GalleryCard extends StatelessWidget {
                   Text(
                     image.caption?.trim().isNotEmpty == true
                         ? image.caption!
-                        : 'Tap for full-screen viewing and jump directly to the related event.',
-                    maxLines: 3,
+                        : 'Open the full photo and related event details.',
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.body.copyWith(
                       color: AppColors.textSecondary,

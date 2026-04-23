@@ -34,6 +34,11 @@ const adminApi = {
     unverifyOrganiser: (id) => api.post(`/admin/organisers/${id}/unverify`),
     updateOrganiserStatus: (id, status) => api.put(`/admin/organisers/${id}/status`, null, { params: { status } }),
 
+    // Supports: { status, isApplication, page, size }
+    getVerificationRequests: (params) => api.get('/admin/verification-requests', { params }),
+    getVerificationStats: () => api.get('/admin/verification-requests/stats'),
+    reviewVerification: (id, data) => api.post(`/admin/verification-requests/${id}/review`, data),
+
     getNotifications: (params) => api.get('/admin/notifications', { params }),
     getUnreadNotifications: (params) => api.get('/admin/notifications/unread', { params }),
     getUnreadCount: () => api.get('/admin/notifications/unread-count'),

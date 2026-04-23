@@ -12,6 +12,7 @@ import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
+import 'services/push_notification_service.dart';
 
 // Stripe publishable key resolution order:
 //   1) --dart-define=STRIPE_PUBLISHABLE_KEY=... at build/run time
@@ -60,9 +61,20 @@ void main() async {
     );
   }
 
+  // Firebase must initialise before the first runApp frame so the background
+  // FCM handler can reuse the default app. Best-effort — if google-services
+  // files aren't installed yet the app falls back to WebSocket notifications.
+  final container = ProviderContainer();
+  try {
+    await container.read(pushNotificationServiceProvider).initialize();
+  } catch (e) {
+    debugPrint('Push init skipped: $e');
+  }
+
   runApp(
-    const ProviderScope(
-      child: LumaApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const LumaApp(),
     ),
   );
 }

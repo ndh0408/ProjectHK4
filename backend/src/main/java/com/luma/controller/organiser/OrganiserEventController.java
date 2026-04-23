@@ -64,11 +64,15 @@ public class OrganiserEventController {
     @Operation(summary = "Get all events by organiser")
     public ResponseEntity<ApiResponse<PageResponse<EventResponse>>> getMyEvents(
             @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) EventStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
         User user = userService.getEntityByEmail(userDetails.getUsername());
         PageResponse<EventResponse> response;
-        if (status != null) {
+        String normalizedSearch = search == null ? null : search.trim();
+        if (normalizedSearch != null && !normalizedSearch.isEmpty()) {
+            response = eventService.searchEventsByOrganiser(user, normalizedSearch, status, pageable);
+        } else if (status != null) {
             response = eventService.getEventsByOrganiserAndStatus(user, status, pageable);
         } else {
             response = eventService.getEventsByOrganiser(user, pageable);

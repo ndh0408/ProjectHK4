@@ -366,7 +366,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ref
           .read(webSocketServiceProvider)
           .subscribeToConversation(widget.conversationId);
-      await _loadConversationDetailsIfNeeded();
+      await _loadConversationDetailsIfNeeded(force: true);
       await ref
           .read(chatMessagesProvider(widget.conversationId).notifier)
           .loadMessages(refresh: true);
@@ -1386,6 +1386,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (id != null) {
               notifier.markMessageDeleted(id);
             }
+            break;
+          case ChatEventType.pinnedMessageUpdated:
+            unawaited(_fetchConversationDetails());
             break;
           case ChatEventType.typing:
             if (event.userId != currentUser?.id && event.userName != null) {

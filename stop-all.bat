@@ -25,6 +25,12 @@ if %errorlevel%==0 (
 )
 
 echo.
+echo Stopping Dart/Flutter processes (Mobile + Flutter Web)...
+taskkill /F /IM dart.exe 2>nul
+taskkill /F /IM flutter.exe 2>nul
+echo [OK] Flutter/Dart processes stopped
+
+echo.
 echo ============================================
 echo           All Services Stopped!
 echo ============================================

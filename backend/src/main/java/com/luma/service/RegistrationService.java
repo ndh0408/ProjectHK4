@@ -123,6 +123,11 @@ public class RegistrationService {
 
     @Transactional
     public RegistrationResponse registerForEvent(User user, UUID eventId, UUID ticketTypeId, Integer quantity) {
+        if (user.getEmail() != null && !user.isEmailVerified()) {
+            throw new BadRequestException(
+                    "EMAIL_NOT_VERIFIED: Please verify your email before registering for events");
+        }
+
         Event event = eventService.getEntityByIdWithRelationships(eventId);
 
         if (event.getStartTime().isBefore(LocalDateTime.now())) {
@@ -168,19 +173,7 @@ public class RegistrationService {
                 .ticketCode(generateTicketCode())
                 .build();
 
-        if (event.isFull()) {
-            registration.setStatus(RegistrationStatus.WAITING_LIST);
-            registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
-            registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
-        } else {
-            registration.setStatus(RegistrationStatus.PENDING);
-            if (ticketType != null) {
-                int updated = ticketTypeRepository.incrementSoldCount(ticketType.getId(), qty);
-                if (updated == 0) {
-                    throw new BadRequestException("Unable to reserve tickets. They may have been sold out.");
-                }
-            }
-        }
+        assignInitialStatus(registration, user, event, ticketType, qty);
 
         Registration savedRegistration = registrationRepository.save(registration);
 
@@ -188,6 +181,61 @@ public class RegistrationService {
         creditBoostRegistration(eventId);
 
         return RegistrationResponse.fromEntity(savedRegistration);
+    }
+
+    /**
+     * Decide the initial registration status and reserve capacity / ticket-pool
+     * as appropriate. Centralised so both register entry points agree:
+     *
+     * <ul>
+     *   <li>Event full → WAITING_LIST (position assigned under pessimistic lock).</li>
+     *   <li>Paid → PENDING; reserve ticket-type inventory if set. Seat in
+     *       {@code approvedCount} is only claimed on payment_intent.succeeded.</li>
+     *   <li>Free + requires approval → PENDING; organiser must approve.</li>
+     *   <li>Free + no approval needed → APPROVED immediately; increment
+     *       approvedCount so {@code isFull()} reflects reality. Previously
+     *       these stayed PENDING and {@code isFull()} never tripped, letting
+     *       unlimited PENDING registrations queue up without using waitlist.</li>
+     * </ul>
+     */
+    private void assignInitialStatus(Registration registration, User user, Event event,
+                                     TicketType ticketType, int qty) {
+        if (event.isFull()) {
+            registration.setStatus(RegistrationStatus.WAITING_LIST);
+            registration.setWaitingListPosition(
+                    registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
+            registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
+            return;
+        }
+
+        BigDecimal price = ticketType != null ? ticketType.getPrice() : event.getTicketPrice();
+        boolean isPaid = price != null && price.compareTo(BigDecimal.ZERO) > 0;
+
+        if (isPaid) {
+            registration.setStatus(RegistrationStatus.PENDING);
+        } else if (event.isRequiresApproval()) {
+            registration.setStatus(RegistrationStatus.PENDING);
+        } else {
+            boolean claimed = eventService.tryIncrementApprovedCount(event);
+            if (!claimed) {
+                // Event filled up between the isFull() check and now (race).
+                // Fall into the waitlist path instead of silently overshooting.
+                registration.setStatus(RegistrationStatus.WAITING_LIST);
+                registration.setWaitingListPosition(
+                        registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
+                registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
+                return;
+            }
+            registration.setStatus(RegistrationStatus.APPROVED);
+            registration.setApprovedAt(LocalDateTime.now());
+        }
+
+        if (ticketType != null) {
+            int updated = ticketTypeRepository.incrementSoldCount(ticketType.getId(), qty);
+            if (updated == 0) {
+                throw new BadRequestException("Unable to reserve tickets. They may have been sold out.");
+            }
+        }
     }
 
     private void creditBoostRegistration(UUID eventId) {
@@ -213,6 +261,11 @@ public class RegistrationService {
     public RegistrationResponse registerForEventWithAnswers(User user, UUID eventId,
             List<RegistrationAnswerRequest> answerRequests, UUID ticketTypeId, Integer quantity,
             java.util.Map<String, String> profileData) {
+        if (user.getEmail() != null && !user.isEmailVerified()) {
+            throw new BadRequestException(
+                    "EMAIL_NOT_VERIFIED: Please verify your email before registering for events");
+        }
+
         Event event = eventService.getEntityByIdWithRelationships(eventId);
 
         if (event.getStartTime().isBefore(LocalDateTime.now())) {
@@ -295,19 +348,7 @@ public class RegistrationService {
                 .experienceLevel(regExperience)
                 .build();
 
-        if (event.isFull()) {
-            registration.setStatus(RegistrationStatus.WAITING_LIST);
-            registration.setWaitingListPosition(registrationRepository.getMaxWaitingListPositionWithLock(event) + 1);
-            registration.setPriorityScore(waitlistService.calculatePriorityScore(user, event));
-        } else {
-            registration.setStatus(RegistrationStatus.PENDING);
-            if (ticketType != null) {
-                int updated = ticketTypeRepository.incrementSoldCount(ticketType.getId(), qty);
-                if (updated == 0) {
-                    throw new BadRequestException("Unable to reserve tickets. They may have been sold out.");
-                }
-            }
-        }
+        assignInitialStatus(registration, user, event, ticketType, qty);
 
         registration = registrationRepository.save(registration);
 

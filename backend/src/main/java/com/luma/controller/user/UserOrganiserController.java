@@ -14,6 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +25,12 @@ public class UserOrganiserController {
 
     private final OrganiserService organiserService;
     private final EventService eventService;
+
+    @GetMapping
+    @Operation(summary = "Get all public organiser profiles")
+    public ResponseEntity<ApiResponse<List<OrganiserResponse>>> getAllOrganisers() {
+        return ResponseEntity.ok(ApiResponse.success(organiserService.getPublicOrganisers()));
+    }
 
     @GetMapping("/{organiserId}")
     @Operation(summary = "Get organiser profile")

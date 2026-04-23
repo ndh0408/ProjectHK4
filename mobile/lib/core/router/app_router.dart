@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../../features/auth/presentation/screens/web_login_qr_scanner_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/bookmarks/presentation/screens/saved_events_screen.dart';
 import '../../features/coupons/presentation/screens/my_coupons_screen.dart';
@@ -50,14 +52,29 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isAuthenticated = authState is Authenticated;
-      final isLoggingIn = state.matchedLocation == '/login';
-      final isInitial = authState is AuthInitial;
+      final isPending = authState is PendingEmailVerification;
+      final location = state.matchedLocation;
+      final isLoggingIn = location == '/login';
+      final isOnOtp = location == '/verify-otp';
 
-      if (isInitial) {
+      // Transient states — don't reshuffle the user mid-flight. AuthError in
+      // particular flashes briefly before clearError resolves it, and
+      // redirecting on that flash boots the OTP screen to /login.
+      if (authState is AuthInitial ||
+          authState is AuthLoading ||
+          authState is AuthError) {
         return null;
       }
 
-      if (!isAuthenticated && !isLoggingIn) {
+      if (isPending && !isOnOtp) {
+        return '/verify-otp';
+      }
+
+      if (!isPending && isOnOtp) {
+        return isAuthenticated ? '/home' : '/login';
+      }
+
+      if (!isAuthenticated && !isLoggingIn && !isOnOtp) {
         return '/login';
       }
 
@@ -72,6 +89,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/verify-otp',
+        name: 'verify-otp',
+        builder: (context, state) => const OtpVerificationScreen(),
+      ),
+      GoRoute(
+        path: '/scan-web-login-qr',
+        name: 'scan-web-login-qr',
+        builder: (context, state) => const WebLoginQrScannerScreen(),
       ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),

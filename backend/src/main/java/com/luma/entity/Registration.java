@@ -69,6 +69,14 @@ public class Registration {
 
     private Integer priorityScore;
 
+    /**
+     * Deadline by which a waitlist-promoted paid user must complete payment.
+     * Set by {@code WaitlistService.acceptOffer} for paid events. A scheduler
+     * cancels PENDING registrations past this deadline and promotes the next
+     * person in line. Null for non-promoted registrations.
+     */
+    private LocalDateTime paymentDeadline;
+
     @Column(length = 50)
     private String couponCode;
 

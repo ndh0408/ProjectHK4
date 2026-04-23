@@ -12,6 +12,7 @@ import '../features/auth/providers/auth_provider.dart';
 enum ChatEventType {
   newMessage,
   messageDeleted,
+  pinnedMessageUpdated,
   typing,
   read,
   online,
@@ -46,6 +47,9 @@ class ChatEvent {
         break;
       case 'MESSAGE_DELETED':
         type = ChatEventType.messageDeleted;
+        break;
+      case 'PINNED_MESSAGE_UPDATED':
+        type = ChatEventType.pinnedMessageUpdated;
         break;
       case 'TYPING':
         type = ChatEventType.typing;

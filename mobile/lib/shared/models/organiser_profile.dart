@@ -57,5 +57,18 @@ class OrganiserProfile {
 
   int get followersCount => followerCount;
 
+  String? get profileImageUrl => _firstNonBlank(logoUrl, avatarUrl, coverUrl);
+
+  String? get headerImageUrl => _firstNonBlank(coverUrl, logoUrl, avatarUrl);
+
+  static String? _firstNonBlank(String? first, String? second, String? third) {
+    for (final value in [first, second, third]) {
+      if (value != null && value.trim().isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() => _$OrganiserProfileToJson(this);
 }

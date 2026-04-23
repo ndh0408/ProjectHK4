@@ -112,8 +112,8 @@ class ApiClient {
     return response.data as T;
   }
 
-  Future<void> delete(String path) async {
-    await _dio.delete<void>(path);
+  Future<void> delete(String path, {Map<String, dynamic>? queryParameters}) async {
+    await _dio.delete<void>(path, queryParameters: queryParameters);
   }
 
   Future<T> patch<T>(

@@ -62,6 +62,21 @@ public class ChatWebSocketService {
         log.debug("Broadcasted message deleted: {} in conversation: {}", messageId, conversationId);
     }
 
+    public void broadcastPinnedMessageUpdated(UUID conversationId, MessageResponse message) {
+        ChatMessageEvent event = ChatMessageEvent.builder()
+                .type(ChatMessageEvent.EventType.PINNED_MESSAGE_UPDATED)
+                .conversationId(conversationId)
+                .message(message)
+                .build();
+
+        messagingTemplate.convertAndSend(
+                "/topic/conversation." + conversationId,
+                event
+        );
+
+        log.debug("Broadcasted pinned message update in conversation: {}", conversationId);
+    }
+
     public void broadcastTyping(UUID conversationId, UUID userId, String userName) {
         ChatMessageEvent event = ChatMessageEvent.builder()
                 .type(ChatMessageEvent.EventType.TYPING)

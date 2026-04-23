@@ -301,7 +301,7 @@ const TypingDots = () => (
 const MessageBubble = ({
     message,
     isMe,
-    isOrganiser,
+    canModerate,
     showAvatar,
     showName,
     onReply,
@@ -315,7 +315,6 @@ const MessageBubble = ({
     const [anchor, setAnchor] = useState(null);
     const openMenu = (e) => setAnchor(e.currentTarget);
     const closeMenu = () => setAnchor(null);
-
     const isFromOrganiser = message.senderRole === 'ORGANISER';
 
     return (
@@ -350,7 +349,7 @@ const MessageBubble = ({
                 </Avatar>
             )}
 
-            {(isMe || isOrganiser) && (
+            {(isMe || canModerate) && (
                 <Box
                     className="msg-actions"
                     sx={{
@@ -374,7 +373,7 @@ const MessageBubble = ({
                             Reply
                         </MenuItem>
 
-                        {isOrganiser && (
+                        {canModerate && (
                             <>
                                 <MenuItem
                                     onClick={() => {
@@ -409,7 +408,7 @@ const MessageBubble = ({
                             </>
                         )}
 
-                        {(!message.deleted && (isMe || isOrganiser)) && (
+                        {(!message.deleted && (isMe || canModerate)) && (
                             <MenuItem
                                 onClick={() => {
                                     onDelete?.(message);
@@ -654,6 +653,7 @@ const EventChats = () => {
     const deferredChatSearch = useDeferredValue(chatSearch);
 
     const selectedChat = chats.find((c) => c.conversationId === selectedId);
+    const canModerateSelectedChat = Boolean(selectedChat?.canModerate);
 
     useEffect(() => {
         selectedIdRef.current = selectedId;
@@ -662,7 +662,8 @@ const EventChats = () => {
     const loadChats = useCallback(async () => {
         setLoadingChats(true);
         try {
-            const list = await chatApi.listEventChats();
+            const response = await organiserApi.listEventChats();
+            const list = response?.data?.data;
             setChats(list || []);
         } catch {
             toast.error('Could not load chat groups');
@@ -674,6 +675,27 @@ const EventChats = () => {
     useEffect(() => {
         loadChats();
     }, [loadChats]);
+
+    const loadConversationMeta = useCallback(async (conversationId) => {
+        if (!conversationId) return;
+        try {
+            const conversation = await chatApi.getConversation(conversationId);
+            setChats((prev) =>
+                prev.map((c) =>
+                    c.conversationId === conversationId
+                        ? {
+                              ...c,
+                              pinnedMessage: conversation.pinnedMessage || null,
+                              participantCount:
+                                  conversation.participantCount ?? c.participantCount,
+                          }
+                        : c,
+                ),
+            );
+        } catch {
+            // Ignore metadata refresh errors; message history load remains primary.
+        }
+    }, []);
 
     const loadMessages = useCallback(
         async (conversationId, { reset = true } = {}) => {
@@ -750,6 +772,13 @@ const EventChats = () => {
                             : m,
                     ),
                 );
+                setChats((prev) =>
+                    prev.map((c) =>
+                        c.conversationId === conversationId && c.pinnedMessage?.id === message.id
+                            ? { ...c, pinnedMessage: null }
+                            : c,
+                    ),
+                );
                 return;
             }
 
@@ -819,7 +848,7 @@ const EventChats = () => {
             setTypingUsers({});
             appliedIdsRef.current = new Set();
 
-            if (!chat.conversationId) {
+            if (!chat.joined) {
                 try {
                     const joined = await chatApi.joinEventChat(chat.eventId);
                     setChats((prev) =>
@@ -828,7 +857,10 @@ const EventChats = () => {
                     if (joined.conversationId) {
                         setSelectedId(joined.conversationId);
                         subscribe(joined.conversationId);
-                        await loadMessages(joined.conversationId, { reset: true });
+                        await Promise.all([
+                            loadMessages(joined.conversationId, { reset: true }),
+                            loadConversationMeta(joined.conversationId),
+                        ]);
                     }
                 } catch {
                     toast.error('Could not join chat group');
@@ -837,9 +869,12 @@ const EventChats = () => {
             }
             setSelectedId(chat.conversationId);
             subscribe(chat.conversationId);
-            await loadMessages(chat.conversationId, { reset: true });
+            await Promise.all([
+                loadMessages(chat.conversationId, { reset: true }),
+                loadConversationMeta(chat.conversationId),
+            ]);
         },
-        [selectedId, subscribe, unsubscribe, loadMessages],
+        [selectedId, subscribe, unsubscribe, loadMessages, loadConversationMeta],
     );
 
     const handleSend = useCallback(async () => {
@@ -883,6 +918,7 @@ const EventChats = () => {
 
     const handleDelete = useCallback(async (message) => {
         const isMe = message.sender?.id === user?.id;
+        if (!isMe && !canModerateSelectedChat) return;
         try {
             if (isMe) {
                 await chatApi.deleteMessage(message.id);
@@ -896,60 +932,69 @@ const EventChats = () => {
                         : m,
                 ),
             );
+            setChats((prev) =>
+                prev.map((c) =>
+                    c.conversationId === selectedId && c.pinnedMessage?.id === message.id
+                        ? { ...c, pinnedMessage: null }
+                        : c,
+                ),
+            );
             toast.success('Message deleted');
         } catch {
             toast.error('Could not delete message');
         }
-    }, [user?.id]);
+    }, [user?.id, canModerateSelectedChat, selectedId]);
 
     const handlePin = useCallback(async (message) => {
-        if (!selectedId) return;
+        if (!selectedId || !canModerateSelectedChat) return;
         try {
-            await organiserApi.pinMessage(selectedId, message.id);
+            const response = await organiserApi.pinMessage(selectedId, message.id);
+            const pinnedMessage = response?.data?.data?.pinnedMessage || {
+                id: message.id,
+                content: message.content,
+                senderName: message.sender?.fullName || 'Unknown',
+            };
             setChats(prev => prev.map(c => c.conversationId === selectedId ? {
                 ...c,
-                pinnedMessage: {
-                    id: message.id,
-                    content: message.content,
-                    senderName: message.sender?.fullName || 'Unknown'
-                }
+                pinnedMessage,
             } : c));
             toast.success('Message pinned');
         } catch (err) {
             toast.error('Could not pin message');
         }
-    }, [selectedId]);
+    }, [selectedId, canModerateSelectedChat]);
 
-    const handleUnpin = useCallback(async () => {
-        if (!selectedId) return;
+    const handleUnpin = useCallback(async (message = selectedChat?.pinnedMessage) => {
+        const pinnedMessageId = message?.id || selectedChat?.pinnedMessage?.id;
+        if (!selectedId || !pinnedMessageId || !canModerateSelectedChat) return;
         try {
-            await organiserApi.unpinMessage(selectedId);
+            await organiserApi.unpinMessage(selectedId, pinnedMessageId);
             setChats(prev => prev.map(c => c.conversationId === selectedId ? { ...c, pinnedMessage: null } : c));
             toast.success('Message unpinned');
         } catch (err) {
             toast.error('Could not unpin message');
         }
-    }, [selectedId]);
+    }, [selectedId, selectedChat?.pinnedMessage, canModerateSelectedChat]);
 
     const handleBan = useCallback(async (userId) => {
-        if (!selectedId || !userId || !window.confirm('Ban this user from the event chat?')) return;
+        if (!selectedId || !userId || !canModerateSelectedChat || !window.confirm('Ban this user from the event chat?')) return;
         try {
             await organiserApi.banUser(selectedId, userId);
             toast.success('User banned from chat');
         } catch (err) {
             toast.error('Could not ban user');
         }
-    }, [selectedId]);
+    }, [selectedId, canModerateSelectedChat]);
 
     const handleMute = useCallback(async (userId) => {
-        if (!selectedId || !userId || !window.confirm('Mute this user?')) return;
+        if (!selectedId || !userId || !canModerateSelectedChat || !window.confirm('Mute this user for 60 minutes?')) return;
         try {
-            await organiserApi.muteUser(selectedId, userId, true);
+            await organiserApi.muteUser(selectedId, userId, 60);
             toast.success('User muted successfully');
         } catch (err) {
             toast.error('Could not mute user');
         }
-    }, [selectedId]);
+    }, [selectedId, canModerateSelectedChat]);
 
     const handleDraftChange = (value) => {
         setDraft(value);
@@ -1067,13 +1112,11 @@ const EventChats = () => {
             const sameSenderAsNext =
                 next && next.sender?.id === m.sender?.id;
             const isMe = m.sender?.id === user?.id;
-            const isFromOrganiser = m.senderRole === 'ORGANISER';
             out.push({
                 type: 'message',
                 key: m.id || i,
                 message: m,
                 isMe,
-                isOrganiser: isFromOrganiser,
                 isPinned: m.id === pinnedId,
                 showAvatar: !isMe && !sameSenderAsNext,
                 showName: !isMe && !sameSenderAsPrev,
@@ -1569,12 +1612,14 @@ const EventChats = () => {
                                             {selectedChat.pinnedMessage.senderName}: {selectedChat.pinnedMessage.content}
                                         </Typography>
                                     </Box>
-                                    <IconButton size="small" onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleUnpin(selectedChat.pinnedMessage);
-                                    }}>
-                                        <CloseIcon fontSize="small" />
-                                    </IconButton>
+                                    {canModerateSelectedChat && (
+                                        <IconButton size="small" onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUnpin(selectedChat.pinnedMessage);
+                                        }}>
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
                                 </Box>
                             )}
 
@@ -1629,7 +1674,7 @@ const EventChats = () => {
                                                         key={item.key}
                                                         message={item.message}
                                                         isMe={item.isMe}
-                                                        isOrganiser={item.isOrganiser}
+                                                        canModerate={canModerateSelectedChat}
                                                         isPinned={item.isPinned}
                                                         showAvatar={item.showAvatar}
                                                         showName={item.showName}

@@ -1,11 +1,11 @@
 package com.luma.dto.response;
 
 import com.luma.entity.Event;
-import com.luma.entity.User;
 import com.luma.entity.enums.EventStatus;
 import com.luma.entity.enums.EventVisibility;
 import com.luma.entity.enums.RecurrenceType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.luma.util.UserImageResolver;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -122,7 +122,7 @@ public class EventResponse {
             response.setOrganiser(OrganiserResponse.builder()
                     .id(event.getOrganiser().getId())
                     .fullName(event.getOrganiser().getFullName())
-                    .avatarUrl(resolveUserImageUrl(event.getOrganiser()))
+                    .avatarUrl(UserImageResolver.resolve(event.getOrganiser()))
                     .build());
         }
 
@@ -200,23 +200,5 @@ public class EventResponse {
         }
 
         return response;
-    }
-
-    private static String resolveUserImageUrl(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        if (user.getOrganiserProfile() != null
-                && user.getOrganiserProfile().getLogoUrl() != null
-                && !user.getOrganiserProfile().getLogoUrl().isBlank()) {
-            return user.getOrganiserProfile().getLogoUrl();
-        }
-
-        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
-            return user.getAvatarUrl();
-        }
-
-        return null;
     }
 }

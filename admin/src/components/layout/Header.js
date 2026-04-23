@@ -97,7 +97,7 @@ const Header = ({ onMenuClick }) => {
                         }}
                     >
                         <Avatar
-                            src={user?.avatarUrl}
+                            src={user?.avatarUrl || user?.logoUrl || user?.coverUrl}
                             alt={user?.fullName}
                             sx={{
                                 width: 34,

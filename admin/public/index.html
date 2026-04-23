@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
@@ -9,6 +9,13 @@
       name="description"
       content="LUMA Admin — manage events, users and revenue in one place."
     />
+    <!--
+      Disable browser auto-translate (Google Translate / Cốc Cốc / Chrome).
+      Auto-translating mutates DOM text nodes which breaks React reconciliation
+      with errors like "Failed to execute 'insertBefore' on 'Node'".
+    -->
+    <meta name="google" content="notranslate" />
+    <meta name="robots" content="notranslate" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -23,7 +30,7 @@
 
     <title>LUMA Admin</title>
   </head>
-  <body>
+  <body class="notranslate">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <!-- Kill any service worker registered by previous production builds -->
     <script>

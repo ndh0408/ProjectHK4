@@ -23,6 +23,7 @@ public class EventChatSummaryResponse {
 
     private UUID conversationId;
     private boolean joined;
+    private boolean canModerate;
     private boolean closed;
     private LocalDateTime closedAt;
     private int participantCount;

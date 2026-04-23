@@ -91,26 +91,29 @@ public class DataSeeder implements CommandLineRunner {
         "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=200&h=200&fit=crop"
     };
 
+    private static final String[] ORGANISER_COVER_URLS = {
+        "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1515187029135-18ee4f6d0b7e?w=1200&h=500&fit=crop",
+        "https://images.unsplash.com/photo-1531058020387-3be344556be6?w=1200&h=500&fit=crop"
+    };
+
     @Override
     @Transactional
     public void run(String... args) {
+        // Runs every boot — pre-OTP users must not be blocked by the new
+        // verification guard, so flip their flag before any other logic.
+        backfillEmailVerifiedForLegacyUsers();
+
         // Check if already seeded (check for admin user)
         boolean alreadySeeded = userRepository.findByEmail("admin@luma.com").isPresent();
 
         if (alreadySeeded) {
-            log.info("=== Database already seeded. Skipping initial data... ===");
-            // Ensure reference data exists (idempotent) — cities may be empty after manual cleanup
-            if (cityRepository.count() == 0) {
-                log.info("=== Cities table empty — re-seeding cities... ===");
-                seedCities();
-            }
-            // But still seed registration questions for events that need them
-            log.info("=== Checking for missing registration questions... ===");
-            seedRegistrationQuestions();
-            // Fix ticket types for free events
-            log.info("=== Checking for free events with incorrect ticket types... ===");
-            fixFreeEventTicketTypes();
-            log.info("=== Data seeding check completed ===");
+            log.info("=== Database already seeded. Skipping all seeding to preserve existing data... ===");
             return;
         }
 
@@ -124,6 +127,7 @@ public class DataSeeder implements CommandLineRunner {
         seedOrganiserUsers();
         seedAdminUser();
         seedEvents();
+        backfillExistingOrganiserProfiles();
         seedRegistrationQuestions();
         seedTicketTypes();
         seedSpeakers();
@@ -133,8 +137,96 @@ public class DataSeeder implements CommandLineRunner {
         seedFollows();
         seedConnections();
         seedBookmarks();
+        seedWaitlistDemo();
 
         log.info("=== Data seeding completed successfully ===");
+    }
+
+    /**
+     * Creates two deterministic demo events that exercise the waitlist flow
+     * end-to-end. Designed for manual QA and the integration test script —
+     * capacity is intentionally small (1) so the waitlist trips on the
+     * second registration.
+     *
+     * Free event "Waitlist Demo (Free)": tests direct-APPROVED promotion.
+     * Paid event "Waitlist Demo (Paid)": tests offer + payment-deadline path.
+     *
+     * Idempotent: skips if either event already exists.
+     */
+    private void seedWaitlistDemo() {
+        if (eventRepository.findAll().stream()
+                .anyMatch(e -> e.getTitle().startsWith("Waitlist Demo"))) {
+            log.info("Waitlist demo events already present, skipping");
+            return;
+        }
+
+        List<User> organisers = userRepository.findAll().stream()
+                .filter(u -> u.getRole() == UserRole.ORGANISER)
+                .toList();
+        List<Category> categories = categoryRepository.findAll();
+        List<City> cities = cityRepository.findAll();
+        if (organisers.isEmpty() || categories.isEmpty() || cities.isEmpty()) {
+            log.warn("Cannot seed waitlist demo — missing organiser/category/city");
+            return;
+        }
+
+        User organiser = organisers.get(0);
+        Category category = categories.get(0);
+        City city = cities.get(0);
+        LocalDateTime start = LocalDateTime.now().plusDays(14).withHour(18).withMinute(0).withSecond(0).withNano(0);
+
+        Event free = Event.builder()
+                .title("Waitlist Demo (Free)")
+                .description("Free demo event with capacity=1 so the second signup automatically joins the waitlist. Cancel the first registration to watch the waitlist promotion.")
+                .imageUrl(EVENT_IMAGE_URLS[0])
+                .startTime(start)
+                .endTime(start.plusHours(2))
+                .registrationDeadline(start.minusHours(1))
+                .venue("LUMA Demo Hall")
+                .address(city.getName() + ", " + city.getCountry())
+                .latitude(10.7769)
+                .longitude(106.7009)
+                .ticketPrice(BigDecimal.ZERO)
+                .isFree(true)
+                .capacity(1)
+                .approvedCount(0)
+                .status(EventStatus.PUBLISHED)
+                .visibility(EventVisibility.PUBLIC)
+                .requiresApproval(false)
+                .recurrenceType(RecurrenceType.NONE)
+                .organiser(organiser)
+                .category(category)
+                .city(city)
+                .build();
+        eventRepository.save(free);
+
+        Event paid = Event.builder()
+                .title("Waitlist Demo (Paid)")
+                .description("Paid demo event with capacity=1. Second signup joins the waitlist; on promotion the user has 30 minutes to complete payment before the seat is auto-reclaimed.")
+                .imageUrl(EVENT_IMAGE_URLS[1])
+                .startTime(start.plusDays(1))
+                .endTime(start.plusDays(1).plusHours(2))
+                .registrationDeadline(start.plusDays(1).minusHours(1))
+                .venue("LUMA Demo Hall")
+                .address(city.getName() + ", " + city.getCountry())
+                .latitude(10.7769)
+                .longitude(106.7009)
+                .ticketPrice(BigDecimal.valueOf(100000))
+                .isFree(false)
+                .capacity(1)
+                .approvedCount(0)
+                .status(EventStatus.PUBLISHED)
+                .visibility(EventVisibility.PUBLIC)
+                .requiresApproval(false)
+                .recurrenceType(RecurrenceType.NONE)
+                .organiser(organiser)
+                .category(category)
+                .city(city)
+                .build();
+        eventRepository.save(paid);
+
+        log.info("✓ Created waitlist demo events: '{}' (free) + '{}' (paid)",
+                free.getTitle(), paid.getTitle());
     }
 
     private void migrateNullColumns() {
@@ -147,6 +239,27 @@ public class DataSeeder implements CommandLineRunner {
             }
         } catch (Exception e) {
             log.warn("Could not run networking_visible migration: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Grandfather every pre-existing account into "verified" so the new
+     * email-verification guard on payment/registration does not lock them
+     * out. Runs on every boot so developers refreshing locally stay happy,
+     * but only actually writes the rows that still need it.
+     */
+    private void backfillEmailVerifiedForLegacyUsers() {
+        try {
+            int updated = entityManager.createNativeQuery(
+                    "UPDATE users SET email_verified = 1, " +
+                    "verification_code = NULL, verification_code_expiry = NULL " +
+                    "WHERE email_verified = 0 AND email IS NOT NULL"
+            ).executeUpdate();
+            if (updated > 0) {
+                log.info("Backfilled email_verified=true for {} existing users", updated);
+            }
+        } catch (Exception e) {
+            log.warn("Could not run email_verified backfill: {}", e.getMessage());
         }
     }
 
@@ -224,32 +337,209 @@ public class DataSeeder implements CommandLineRunner {
 
         for (Object[] orgData : organisers) {
             String email = (String) orgData[0];
-            if (!userRepository.existsByEmail(email)) {
-                User organiser = User.builder()
+            String password = (String) orgData[1];
+            String fullName = (String) orgData[2];
+            String displayName = (String) orgData[3];
+            String bio = (String) orgData[4];
+            String logoUrl = (String) orgData[5];
+            String website = "https://www." + orgData[6] + ".com";
+            int coverIndex = Integer.parseInt((String) orgData[7]);
+            String coverUrl = ORGANISER_COVER_URLS[coverIndex % ORGANISER_COVER_URLS.length];
+
+            User organiser = userRepository.findByEmail(email).orElse(null);
+            boolean createdUser = organiser == null;
+            if (organiser == null) {
+                organiser = User.builder()
                         .email(email)
-                        .password(passwordEncoder.encode((String) orgData[1]))
-                        .fullName((String) orgData[2])
-                        .avatarUrl((String) orgData[5])
+                        .password(passwordEncoder.encode(password))
+                        .fullName(fullName)
+                        .avatarUrl(logoUrl)
                         .role(UserRole.ORGANISER)
                         .status(UserStatus.ACTIVE)
                         .emailVerified(true)
-                        .bio((String) orgData[4])
+                        .bio(bio)
                         .build();
-                organiser = userRepository.save(organiser);
+            } else {
+                if (isBlank(organiser.getFullName())) {
+                    organiser.setFullName(fullName);
+                }
+                if (isBlank(organiser.getBio())) {
+                    organiser.setBio(bio);
+                }
+                if (isBlank(organiser.getAvatarUrl())) {
+                    organiser.setAvatarUrl(logoUrl);
+                }
+                organiser.setRole(UserRole.ORGANISER);
+                organiser.setStatus(UserStatus.ACTIVE);
+                organiser.setEmailVerified(true);
+            }
+            organiser = userRepository.save(organiser);
 
-                OrganiserProfile profile = OrganiserProfile.builder()
+            OrganiserProfile profile = organiserProfileRepository.findByUser(organiser).orElse(null);
+            boolean createdProfile = profile == null;
+            if (profile == null) {
+                profile = OrganiserProfile.builder()
                         .user(organiser)
-                        .displayName((String) orgData[3])
-                        .bio((String) orgData[4])
-                        .logoUrl((String) orgData[5])
+                        .displayName(displayName)
+                        .bio(bio)
+                        .logoUrl(logoUrl)
+                        .coverUrl(coverUrl)
                         .contactEmail(email)
-                        .website("https://www." + orgData[6] + ".com")
+                        .website(website)
                         .verified(true)
                         .build();
-                organiserProfileRepository.save(profile);
-                log.info("✓ Created Organiser: {} - {}", email, orgData[2]);
+            } else {
+                if (isBlank(profile.getDisplayName())) {
+                    profile.setDisplayName(displayName);
+                }
+                if (isBlank(profile.getBio())) {
+                    profile.setBio(bio);
+                }
+                if (isBlank(profile.getLogoUrl())) {
+                    profile.setLogoUrl(logoUrl);
+                }
+                if (isBlank(profile.getCoverUrl())) {
+                    profile.setCoverUrl(coverUrl);
+                }
+                if (isBlank(profile.getContactEmail())) {
+                    profile.setContactEmail(email);
+                }
+                if (isBlank(profile.getWebsite())) {
+                    profile.setWebsite(website);
+                }
+                profile.setVerified(true);
+            }
+            organiserProfileRepository.save(profile);
+
+            if (createdUser || createdProfile) {
+                log.info("✓ Seeded Organiser: {} - {}", email, fullName);
+            } else {
+                log.info("✓ Backfilled Organiser seed data: {}", email);
             }
         }
+    }
+
+    private void backfillExistingOrganiserProfiles() {
+        List<User> organisers = userRepository.findAllByRole(UserRole.ORGANISER);
+        if (organisers.isEmpty()) {
+            return;
+        }
+
+        int updatedCount = 0;
+        for (User organiser : organisers) {
+            boolean userChanged = false;
+            boolean profileChanged = false;
+
+            if (isBlank(organiser.getFullName())) {
+                organiser.setFullName(defaultOrganiserName(organiser));
+                userChanged = true;
+            }
+
+            String fallbackCoverUrl = firstNonBlank(
+                    resolveFeaturedEventImage(organiser),
+                    defaultOrganiserCover(organiser)
+            );
+
+            OrganiserProfile profile = organiserProfileRepository.findByUser(organiser).orElse(null);
+            if (profile == null) {
+                profile = OrganiserProfile.builder()
+                        .user(organiser)
+                        .displayName(defaultOrganiserName(organiser))
+                        .bio(firstNonBlank(organiser.getBio()))
+                        .logoUrl(firstNonBlank(organiser.getAvatarUrl(), fallbackCoverUrl))
+                        .coverUrl(fallbackCoverUrl)
+                        .contactEmail(organiser.getEmail())
+                        .contactPhone(organiser.getPhone())
+                        .build();
+                profileChanged = true;
+            } else {
+                if (isBlank(profile.getDisplayName())) {
+                    profile.setDisplayName(defaultOrganiserName(organiser));
+                    profileChanged = true;
+                }
+                if (isBlank(profile.getBio()) && !isBlank(organiser.getBio())) {
+                    profile.setBio(organiser.getBio());
+                    profileChanged = true;
+                }
+                if (isBlank(profile.getLogoUrl()) && !isBlank(organiser.getAvatarUrl())) {
+                    profile.setLogoUrl(organiser.getAvatarUrl());
+                    profileChanged = true;
+                }
+                if (isBlank(profile.getCoverUrl()) && !isBlank(fallbackCoverUrl)) {
+                    profile.setCoverUrl(fallbackCoverUrl);
+                    profileChanged = true;
+                }
+                if (isBlank(profile.getContactEmail()) && !isBlank(organiser.getEmail())) {
+                    profile.setContactEmail(organiser.getEmail());
+                    profileChanged = true;
+                }
+                if (isBlank(profile.getContactPhone()) && !isBlank(organiser.getPhone())) {
+                    profile.setContactPhone(organiser.getPhone());
+                    profileChanged = true;
+                }
+            }
+
+            if (isBlank(organiser.getAvatarUrl())) {
+                organiser.setAvatarUrl(firstNonBlank(
+                        profile.getLogoUrl(),
+                        profile.getCoverUrl(),
+                        fallbackCoverUrl
+                ));
+                userChanged = !isBlank(organiser.getAvatarUrl()) || userChanged;
+            }
+
+            if (userChanged) {
+                userRepository.save(organiser);
+            }
+            if (profileChanged) {
+                organiserProfileRepository.save(profile);
+            }
+            if (userChanged || profileChanged) {
+                updatedCount++;
+            }
+        }
+
+        if (updatedCount > 0) {
+            log.info("✓ Backfilled organiser media/profile data for {} organiser accounts", updatedCount);
+        }
+    }
+
+    private String resolveFeaturedEventImage(User organiser) {
+        return eventRepository.findByOrganiserIdOrderByStartTimeDesc(organiser.getId()).stream()
+                .map(Event::getImageUrl)
+                .filter(imageUrl -> !isBlank(imageUrl))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String defaultOrganiserCover(User organiser) {
+        String identity = firstNonBlank(organiser.getEmail(), organiser.getFullName(), organiser.getId() != null ? organiser.getId().toString() : null);
+        if (identity == null) {
+            return ORGANISER_COVER_URLS[0];
+        }
+        int index = Math.floorMod(identity.hashCode(), ORGANISER_COVER_URLS.length);
+        return ORGANISER_COVER_URLS[index];
+    }
+
+    private String defaultOrganiserName(User organiser) {
+        return firstNonBlank(
+                organiser.getFullName(),
+                organiser.getEmail() != null ? organiser.getEmail().split("@")[0] : null,
+                "Organiser"
+        );
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (!isBlank(value)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private void seedCategories() {

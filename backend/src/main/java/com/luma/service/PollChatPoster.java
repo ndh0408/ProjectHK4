@@ -2,6 +2,7 @@ package com.luma.service;
 
 import com.luma.dto.response.MessageResponse;
 import com.luma.entity.Conversation;
+import com.luma.entity.ConversationParticipant;
 import com.luma.entity.Event;
 import com.luma.entity.Message;
 import com.luma.entity.Poll;
@@ -98,6 +99,11 @@ public class PollChatPoster {
                 .imageUrl(event.getImageUrl())
                 .event(event)
                 .build();
-        return conversationRepository.save(conversation);
+        conversation = conversationRepository.save(conversation);
+        participantRepository.save(ConversationParticipant.builder()
+                .conversation(conversation)
+                .user(event.getOrganiser())
+                .build());
+        return conversation;
     }
 }

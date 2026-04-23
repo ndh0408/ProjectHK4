@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useDeferredValue } from 'react';
 import {
     Box,
     Typography,
@@ -52,7 +52,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MDEditor from '@uiw/react-md-editor';
 import { organiserApi, publicApi } from '../../api';
 import { ConfirmDialog, ImageUpload, SpeakerForm, UpgradeDialog } from '../../components/common';
-import { PageHeader, DataTableCard, StatusChip, FormDialog, LoadingButton } from '../../components/ui';
+import { PageHeader, PageToolbar, DataTableCard, StatusChip, FormDialog, LoadingButton } from '../../components/ui';
 import EventIcon from '@mui/icons-material/Event';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -94,6 +94,8 @@ const OrganiserEvents = () => {
     const [categories, setCategories] = useState([]);
     const [cities, setCities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const deferredSearch = useDeferredValue(search);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [totalRows, setTotalRows] = useState(0);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -198,6 +200,7 @@ const OrganiserEvents = () => {
             const response = await organiserApi.getMyEvents({
                 page: paginationModel.page,
                 size: paginationModel.pageSize,
+                search: deferredSearch.trim() || undefined,
             });
             setEvents(response.data.data.content || []);
             setTotalRows(response.data.data.totalElements || 0);
@@ -206,7 +209,7 @@ const OrganiserEvents = () => {
         } finally {
             setLoading(false);
         }
-    }, [paginationModel]);
+    }, [paginationModel, deferredSearch]);
 
     const loadMasterData = async () => {
         try {
@@ -227,8 +230,19 @@ const OrganiserEvents = () => {
 
     useEffect(() => {
         loadEvents();
-        loadMasterData();
     }, [loadEvents]);
+
+    useEffect(() => {
+        loadMasterData();
+    }, []);
+
+    const handleSearchChange = (value) => {
+        setSearch(value);
+        setPaginationModel((prev) => ({
+            ...prev,
+            page: 0,
+        }));
+    };
 
     const handleRowClick = async (params) => {
         try {
@@ -710,6 +724,8 @@ const OrganiserEvents = () => {
         },
     ];
 
+    const hasSearch = search.trim().length > 0;
+
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box>
@@ -764,17 +780,26 @@ const OrganiserEvents = () => {
 
 
                 <DataTableCard
+                    toolbar={
+                        <PageToolbar
+                            search={search}
+                            onSearchChange={handleSearchChange}
+                            searchPlaceholder="Search your events..."
+                        />
+                    }
                     rows={events}
                     columns={columns}
                     loading={loading}
-                    emptyTitle="No events yet"
-                    emptyDescription="Create your first event to start collecting registrations."
+                    emptyTitle={hasSearch ? 'No events match your search' : 'No events yet'}
+                    emptyDescription={hasSearch
+                        ? 'Try a different keyword or clear the search.'
+                        : 'Create your first event to start collecting registrations.'}
                     emptyIcon={<EventIcon sx={{ fontSize: 40 }} />}
-                    emptyAction={
+                    emptyAction={!hasSearch && (
                         <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
                             Create Event
                         </Button>
-                    }
+                    )}
                     dataGridProps={{
                         paginationModel,
                         onPaginationModelChange: setPaginationModel,

@@ -8,6 +8,7 @@ import com.luma.entity.enums.EventStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,9 +21,34 @@ import java.util.UUID;
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
 
+    /**
+     * Atomically increments approvedCount iff the event still has room.
+     * Returns 1 when the seat was claimed, 0 when the event is full (race with
+     * another concurrent promotion/approval). Callers must check the return
+     * value and compensate (e.g. set status back to WAITING_LIST) on 0.
+     */
+    @Modifying
+    @Query("UPDATE Event e SET e.approvedCount = e.approvedCount + 1 " +
+           "WHERE e.id = :id AND (e.capacity IS NULL OR e.approvedCount < e.capacity)")
+    int incrementApprovedCountIfRoom(@Param("id") UUID id);
+
+    @Modifying
+    @Query("UPDATE Event e SET e.approvedCount = CASE WHEN e.approvedCount > 0 THEN e.approvedCount - 1 ELSE 0 END WHERE e.id = :id")
+    int decrementApprovedCountAtomic(@Param("id") UUID id);
+
     Page<Event> findByOrganiser(User organiser, Pageable pageable);
 
     Page<Event> findByOrganiserAndStatus(User organiser, EventStatus status, Pageable pageable);
+
+    @Query("SELECT e FROM Event e WHERE e.organiser = :organiser " +
+           "AND (:status IS NULL OR e.status = :status) " +
+           "AND (LOWER(e.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
+           "OR LOWER(COALESCE(e.description, '')) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Event> searchOrganiserEvents(
+            @Param("organiser") User organiser,
+            @Param("query") String query,
+            @Param("status") EventStatus status,
+            Pageable pageable);
 
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
 

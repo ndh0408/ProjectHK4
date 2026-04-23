@@ -148,13 +148,12 @@ class OrganiserProfileScreen extends ConsumerWidget {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (organiser.logoUrl != null ||
-                        organiser.avatarUrl != null)
+                    if (organiser.headerImageUrl != null)
                       Stack(
                         fit: StackFit.expand,
                         children: [
                           CachedNetworkImage(
-                            imageUrl: organiser.logoUrl ?? organiser.avatarUrl!,
+                            imageUrl: organiser.headerImageUrl!,
                             fit: BoxFit.cover,
                             errorWidget: (_, __, ___) =>
                                 _buildGradientBackground(),
@@ -209,8 +208,7 @@ class OrganiserProfileScreen extends ConsumerWidget {
                   children: [
                     Builder(
                       builder: (context) {
-                        final profileImageUrl =
-                            organiser.logoUrl ?? organiser.avatarUrl;
+                        final profileImageUrl = organiser.profileImageUrl;
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -246,11 +244,14 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                           ),
                                         ),
                                       ),
-                                      if (organiser.verified)
-                                        const StatusChip(
-                                          label: 'Verified',
-                                          variant: StatusChipVariant.success,
-                                        ),
+                                      StatusChip(
+                                        label: organiser.verified
+                                            ? 'Verified'
+                                            : 'Public organiser',
+                                        variant: organiser.verified
+                                            ? StatusChipVariant.success
+                                            : StatusChipVariant.neutral,
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
@@ -260,6 +261,10 @@ class OrganiserProfileScreen extends ConsumerWidget {
                                         : organiser.contactEmail?.isNotEmpty ==
                                                 true
                                             ? organiser.contactEmail!
+                                            : organiser.contactPhone
+                                                        ?.isNotEmpty ==
+                                                    true
+                                                ? organiser.contactPhone!
                                             : 'Independent organiser profile',
                                     style: AppTypography.body.copyWith(
                                       color: AppColors.textSecondary,
@@ -326,12 +331,19 @@ class OrganiserProfileScreen extends ConsumerWidget {
                             label: 'Email',
                             onTap: () => _openEmail(organiser.contactEmail!),
                           ),
+                        if (organiser.contactPhone != null &&
+                            organiser.contactPhone!.isNotEmpty)
+                          _ActionButton(
+                            icon: Icons.call_outlined,
+                            label: 'Phone',
+                            onTap: () => _openPhone(organiser.contactPhone!),
+                          ),
                       ],
                     ),
                   ],
                 ),
               ),
-              if (organiser.bio != null && organiser.bio!.isNotEmpty)
+              if (_buildAboutCopy(organiser) != null)
                 AppCard(
                   margin: const EdgeInsets.only(bottom: AppSpacing.section),
                   child: Column(
@@ -344,45 +356,53 @@ class OrganiserProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      MarkdownBody(
-                        data: organiser.bio!,
-                        shrinkWrap: true,
-                        softLineBreak: true,
-                        styleSheet: MarkdownStyleSheet(
-                          p: AppTypography.body.copyWith(
+                      if (organiser.bio?.trim().isNotEmpty ?? false)
+                        MarkdownBody(
+                          data: organiser.bio!,
+                          shrinkWrap: true,
+                          softLineBreak: true,
+                          styleSheet: MarkdownStyleSheet(
+                            p: AppTypography.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            strong: AppTypography.body.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            em: AppTypography.body.copyWith(
+                              color: AppColors.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            a: AppTypography.body.copyWith(
+                              color: AppColors.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                            listBullet: AppTypography.body.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            h1: AppTypography.h2.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                            h2: AppTypography.h3.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                            h3: AppTypography.h4.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          onTapLink: (text, href, title) {
+                            if (href != null) {
+                              launchUrl(Uri.parse(href));
+                            }
+                          },
+                        )
+                      else
+                        Text(
+                          _buildAboutCopy(organiser)!,
+                          style: AppTypography.body.copyWith(
                             color: AppColors.textSecondary,
-                          ),
-                          strong: AppTypography.body.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          em: AppTypography.body.copyWith(
-                            color: AppColors.textSecondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                          a: AppTypography.body.copyWith(
-                            color: AppColors.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                          listBullet: AppTypography.body.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          h1: AppTypography.h2.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                          h2: AppTypography.h3.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                          h3: AppTypography.h4.copyWith(
-                            color: AppColors.textPrimary,
                           ),
                         ),
-                        onTapLink: (text, href, title) {
-                          if (href != null) {
-                            launchUrl(Uri.parse(href));
-                          }
-                        },
-                      ),
                     ],
                   ),
                 ),
@@ -581,6 +601,13 @@ class OrganiserProfileScreen extends ConsumerWidget {
     }
   }
 
+  void _openPhone(String phone) async {
+    final url = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    }
+  }
+
   Widget _buildGradientBackground() {
     return Container(
       decoration: BoxDecoration(
@@ -604,6 +631,22 @@ class OrganiserProfileScreen extends ConsumerWidget {
       return '${(count / 1000).toStringAsFixed(1)}K';
     }
     return count.toString();
+  }
+
+  String? _buildAboutCopy(OrganiserProfile organiser) {
+    if (organiser.bio?.trim().isNotEmpty ?? false) {
+      return organiser.bio!.trim();
+    }
+
+    if (organiser.eventsCount <= 0) {
+      return organiser.verified
+          ? 'Verified organiser profile on LUMA.'
+          : 'Public organiser profile on LUMA.';
+    }
+
+    return organiser.verified
+        ? '${organiser.displayName} is a verified organiser with ${_formatCount(organiser.eventsCount)} published events on LUMA.'
+        : '${organiser.displayName} is running ${_formatCount(organiser.eventsCount)} published events on LUMA.';
   }
 
   Future<void> _toggleFollow(WidgetRef ref, BuildContext context) async {

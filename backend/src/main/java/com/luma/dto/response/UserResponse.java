@@ -3,6 +3,7 @@ package com.luma.dto.response;
 import com.luma.entity.User;
 import com.luma.entity.enums.UserRole;
 import com.luma.entity.enums.UserStatus;
+import com.luma.util.UserImageResolver;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,7 +42,7 @@ public class UserResponse {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .fullName(user.getFullName())
-                .avatarUrl(resolveUserImageUrl(user))
+                .avatarUrl(UserImageResolver.resolve(user))
                 .signatureUrl(user.getSignatureUrl())
                 .role(user.getRole())
                 .status(user.getStatus())
@@ -55,23 +56,5 @@ public class UserResponse {
                 .createdAt(user.getCreatedAt())
                 .lastLoginAt(user.getLastLoginAt())
                 .build();
-    }
-
-    private static String resolveUserImageUrl(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        if (user.getOrganiserProfile() != null
-                && user.getOrganiserProfile().getLogoUrl() != null
-                && !user.getOrganiserProfile().getLogoUrl().isBlank()) {
-            return user.getOrganiserProfile().getLogoUrl();
-        }
-
-        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isBlank()) {
-            return user.getAvatarUrl();
-        }
-
-        return null;
     }
 }

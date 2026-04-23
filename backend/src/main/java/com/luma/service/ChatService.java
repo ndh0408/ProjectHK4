@@ -82,14 +82,30 @@ public class ChatService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
+        boolean isOrganiser = event.getOrganiser().getId().equals(user.getId());
         Conversation conversation = conversationRepository.findByEventAndType(event, ConversationType.EVENT_GROUP)
-                .orElseThrow(() -> new ForbiddenException("Join the event chat before opening it"));
+                .orElse(null);
+        if (conversation == null) {
+            if (!isOrganiser) {
+                throw new ForbiddenException("Join the event chat before opening it");
+            }
+            conversation = createEventGroupChat(event);
+        }
 
-        ConversationParticipant currentParticipant = participantRepository
-                .findByConversationAndUser(conversation, user)
-                .orElseThrow(() -> new ForbiddenException("Join the event chat before opening it"));
+        ConversationParticipant currentParticipant = isOrganiser
+                ? ensureParticipant(conversation, user)
+                : participantRepository.findByConversationAndUser(conversation, user)
+                        .orElseThrow(() -> new ForbiddenException("Join the event chat before opening it"));
 
         return ConversationResponse.fromEntity(conversation, currentParticipant);
+    }
+
+    private ConversationParticipant ensureParticipant(Conversation conversation, User user) {
+        return participantRepository.findByConversationAndUser(conversation, user)
+                .orElseGet(() -> participantRepository.save(ConversationParticipant.builder()
+                        .conversation(conversation)
+                        .user(user)
+                        .build()));
     }
 
     private Conversation createEventGroupChat(Event event) {
@@ -99,9 +115,12 @@ public class ChatService {
                 .imageUrl(event.getImageUrl())
                 .event(event)
                 .build();
-        return conversationRepository.save(conversation);
+        conversation = conversationRepository.save(conversation);
+        ensureParticipant(conversation, event.getOrganiser());
+        return conversation;
     }
 
+    @Transactional
     public List<EventChatSummaryResponse> getEventChats(User user) {
         List<Registration> approvedRegs = registrationRepository.findByUserAndStatus(user, RegistrationStatus.APPROVED);
         List<Event> organisedEvents = eventRepository.findByOrganiserIdOrderByStartTimeDesc(user.getId());
@@ -122,13 +141,23 @@ public class ChatService {
 
         List<EventChatSummaryResponse> summaries = new ArrayList<>(eventsById.size());
         for (Event event : eventsById.values()) {
+            boolean isOrganiser = event.getOrganiser().getId().equals(user.getId());
             Conversation conversation = conversationRepository
                     .findByEventAndType(event, ConversationType.EVENT_GROUP)
                     .orElse(null);
+            if (conversation == null && isOrganiser) {
+                conversation = createEventGroupChat(event);
+            }
 
             ConversationParticipant participant = conversation == null
                     ? null
-                    : participantRepository.findByConversationAndUser(conversation, user).orElse(null);
+                    : isOrganiser
+                            ? ensureParticipant(conversation, user)
+                            : participantRepository.findByConversationAndUser(conversation, user).orElse(null);
+
+            int participantCount = conversation != null
+                    ? (int) participantRepository.countByConversation(conversation)
+                    : 0;
 
             summaries.add(EventChatSummaryResponse.builder()
                     .eventId(event.getId())
@@ -139,10 +168,10 @@ public class ChatService {
                     .venue(event.getVenue())
                     .conversationId(conversation != null ? conversation.getId() : null)
                     .joined(participant != null)
+                    .canModerate(isOrganiser)
                     .closed(conversation != null && conversation.getClosedAt() != null)
                     .closedAt(conversation != null ? conversation.getClosedAt() : null)
-                    .participantCount(conversation != null && conversation.getParticipants() != null
-                            ? conversation.getParticipants().size() : 0)
+                    .participantCount(participantCount)
                     .lastMessageContent(conversation != null ? conversation.getLastMessageContent() : null)
                     .lastMessageAt(conversation != null ? conversation.getLastMessageAt() : null)
                     .unreadCount(participant != null ? participant.getUnreadCount() : 0)
@@ -198,6 +227,7 @@ public class ChatService {
                 .venue(event.getVenue())
                 .conversationId(conversation.getId())
                 .joined(true)
+                .canModerate(isOrganiser)
                 .closed(false)
                 .closedAt(null)
                 .participantCount(participantCount)
@@ -485,12 +515,14 @@ public class ChatService {
         // If the deleted message was the pinned announcement, unpin it too
         // so clients don't keep rendering a dangling banner.
         Conversation conversation = message.getConversation();
+        boolean clearedPinnedMessage = false;
         if (conversation.getPinnedMessage() != null
                 && conversation.getPinnedMessage().getId().equals(messageId)) {
             conversation.setPinnedMessage(null);
             conversation.setPinnedAt(null);
             conversation.setPinnedBy(null);
             conversationRepository.save(conversation);
+            clearedPinnedMessage = true;
         }
 
         message.setDeleted(true);
@@ -501,6 +533,9 @@ public class ChatService {
         messageRepository.save(message);
 
         webSocketService.broadcastMessageDeleted(conversationId, messageId);
+        if (clearedPinnedMessage) {
+            webSocketService.broadcastPinnedMessageUpdated(conversationId, null);
+        }
     }
 
     /// True iff the user is the event organiser for this conversation's
@@ -542,6 +577,11 @@ public class ChatService {
         conversation.setPinnedBy(user);
         conversationRepository.save(conversation);
 
+        webSocketService.broadcastPinnedMessageUpdated(
+                conversationId,
+                MessageResponse.fromEntity(message, pid -> false)
+        );
+
         ConversationParticipant participant = participantRepository
                 .findByConversationAndUser(conversation, user)
                 .orElse(null);
@@ -558,6 +598,8 @@ public class ChatService {
         conversation.setPinnedAt(null);
         conversation.setPinnedBy(null);
         conversationRepository.save(conversation);
+
+        webSocketService.broadcastPinnedMessageUpdated(conversationId, null);
 
         ConversationParticipant participant = participantRepository
                 .findByConversationAndUser(conversation, user)

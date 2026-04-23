@@ -22,12 +22,18 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
 });
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._repository, this._googleSignIn) : super(const AuthInitial()) {
+  AuthNotifier(this._repository, this._googleSignIn)
+      : super(const AuthInitial()) {
     unawaited(_checkAuthStatus());
   }
 
   final AuthRepository _repository;
   final GoogleSignIn _googleSignIn;
+
+  /// Remembers the last pending-verification handshake so that an error → clearError
+  /// cycle on the OTP screen restores the pending state instead of dropping to
+  /// Unauthenticated (which would kick the router back to /login).
+  PendingEmailVerification? _lastPending;
 
   Future<void> _checkAuthStatus() async {
     final isAuthenticated = await _repository.isAuthenticated();
@@ -48,10 +54,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      final user = await _repository.login(
+      final result = await _repository.login(
         LoginRequest(email: email, password: password),
       );
-      state = Authenticated(user);
+      _applyAuthResult(result);
     } on AuthException catch (e) {
       state = AuthError(e.message);
     } catch (e, stackTrace) {
@@ -70,7 +76,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
 
     try {
-      final user = await _repository.register(
+      final result = await _repository.register(
         RegisterRequest(
           email: email,
           password: password,
@@ -78,13 +84,58 @@ class AuthNotifier extends StateNotifier<AuthState> {
           phone: phone,
         ),
       );
-      state = Authenticated(user);
+      _applyAuthResult(result);
     } on AuthException catch (e) {
       state = AuthError(e.message);
     } catch (e, stackTrace) {
       debugPrint('Register error: $e');
       debugPrint('Stack trace: $stackTrace');
       state = AuthError('Error: $e');
+    }
+  }
+
+  Future<void> verifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    state = const AuthLoading();
+    try {
+      final user = await _repository.verifyOtp(
+        VerifyOtpRequest(email: email, otp: otp),
+      );
+      state = Authenticated(user);
+    } on AuthException catch (e) {
+      state = AuthError(e.message);
+    } catch (e, stackTrace) {
+      debugPrint('Verify OTP error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      state = AuthError('Error: $e');
+    }
+  }
+
+  Future<void> resendOtp(String email) async {
+    try {
+      await _repository.resendOtp(email);
+    } on AuthException catch (e) {
+      state = AuthError(e.message);
+    }
+  }
+
+  void _applyAuthResult(AuthResult result) {
+    switch (result) {
+      case AuthSuccess(user: final user):
+        _lastPending = null;
+        state = Authenticated(user);
+      case AuthPendingVerification(
+          email: final email,
+          otpExpiresInSeconds: final expires,
+        ):
+        final pending = PendingEmailVerification(
+          email: email,
+          otpExpiresInSeconds: expires,
+        );
+        _lastPending = pending;
+        state = pending;
     }
   }
 
@@ -125,19 +176,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> signInWithQrChallenge({
+    required String challengeId,
+    required String pollingToken,
+  }) async {
+    state = const AuthLoading();
+
+    try {
+      final user = await _repository.exchangeQrLoginChallenge(
+        challengeId: challengeId,
+        pollingToken: pollingToken,
+      );
+      _lastPending = null;
+      state = Authenticated(user);
+    } on AuthException catch (e) {
+      state = AuthError(e.message);
+    } catch (e, stackTrace) {
+      debugPrint('QR Sign-In error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      state = AuthError('QR Sign-In failed: $e');
+    }
+  }
+
   Future<void> logout() async {
     state = const AuthLoading();
     try {
       await _googleSignIn.signOut();
-    } catch (_) {
-    }
+    } catch (_) {}
     await _repository.logout();
+    _lastPending = null;
     state = const Unauthenticated();
   }
 
   void clearError() {
     if (state is AuthError) {
-      state = const Unauthenticated();
+      // If the error happened during the OTP handshake, keep the user on the
+      // OTP screen; otherwise fall back to the login screen.
+      final pending = _lastPending;
+      state = pending ?? const Unauthenticated();
     }
   }
 }

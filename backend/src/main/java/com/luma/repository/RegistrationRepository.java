@@ -217,4 +217,9 @@ public interface RegistrationRepository extends JpaRepository<Registration, UUID
     List<Registration> findAllByEventIdAndStatus(UUID eventId, RegistrationStatus status);
 
     List<Registration> findAllByStatus(RegistrationStatus status);
+
+    @Query("SELECT r FROM Registration r JOIN FETCH r.event JOIN FETCH r.user " +
+           "WHERE r.status = :status AND r.paymentDeadline IS NOT NULL AND r.paymentDeadline < :now")
+    List<Registration> findPromotedPendingPastDeadline(@Param("status") RegistrationStatus status,
+                                                       @Param("now") LocalDateTime now);
 }

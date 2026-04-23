@@ -6,9 +6,15 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../services/api_service.dart';
 import '../../../../shared/models/organiser_profile.dart';
 import '../../../../shared/widgets/app_components.dart';
-import 'explore_screen.dart';
+
+final organisersDirectoryProvider =
+    FutureProvider<List<OrganiserProfile>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  return api.getOrganisers();
+});
 
 class OrganisersScreen extends ConsumerWidget {
   const OrganisersScreen({super.key});
@@ -16,7 +22,7 @@ class OrganisersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final organisers = ref.watch(featuredOrganisersProvider);
+    final organisers = ref.watch(organisersDirectoryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -30,7 +36,7 @@ class OrganisersScreen extends ConsumerWidget {
               style: IconButton.styleFrom(
                 backgroundColor: AppColors.surfaceVariant,
               ),
-              onPressed: () => ref.invalidate(featuredOrganisersProvider),
+              onPressed: () => ref.invalidate(organisersDirectoryProvider),
               icon: const Icon(Icons.refresh_rounded),
             ),
           ),
@@ -43,9 +49,9 @@ class OrganisersScreen extends ConsumerWidget {
               icon: Icons.groups_outlined,
               title: l10n.noOrganisersAvailable,
               subtitle:
-                  'Featured organisers will appear here as their event pages gain traction.',
+                  'Public organiser profiles will appear here once organisers publish their calendars.',
               actionLabel: l10n.refresh,
-              onAction: () => ref.invalidate(featuredOrganisersProvider),
+              onAction: () => ref.invalidate(organisersDirectoryProvider),
             );
           }
 
@@ -58,7 +64,7 @@ class OrganisersScreen extends ConsumerWidget {
 
           return RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: () async => ref.invalidate(featuredOrganisersProvider),
+            onRefresh: () async => ref.invalidate(organisersDirectoryProvider),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -101,7 +107,7 @@ class OrganisersScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  '${_formatNumber(totalFollowers)} followers across featured organiser calendars.',
+                                  '${_formatNumber(totalFollowers)} followers across organiser calendars.',
                                   style: AppTypography.body.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
@@ -118,9 +124,9 @@ class OrganisersScreen extends ConsumerWidget {
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageX),
                     child: SectionHeader(
-                      title: 'Featured organisers',
+                      title: 'All organisers',
                       subtitle:
-                          'Verified teams, active calendars and public organiser profiles.',
+                          'Public organiser profiles and active event calendars.',
                     ),
                   ),
                 ),
@@ -162,7 +168,7 @@ class OrganisersScreen extends ConsumerWidget {
         loading: () => const LoadingState(message: 'Loading organisers...'),
         error: (error, _) => ErrorState(
           message: '$error',
-          onRetry: () => ref.invalidate(featuredOrganisersProvider),
+          onRetry: () => ref.invalidate(organisersDirectoryProvider),
         ),
       ),
     );
@@ -190,7 +196,7 @@ class _OrganiserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = organiser.logoUrl ?? organiser.avatarUrl;
+    final imageUrl = organiser.profileImageUrl;
     final summary = _buildSummary(organiser);
     final statusLabel = organiser.verified ? 'Verified' : 'Active';
 
@@ -205,7 +211,7 @@ class _OrganiserCard extends StatelessWidget {
             name: organiser.displayName,
             imageUrl: imageUrl,
             verified: organiser.verified,
-            logoMode: organiser.logoUrl != null,
+            logoMode: organiser.logoUrl?.trim().isNotEmpty == true,
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(

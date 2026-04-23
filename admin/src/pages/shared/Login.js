@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
     Box,
     Stack,
@@ -8,10 +8,12 @@ import {
     InputAdornment,
     IconButton,
     Alert,
+    AlertTitle,
     Divider,
     Chip,
     Paper,
     useMediaQuery,
+    Button,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
@@ -25,6 +27,7 @@ import {
     CheckCircleOutline as CheckIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { publicApi } from '../../api';
 import { LoadingButton } from '../../components/ui';
 import { tokens } from '../../theme';
 import LumaLogo from '../../components/brand/LumaLogo';
@@ -67,6 +70,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [applicationInfo, setApplicationInfo] = useState(null);
 
     const validateForm = () => {
         const errors = {};
@@ -95,10 +99,19 @@ const Login = () => {
             const user = await login(email, password);
             if (user.role === 'ADMIN') {
                 navigate('/admin/dashboard', { replace: true });
-            } else if (user.role === 'ORGANISER') {
+                return;
+            }
+            if (user.role === 'ORGANISER') {
                 navigate('/organiser/dashboard', { replace: true });
-            } else {
-                setError('Access denied. Only Admin and Organiser can access this panel.');
+                return;
+            }
+
+            // USER role on the admin portal = either pending or rejected organiser application
+            try {
+                const statusResp = await publicApi.getMyOrganiserApplicationStatus();
+                setApplicationInfo(statusResp.data?.data || { status: 'NONE' });
+            } catch {
+                setApplicationInfo({ status: 'NONE' });
             }
         } catch (err) {
             setError(err.response?.data?.message || err.message || 'Login failed.');
@@ -253,6 +266,51 @@ const Login = () => {
                         </Alert>
                     )}
 
+                    {applicationInfo && (
+                        <Alert
+                            severity={
+                                applicationInfo.status === 'REJECTED' ? 'error'
+                                    : applicationInfo.status === 'PENDING' ? 'info'
+                                    : 'warning'
+                            }
+                            sx={{ mb: 2.5 }}
+                            action={
+                                (applicationInfo.status === 'REJECTED' || applicationInfo.status === 'NONE') && (
+                                    <Button
+                                        component={RouterLink}
+                                        to="/apply-organiser"
+                                        size="small"
+                                        color="inherit"
+                                        variant="outlined"
+                                    >
+                                        {applicationInfo.status === 'REJECTED' ? 'Reapply' : 'Apply'}
+                                    </Button>
+                                )
+                            }
+                        >
+                            <AlertTitle>
+                                {applicationInfo.status === 'REJECTED' && 'Your organiser application was rejected'}
+                                {applicationInfo.status === 'PENDING' && 'Application under review'}
+                                {applicationInfo.status === 'APPROVED' && 'Account not yet activated'}
+                                {applicationInfo.status === 'NONE' && 'Your account does not have organiser access'}
+                            </AlertTitle>
+                            {applicationInfo.status === 'REJECTED' && (
+                                applicationInfo.rejectReason
+                                    ? `Admin feedback: ${applicationInfo.rejectReason}`
+                                    : 'You can submit a new application with updated documents.'
+                            )}
+                            {applicationInfo.status === 'PENDING' && (
+                                'An admin is reviewing your submission. You will receive an email once the decision is made.'
+                            )}
+                            {applicationInfo.status === 'APPROVED' && (
+                                'Please refresh this page — your role should be updated. If this persists, contact support.'
+                            )}
+                            {applicationInfo.status === 'NONE' && (
+                                'Apply to become an organiser to access the dashboard.'
+                            )}
+                        </Alert>
+                    )}
+
                     <Box component="form" onSubmit={handleSubmit} noValidate>
                         <Stack spacing={2.25}>
                             <TextField
@@ -321,6 +379,38 @@ const Login = () => {
                                 {loading ? 'Signing in...' : 'Sign in'}
                             </LoadingButton>
                         </Stack>
+                    </Box>
+
+                    <Box
+                        sx={{
+                            mt: 2.5,
+                            p: 2.25,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: 'primary.100',
+                            bgcolor: 'primary.50',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                        }}
+                    >
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.25 }}>
+                                Want to organise events?
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Apply to become a LUMA organiser — approval usually takes 1-2 business days.
+                            </Typography>
+                        </Box>
+                        <Button
+                            component={RouterLink}
+                            to="/apply-organiser"
+                            variant="outlined"
+                            size="small"
+                            sx={{ whiteSpace: 'nowrap' }}
+                        >
+                            Apply now
+                        </Button>
                     </Box>
 
                     <Divider sx={{ my: 3.5 }}>

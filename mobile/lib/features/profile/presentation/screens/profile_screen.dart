@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +19,6 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
-import '../../../my_events/presentation/screens/my_events_screen.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -660,6 +660,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: l10n.notificationPreferences,
             onTap: () => _showNotificationPreferences(user),
           ),
+          if (!kIsWeb)
+            _SettingsTile(
+              icon: Icons.qr_code_scanner_rounded,
+              title: 'Scan web login QR',
+              onTap: () => context.push('/scan-web-login-qr'),
+            ),
         ],
       ),
     );

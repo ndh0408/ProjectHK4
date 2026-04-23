@@ -8,6 +8,9 @@ const chatApi = {
     joinEventChat: (eventId) =>
         api.post(`/user/chat/event-chats/${eventId}/join`).then(unwrap),
 
+    getConversation: (conversationId) =>
+        api.get(`/user/chat/conversations/${conversationId}`).then(unwrap),
+
     getMessages: (conversationId, { page = 0, size = 50 } = {}) =>
         api
             .get(`/user/chat/conversations/${conversationId}/messages`, {

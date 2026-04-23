@@ -213,6 +213,11 @@ public class EventService {
             recurrenceDaysStr = String.join(",", request.getRecurrenceDaysOfWeek());
         }
 
+        BigDecimal initialTicketPrice = request.getTicketPrice() != null ? request.getTicketPrice() : BigDecimal.ZERO;
+        boolean initialIsFree = request.getTicketPrice() != null
+                ? request.getTicketPrice().compareTo(BigDecimal.ZERO) <= 0
+                : request.isFree();
+
         Event event = Event.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -224,8 +229,8 @@ public class EventService {
                 .address(request.getAddress())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
-                .ticketPrice(request.getTicketPrice() != null ? request.getTicketPrice() : BigDecimal.ZERO)
-                .isFree(request.isFree())
+                .ticketPrice(initialTicketPrice)
+                .isFree(initialIsFree)
                 .capacity(request.getCapacity())
                 .visibility(request.getVisibility())
                 .requiresApproval(request.isRequiresApproval())
@@ -449,11 +454,7 @@ public class EventService {
         if (request.getAddress() != null) event.setAddress(request.getAddress());
         if (request.getLatitude() != null) event.setLatitude(request.getLatitude());
         if (request.getLongitude() != null) event.setLongitude(request.getLongitude());
-        if (request.getIsFree() != null && request.getIsFree()) {
-            event.setTicketPrice(BigDecimal.ZERO);
-        } else if (request.getTicketPrice() != null) {
-            event.setTicketPrice(request.getTicketPrice());
-        }
+        applyFlatPricing(event, request.getTicketPrice(), request.getIsFree());
         if (request.getCapacity() != null) event.setCapacity(request.getCapacity());
         if (request.getVisibility() != null) event.setVisibility(request.getVisibility());
         if (request.getStatus() != null) event.setStatus(request.getStatus());
@@ -610,11 +611,7 @@ public class EventService {
             if (request.getAddress() != null) childEvent.setAddress(request.getAddress());
             if (request.getLatitude() != null) childEvent.setLatitude(request.getLatitude());
             if (request.getLongitude() != null) childEvent.setLongitude(request.getLongitude());
-            if (request.getIsFree() != null && request.getIsFree()) {
-                childEvent.setTicketPrice(BigDecimal.ZERO);
-            } else if (request.getTicketPrice() != null) {
-                childEvent.setTicketPrice(request.getTicketPrice());
-            }
+            applyFlatPricing(childEvent, request.getTicketPrice(), request.getIsFree());
             if (request.getCapacity() != null) childEvent.setCapacity(request.getCapacity());
             if (request.getVisibility() != null) childEvent.setVisibility(request.getVisibility());
             if (request.getRequiresApproval() != null) childEvent.setRequiresApproval(request.getRequiresApproval());
@@ -911,6 +908,21 @@ public class EventService {
     public PageResponse<EventResponse> getEventsBySpeaker(String speakerName, Pageable pageable) {
         Page<Event> events = eventRepository.findEventsBySpeakerName(speakerName, pageable);
         return PageResponse.from(events, event -> enrichEventResponseWithBoostInfo(event));
+    }
+
+    private void applyFlatPricing(Event event, BigDecimal requestedTicketPrice, Boolean requestedIsFree) {
+        if (requestedTicketPrice != null) {
+            event.setTicketPrice(requestedTicketPrice);
+            event.setFree(requestedTicketPrice.compareTo(BigDecimal.ZERO) <= 0);
+            return;
+        }
+
+        if (requestedIsFree != null) {
+            event.setFree(requestedIsFree);
+            if (requestedIsFree) {
+                event.setTicketPrice(BigDecimal.ZERO);
+            }
+        }
     }
 
     private void ensureOrganiserProfile(User user) {

@@ -95,6 +95,26 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return rateLimitConfig.getLoginBucket(clientIp);
         }
 
+        if (path.startsWith("/api/auth/qr-login")) {
+            return rateLimitConfig.getLoginBucket(clientIp);
+        }
+
+        // OTP verify is brute-forceable (1M code space), so reuse the stricter
+        // login bucket rather than the generic API budget.
+        if (path.equals("/api/auth/verify-otp") && "POST".equals(method)) {
+            return rateLimitConfig.getLoginBucket(clientIp);
+        }
+
+        if (path.equals("/api/auth/resend-otp") && "POST".equals(method)) {
+            return rateLimitConfig.getRegisterBucket(clientIp);
+        }
+
+        // Public organiser application endpoints are unauthenticated - rate-limit
+        // to prevent abuse (spam applications, upload flooding the CDN bucket).
+        if (path.startsWith("/api/public/organiser-application")) {
+            return rateLimitConfig.getRegisterBucket(clientIp);
+        }
+
         // LLM-backed endpoints are expensive (OpenAI tokens) — keep them on a
         // separate, tighter bucket so they don't drain the generic API budget.
         if (path.equals("/api/user/assistant/chat") && "POST".equals(method)) {

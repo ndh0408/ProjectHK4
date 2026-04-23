@@ -3,6 +3,7 @@ package com.luma.service;
 import com.luma.dto.request.CreateGroupChatRequest;
 import com.luma.dto.response.ConversationResponse;
 import com.luma.dto.response.EventBuddyResponse;
+import com.luma.dto.response.EventChatSummaryResponse;
 import com.luma.dto.response.PageResponse;
 import com.luma.entity.*;
 import com.luma.entity.enums.ConversationType;
@@ -33,13 +34,18 @@ public class OrganiserChatService {
     private final ChatService chatService;
 
     @Transactional
-    public void muteAttendee(User organiser, UUID conversationId, UUID attendeeId, boolean mute) {
-        chatService.muteAttendee(organiser, conversationId, attendeeId, mute);
+    public void muteAttendee(User organiser, UUID conversationId, UUID attendeeId, int minutes) {
+        chatService.muteParticipant(organiser, conversationId, attendeeId, minutes);
     }
 
     @Transactional
     public void banAttendee(User organiser, UUID conversationId, UUID attendeeId) {
-        chatService.banAttendee(organiser, conversationId, attendeeId);
+        chatService.banParticipant(organiser, conversationId, attendeeId);
+    }
+
+    @Transactional
+    public void unbanAttendee(User organiser, UUID conversationId, UUID attendeeId) {
+        chatService.unbanParticipant(organiser, conversationId, attendeeId);
     }
 
     @Transactional
@@ -55,6 +61,12 @@ public class OrganiserChatService {
     @Transactional
     public ConversationResponse unpinMessage(User organiser, UUID conversationId) {
         return chatService.unpinMessage(organiser, conversationId);
+    }
+
+    public List<EventChatSummaryResponse> getEventChats(User organiser) {
+        return chatService.getEventChats(organiser).stream()
+                .filter(EventChatSummaryResponse::isCanModerate)
+                .toList();
     }
 
     public PageResponse<EventBuddyResponse> getEventBuddies(User organiser, Pageable pageable) {

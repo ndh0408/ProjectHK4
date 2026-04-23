@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/l10n/app_localizations.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/config/theme.dart';
 import '../../../../core/design_tokens/design_tokens.dart';
 import '../../../../services/api_service.dart';
 import '../../../../shared/models/event.dart';
 import '../../../../shared/widgets/app_components.dart';
+import '../../data/auth_repository.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 import '../../../home/providers/events_provider.dart';
 import '../../../main/presentation/screens/main_shell.dart';
@@ -45,9 +50,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // surface the spinner on the button the user actually tapped.
   bool _googleInFlight = false;
   bool _emailInFlight = false;
+  Timer? _qrPollTimer;
+  QrLoginChallenge? _qrChallenge;
+  QrLoginStatus? _qrStatus;
+  bool _isPreparingQr = false;
+  bool _isExchangingQr = false;
+  String? _qrError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      _prepareQrLogin();
+    }
+  }
 
   @override
   void dispose() {
+    _stopQrPolling();
     _emailController.dispose();
     _passwordController.dispose();
     _fullNameController.dispose();
@@ -82,6 +102,107 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authProvider.notifier).signInWithGoogle();
     } finally {
       if (mounted) setState(() => _googleInFlight = false);
+    }
+  }
+
+  Future<void> _prepareQrLogin() async {
+    _stopQrPolling();
+
+    if (mounted) {
+      setState(() {
+        _isPreparingQr = true;
+        _isExchangingQr = false;
+        _qrChallenge = null;
+        _qrStatus = null;
+        _qrError = null;
+      });
+    }
+
+    try {
+      final challenge =
+          await ref.read(authRepositoryProvider).createQrLoginChallenge();
+      if (!mounted) return;
+
+      setState(() {
+        _qrChallenge = challenge;
+        _qrStatus = null;
+        _qrError = null;
+      });
+      _startQrPolling();
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _qrError = e.message);
+    } finally {
+      if (mounted) setState(() => _isPreparingQr = false);
+    }
+  }
+
+  void _startQrPolling() {
+    _stopQrPolling();
+    _qrPollTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _pollQrStatus(),
+    );
+  }
+
+  void _stopQrPolling() {
+    _qrPollTimer?.cancel();
+    _qrPollTimer = null;
+  }
+
+  Future<void> _pollQrStatus() async {
+    final challenge = _qrChallenge;
+    if (challenge == null || _isExchangingQr) return;
+
+    try {
+      final status = await ref.read(authRepositoryProvider).getQrLoginStatus(
+            challengeId: challenge.challengeId,
+            pollingToken: challenge.pollingToken,
+          );
+      if (!mounted) return;
+
+      setState(() {
+        _qrStatus = status;
+        _qrError = null;
+      });
+
+      switch (status.status) {
+        case QrLoginChallengeStatus.pending:
+          return;
+        case QrLoginChallengeStatus.approved:
+          _stopQrPolling();
+          await _exchangeQrChallenge();
+          return;
+        case QrLoginChallengeStatus.expired:
+          _stopQrPolling();
+          return;
+        case QrLoginChallengeStatus.consumed:
+          _stopQrPolling();
+          setState(() {
+            _qrError =
+                'This QR code has already been used. Generate a new one to try again.';
+          });
+          return;
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      _stopQrPolling();
+      setState(() => _qrError = e.message);
+    }
+  }
+
+  Future<void> _exchangeQrChallenge() async {
+    final challenge = _qrChallenge;
+    if (challenge == null || _isExchangingQr) return;
+
+    setState(() => _isExchangingQr = true);
+    try {
+      await ref.read(authProvider.notifier).signInWithQrChallenge(
+            challengeId: challenge.challengeId,
+            pollingToken: challenge.pollingToken,
+          );
+    } finally {
+      if (mounted) setState(() => _isExchangingQr = false);
     }
   }
 
@@ -191,6 +312,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ? _buildEmailForm(isLoading)
                     : _buildAuthButtons(isLoading),
               ),
+              if (kIsWeb) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pageX,
+                  ),
+                  child: _buildQrLoginCard(isLoading),
+                ),
+              ],
               const SizedBox(height: AppSpacing.xl),
               Padding(
                 padding:
@@ -404,6 +534,187 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildQrLoginCard(bool isLoading) {
+    final activeChallenge = _qrChallenge;
+    final status = _qrStatus?.status ?? QrLoginChallengeStatus.pending;
+    final countdown =
+        _qrStatus?.expiresInSeconds ?? activeChallenge?.expiresInSeconds ?? 0;
+    final approvedBy = _qrStatus?.approvedByName;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: AppRadius.allMd,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.qr_code_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Login with QR',
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Open LUMA on your phone, go to Profile, then tap Scan web login QR.',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          if (_isPreparingQr)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (activeChallenge != null)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.allLg,
+                  border: Border.all(color: AppColors.borderLight),
+                ),
+                child: QrImageView(
+                  data: activeChallenge.qrData,
+                  size: 184,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: AppColors.textPrimary,
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: AppRadius.allLg,
+              ),
+              child: Text(
+                _qrError ?? 'Generate a QR code to sign in from your phone.',
+                style: AppTypography.body.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              StatusChip(
+                label: _qrStatusLabel(status),
+                variant: _qrStatusVariant(status),
+              ),
+              if (activeChallenge != null &&
+                  status != QrLoginChallengeStatus.consumed)
+                StatusChip(
+                  label: countdown > 0
+                      ? 'Expires in ${_formatCountdown(countdown)}'
+                      : 'Expires soon',
+                  variant: StatusChipVariant.neutral,
+                ),
+            ],
+          ),
+          if (approvedBy != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Approved by $approvedBy${_isExchangingQr ? '. Signing you in...' : '.'}',
+              style: AppTypography.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ] else if (_qrError != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              _qrError!,
+              style: AppTypography.body.copyWith(color: AppColors.error),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: activeChallenge == null ||
+                    status == QrLoginChallengeStatus.expired
+                ? 'Generate QR'
+                : 'Refresh QR',
+            onPressed: (isLoading || _isPreparingQr) ? null : _prepareQrLogin,
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.lg,
+            expanded: true,
+            icon: Icons.refresh_rounded,
+            loading: _isPreparingQr,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCountdown(int totalSeconds) {
+    final safe = totalSeconds.clamp(0, 3599).toInt();
+    final minutes = (safe ~/ 60).toString().padLeft(2, '0');
+    final seconds = (safe % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  String _qrStatusLabel(QrLoginChallengeStatus status) {
+    switch (status) {
+      case QrLoginChallengeStatus.approved:
+        return _isExchangingQr ? 'Signing in' : 'Approved';
+      case QrLoginChallengeStatus.expired:
+        return 'Expired';
+      case QrLoginChallengeStatus.consumed:
+        return 'Used';
+      case QrLoginChallengeStatus.pending:
+        return 'Waiting for scan';
+    }
+  }
+
+  StatusChipVariant _qrStatusVariant(QrLoginChallengeStatus status) {
+    switch (status) {
+      case QrLoginChallengeStatus.approved:
+        return StatusChipVariant.success;
+      case QrLoginChallengeStatus.expired:
+        return StatusChipVariant.warning;
+      case QrLoginChallengeStatus.consumed:
+        return StatusChipVariant.neutral;
+      case QrLoginChallengeStatus.pending:
+        return StatusChipVariant.info;
+    }
   }
 }
 

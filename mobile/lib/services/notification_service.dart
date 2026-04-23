@@ -13,6 +13,7 @@ import '../features/main/presentation/screens/main_shell.dart';
 import '../shared/models/notification.dart' as app;
 import 'api_service.dart';
 import 'local_notification_service.dart';
+import 'push_notification_service.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);
@@ -27,11 +28,24 @@ final notificationServiceInitializerProvider = Provider<void>((ref) {
       await notificationService.initialize();
       notificationService.connect(authState.user.id);
       debugPrint('Notification service initialized for user: ${authState.user.id}');
+      try {
+        final api = ref.read(apiServiceProvider);
+        await ref.read(pushNotificationServiceProvider)
+            .registerCurrentDeviceToken(api);
+      } catch (e) {
+        debugPrint('FCM token registration failed: $e');
+      }
     });
   } else if (authState is Unauthenticated) {
-    Future.microtask(() {
+    Future.microtask(() async {
       notificationService.disconnect();
       debugPrint('Notification service disconnected');
+      try {
+        final api = ref.read(apiServiceProvider);
+        await ref.read(pushNotificationServiceProvider).unregisterOnLogout(api);
+      } catch (e) {
+        debugPrint('FCM token unregister failed: $e');
+      }
     });
   }
 });

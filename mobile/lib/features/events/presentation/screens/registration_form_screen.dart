@@ -22,6 +22,7 @@ class RegistrationFormScreen extends ConsumerStatefulWidget {
     this.ticketTypeId,
     this.ticketTypeName,
     this.quantity = 1,
+    this.isWaitlist = false,
   });
 
   final String eventId;
@@ -31,6 +32,7 @@ class RegistrationFormScreen extends ConsumerStatefulWidget {
   final String? ticketTypeId;
   final String? ticketTypeName;
   final int quantity;
+  final bool isWaitlist;
 
   @override
   ConsumerState<RegistrationFormScreen> createState() =>
@@ -92,7 +94,10 @@ class _RegistrationFormScreenState
       // one up-front so PaymentScreen has a real id to call /payment-intent
       // with. An empty id collapses the path and the request 404s into the
       // generic 500 handler.
-      if (!widget.isFree &&
+      // Waitlist entries skip payment — fee is collected only after a spot
+      // opens up and the user accepts the promotion offer.
+      if (!widget.isWaitlist &&
+          !widget.isFree &&
           widget.ticketPrice != null &&
           widget.ticketPrice! > 0) {
         String registrationId;
@@ -264,7 +269,10 @@ class _RegistrationFormScreenState
         quantity: widget.quantity,
       );
 
-      if (!widget.isFree &&
+      final onWaitlist = registration.isWaiting;
+
+      if (!onWaitlist &&
+          !widget.isFree &&
           widget.ticketPrice != null &&
           widget.ticketPrice! > 0) {
         if (!mounted) return;
@@ -285,10 +293,16 @@ class _RegistrationFormScreenState
       } else if (mounted) {
         ref.invalidate(myFutureRegistrationsProvider);
         ref.invalidate(myPastRegistrationsProvider);
+        final message = onWaitlist
+            ? (registration.waitingListPosition != null
+                ? "You're on the waitlist at position #${registration.waitingListPosition}. We'll notify you when a spot opens up."
+                : "You're on the waitlist. We'll notify you when a spot opens up.")
+            : AppLocalizations.of(context)!.successfullyRegistered;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.successfullyRegistered),
-            backgroundColor: AppColors.success,
+            content: Text(message),
+            backgroundColor: onWaitlist ? AppColors.warning : AppColors.success,
+            duration: Duration(seconds: onWaitlist ? 5 : 3),
           ),
         );
         Navigator.pop(context, true);

@@ -140,6 +140,13 @@
             <version>24.0.0</version>
         </dependency>
 
+        <!-- Firebase Admin SDK (FCM push notifications) -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.2.0</version>
+        </dependency>
+
         <!-- Dotenv for loading .env file -->
         <dependency>
             <groupId>me.paulschwarz</groupId>
