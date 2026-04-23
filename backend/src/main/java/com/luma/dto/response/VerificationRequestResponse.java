@@ -1,5 +1,6 @@
 package com.luma.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luma.entity.OrganiserVerificationRequest;
 import com.luma.entity.User;
@@ -37,7 +38,12 @@ public class VerificationRequestResponse {
     private String legalName;
     private String documentNumber;
 
+    // Jackson strips the "is" prefix from boolean fields by default, which would
+    // serialize this as "application" on the wire. Force the JSON key to match
+    // the Java name so frontend can read `selected.isApplication` correctly.
+    @JsonProperty("isApplication")
     private boolean isApplication;
+
     private String organisationName;
     private String organisationBio;
     private String organisationWebsite;

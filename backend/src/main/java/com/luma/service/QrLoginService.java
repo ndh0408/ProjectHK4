@@ -7,6 +7,8 @@ import com.luma.entity.enums.QrLoginChallengeStatus;
 import com.luma.exception.BadRequestException;
 import com.luma.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -20,17 +22,24 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class QrLoginService {
 
     private static final Duration CHALLENGE_TTL = Duration.ofMinutes(3);
+    private static final Duration APPROVED_TTL = Duration.ofMinutes(2);
     private static final Duration RETENTION_AFTER_FINAL_STATE = Duration.ofMinutes(5);
+    private static final int MAX_ACTIVE_CHALLENGES = 10_000;
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final Map<UUID, ChallengeState> challenges = new ConcurrentHashMap<>();
 
     public synchronized QrLoginChallengeResponse createChallenge() {
         cleanupChallenges();
+
+        if (challenges.size() >= MAX_ACTIVE_CHALLENGES) {
+            throw new BadRequestException("Too many active QR login challenges. Please try again shortly.");
+        }
 
         UUID challengeId = UUID.randomUUID();
         String approvalCode = randomToken(24);
@@ -58,7 +67,6 @@ public class QrLoginService {
     }
 
     public synchronized QrLoginStatusResponse getStatus(UUID challengeId, String pollingToken) {
-        cleanupChallenges();
         ChallengeState challenge = requireChallenge(challengeId);
         validatePollingToken(challenge, pollingToken);
         expireIfNeeded(challenge);
@@ -66,7 +74,6 @@ public class QrLoginService {
     }
 
     public synchronized UUID approveChallenge(UUID challengeId, String approvalCode, User approver) {
-        cleanupChallenges();
         ChallengeState challenge = requireChallenge(challengeId);
         expireIfNeeded(challenge);
 
@@ -76,7 +83,10 @@ public class QrLoginService {
         if (challenge.getStatus() == QrLoginChallengeStatus.CONSUMED) {
             throw new BadRequestException("This QR login request has already been used.");
         }
-        if (!challenge.getApprovalCode().equals(approvalCode)) {
+        if (challenge.getStatus() == QrLoginChallengeStatus.APPROVED) {
+            throw new BadRequestException("This QR login request has already been approved.");
+        }
+        if (!constantTimeEquals(challenge.getApprovalCode(), approvalCode)) {
             throw new UnauthorizedException("Invalid QR login approval code.");
         }
 
@@ -88,11 +98,11 @@ public class QrLoginService {
                         ? approver.getFullName()
                         : approver.getEmail()
         );
+        log.info("QR login challenge {} approved by user {}", challengeId, approver.getId());
         return approver.getId();
     }
 
     public synchronized UUID consumeApprovedChallenge(UUID challengeId, String pollingToken) {
-        cleanupChallenges();
         ChallengeState challenge = requireChallenge(challengeId);
         validatePollingToken(challenge, pollingToken);
         expireIfNeeded(challenge);
@@ -112,9 +122,11 @@ public class QrLoginService {
 
         challenge.setStatus(QrLoginChallengeStatus.CONSUMED);
         challenge.setConsumedAt(Instant.now());
+        log.info("QR login challenge {} consumed for user {}", challengeId, challenge.getApprovedByUserId());
         return challenge.getApprovedByUserId();
     }
 
+    @Scheduled(fixedDelay = 60_000L, initialDelay = 60_000L)
     public synchronized void cleanupChallenges() {
         Instant now = Instant.now();
         List<UUID> toRemove = new ArrayList<>();
@@ -137,6 +149,11 @@ public class QrLoginService {
         for (UUID challengeId : toRemove) {
             challenges.remove(challengeId);
         }
+
+        if (!toRemove.isEmpty()) {
+            log.debug("QR login cleanup removed {} stale challenges (remaining: {})",
+                    toRemove.size(), challenges.size());
+        }
     }
 
     private ChallengeState requireChallenge(UUID challengeId) {
@@ -149,14 +166,21 @@ public class QrLoginService {
 
     private void validatePollingToken(ChallengeState challenge, String pollingToken) {
         if (pollingToken == null || pollingToken.isBlank() ||
-                !challenge.getPollingToken().equals(pollingToken)) {
+                !constantTimeEquals(challenge.getPollingToken(), pollingToken)) {
             throw new UnauthorizedException("Invalid QR login polling token.");
         }
     }
 
     private void expireIfNeeded(ChallengeState challenge) {
+        Instant now = Instant.now();
         if (challenge.getStatus() == QrLoginChallengeStatus.PENDING &&
-                Instant.now().isAfter(challenge.getExpiresAt())) {
+                now.isAfter(challenge.getExpiresAt())) {
+            challenge.setStatus(QrLoginChallengeStatus.EXPIRED);
+            return;
+        }
+        if (challenge.getStatus() == QrLoginChallengeStatus.APPROVED &&
+                challenge.getApprovedAt() != null &&
+                now.isAfter(challenge.getApprovedAt().plus(APPROVED_TTL))) {
             challenge.setStatus(QrLoginChallengeStatus.EXPIRED);
         }
     }
@@ -181,6 +205,15 @@ public class QrLoginService {
         byte[] raw = new byte[bytes];
         RANDOM.nextBytes(raw);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+    }
+
+    private static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null) {
+            return false;
+        }
+        byte[] aBytes = a.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return java.security.MessageDigest.isEqual(aBytes, bBytes);
     }
 
     @lombok.Data

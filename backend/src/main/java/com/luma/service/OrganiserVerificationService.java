@@ -243,6 +243,9 @@ public class OrganiserVerificationService {
         boolean approve = Boolean.TRUE.equals(review.getApprove());
         boolean grantBadgeInput = Boolean.TRUE.equals(review.getGrantVerifiedBadge());
 
+        log.info("[VERIFICATION REVIEW] request={} admin={} approve={} grantVerifiedBadge={} isApplication={}",
+                requestId, admin.getId(), approve, grantBadgeInput, request.isApplication());
+
         if (!approve && (review.getRejectReason() == null || review.getRejectReason().isBlank())) {
             throw new BadRequestException("Reject reason is required when rejecting a request");
         }
@@ -311,8 +314,8 @@ public class OrganiserVerificationService {
                 }
             }
             organiserProfileRepository.save(profile);
-            log.info("Admin {} approved verification {} for organiser {} (application={}, grantBadge={})",
-                    admin.getId(), requestId, organiser.getId(), request.isApplication(), grantBadge);
+            log.info("[VERIFICATION REVIEW RESULT] organiser={} profile.verified={} (application={}, grantBadge={})",
+                    organiser.getId(), profile.isVerified(), request.isApplication(), grantBadge);
 
             try {
                 if (request.isApplication()) {
