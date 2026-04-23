@@ -55,6 +55,8 @@ const adminApi = {
     generateRejectionReason: (data) => api.post('/admin/ai/generate-rejection-reason', data),
     generateBroadcastMessage: (data) => api.post('/admin/ai/generate-broadcast-message', data),
     getAIInsights: () => api.get('/admin/ai/dashboard-insights'),
+    aiReviewOrganiser: (userId) => api.post(`/admin/ai/organiser-review/${userId}`),
+    aiAnalyseUser: (userId) => api.post(`/admin/ai/user-risk/${userId}`),
 
     getBoosts: (params) => api.get('/admin/boosts', { params }),
     getBoostById: (id) => api.get(`/admin/boosts/${id}`),

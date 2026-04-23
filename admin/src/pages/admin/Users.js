@@ -13,9 +13,10 @@ import {
     MoreVert as MoreVertIcon,
     Refresh as RefreshIcon,
     PeopleAlt as PeopleAltIcon,
+    AutoAwesome as AIIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
-import { ConfirmDialog } from '../../components/common';
+import { ConfirmDialog, AiReviewDialog } from '../../components/common';
 import {
     PageHeader,
     PageToolbar,
@@ -40,6 +41,7 @@ const Users = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', action: null });
+    const [aiReview, setAiReview] = useState({ open: false, subject: null, loading: false, error: null, data: null });
 
     const loadUsers = useCallback(async () => {
         setLoading(true);
@@ -94,6 +96,23 @@ const Users = () => {
                 }
             },
         });
+    };
+
+    const handleAiReview = async () => {
+        const target = selectedUser;
+        handleMenuClose();
+        if (!target) return;
+        setAiReview({ open: true, subject: target, loading: true, error: null, data: null });
+        try {
+            const response = await adminApi.aiAnalyseUser(target.id);
+            setAiReview((s) => ({ ...s, loading: false, data: response.data.data }));
+        } catch (e) {
+            setAiReview((s) => ({
+                ...s,
+                loading: false,
+                error: e.response?.data?.message || 'Failed to run AI analysis.',
+            }));
+        }
     };
 
     const handleDelete = () => {
@@ -223,8 +242,18 @@ const Users = () => {
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
-                slotProps={{ paper: { sx: { minWidth: 180, borderRadius: 2 } } }}
+                slotProps={{ paper: { sx: { minWidth: 200, borderRadius: 2 } } }}
             >
+                <MenuItem onClick={handleAiReview}>
+                    <AIIcon fontSize="small" color="primary" sx={{ mr: 1 }} />
+                    <Box>
+                        <Typography variant="body2">AI Risk Analysis</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Behavior & moderation hint
+                        </Typography>
+                    </Box>
+                </MenuItem>
+                <Divider sx={{ my: 0.5 }} />
                 <MenuItem disabled sx={{ opacity: 0.7 }}>
                     <Typography variant="caption" fontWeight={600}>
                         Change status
@@ -253,6 +282,19 @@ const Users = () => {
                     setConfirmDialog({ ...confirmDialog, open: false });
                 }}
                 onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            />
+
+            <AiReviewDialog
+                open={aiReview.open}
+                onClose={() => setAiReview({ open: false, subject: null, loading: false, error: null, data: null })}
+                title="AI User Risk Analysis"
+                subtitle="AI suggests a moderation direction from available activity data. Admin should review before taking action."
+                subjectName={aiReview.subject?.fullName}
+                subjectEmail={aiReview.subject?.email}
+                loading={aiReview.loading}
+                error={aiReview.error}
+                data={aiReview.data}
+                mode="user"
             />
         </Box>
     );

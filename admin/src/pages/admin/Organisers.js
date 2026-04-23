@@ -42,7 +42,7 @@ import {
     Warning as WarningIcon,
 } from '@mui/icons-material';
 import { adminApi } from '../../api';
-import { ConfirmDialog } from '../../components/common';
+import { ConfirmDialog, AiReviewDialog } from '../../components/common';
 import {
     PageHeader,
     PageToolbar,
@@ -727,6 +727,7 @@ const AllOrganisersList = () => {
     const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', action: null });
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedOrganiser, setSelectedOrganiser] = useState(null);
+    const [aiReview, setAiReview] = useState({ open: false, subject: null, loading: false, error: null, data: null });
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -757,6 +758,21 @@ const AllOrganisersList = () => {
     const handleMenuClose = () => {
         setAnchorEl(null);
         setSelectedOrganiser(null);
+    };
+
+    const handleAiReview = async (organiser) => {
+        handleMenuClose();
+        setAiReview({ open: true, subject: organiser, loading: true, error: null, data: null });
+        try {
+            const response = await adminApi.aiReviewOrganiser(organiser.id);
+            setAiReview((s) => ({ ...s, loading: false, data: response.data.data }));
+        } catch (e) {
+            setAiReview((s) => ({
+                ...s,
+                loading: false,
+                error: e.response?.data?.message || 'Failed to run AI review.',
+            }));
+        }
     };
 
     const handleVerify = (organiser) => {
@@ -965,6 +981,17 @@ const AllOrganisersList = () => {
                 onClose={handleMenuClose}
                 slotProps={{ paper: { sx: { minWidth: 230, borderRadius: 2 } } }}
             >
+                <MenuItem onClick={() => handleAiReview(selectedOrganiser)}>
+                    <ListItemIcon>
+                        <AIIcon fontSize="small" color="primary" />
+                    </ListItemIcon>
+                    <ListItemText
+                        primary="AI Review"
+                        secondary="Verification & trust analysis"
+                        secondaryTypographyProps={{ variant: 'caption' }}
+                    />
+                </MenuItem>
+                <Divider sx={{ my: 0.5 }} />
                 {selectedOrganiser?.status === 'ACTIVE' ? (
                     <MenuItem onClick={() => handleLock(selectedOrganiser)}>
                         <ListItemIcon>
@@ -1015,6 +1042,19 @@ const AllOrganisersList = () => {
                     setConfirmDialog({ ...confirmDialog, open: false });
                 }}
                 onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
+            />
+
+            <AiReviewDialog
+                open={aiReview.open}
+                onClose={() => setAiReview({ open: false, subject: null, loading: false, error: null, data: null })}
+                title="AI Organiser Verification Review"
+                subtitle="AI reviews organiser profile and activity as a verification assistant. Admin remains the final decision maker."
+                subjectName={aiReview.subject?.displayName || aiReview.subject?.fullName}
+                subjectEmail={aiReview.subject?.email}
+                loading={aiReview.loading}
+                error={aiReview.error}
+                data={aiReview.data}
+                mode="organiser"
             />
         </>
     );

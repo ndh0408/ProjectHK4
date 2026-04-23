@@ -6,3 +6,4 @@ export { default as SpeakerForm } from './SpeakerForm';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as UpgradeDialog } from './UpgradeDialog';
 export { default as VerificationDocumentUpload } from './VerificationDocumentUpload';
+export { default as AiReviewDialog } from './AiReviewDialog';

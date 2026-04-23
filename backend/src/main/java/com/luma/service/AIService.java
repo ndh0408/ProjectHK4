@@ -1044,6 +1044,133 @@ public class AIService {
         }
     }
 
+    public String analyzeOrganiserVerification(String organiserName, String email, String bio, String website,
+                                                 String contactEmail, String contactPhone, boolean verified,
+                                                 int totalEvents, int totalFollowers, long approvedEvents,
+                                                 long pendingEvents, long rejectedEvents, long totalRegistrations,
+                                                 Double averageRating, long reviewCount, long accountAgeDays,
+                                                 boolean hasValidDocument) {
+        String systemPrompt = """
+            You are an AI verification assistant for an event management platform. Analyse an event organiser's
+            profile and activity to help the admin decide whether to trust them.
+
+            STRICT LANGUAGE RULE: Respond in ENGLISH ONLY. Never use Vietnamese or any other language.
+            Every field, every string, every list item MUST be English.
+
+            Decision taxonomy:
+            - trust: "HIGH" | "MEDIUM" | "LOW" (overall trustworthiness)
+            - trustworthy: true | false (simple yes/no for the admin)
+            - decision: "APPROVE" | "REJECT" | "REVIEW" (recommendation only — the admin has final authority)
+            - confidence: 0-100 integer (how sure you are)
+
+            Guidelines:
+            1. Higher trust when: complete profile, valid documents, active history, positive reviews, older account.
+            2. Lower trust when: missing fields, zero events/followers, new account with no activity, flagged signals.
+            3. Keep "summary" to one sentence. Keep each bullet short (<= 12 words).
+            4. Strengths lists what supports approval. Missing info lists concrete gaps (empty bio, no website, etc.).
+            5. Risk signals flag anything suspicious (brand-new account, no contact info, etc.). Empty array if none.
+            6. "recommendation" is a one-sentence closing note for the admin.
+            7. Return ONLY valid JSON. No markdown, no extra text.
+
+            JSON format (all values in English):
+            {
+              "trust": "HIGH",
+              "trustworthy": true,
+              "decision": "APPROVE",
+              "confidence": 90,
+              "summary": "Complete profile, strong track record, no risk indicators.",
+              "strengths": ["Full profile information", "Active event history", "Positive attendee reviews"],
+              "missingInfo": [],
+              "riskSignals": [],
+              "recommendation": "Safe to approve; organiser meets all trust criteria."
+            }
+            """;
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("Analyse this organiser profile and activity. Respond in ENGLISH ONLY.\n\n");
+        userPrompt.append("=== ORGANISER PROFILE ===\n");
+        userPrompt.append("Name: ").append(organiserName != null ? organiserName : "(missing)").append("\n");
+        userPrompt.append("Email: ").append(email != null ? email : "(missing)").append("\n");
+        userPrompt.append("Bio: ").append(bio != null && !bio.isBlank() ? bio : "(missing)").append("\n");
+        userPrompt.append("Website: ").append(website != null && !website.isBlank() ? website : "(missing)").append("\n");
+        userPrompt.append("Contact email: ").append(contactEmail != null && !contactEmail.isBlank() ? contactEmail : "(missing)").append("\n");
+        userPrompt.append("Contact phone: ").append(contactPhone != null && !contactPhone.isBlank() ? contactPhone : "(missing)").append("\n");
+        userPrompt.append("Verified badge: ").append(verified ? "yes" : "no").append("\n");
+        userPrompt.append("Valid verification document on file: ").append(hasValidDocument ? "yes" : "no").append("\n");
+        userPrompt.append("\n=== ACTIVITY METRICS ===\n");
+        userPrompt.append("Account age (days): ").append(accountAgeDays).append("\n");
+        userPrompt.append("Total events: ").append(totalEvents).append("\n");
+        userPrompt.append("  - Approved/published: ").append(approvedEvents).append("\n");
+        userPrompt.append("  - Pending: ").append(pendingEvents).append("\n");
+        userPrompt.append("  - Rejected: ").append(rejectedEvents).append("\n");
+        userPrompt.append("Total followers: ").append(totalFollowers).append("\n");
+        userPrompt.append("Total registrations received: ").append(totalRegistrations).append("\n");
+        userPrompt.append("Average review rating: ").append(averageRating != null ? String.format("%.2f/5", averageRating) : "no reviews yet").append("\n");
+        userPrompt.append("Total review count: ").append(reviewCount).append("\n");
+        userPrompt.append("\nReturn ONLY valid JSON in English. Do not use Vietnamese.");
+
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 600);
+    }
+
+    public String analyzeUserRisk(String fullName, String email, String role, String status,
+                                   boolean emailVerified, boolean phoneVerified, long accountAgeDays,
+                                   long totalRegistrations, long approvedRegistrations,
+                                   long checkedInCount, long reviewCount,
+                                   long flaggedReviewCount, long reportedCount) {
+        String systemPrompt = """
+            You are an AI risk-analysis assistant for a platform admin. Review a user's behaviour and data to
+            suggest a moderation direction. The admin makes the final call.
+
+            STRICT LANGUAGE RULE: Respond in ENGLISH ONLY. Never use Vietnamese or any other language.
+            Every field, every string, every list item MUST be English.
+
+            Decision taxonomy:
+            - risk: "LOW" | "MEDIUM" | "HIGH"
+            - action: "KEEP" | "WARN" | "LOCK" (recommendation — admin decides)
+            - confidence: 0-100 integer
+
+            Guidelines:
+            1. Low risk: normal activity, no flags, verified contacts, no abusive reviews.
+            2. Medium risk: unusual patterns, unverified contacts, some flagged content, brand-new account.
+            3. High risk: multiple flagged reviews, many reports against them, suspicious behaviour.
+            4. A brand-new account with zero activity is usually LOW risk with a "keep but monitor" note.
+            5. Keep summary and each bullet short (<= 14 words).
+            6. Return ONLY valid JSON. No markdown, no extra text.
+
+            JSON format (all values in English):
+            {
+              "risk": "LOW",
+              "action": "KEEP",
+              "confidence": 75,
+              "behaviorSummary": "New user, no transactions or reviews yet.",
+              "reasons": ["No transactions yet", "No reviews yet", "New account"],
+              "recommendation": "New user — monitor future activity, no action needed now."
+            }
+            """;
+
+        StringBuilder userPrompt = new StringBuilder();
+        userPrompt.append("Analyse this user's risk profile. Respond in ENGLISH ONLY.\n\n");
+        userPrompt.append("=== USER ===\n");
+        userPrompt.append("Name: ").append(fullName != null ? fullName : "(missing)").append("\n");
+        userPrompt.append("Email: ").append(email != null ? email : "(missing)").append("\n");
+        userPrompt.append("Role: ").append(role).append("\n");
+        userPrompt.append("Account status: ").append(status).append("\n");
+        userPrompt.append("Email verified: ").append(emailVerified ? "yes" : "no").append("\n");
+        userPrompt.append("Phone verified: ").append(phoneVerified ? "yes" : "no").append("\n");
+        userPrompt.append("Account age (days): ").append(accountAgeDays).append("\n");
+        userPrompt.append("\n=== ACTIVITY ===\n");
+        userPrompt.append("Total registrations: ").append(totalRegistrations).append("\n");
+        userPrompt.append("Approved registrations: ").append(approvedRegistrations).append("\n");
+        userPrompt.append("Check-ins: ").append(checkedInCount).append("\n");
+        userPrompt.append("Reviews written: ").append(reviewCount).append("\n");
+        userPrompt.append("\n=== RISK INDICATORS ===\n");
+        userPrompt.append("Flagged reviews authored by this user: ").append(flaggedReviewCount).append("\n");
+        userPrompt.append("Times reported by others: ").append(reportedCount).append("\n");
+        userPrompt.append("\nReturn ONLY valid JSON in English. Do not use Vietnamese.");
+
+        return callOpenAiApi(systemPrompt, userPrompt.toString(), 500);
+    }
+
     private String callOpenAiApi(String systemPrompt, String userPrompt, int maxTokens) {
         try {
             log.info("=== Starting OpenAI API Call ===");
