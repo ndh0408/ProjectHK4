@@ -80,6 +80,7 @@ test-*.jpg
 # Temp & backup files - NEVER commit
 # ===================================
 *.bak
+!backend/backups/luma_db.bak
 _tmp_*
 *.tmp.sql
 Clear
