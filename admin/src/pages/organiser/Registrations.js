@@ -685,13 +685,34 @@ const OrganiserRegistrations = () => {
                 const score = params.row.priorityScore || 0;
                 const color = score >= 60 ? 'success' : score >= 30 ? 'warning' : 'default';
                 return (
-                    <Chip
-                        icon={<StarIcon sx={{ fontSize: 16 }} />}
-                        label={score}
-                        size="small"
-                        color={color}
-                        variant="outlined"
-                    />
+                    <Tooltip
+                        arrow
+                        title={
+                            <Box sx={{ p: 0.5 }}>
+                                <Typography variant="caption" fontWeight="bold" sx={{ display: 'block' }}>
+                                    Waitlist priority
+                                </Typography>
+                                <Typography variant="caption" sx={{ display: 'block' }}>
+                                    Rule-based score from:
+                                </Typography>
+                                <Typography variant="caption" sx={{ display: 'block' }}>• Verified email/phone</Typography>
+                                <Typography variant="caption" sx={{ display: 'block' }}>• Past approved events</Typography>
+                                <Typography variant="caption" sx={{ display: 'block' }}>• Organiser role & subscription</Typography>
+                                <Typography variant="caption" sx={{ display: 'block' }}>• Penalty for past cancellations</Typography>
+                                <Typography variant="caption" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic' }}>
+                                    Click row for full AI-style reliability breakdown.
+                                </Typography>
+                            </Box>
+                        }
+                    >
+                        <Chip
+                            icon={<StarIcon sx={{ fontSize: 16 }} />}
+                            label={score}
+                            size="small"
+                            color={color}
+                            variant="outlined"
+                        />
+                    </Tooltip>
                 );
             },
         },
@@ -967,6 +988,9 @@ const OrganiserRegistrations = () => {
                                         </Typography>
                                     </Box>
                                 )}
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, pt: 1 }}>
+                                    Click a row to view the applicant's form, score and signals.
+                                </Typography>
                                 <DataGrid
                                     rows={filteredRegistrations}
                                     columns={columns}
@@ -978,24 +1002,39 @@ const OrganiserRegistrations = () => {
                                     paginationMode={quickSearch ? 'client' : 'server'}
                                     disableRowSelectionOnClick
                                     autoHeight
+                                    onRowClick={(params, event) => {
+                                        if (event.target.closest('button, a, [role="button"]')) return;
+                                        handleViewAnswers(params.row);
+                                    }}
+                                    sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
                                 />
                             </>
                         )}
 
                         {tabValue === 1 && (
-                            <DataGrid
-                                rows={waitingList}
-                                columns={waitingListColumns}
-                                loading={loading}
-                                pageSizeOptions={[10, 25, 50]}
-                                disableRowSelectionOnClick
-                                autoHeight
-                                initialState={{
-                                    sorting: {
-                                        sortModel: [{ field: 'waitingListPosition', sort: 'asc' }],
-                                    },
-                                }}
-                            />
+                            <>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', px: 2, pt: 2 }}>
+                                    Click a row to view the applicant's form, reliability score and signals before deciding to approve.
+                                </Typography>
+                                <DataGrid
+                                    rows={waitingList}
+                                    columns={waitingListColumns}
+                                    loading={loading}
+                                    pageSizeOptions={[10, 25, 50]}
+                                    disableRowSelectionOnClick
+                                    autoHeight
+                                    initialState={{
+                                        sorting: {
+                                            sortModel: [{ field: 'waitingListPosition', sort: 'asc' }],
+                                        },
+                                    }}
+                                    onRowClick={(params, event) => {
+                                        if (event.target.closest('button, a, [role="button"]')) return;
+                                        handleViewAnswers(params.row);
+                                    }}
+                                    sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
+                                />
+                            </>
                         )}
 
                         {tabValue === 2 && (
